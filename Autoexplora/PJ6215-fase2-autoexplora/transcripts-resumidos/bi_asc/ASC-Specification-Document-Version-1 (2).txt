@@ -1,0 +1,22 @@
+# Condensado — ASC-Specification-Document-Version-1 (2).txt
+
+## Decisiones
+- ASC (Automotive Standards Council) define una especificación estándar de eventos GA4 para sitios de dealers automotrices, con más de 35 nombres de evento (`asc_*`) y un modelo de parámetros compartido — el objetivo es que el reporting funcione igual sin importar la plataforma web o herramienta de terceros usada.
+- Hay 4 eventos "core" de engagement (no se marcan como conversión): `asc_comm_engagement` (chat/SMS), `asc_form_engagement` (formularios), `asc_video_call_engagement`, `asc_voice_engagement`. A partir de ellos se derivan los eventos de conversión específicos por resultado (ej. `asc_form_submission_sales_appt` cuando el formulario resulta en una cita agendada).
+- El estándar evita usar la palabra "lead" (es ambigua); en su lugar usa `asc_form_submission` + parámetro `department` para clasificar el tipo de solicitud (ventas, servicio, refacciones, RH, etc.).
+- Existe un "data layer" común (`asc_datalayer`) con variables compartidas (marca/modelo/año/color/precio del vehículo, tipo de página, idioma, moneda) que alimenta los parámetros de los eventos sin que cada proveedor tenga que scrapear la página.
+- Los eventos de conversión (verdes) se construyen sobre los engagement events (rojos) para reducir el mantenimiento manual de metas de conversión en cada propiedad de GA4 por dealer.
+
+## Alcance / requerimientos
+- Cada evento de formulario dispara además un `asc_cta_interaction` (clic en el botón de envío) con `event_action_result = success` o `error` según si se completaron los campos requeridos.
+- Parámetros de vehículo estándar en casi todos los eventos: `item_id` (VIN), `item_number` (stock del dealer), `item_price`, `item_condition`, `item_year`, `item_make`, `item_model`, `item_variant`, `item_color`, `item_type`, `item_category`, `item_fuel_type`, `item_inventory_date`.
+- `asc_click_to_call` distingue si el número es fijo (lo dispara la plataforma web) o dinámico vía proveedor de telefonía (DNI).
+
+## Riesgos / pendientes
+- La implementación del estándar en GA4 aún requiere configuración manual por cada propiedad/dealer (marcar qué eventos son conversión, crear dimensiones personalizadas) — no hay todavía una herramienta administrativa multi-sitio.
+- Los eventos de engagement no deben pesar igual que los de conversión (ej. un clic para llamar no garantiza que la llamada se conectó) — cualquier reporte de BI debe distinguir intención de resultado confirmado.
+
+## Componentes técnicos involucrados
+- Especificación pública de la Automotive Standards Council (GA4); referencia oficial: automotivestandardscouncil.com. Documento de referencia para el diseño de eventos de BI de cualquier sitio de dealers de Go Virtual, incluido Autoexplora.
+
+Nota: el documento completo tiene 2838 líneas con el detalle de parámetros de cada uno de los 35+ eventos del estándar; este condensado cubre el marco general. El detalle de los eventos específicos que Go Virtual ya seleccionó para Autoexplora está en el condensado de `EVENTOS ASC V3.xlsx`.

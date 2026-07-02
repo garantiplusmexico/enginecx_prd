@@ -1,0 +1,43 @@
+# Condensado — Revisión Fase 2 Autoexplora.txt
+
+Revisión punto por punto (por slide) de la presentación de comentarios/ajustes de Fase 2 entre Lourdes Munguía (cliente) y equipo GV (Abigail Estrada, Sharon Mendoza). Convención: puntito verde = ajuste ya aplicado en productivo; rojo/morado = pendiente de Go Virtual.
+
+## Decisiones
+- Formulario "Vende tu Auto" (slide 13): se implementará envío de correo al usuario; GV requiere del cliente: diseño (Figma o imagen de referencia), plantilla HTML si la tienen, assets (imágenes/logos/fondos), o especificaciones completas de diseño (tipografía, tamaños, colores) si no hay HTML.
+- Formulario guía de precios / Exagono (slides 14-15): estilo ya homologado según alcance del proyecto; pendiente el mismo envío de correo, en espera del mismo insumo de diseño.
+- Cotizador de crédito (slide 21): se elimina la leyenda de "auto disponible en otra ciudad/estado" (validado con Vivian, no es garantía 100% cumplible).
+- Formulario "Agenda tu Cita" (slide 24): se agregará envío de correo (mismo criterio que los anteriores).
+- Calendario de citas (slide 28): actualmente se pierden 2 días hábiles al agendar (regla definida para dar tiempo al BDC de gestionar el lead); cliente pide reducir esa ventana. GV: la agencia debe definir cuánto tiempo tarda el lead en recorrer el funnel para ajustar la regla; se considera para Fase 2 pero requiere sesión con "Gonzalo" (Smart IT) esta semana para no perder tiempo de desarrollo — depende de agendar esa sesión pronto.
+- Tags de inventario "único dueño"/"auto nuevo" (slide 36): Brick ya soporta mostrarlos; falta sesión con Intelimotor para que agreguen columna adicional al feed donde las agencias indiquen el tag por unidad — implementación ágil una vez resuelto el dato.
+- Banner lateral en inventario (slide 41): grilla actual es de 3 columnas; para agregar banner se necesitaría pasar a 4 columnas (ya se probó antes y se revirtió por verse "apretado"). Cliente enviará propuesta visual del banner; queda pendiente de definición.
+- Carrusel de logos en home (slide 47) + sección Concesionarios: en móvil se ven pequeños (en PC bien) — ajustar tamaño. Todos los logos del carrusel deben tener mismo ancho/alto (ej. 800x800) por la animación automática del carrusel; si se requieren logos rectangulares (para "chaparritos") se corre riesgo de que se corten — cliente decide si acepta ese trade-off.
+- Compartir vehículo (slide 63): habilitar compartir por WhatsApp, redes sociales y correo (hoy solo existe copiar liga) — considerado para Fase 2, GV aún define alcance exacto de canales.
+- Homologación de agencias (inventario, slides 52-54): depende de que Paola republique unidades en Intelimotor; pendiente confirmación.
+- Precio contado/financiamiento (slide 62): el sitio anterior (DealerOn) mostraba un financiamiento "estimado", no reglas reales — GV requiere que el cliente autorice definir reglas de financiamiento propias (no todos los vehículos tienen financiamiento definido); es una implementación mayor a evaluar, pendiente decisión del cliente.
+- Rediseño de pasos del formulario con iconos/descripciones (slides 67, ex-71, comentario de Gaby/UX): se aplicaría a todos los formularios del sitio, no solo uno; pendiente que el cliente provea guía de diseño o referencia.
+- Sección "banner hacia Nosotros" (slide 66): se sustituye por carrusel de "más buscados"/"en oferta" para reducir scroll, especialmente en móvil. Se prioriza implementar primero el carrusel de "oferta" (ya se maneja ese dato) en Fase 2; "más buscados" requeriría que el cliente defina el criterio y se considera trabajo adicional, posiblemente Fase 3.
+- WhatsApp con mayor protagonismo (slide 70): el cliente decide NO invertir esfuerzo en el botón general del agente virtual (ya no continuará) y en su lugar prioriza: (a) WhatsApp vinculado a la agencia dentro de la ficha del vehículo (ajuste de nivel medio, ~días, ya viable con datos de Intelimotor) y (b) evaluar un directorio de agencias (por estado → agencia) para el botón flotante del home, en lugar de mandar a un número genérico. Cliente proveerá listado actualizado de números de WhatsApp por agencia.
+- Botón "Comparar vehículos" (slide 71 final, comentario de Gaby/UX): rediseñar visualmente para diferenciarlo de los demás botones (actualmente hay demasiados botones iguales); el usuario no entiende que el corazón guarda para comparar. Cliente propone además una animación/alerta tras ~20-30s de permanencia en la ficha invitando a comparar. GV evaluará propuesta.
+- Simulador de crédito (referencia externa "Dalton Seminuevos"): el cliente quiere mejorar la experiencia visual/UX del simulador actual (no copiar el diseño de Dalton ni cambiar todo), coordinando con Exagono/BBVA ya que el cálculo depende de esa integración.
+
+## Alcance / requerimientos
+- Todas las implementaciones de formularios (correo) dependen de que el cliente entregue: diseño de referencia, plantilla HTML (si aplica) o especificaciones completas, y assets.
+- GV compartirá un plan de trabajo con fecha límite para recibir cada insumo de diseño antes de poder implementar en la ventana de Fase 2.
+- Cliente pidió explícitamente que el plan de proyecto tenga fechas de entrega actualizadas y fechas de resolución del lado GV (columnas del tracker compartido).
+
+## Actores
+- **Cliente**: Lourdes Munguía "Lulú" (conduce la revisión), Andrea Quintana "Andy" (aporta contexto de negocio, decide no invertir en WhatsApp del agente virtual), Fer Márquez, Cristian (mencionado, no presente).
+- **Go Virtual**: Abigail Estrada (coordina comentarios/registro), Sharon Mendoza (evalúa viabilidad técnica de cada ajuste), David (mencionado, parte del equipo de implementación de WhatsApp por agencia).
+- Terceros mencionados: Exagono (formulario guía de precios, dependencia de BBVA), Gonzalo/Smart IT (dependencia técnica para regla de calendario de citas), Gaby (UX del cliente, autora de varios comentarios de diseño), Vivian (equipo de agencias, validó eliminación de leyenda), Paola (republicación de unidades en Intelimotor).
+
+## Riesgos / pendientes
+- Múltiples implementaciones de Fase 2 dependen de insumos de diseño que el cliente aún no ha entregado (riesgo de bloqueo de cronograma).
+- Regla de calendario de citas requiere sesión externa con Smart IT (Gonzalo) no agendada aún — riesgo de no alcanzar a implementarse en la ventana de Fase 2 si se retrasa.
+- Tags de inventario dependen de que Intelimotor agregue una columna nueva al feed (dependencia externa no confirmada con fecha).
+- Ambigüedad sobre el alcance real del "banner lateral" (3 vs 4 columnas) — pendiente definición final con el cliente.
+- Financiamiento con reglas reales es una implementación de mayor esfuerzo, pendiente autorización explícita del cliente antes de dimensionarla.
+- Duplicidad percibida de actividades en el tracker de Fase 2 (aclarado en la sesión Weekly: son tareas de "cliente" vs. tareas de "revisión" con texto similar, no duplicados reales) — se acordó usar columnas de "comentarios Autoexplora"/"comentarios Go Virtual" en vez de filas duplicadas.
+
+## Fechas / hitos
+- Revisión realizada el 22 de junio de 2026 (fecha citada en la sesión respecto al cálculo del calendario de citas).
+- Ventana de Fase 2: 22 junio – 24 julio 2026 (contexto general del proyecto).

@@ -1,0 +1,281 @@
+﻿Contexto Técnico — Proyecto Autoexplora
+Preparado para: Agente de desarrollo (Claude Code) — insumo para PRD, plan de desarrollo y mejora del proyecto Preparado por: Go Virtual (GV) — equipo de cuenta Autoexplora Fecha de corte: 1 de julio de 2026 Uso sugerido: compartir directamente con el agente de desarrollo. Complementa al documento "Contexto de Negocio y Relación Comercial", el cual no es necesario compartir con el agente salvo que se requiera contexto adicional de priorización.
+
+
+________________
+
+
+1. Resumen del proyecto
+Autoexplora es la plataforma digital de venta de autos seminuevos certificados operada por Grupo Autofin / Grupo Autogine, con aproximadamente 49 ubicaciones de agencias/dealers en México, multimarca (Chevrolet, Volkswagen, Nissan, Mazda, SEAT, Kia, Infinity, BMW, Ford, entre otras). El sitio web es desarrollado y operado por Go Virtual (GV).
+
+
+El proyecto atraviesa actualmente una migración de plataforma: del CMS legado DealerOn a una plataforma propietaria de Go Virtual llamada internamente "Brick" (también referida como "BRIC" o "BRICK" en documentación de proyecto), hospedada en Vercel. La migración fase 1 (paridad funcional + Go-Live) se completó el 15 de junio de 2026. El proyecto se encuentra ahora en Fase 2 (mejoras post-migración), con un cronograma de 34 tickets en ejecución entre el 22 de junio y el 24 de julio de 2026.
+
+
+________________
+
+
+2. Actores técnicos relevantes
+Organización
+	Persona
+	Rol técnico
+	Go Virtual
+	Sharon Mendoza
+	Desarrollo / gestión de cronograma de migración; avance semana a semana
+	Go Virtual
+	Abigail Estrada
+	Product Manager/ SEO, QA, análisis de datos de inventario/leads, comunicación técnica con Intelimotor
+	Go Virtual
+	Aldo Álvarez
+	IT / BI; dashboards, flujos de decisión, template SEO
+	Go Virtual
+	Germán Delgado
+	Dashboards de Darwin AI (chatbot)
+	Intelimotor
+	Edgar Bahena
+	Ingeniero principal; feeds, deduplicación de VIN, endpoints
+	Intelimotor
+	Mario Villarreal, Fernanda García / Estefanía
+	Cuenta y soporte técnico
+	Cliente (Autofin/Autogine)
+	Cristian Mendoza
+	Revisor técnico de SEO (exigente en detalle de URLs dinámicas)
+	Cliente (Autofin/Autogine)
+	"Equipo de Norma"
+	Equipo de TI de Grupo Autogine, solicitante de flujos de decisión y template SEO
+	
+
+Nota: se recibió indicación de pausar el trabajo con la plataforma de agentes virtuales (Darwin AI) — confirmar vigencia antes de planear trabajo relacionado con el chatbot del sitio.
+
+
+________________
+
+
+3. Arquitectura técnica y stack
+3.1 Plataforma nueva ("Brick")
+* Plataforma propietaria desarrollada por Go Virtual. No es un framework público conocido — debe documentarse desde cero, no inferir convenciones externas.
+* Hospedaje en Vercel. Configuración del proyecto en Vercel es responsabilidad de GV; el cliente solo participa en la configuración de dominio.
+* Reemplaza al CMS legado DealerOn.
+* Arquitectura basada en componentes reutilizables: navbar, footer, botón de links rápidos, y plantillas de página que se "rellenan" con contenido (p. ej., una plantilla de marca se reutiliza para generar "Vehículos Nissan", "Vehículos Chevrolet", etc.).
+* Imágenes: proceso de optimización y carga a un bucket de AWS S3.
+* Analytics/Tag Manager: ya integrado; GV mantiene medición de campañas y conversiones.
+* DNS: el cambio de DNS marca el momento de Go-Live.
+3.2 Migración de datos e inventario
+* El feed de inventario de vehículos llega desde Intelimotor vía archivo (XML/CSV) con estructura de columnas y nombre de archivo idénticos a los usados previamente con DealerOn — requisito explícito para no romper la integración existente.
+* Mecanismo de transferencia definido: Intelimotor sube un archivo (binario o vía URL) a un endpoint expuesto por GV, con token de autenticación; el endpoint sube el archivo a un bucket manteniendo estructura y nombre de columnas.
+* Regla de deduplicación de Intelimotor: cuando dos dealers publican el mismo VIN simultáneamente, Intelimotor asigna el VIN al primer publicador ("first publisher keeps the VIN"). Caso documentado: 3 VINs publicados a la vez por BMW Master Acapulco (DealerID 31411) y BMW Master Río Mayo (DealerID 31410), asignados a Acapulco. Después de "aplicar la regla" persistió una diferencia de 7 unidades sin explicar (pendiente de Intelimotor/Edgar desde inicios de junio 2026).
+* Terminología estándar: siempre VIN, nunca "BIN".
+3.3 SEO — arquitectura de páginas y template
+GV construyó un template SEO específico para Autoexplora (no genérico), con 4 pestañas: instrucciones, plantilla, buenas prácticas recomendadas, SEO técnico. Estructura de la plantilla por página:
+
+
+Campo
+	Descripción
+	ID
+	Identificador de orden
+	Tipo de página
+	Estática o dinámica
+	Sección/página
+	Nombre descriptivo
+	URL
+	Con tokens dinámicos entre corchetes, p. ej. {Marca} {Modelo} {Año} {Versión}
+	Meta title
+	Con contador de caracteres y validación de longitud ideal (semáforo rojo/verde)
+	Meta description
+	Con contador de caracteres
+	H1, H2, H3
+	Jerarquía de encabezados — el H1 no es visible al usuario pero es señal fuerte para buscadores y motores de IA sobre el tema principal
+	Keywords
+	—
+	URLs canónicas
+	Para evitar contenido duplicado cuando dos URLs apuntan al mismo tema
+	Meta robots
+	Control de indexación por página
+	Breadcrumbs
+	—
+	Open Graph (title, description, image)
+	Vista previa al compartir en WhatsApp/redes
+	Alt text de imágenes
+	Accesibilidad + señal para buscadores
+	Schema.org
+	AutoDealer / LocalBusiness combinado con ItemList para fichas de vehículo (marca, precio, moneda, etc.)
+	Enlaces internos
+	—
+	
+
+Páginas estáticas (sin elementos dinámicos de inventario): Home, Acerca de Autoexplora, Concesionarios, Privacidad, Términos y condiciones, Servicio/Postventa.
+
+
+Páginas dinámicas (dependen del feed de inventario): fichas de vehículo (VDP) y páginas de categoría (por marca actualmente).
+
+
+Decisión de alcance — categorización dinámica por modelo/año/color:
+
+
+* El cliente (Cristian Mendoza) solicitó categorización dinámica también por modelo y por color, no solo por marca, con H1 específico para cada combinación (p. ej. "Seminuevos Volkswagen" → "Seminuevos Polo").
+* GV confirmó que es técnicamente viable mediante el mismo sistema de componentes reutilizables.
+* Acordado implementarlo en fase posterior a la migración (no en v1), de forma incremental: primero por marca (ya en v1), después año/color/versión.
+* Dependencia: antes de implementar categorización por color, conviene resolver el problema de calidad de datos de color descrito en la sección 5.2 — de lo contrario se generarán categorías fragmentadas (ej. "Autos Plateados" vs. "Autos Plata" para el mismo valor real).
+
+
+Comportamiento de URLs de VDP cuando se vende la unidad:
+
+
+* Estado actual: cuando una unidad se vende y desaparece del feed, su URL de ficha deja de existir sin redirect.
+* Riesgo identificado: Google indexa esas URLs; un usuario que llega por resultado de búsqueda cae en un 404.
+* Regla de negocio esperada (principio de arquitectura, verificar estado real de implementación en Brick): las VDPs de inventario vendido deberían hacer redirect 301 a la página de categoría de marca/modelo más relevante (no al homepage), para evitar patrones de "soft 404" y preservar performance de campañas de catálogo de Meta Ads.
+
+
+Decisión pendiente relacionada: si se comparte la lógica de construcción de URL de VDP con Intelimotor, o si en cambio se les envían directamente las URLs publicadas. Pendiente reunión dedicada (GV + Intelimotor + "Elimelet").
+
+
+Límite de control de acceso SEO acordado con el cliente: el esquema técnico/schema y datos enriquecidos permanecen bajo control de GV; el cliente edita metadatos de negocio por página (title, description, H1, keywords, URL) vía el template en Google Sheets, que GV luego implementa.
+3.4 CMS y control de acceso
+* El cliente no tuvo acceso operativo real al CMS durante gran parte del proyecto legado (DealerOn), generando dependencia total en GV para cambios de contenido.
+* Compromiso pendiente: acceso funcional completo del cliente al CMS de Brick a finales de julio de 2026, con permisos/variables organizados para que el negocio edite contenido sin depender de GV.
+* Requisito de producto recomendado: panel de administración de contenido con permisos diferenciados — negocio puede editar metadatos SEO de nivel página y contenido general; GV mantiene control de schema técnico y configuración de infraestructura.
+3.5 Otros sistemas del stack
+* IMPEL / Spins 360° — posiblemente fotografía/tours virtuales de inventario (no detallado en fuentes revisadas; confirmar con Abi).
+* Cosmos — mencionado como herramienta del proyecto; función exacta no confirmada en las fuentes revisadas — no asumir, verificar con el equipo antes de documentar en un PRD.
+* Azure Cloud, Fastly CDN — infraestructura.
+* Autofox — aplicativo interno de Autoexplora para carga de contenido/imágenes por parte de las agencias. Bug abierto: visualización incorrecta de imágenes; en capacitación de agencias a fines de junio 2026; pendiente confirmar si la causa es de enfoque/orientación de imagen o del proceso de carga.
+
+
+________________
+
+
+4. Cronograma técnico de la migración
+Hito
+	Fecha
+	Estado
+	Semana 1: fundaciones, componentes base, optimización de imágenes, carga a bucket AWS
+	~11 mayo 2026
+	Completado
+	Semana 2: páginas principales (Home, Acerca de, Concesionarios, Privacidad, Términos, Servicio)
+	~18 mayo 2026
+	Completado
+	Migración de formularios
+	A partir de ~19 mayo 2026
+	Completado
+	Objetivo original de despliegue
+	1 junio 2026
+	No cumplido — retraso de insumos de Intelimotor
+	Fecha límite ajustada para insumos faltantes de Intelimotor
+	27 mayo 2026
+	—
+	Segunda revisión de link de pruebas (formularios + inventario)
+	5–8 junio 2026
+	Completado
+	Revisión final pre-liberación
+	12–15 junio 2026
+	Completado
+	Go-Live (Fase 1 — cambio de DNS)
+	15 junio 2026
+	Completado
+	Semana de monitoreo post Go-Live
+	Semana del 15 junio 2026
+	Completado
+	Inicio de Fase 2
+	22 junio 2026
+	En curso
+	Ventana de ejecución de Fase 2 (34 tickets)
+	22 junio – 24 julio 2026
+	En curso
+	
+
+Nota sobre gestión de cronograma: el plan de Fase 2 tuvo tareas aparentemente duplicadas detectadas por el cliente el 29 de junio — en realidad correspondían a "tareas asignadas al cliente para completar" vs. "tareas de revisión" con texto similar. Se acordó diferenciar con columnas de "comentarios Autoexplora" / "comentarios Go Virtual" en vez de filas duplicadas — relevante si el agente construye o migra este tracking a una herramienta.
+
+
+________________
+
+
+5. Calidad de datos e integraciones — hallazgos técnicos
+5.1 Pérdida de leads — causa raíz y remediación
+Síntoma: desde ~4 de mayo de 2026, leads no llegaban al CRM (Intelimotor), afectando conversión a citas/ventas.
+
+
+Causa raíz: la cuenta de correo operaciones@govirtual.com.mx (remitente de leads) no estaba en la lista de remitentes autorizados de Intelimotor, causando rechazos silenciosos — Intelimotor respondía "OK" de recepción sin procesar el lead realmente; no había segunda validación cruzada del contenido real recibido.
+
+
+Remediación:
+
+
+* Edgar Bahena (Intelimotor) agregó la cuenta a la lista de remitentes autorizados el 27 de mayo de 2026 (sesión en vivo).
+* Carga manual de leads faltantes recuperó una parte de lo perdido.
+* Segundo intento de carga masiva arrojó 0 confirmaciones — causa no resuelta en fuentes revisadas.
+* Recomendación vigente: prueba controlada de 2 leads antes de cualquier nueva carga masiva.
+* Pendiente reportado a inicios de junio: 11 leads aún sin llegar, seguimiento Abi/Aldo.
+
+
+Metodología de análisis de leads (estándar a preservar):
+
+
+* Normalización de email (minúsculas) y teléfono (últimos 10 dígitos, sin prefijo de país) para cruzar coincidencias entre todos los canales del CRM — no solo el canal primario de DealerOn, ya que algunos leads se reclasifican bajo canales de Darwin, AUTOEXPLORA, o subdominios, generando falsos negativos si no se cruzan todos.
+* Leads de prueba QA (correos con "prueba", teléfonos placeholder como 5555555555) deben separarse siempre de leads reales perdidos en cualquier output.
+
+
+Recomendaciones técnicas derivadas:
+
+
+1. Checklist/monitor de salud de integración: verificar remitentes autorizados en Intelimotor como chequeo recurrente.
+2. Alertas de discrepancia entre "confirmación de envío" y "confirmación de recepción real" (evitar depender solo de un "OK" aparente).
+3. Pipeline de normalización de email/teléfono como estándar reutilizable.
+4. Separación automática de leads QA vs. reales en cualquier reporte/dashboard.
+5.2 Calidad del campo "color" de inventario
+* Análisis sobre 894 unidades de Autoexplora.
+* Problema: valores en forma de adjetivo en vez de sustantivo base — ej. "Plateado" → debería ser "Plata"; "Dorado" → "Oro".
+* Agencias con mayor incidencia: SEAT Furia Motors Acapulco, Volkswagen Cresta del Valle, Mazda Pasión Pachuca, Volkswagen Cresta Cuernavaca.
+* Relevancia directa para desarrollo: es bloqueante/dependencia para la categorización dinámica de VDP por color (sección 3.3) — la normalización debería resolverse en el pipeline de ingesta antes o junto con esa feature, no después.
+5.3 Valor "CFE" visible en UI (síntoma de proceso, no solo de datos)
+* La columna "stock" del feed de Intelimotor se usa para marcar categorías internas de Autoexplora (CFE, HashBags, campañas). Un cambio no solicitado en DealerOn causó que apareciera una leyenda en inglés visible al usuario final.
+* Mismo patrón ocurrió antes con un "botón verde" no solicitado.
+* Recomendación técnica: sistema de detección de diffs/cambios de comportamiento en el feed o en componentes de terceros, con alerta antes de llegar a producción — para prevenir regresiones visuales no solicitadas que lleguen directo a usuarios finales.
+5.4 Discrepancia de VINs duplicados (BMW Master Acapulco / Río Mayo)
+* Ver sección 3.2. Causa raíz identificada (regla de deduplicación de Intelimotor), pero con diferencia residual de 7 unidades sin explicar.
+* Podría requerir una herramienta de reconciliación de inventario que cruce el feed de Intelimotor con el inventario real por dealer/VIN, detectando publicaciones simultáneas antes de que ocurra la deduplicación (prevención, no solo corrección posterior).
+
+
+________________
+
+
+6. Principios de arquitectura y estándares a preservar en cualquier desarrollo nuevo
+1. VIN, nunca "BIN", en toda terminología de producto, UI, documentación o código.
+2. Normalización de email/teléfono para matching de leads across all CRM channels (no solo canal primario) — ver sección 5.1.
+3. Separación estricta de leads QA/prueba vs. leads reales en cualquier reporte, dashboard o pipeline.
+4. Regla de deduplicación de VIN de Intelimotor ("primer publicador se queda con el VIN") es comportamiento esperado de la plataforma de terceros — cualquier solución debe apuntar a prevenir publicación simultánea, no a "corregir" después.
+5. Páginas dinámicas (VDP y categorías) deben construirse con patrones basados en tokens ({Marca} {Modelo} {Año} {Versión}) reutilizando componentes, no filas/páginas individuales hardcodeadas.
+6. VDPs de inventario vendido: comportamiento esperado es redirect 301 a la categoría de marca/modelo más relevante, nunca al homepage ni dejar 404.
+7. Estructura de base de datos de teléfonos/horarios: siempre en columnas dedicadas por área (Ventas, Seminuevos, Servicio, Refacciones) en ese orden fijo — nunca combinadas ni condicionales, para evitar errores de importación.
+8. El CMS técnico de SEO (schema, datos enriquecidos) se mantiene bajo control de GV; el cliente solo edita metadatos de negocio por página.
+9. Cambios de comportamiento originados en terceros (DealerOn, Intelimotor) que afecten la UI pública deben detectarse antes de llegar a producción — considerar monitoreo/alertas automatizadas de diffs de feed.
+
+
+________________
+
+
+7. Pendientes técnicos abiertos a la fecha de corte
+* Confirmar estado real de implementación del redirect 301 para inventario vendido (definido como principio, no confirmado como shipped).
+* Explicación de la diferencia residual de 7 unidades en la regla de deduplicación de VIN (Intelimotor/Edgar).
+* Resultado de la prueba controlada de 2 leads antes de reactivar carga masiva de leads recuperados.
+* Decisión sobre compartir lógica de construcción de URL de VDP con Intelimotor vs. enviarles URLs publicadas directamente.
+* Implementación de categorización dinámica de VDP/categoría por modelo, año, color (depende de resolver calidad de datos de color, sección 5.2).
+* Acceso completo del cliente al CMS de Brick.
+* Resolución del bug de visualización de imágenes en Autofox.
+* Cierre de los 34 tickets de Fase 2 (ventana 22 junio–24 julio 2026).
+* Confirmar función exacta de "Cosmos" dentro del stack.
+
+
+________________
+
+
+8. Recomendaciones para el agente de desarrollo
+* No asumir que "Brick" es un framework público conocido — es una plataforma propietaria interna de Go Virtual. Documentar desde cero (arquitectura, componentes, convenciones) en lugar de inferir de frameworks externos con nombre similar.
+* Cualquier PRD o plan de desarrollo nuevo debería incluir explícitamente: alcance, fuera de alcance, responsables, dependencias externas nombradas (Intelimotor, DealerOn, Autofox), y fechas — con el nivel de granularidad que el cliente ha solicitado en cronogramas anteriores (ver sección 4).
+* Candidatos de "mejora del proyecto" con mayor valor técnico identificados en este documento:
+   * (a) Monitoreo automatizado de salud de integración de leads (remitentes autorizados, confirmación real vs. aparente).
+   * (b) Reconciliación de inventario/VIN entre dealers (prevención de publicación simultánea).
+   * (c) Validación/normalización de datos de color (y potencialmente otros campos) en el pipeline de ingesta.
+   * (d) Sistema de alertas de diffs de feed/comportamiento de terceros antes de que lleguen a producción.
+   * (e) Implementación confirmada de redirects 301 para VDPs de inventario vendido.
+   * (f) Panel de CMS con permisos diferenciados para el cliente.
+* Cualquier feature relacionada con el asistente virtual/chat (Darwin) requiere confirmar primero si la pausa comunicada sigue vigente antes de invertir tiempo de desarrollo ahí.

@@ -1,0 +1,405 @@
+00:00:02
+Claudia Guevara
+Y que también sé que hay algunos intermediarios que hemos tenido como DealerOn, terceros que juegan un factor tercero en el que fue Dillerón y Intelmotor, que ahí me queda claro que tú como GoVirtual eres la parte de la plataforma, pero que hay otros participantes y eso nos vuelve también esa parte de integración. Que no nos hemos puesto también de acuerdo por aceptaciones operativas que nos puedan ayudar, no?
+00:00:32
+Claudia Guevara
+Entonces justamente por eso son las personas que quise traer para poder llevar todo esto de manera más perfecto.
+00:00:41
+Salvador Brito
+Juan, como bien nos refiere Clau desde hace tiempo que empezamos a ver lo de la plataforma para poderla implementar con nuestras necesidades y con todo lo demás. Nosotros entendíamos de que esto básicamente iba a ser muy automático. Que todo iba a irse desarrollando muy bien, que todo iba a ir generando sus procesos, sus cambios, sus anotaciones y desafortunadamente no ha sido así.
+00:01:13
+Salvador Brito
+Y es por eso que Claudio y Jo, espérense, vamos a ver qué es lo que sucede, porque no, hemos tenido muchos problemas técnicos, cuestiones comerciales que son las que más nos preocuparían, no en el tema de que hay muchos leads que se nos van, que no captamos y eso son ventas y al final del día nos preocupa mucho y nos afecta demasiado. Entonces queremos sí, este ver qué es lo que está sucediendo. No sé si tú tengas claridad en esto.
+00:01:43
+Juan Berner
+Sí, quieren, este les voy platicando y tengo aquí el respaldo documental para compartir los detalles.
+00:01:51
+Juan Berner
+Sí, es una realidad. Desde el diseño funcional del tema de los leads, puntualmente ha habido muchos problemas en la integración con Intelimotor. Tengo buena relación con el equipo de Intelimotor. No es un tema de pasar una pelota caliente a alguien, ha sido desde el diseño de cómo se generó y nosotros somos responsables de no haber detenido ahí. La integración o haber hecho una auditoría más profunda, eso es responsabilidad nuestra y asumo las, es algo que debimos de haber levantado la mano.
+00:02:29
+Juan Berner
+Hemos hecho la transición a la nueva plataforma, la nueva plataforma nos da mucho más agilidad, respaldo. Estamos en un muy buen momento para si se tiene que hacer rediseño de procesos, ya lo podemos hacer a partir de ya. Tenemos muchas menos condicionantes porque esta ya es una plataforma propietaria. Entonces me parece buenísimo. Gracias por la iniciativa de esta invitación. Yo propondría armar un grupo de trabajo de algunas personas de su lado y de nuestro lado, hacer como una auditoría muy completa.
+00:03:05
+Juan Berner
+Lo cruzamos respecto a porque otra cosa que somos corresponsables es que al principio del proyecto. No hubo un project scoping document que normalmente lo hacemos, fue por andar a las carreras, este no lo definamos, ahorita queremos más o menos esto, ya vi la funcionalidad, entonces yo siento que eso fue un error este de compartido. Nosotros por no detener la bola y decir, espérense, esto es súper importante que lo tengamos desde el momento uno, nuestro proceso así lo dicta, pero por andar a las carreras no lo hicimos, lo podemos hacer ahora.
+00:03:46
+Juan Berner
+Este hubo como mucho, sí, y yo les voy a pasar lo que todo esto. Tengo un transcript. Normalmente lo que hago es ajá. Entonces, en las últimas semanas el enfoque fue migremos a la nueva plataforma. Y en la nueva plataforma tenemos mucha más flexibilidad y menos condicionamientos.
+00:04:19
+Juan Berner
+Entonces, mi propuesta, si quieren revisar dónde estamos y qué falta, lo tengo muy mapeado aquí. Estamos trabajando en ello, pero si es un buen momento para ustedes, para hacer una pausa, revisar muy bien los procesos. Dónde han estado todas las circunstancias de los leads con Intelimotor? Que ustedes tengan el mapa completo de qué pasa una vez que nosotros mandamos estos leads. Por ejemplo, hubo un problema de pérdida de leads en donde nuestra plataforma mandaba el lead y nos respondía con un OK, pero ya no hicimos una doble validación de comparar si todos los formularios estaban como debían.
+00:05:07
+Juan Berner
+Recibíamos de la plataforma de Telemotoro el o ky tal vez donde nuestra nuestro equipo, nosotros fallamos, es ser mucho más incisivos en decir, espérense, ya tenemos el este la respuesta de que están llegando los leads, están llegando todos correctamente o hay algún tipo de problema. Entonces podríamos, si les parece bien, correr un ejercicio completito con la nueva plataforma. Y si ustedes están cambiando algunos procesos, también dennos visibilidad para nosotros adaptar lo nuevo que estamos haciendo asus nuevos procesos.
+00:05:47
+Juan Berner
+Si quieren platicarme de una vez si ya están haciendo algunos cambios a nivel flujo, de una vez y lo metemos actualizamos en el plan de proyecto.
+00:05:57
+Carlos Rodriguez
+Justo uno de los puntos que yo le decía hoy, Abigail es si nos pueden compartir esos flujos que hoy en día existen. Porque hoy en día no se tienen como tal o no se ubican donde está. Por ejemplo, hoy veíamos lo de los famosos child sites que decían, nos decían que eran micrositios. Dijimos, dónde están los micrositios, dicen, no son micrositios, son realmente lista.
+00:06:23
+Juan Berner
+Para las ubicaciones
+00:06:24
+Carlos Rodriguez
+Licencias, por así llamarlo, contenedor de para poder tener una ubicación más que un micrositio. No es de que el micrositio de Cresta del Valle y ahí lo pudieran.
+00:06:36
+Juan Berner
+Sí, es como el directorio de ubicaciones para después tener las nomenclaturas para poder direccionarlos
+00:06:45
+Carlos Rodriguez
+Por ejemplo, eso no lo ubicamos. Esos flujos que hoy en día ustedes tienen nos ayudaría bastante.
+00:06:58
+Juan Berner
+Cuando dices flujos es flujos de navegación y conversión.
+00:07:02
+Carlos Rodriguez
+La interacción, por ejemplo, con Intelimotors. Sabemos que hoy en día se los dejan en un s 3 con el tema con cada hora y por ejemplo, es uno de los puntos que identificamos. Yo estoy en el grupo este de WhatsApp donde van diciendo los mensajes. Y una de las grandes puntos de quejas es no cuadra el inventario y no cuadra porque de entrada en Intelimotor no se manejan puntos de venta.
+00:07:34
+Juan Berner
+Si ustedes, por lo que entiendo, y corrígeme si estoy equivocado, hay vehículos duplicados
+00:07:41
+Carlos Rodriguez
+Más que duplicados es de que se hacen intercambios entre las agencias y al pasar cada hora la información, entonces. Ese auto ya pertenecía a una agencia y lo pueden pasar a un punto de venta. Entonces, al decir o K, no tengo el punto de venta, parecería que está duplicado porque en realidad está en el punto de venta.
+00:08:07
+Juan Berner
+Eso es un buen ejemplo, tal vez de un flujo que no se escribe al principio para identificar el riesgo y decir, oigan, si pasa este escenario. Los datos no van a cuadrar.
+00:08:23
+Carlos Rodriguez
+Sí, de entrada digo hoy que tuvimos esa sesión identificamos que por ahí puede estar ese punto ahora de que, por ejemplo, ahorita son las 5:18, ahorita podrían sacar el inventario y decir tengo 525 unidades, oye, pero el corte fue a las 4:00 de la tarde, a las 5:00, entonces no, ahí tenía yo 523.
+00:08:47
+Juan Berner
+¿A qué hora tomaste la foto?
+00:08:50
+Carlos Rodriguez
+Ya no tomaste la foto, ya no cuadraste.
+00:08:53
+Carlos Rodriguez
+Y eso no se tenía claro exactamente que no es en línea. Cada hora, a lo mejor pueden decir, yo les he dicho que no es en línea, pero el negocio lo ubicaba sí era en línea.
+00:09:07
+Claudia Guevara
+Pero desde su lado nunca hubo un curso. Desde que inició el proyecto
+00:09:11
+Juan Berner
+No hubo un fluto técnico
+00:09:12
+Claudia Guevara
+Ni de proceso, nada.
+00:09:15
+Juan Berner
+No lo hicimos por error, por andar a las carreras en sacar el desarrollo, pero fue como colaborativo el no llegar a ese nivel de definición. En algunas reuniones se tocó el tema de documentemos esto y fue más bien, no usemos la funcionalidad más o menos como ya la vimos en la demo, vámonos para adelante y yo creo que ahí fue. Asumo la responsabilidad de que no fuimos disciplinados que debimos en decir espérense tantito este por orden en el proyecto y para seguir un el proceso de trabajo
+00:09:53
+Carlos Rodriguez
+Eso sí
+00:09:54
+Juan Berner
+Y eso les propongo.
+00:09:58
+Juan Berner
+Hay muchos detallitos que ya estuve preguntando y siento que tal vez son cosméticos que tenemos que arreglar, pero lo más importante que a mí me parece que la conversación tiene que partir de ahí es hoy no es nada fácil para ustedes como responsables del negocio tener trazabilidad de la venta. Creo que los reportes de ventas tienen que andar cruzando mucha información
+00:10:29
+Carlos Rodriguez
+Pero fíjate que aparte de la venta no es funcional, al menos desde la perspectiva en el tema de que tengamos que estarle mandando a ustedes todo el contenido para que se suba a la plataforma. Sí, yo le preguntaba, no tienen un CMS porque.
+00:10:50
+Juan Berner
+El CMS ya lo organicé yo con el equipo de los temas que estuve hablando hace rato. Estamos apuramos una serie de componentes de la plataforma para ya poder salir con velocidad en el proyecto. El CMS. A finales de julio ustedes ya van a tener todas las facultades para en el CMS.
+00:11:14
+Carlos Rodriguez
+En DealerOn
+00:11:15
+Juan Berner
+Siempre lo tuvimos
+00:11:17
+Carlos Rodriguez
+Pero ahí porque no se pasó de alguna manera al negocio. Por qué se hacía a través de ustedes? Es prevención?
+00:11:24
+Juan Berner
+No, el content management system. Ustedes tenían en Dilleron, no entiendo que no tuvo que haber ningún tipo de restricción para que ustedes utilizaran el DMS. Sí, pero.
+00:11:37
+Carlos Rodriguez
+Era más.
+00:11:40
+Juan Berner
+Bien por la organización que por acceso en Dileron, el nuevo content management system que tenía el nuestro, el de la nueva plataforma Ingrid, estamos acomodando las variables para que ustedes de manera funcional puedan manipularlo y esto en a finales de julio a más tardar ya ustedes van a tener todos los accesos.
+00:12:07
+Carlos Rodriguez
+Content Management System
+00:12:10
+Juan Berner
+No en Diller On, se me hace raro el comentario porque en Diller On eran los Accesos.
+00:12:21
+Juan Berner
+Este voy a averiguar esto, la verdad no sé, te dijo quién te dijo esto
+00:12:26
+Carlos Rodriguez
+Lo preguntó Norma y justamente dijeron que no, que no estaba.
+00:12:32
+Juan Berner
+Algo que me dijo Abi hace rato que no sé si hubo una confusión en la comunicación, es que no todas las personas de su equipo estaban totalmente conscientes que ya migramos a la nueva plataforma. Eso es un punto importante para el sitio, ya está en la nueva plataforma y los.
+00:12:51
+Claudia Guevara
+Indicadores, porque no solamente del lado del marketing, son Andrea, Lu y Fernanda.
+00:13:09
+Juan Berner
+Sí, eso me parece que es una confusión. Este 10 días en la nueva plataforma, los indicadores es un periodo de tiempo corto, no es este un periodo suficiente estadísticamente representativo para decir, oigan, esto ya los. Crecimientos en conversión y todo esto son como concluyentes, pero se ven bien. Si quieren, le podemos echar un ojo o se los puedo mandar.
+00:13:40
+Juan Berner
+Este. Pero regresándome un punto, me encanta la idea de que hagamos un grupo de trabajo para, en orden, fijar el proceso, decir o k vamos a hacer un realmente un levantamiento de dónde estamos hoy con base en las expectativas. Crucé también para su información, si es que no es algo que les haya llegado a ustedes, la lista de funcionalidades y lo que se acordó al inicio del proyecto y dónde estamos ahorita.
+00:14:15
+Juan Berner
+Eso también se los puedo hacer llegar y a partir de ahí escucharlos.
+00:14:20
+Salvador Brito
+Sí, Juan, yo creo que aquí hay 2 temas y está muy bien, ahorita ya nos vamos a poner de acuerdo para verlo, pero lo que realmente no creo yo que sea correcto es que llevemos 10 meses operando con este tipo de temas y sin haber terminado en su totalidad los procesos o las cosas que teníamos que ver desde un inicio, porque nosotros desde el principio hemos estado cubriendo los pagos normales de como si el sistema estuviera funcionando así. Y es un tema de colaboración, como bien lo refirió Clau desde un inicio y que nos conocemos en el futuro ya hace mucho tiempo y creo que debemos de establecer muy bien cómo vamos a partir de aquí en adelante y nosotros validar que efectivamente se dé el resultado como estamos esperando que se dé, porque si pasa que en algún momento el tiempo.
+00:15:18
+Salvador Brito
+Transcurre y no sucede nada pues entonces vamos a estar en un doble problema todavía. Entonces yo te quiero proponer lo siguiente, ¿Cuánto tiempo es en que tú determinas que va esto va a llevarnos el hacer los levantamientos y todo lo demás?
+00:15:36
+Juan Berner
+Tal vez un par de depende cómo ordenamos la agenda y quienes ya están listos todas las personas que tienen que participar no más de dos semanas, para que lleguemos a como una definición muy clara este y yo creo que deberíamos también cuestionar si lo que se planteó hace tiempo es lo que su negocio necesita hoy. Les explico. Este con la experiencia de cómo se está operando por ejemplo si nos ayudan también a saber.
+00:16:14
+Juan Berner
+Una vez que se entrega el lead, cómo es el proceso en las agencias, qué va pasando? Hay cosas que podemos nosotros también mejorar desde el principio. Voy a decir algo: cuando viaja la información del lead, es muy bueno que ya haya pasado por el BDC o le cayó directo a alguien de ventas. Es muy bueno que la información que viaja el lead sea clara para que la persona que va a hablar con el cliente tenga el contexto bien resumido y bien claro de qué coche empezaste a ver, qué preguntas hiciste, qué nos dijiste que es importante para ti.
+00:16:51
+Juan Berner
+Todo eso es algo que nunca hablamos.
+00:16:55
+Carlos Rodriguez
+Este, creo que ahí es donde podríamos, sin ser abogado el diablo.
+00:17:03
+Carlos Rodriguez
+Justamente uno de los puntos del negocio es que nos vamos a ir con voz virtual porque justamente ellos tienen esa experiencia y nos van a enseñar. Así es. Hacerlo bien y vale la pena invertirle en la plataforma. Eso fue. Porque justamente ellos ya tienen ese es por eso es que a lo mejor no hubo esa definición completa o ese porque si no es un consultor que nos va a venir a ayudar a ya no a recorrer el camino que yo iniciaría si tuviera que empezar a hacer
+00:17:37
+Carlos Rodriguez
+Y esa es justamente la parte que creo que no ha sucedido, al menos esa es la sensación del negocio.
+00:17:46
+Salvador Brito
+Ahora, partiendo puntualmente de esto, yo lo que quisiera proponerte es esto no va a parar, ustedes en esas 2 semanas el sitio no para, nosotros continuamos, todo activo. Entonces, porque también tiene mucho que ver, el tema económico, no el tema de lo que nosotros estamos pagando mes a mes y que al final del día. Hoy nos venimos enterando por claro que fue el oiga, espérame tantito, no es esto lo que nosotros estamos buscando, lo que se planteó en un inicio.
+00:18:17
+Salvador Brito
+Lo que yo te quiero proponer es que nosotros ya pagamos 10 meses completos. Nos falta, creo que uno nada más. Lo que yo te propongo es que los siguientes 2 meses nos ayudes y no nos cobres esas 2 mensualidades para que nosotros podamos ver el desarrollo, ver que efectivamente todo va jalando bien, que no se va atorar ninguna parte. Y si esto es así, continuamos.
+00:18:45
+Juan Berner
+Contrapropongo este ahí les va. Te digo porque yo estoy dispuesto a algo así. Sin embargo, ha habido desorden que también de muchas cosas que se ha originado de la gestión del proyecto acá. Entonces, por qué no ponemos esos 2 meses en algún lado en donde ustedes dicen yo no los toco ni tú los tocas un scroll, tú lo pones ahí, trabajamos con enfoque, nos comprometemos a una serie de entregables de ambos equipos, sacamos esto adelante y cuando saquemos esto adelante en 3 meses con números enfrente, ustedes decidan si esos si esos 2 meses que están ahí congelados, este por los resultados y por lo que ven en el proyecto y en la plataforma.
+00:19:30
+Juan Berner
+Ustedes deciden unilateralmente si los pagan y eso yo estoy o k con ello. Yo puedo tomar esa decisión, pero lo que quiero decirles con esto es que de cierta manera muchas de las definiciones que faltaron también fue de la forma de trabajo. Yo me comprometo con ustedes a disciplinar mucho a mi equipo y Aldo va a tomar un rol muy protagónico en esto. Que es nuestro director de tecnología y operaciones, y digamos, tener la libertad y la confianza de Seal Cloud.
+00:20:09
+Juan Berner
+Esta decisión que se está tomando como un poco a ligera, no es tan a ligera. Hay que hablar, este hay que hacerlo en forma, nos que la prisa nos provoque cosas que ya aprendimos de la experiencia. Entonces, desde lo económico te propongo, te contrapropongo eso, pongamos ese dinero ahí. Si en hay que hacer el plan de trabajo y definiendo el plan de trabajo ponemos la fecha en donde ustedes, con una evaluación numérica y con todos los elementos en la mano, ustedes decidan si el esfuerzo merece, ese es alinearnos a ese compromiso.
+00:20:53
+Juan Berner
+Yo estaré si ustedes tienen los elementos y yo digo, sabes que sí completamente nos faltó entregar o hacer y queda de nuestro lado. Yo voy a ser el primero en reconocerlo.
+00:21:04
+Salvador Brito
+Okay entonces para darle un poco de forma a esto. Acotemos esto a un periodo de dos meses. Hoy al día nosotros no tenemos certidumbre de absolutamente nada. Y esa es nuestra verdad y te lo planteamos Juan muy claramente. Gobierno de referenció Charlie al principio nos dijo: no, nosotros nos fuimos porque ustedes tenían el expertise, el know how, todo y bueno, si hubo una falta de seguimiento en el momento en el que hasta este momento Clau detectó esto y si lo hubiera, si Clau lo hubiera visto hace 6 meses, pero ahorita hoy estamos así y bueno, pues al final del día vamos a contar esto a un periodo de 2 meses.
+00:21:47
+Salvador Brito
+De revisión y de prueba para ver que todo esté bien. Esos 2 meses los dejamos en una bolsa al final de ese periodo de 2 meses, julio y agosto. Nosotros te decimos, Juan, la verdad estuvo muy bien, adelante, toma, vamos a continuar. Juan, sabes que la verdad estuvo mal, este creo que lo justo es el 50% o Juan, la verdad no nos ha dado resultado. Este. No creo que sea conveniente o justo para nosotros cubrir estas 2 mensualidades y yo.
+00:22:18
+Juan Berner
+Estaré o K con su decisión. Yo lo que pido a cambio es darles unilateralmente la decisión, es tú y yo podemos tener como línea directa para accionar a los equipos este y para asegurarnos de que no se deje pasar alguna definición que puede impactar negativamente el proyecto. Por ejemplo, detallitos como lo del inventario no es tan trascendental, pero genera un ruido y ensucia la información.
+00:22:50
+Juan Berner
+No debimos haber permitido que eso pasara a ese proyecto.
+00:22:53
+Salvador Brito
+Sí es importante. Ahora lo que también te pido es que hay una apertura para nuestra gente de procesos y nuestra gente técnica, porque el tema va a ser. Como no se involucraron, al final del día eso es lo que ha sucedido.
+00:23:07
+Juan Berner
+De acuerdo, y yo les agradecería un montón si también nos dejan ver como el flujo completo para poder detectar y hacer recomendaciones y nosotros incorporar cosas como la originación del lead y la información que viene es bien importante para lo que pase después. Entonces, por ejemplo, nosotros no podemos comprometer indicadores de ventas. Porque pasan muchas cosas desde que llega el lead hasta que sucede la venta, pero si por nudos en el proceso, el tiempo de atención en los leads y el proceso del de atención a los leads no es el mejor, después se nos atora la conversión a cita agendada, cita concretada y venta.
+00:23:57
+Juan Berner
+No, tenemos un buen de experiencia que nos gustaría también poner sobre la mesa. Más allá del alcance del proyecto como para revisar con ustedes, dar sugerencias, estamos haciendo algunos proyectos que en su momento comenté, le dije a Cintia, oye, me encantaría mostrarte esto y eso probablemente para este proyecto les funcione. El tema de los crms y los este dmss es complejo y más en grupos tan multimarca como ustedes.
+00:24:30
+Juan Berner
+Este. Muchas veces tienes que trabajar con el CRM que te pide planta y tú tienes otros procesos. Entonces tienes en el BDC alguien metiéndose de una ventana a otra todo el tiempo, que eso es fatal para la operación. Entonces algo que hicimos fue este proyecto, lo hicimos con Salesforce, extraer toda la data de Salesforce, poner en una capa toda la información en una capa de datos protegida y el BDC.
+00:25:01
+Juan Berner
+En vez de meterse a cuatro herramientas diferentes, toca aquí y tiene el 360 de la información del cliente sin tener que hacer login y logout. Son algunas prácticas que cuando dices, operativamente esto es un problema y las nuevas herramientas con tecnología emergente ya y todo lo que este Antropic ahorita está haciendo pueden ser salidas. Muy inteligentes a problemas muy cotidianos que las marcas te obligan a hacerlo y por proceso tienes que hacerlo, pero hay mecanismos y eso luego se ve en una eficiencia en el seguimiento de los leads, porque los operadores y la gente que está involucrada tiene la información fluida y la información viaja correctamente.
+00:25:51
+Juan Berner
+Son de las cosas que será muy interesante si superamos y haciendo lo básico que tenemos que resolver. Podemos también participar de la conversación y ayudar a que este proyecto tenga mejores resultados. Sí, va o k entonces este cómo le hacemos.
+00:26:13
+Salvador Brito
+Se va a ver un periodo de 2 meses en el cual nosotros vamos a estar trabajando con ellos. Se va a involucrar la gente de Charly, Julio y Agosto, se va a implementar la gente de procesos para que las cosas vayan bien, como debe de ser. Vamos a ver qué tanto nos funciona, cómo mejora. Al final de este periodo nos volvemos a aceptar, mencionamos qué es lo que va a suceder y decimos, oye, fue así, fue asado. Acordamos lo necesario, aunque si hay algún tema en el cual nosotros no estemos de acuerdo, queda decisión nuestra, lógicamente nosotros también vamos a revisar todo lo que debe de ser y en eso quedamos, Perfecto.
+00:26:58
+Juan Berner
+Sí, muy bien, varias cosas. Recibimos la indicación de que no vamos a seguir trabajando con la plataforma de agentes virtuales en este momento.
+00:27:17
+Juan Berner
+Que ahorita lo creo que lo ganamos, pero el domingo y sí, pero me habían dicho que estaba la señal de pausarlo y ayuda.
+00:27:28
+Claudia Guevara
+Como tú.
+00:27:32
+Claudia Guevara
+Ya. Sin embargo aquí que está no me desprendes nada porque es parte del ecosistema. Sí, la respuesta fue que no se podía cancelar. Porque veo el contrato que no fue que tenía un periodo está mejor hay que aprovecharlo y le dije Charlie es un éxito de tu experiencia. Ok. Otra vez no en esta colaboración en conjunto. Perfecto. No que a lo mejor ni mismo a marketing. Ajá de la gente que está aquí conmigo mejor que nos digan. Lo cual si debe ser un flujo con un plan de trabajo.
+00:28:04
+Carlos Rodriguez
+Lo que nos decía Alejandro si se llama así el chico que es el experto en Garmen.
+00:28:10
+Juan Berner
+Germán o.
+00:28:12
+Carlos Rodriguez
+Sofi o era hombre. Hoy participó según yo era Alejandro pero igual estoy confundiendo el nombre. De la gente virtual.
+00:28:21
+Juan Berner
+De la gente de Tomás. No, no me suena. Ahorita checo.
+00:28:28
+Carlos Rodriguez
+Ahora este chico nos decía que tenía una actualización por modelo y que como se había detenido ya no se dice porque anteriormente está basado en ubicación
+00:28:39
+Juan Berner
+Entonces dice mejor por modelo de interés. Este. Yo creo que sí es bueno hacer algunos ajustes, pero mantenerlo porque ayuda mucho a la conversión y trabajar también con ustedes de aprovechar todos los mecanismos de conversión. Que tiene esta tecnología para no quedarnos cortos en el uso. Por ejemplo, se pueden hacer cosas interesantes con códigos QR, se pueden hacer bastantes cosas.
+00:29:11
+Juan Berner
+Hay muchas cosas que se dejaron, hacemos como un research.
+00:29:18
+Salvador Brito
+Ahora yo también, Juan, quiero ser súper claro contigo y súper transparente hoy en día. La verdad, para nosotros esto no ha sido algo de lo que nosotros estamos esperando. Yo en 2 meses incluso te puedo decir, oye Juan, sabes que muchas gracias, ahí nos vemos porque la verdad no es lo que yo me imaginé cuando tú me lo vendiste. Ajá. Entonces yo quiero ser muy claro, muy transparente contigo, porque no se trata de decir, oye, pues ya trabajamos, no. Puede ser que nosotros en un periodo de 2 meses diga, oye Juan, sabes que la verdad.
+00:29:53
+Salvador Brito
+Costo beneficio, no estoy obteniendo lo que estoy. Estoy esperando.
+00:29:58
+Juan Berner
+Para hacerlo muy claro, les propongo que tal vez en estas 2 semanas de haber hecho equipo y de generar este todo ese diagnóstico, ponernos indicadores y decir qué significa que la plataforma está performando de acuerdo a las expectativas, no este y que tú tengas cualitativamente y cuantitativamente. Indicadores para decir esto está jalando o no está jalando.
+00:30:28
+Carlos Rodriguez
+Hoy en día el grupo está muy basado en eso, yo sé que no puedo garantizarte ventas, pero esa es la forma como el grupo mide todo en este negocio, todo lo hace a las ventas. Invertí. El viernes hablaban de once mil dólares mensuales, creo que ahí hay una cifra, no sé si esté equivocado.
+00:30:52
+Juan Berner
+No es menos que.
+00:30:53
+Carlos Rodriguez
+Eso digo, no yo invierto once mil dólares y cuántas unidades vendo, no a través de esa plataforma, entonces el costo beneficio que me está dejando.
+00:31:07
+Juan Berner
+Sí, siendo abogado del diablo y usando tus palabras, hay muchos pasos hasta la venta. En donde nosotros podemos definir algunos procesos como de monitoreo que tal vez les pueden ayudar
+00:31:21
+Carlos Rodriguez
+Para el negocio al final te digo y para el dueño no le invertí tanto que me trajo, que me está dando por esos creo que son 4500 USD, pues 4500 USD que estoy recibiendo, pero.
+00:31:39
+Juan Berner
+Está claro.
+00:31:41
+Juan Berner
+Gracias por el tiempo, Clau, si te parece bien
+00:31:48
+Claudia Guevara
+Ahora nada más, vamos a hacer un pequeño resumen, hacemos un pequeño convenio donde todo lo que hemos acordado hoy queda clarito, lo firmamos y vamos para adelante, ¿te parece?
+00:32:06
+Juan Berner
+De acuerdo, yo les mando el transcript de lo que dijimos con el resumen. Este y de ahí puede salir la carta.
+00:32:14
+Claudia Guevara
+Jorge quiere hablar, adelante Jorge.
+00:32:17
+Jorge García
+Gracias, si me escucharon. Sí, señor. Gracias, Juan. Yo este iba a tratar de no este. Pero la realidad sí este creo que es importante. Yo identifico Google virtual con un proveedor, muy bueno, con un proveedor que tiene mucho conocimiento en las páginas y creo que gran parte del por qué la adhesión que tomamos de ir con ustedes es justo eso, o sea que tienen en distintas marcas un expertismo muy importante, pero siendo transparente, claro y quizá un poco directo, lo que yo percibí aquí y.
+00:33:08
+Jorge García
+Y también comentarlo inclusive por ti es este que los atropellamos al no tener una definición y le entraron a nuestro juegos. ¿En qué sentido? Tú cuando desarrollas algo este sí o sí te tiene que quedar la especificación muy clara para que cuando ocurran las diferencias, no ocurra este tipo de temas como hoy está ocurriendo. Este no por cobrarnos, porque ese es un poco mi sentir en esta ocasión. Este no por cobrarnos durante 1 año, que ese ha sido el tema. Este nos han cobrado durante 1 año. Este como si sí estuviera operando este por no haber tenido una definición y después de 1 año, 10 meses, 11 meses, no sé cuánto va este tener ese.
+00:34:04
+Jorge García
+Esta retro es que no definieron desde el principio, nosotros no lo exigimos y por eso empezamos a entregar mal. Me parecería algo básico cuando desarrollas algo, este es, tienes una especificación, tienes una definición, tienes un alcance, tienes hasta dónde te voy a entregar, qué vas a ver, qué no vas a ver, oye, te propongo esto, no esto antes de aventar COVID. Programar y pagar, me explico, pero lo que yo percibo aquí es que este como si tuvieran la necesidad de que pagaron, pagáramos, pagáronlos y a ver si jala y jaló, y si no jala, pues ahí vamos resolviendo.
+00:34:49
+Jorge García
+Ese es mi sentir en esto que hace con este proyecto, en esta relación con lo virtual. Yo sí creo, como bien decía Salvador. Tener claras las cosas. Hoy no nos sentimos cómodos para hacerte transparente con lo que hoy hemos obtenido de Go Virtual y que hemos pagado mes a mes, con excepción de estos 2 que dice Claudia, y le vamos a seguir pagando a la herramienta que nos proponían, pues sí, para que siga generando.
+00:35:23
+Jorge García
+Con esta mente no lo sé porque este somos los temas. El justo no nos ha dado el resultado este y que esté incompleto y que nos sentimos este que no estaba operando bien y este y pues ya pasó el tiempo. Ese es este es un poquito mi punto. Sí me gustaría este Salvador que pudieran acordar este pues de aquí a un par de meses este sí tener esta este nueva revisión digámoslo así ya final.
+00:36:00
+Jorge García
+Y que tomemos o que podamos tomar esa decisión este así de clarita. Porque sí estuvimos pagando durante un rato.
+00:36:09
+Salvador Brito
+Sí. Perdón, a ver, Sí.
+00:36:12
+Jalil Daher
+Sí.
+00:36:14
+Jalil Daher
+Este. Gracias por.
+00:36:19
+Jalil Daher
+Por ganarme y adoptarme el discurso por media hora porque exactamente iba por donde tú dices este. O me conocen, igual me voy a conocer o muchos han visto ponemos a conocer. Yo todavía voy más directo. Yo no estoy contento con Google virtual. Para mí, este, el proveedor, el proveedor son ustedes y eso de que haya pasado 1 año y no nos hayamos metido, hayamos metido realmente al 100% para que esto funcione como proveedor, pues la verdad a mí me dejan muchas dudas.
+00:36:58
+Jalil Daher
+No estoy nada contento con esto. Yo quisiera que nos involucráramos al 100% de los dos lados y sí probarlo dos meses, pero sin háganos de sentir, como líder de este proyecto, entre otros en este grupo. Yo no estoy contento con lo que han pasado en un año y no sé por qué mis compañeros lo dejaron pasar así, ya no voy a hablar de quienes, no, pero no estoy nada contento.
+00:37:28
+Juan Berner
+Recibido, interiorizado y también para su no sé si es tranquilidad o información. Estamos moviendo a las personas que estaban operando el proyecto, estamos cambiando gente, este y eso es bueno
+00:37:47
+Salvador Brito
+Entonces, ya lo hemos dicho todos, al final del día, este nosotros. Tenemos ya una relación de tiempo con Go virtual, con algunas otras cosas. Somos muy transparentes contigo, Juan. Queremos dejar las cosas súper claras, no es nuestra intención hacer algo que en algún momento después vayamos a tener algún tema. Haremos una minuta de esta reunión, haremos el acuerdo de esta reunión donde todos los puntos de los cuales hoy hablamos se van a plasmar a blanco y negro.
+00:38:18
+Salvador Brito
+Lo firmamos terminando los próximos 2 meses, nos sentamos y determinamos qué es lo que sucede.
+00:38:26
+Juan Berner
+Claramente les parecería bien, de acuerdo, de una vez que pongamos fecha para una reunión con los mismos integrantes que estamos ahorita, por ejemplo, en un mes en donde yo vengo y les presento dónde están las cosas, todos involucrados, antes y después, los números, los flujos, alguien más de ustedes que también presente para que sea. Digamos, la perspectiva también este de desde Autoexplora les hace sentido.
+00:38:58
+Salvador Brito
+Sí, si quieres puedes programar la reunión para el 3 de agosto, les parece 3 de agosto.
+00:39:06
+Salvador Brito
+Entonces programemos la reunión para el 3 de agosto y ahí determinamos qué se qué sigue.
+00:39:15
+Juan Berner
+Les hace sentido?
+00:39:21
+Juan Berner
+Perfecto, horario que les a qué hora.
+00:39:23
+Salvador Brito
+Habíamos pedido 2 meses.
+00:39:26
+Juan Berner
+No, ya en un mes podemos hacer 2
+00:39:29
+Salvador Brito
+Hacemos el 3 de agosto y la definición quedaría más tardar el primero de septiembre.
+00:39:42
+Salvador Brito
+Sí, están de acuerdo Jorge y Jalín.
+00:39:47
+Juan Berner
+¿Qué horario les queda bien el 3 de agosto? Y si pudiera ser presencial, mejor 5 PM, sí, o K ya. Ya lo bloqueo, 3 de agosto, 5 de a.
+00:40:21
+Claudia Guevara
+Sí, te parece bien.
+00:40:29
+Juan Berner
+Me gustaría hacer un team back con mi grupo de trabajo y proponerles una serie de pasos en lo inmediato. Mañana en la mañana se los hacemos llegar. Hoy les mandamos el transcript y digamos el contenido
+00:40:45
+Salvador Brito
+Lo revisamos este
+00:40:47
+Juan Berner
+Pero ya en lo operativo me gustaría mañana en la mañana, por ejemplo, siguientes pasos. Sí, creo que es muy bueno que hagamos este como rediscovery de algunas cosas importantes que no se hicieron inicialmente para tener esa validación. Lo asegurarnos de que lo que estamos entendiendo es realmente lo que. Ustedes nos la información que ustedes nos quieren dar y a partir de ahí definir el calendario de trabajo y quienes participan.
+00:41:22
+Carlos Rodriguez
+Aldo
+00:41:25
+Juan Berner
+Dijiste Alex
+00:41:26
+Carlos Rodriguez
+Dijiste Alex, no sé si ya lo contrataron. Ahí te puede decir quién eres, quedaron en mandarnos eso, la parte de Darwin y la parte de los inventarios para que lo fuéramos bien, no si no lo comparten
+00:41:51
+Juan Berner
+Eso lo metemos dentro de las actividades. Perfecto, o k bien, gracias por el tiempo. Este Yo soy es una compañía que fundé hace 16 años, este y soy una persona muy comprometida con este tipo de soluciones, mi error fue delegar ciertas cosas a personas que no hicieron lo que tenían que hacer, pero nos vamos a ver en un mes de nuevo este y ahí tendremos la información mucho más clara y en paralelo nos vamos organizando en el detalle para avanzar rápido.
+00:42:33
+Juan Berner
+O K estamos.
+00:42:36
+Claudia Guevara
+Jorge Jalil, algún otro.
+00:42:43
+Jalil Daher
+Okay, muchas gracias, estoy en cuando doctor, pero como quedamos, quedamos tiempo, no, y lo vemos.
+00:42:53
+Juan Berner
+Muchas gracias, excelente tarde, cierro aquí y les mando la transcripta en un ratito.

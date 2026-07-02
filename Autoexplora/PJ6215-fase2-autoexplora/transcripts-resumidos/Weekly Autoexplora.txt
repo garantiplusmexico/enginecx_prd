@@ -1,0 +1,33 @@
+# Condensado — Weekly Autoexplora.txt
+
+Sesión semanal de seguimiento operativo entre Lourdes Munguía (cliente) y equipo GV (Aldo Álvarez, Abigail Estrada, Sharon Mendoza, Antonio "Tony" Estrada, Andrea Quintana).
+
+## Decisiones
+- Se aclara la duda del cliente sobre "actividades duplicadas" en el tracker de Fase 2: no son duplicados, son tareas asignadas al cliente para completar vs. tareas de revisión con texto similar. Se acuerda diferenciar con columnas de "comentarios Autoexplora" / "comentarios Go Virtual" en lugar de filas repetidas.
+- Discrepancias de inventario por agencia (Infinity Polanco, Kia Patriotismo, Nissan Imperio Abasto, Imperio Tláhuac, Chilpancingo) se explican por: (a) regla de deduplicación de VIN de Intelimotor (unidad publicada en otra agencia por ser primer publicador), (b) desfase de horario entre el corte del CSV compartido y la actualización en sitio, (c) unidades aún no publicadas por la agencia (Chilpancingo, agencia nueva, pendiente de capacitación/personal).
+- Aldo Álvarez se compromete a automatizar el reporte de comparación CSV-vs-sitio (actualmente manual); mientras se automatiza, actualización cada 2-3 días (no diario); automatización esperada para mediados de la semana siguiente, después reporte diario con alertas proactivas de discrepancias.
+- Se explora obtener de Intelimotor una columna de estado "publicado/despublicado/no publicado" directamente (hoy Intelimotor no la comparte a GV, solo al cliente) para agilizar el cruce de información — Aldo propone enviar correo a Intelimotor solicitando acceso o un reporte equivalente; el cliente ayuda a gestionar esa solicitud.
+- Mapa de calor del sitio: no existe herramienta implementada aún (tampoco existía en el sitio anterior DealerOn, por lo que no habrá comparativo antes/después). GV evalúa herramientas de tracking de clics/mouse (alternativa más simple que estudios de atención visual con cámaras) y, si no es viable, propone medición por tagueo de clics por botón como alternativa. Propuesta con fecha de entrega prometida "esta semana".
+- Tema BBVA (condiciones de financiamiento): resuelto — Lourdes lo encontró en un correo de Sharon, ya cubierto.
+- Presentación de Antonio "Tony" Estrada como nuevo Project Manager de GV para las siguientes fases, en apoyo/relevo parcial de Sharon Mendoza en seguimiento (para que Sharon enfoque más tiempo en desarrollo y puntos críticos).
+
+## Alcance / requerimientos
+- El cliente pidió doble-check sobre el tracker de Fase 1 y Fase 2 para depurar percepción de duplicados.
+- Pendiente de entrega por parte del cliente: logos (a cargo de "Oliver"), base de datos de información validada por agencia (Lourdes, con fecha objetivo el mismo día o la mañana siguiente), assets pendientes.
+- Cliente solicita mapa de calor o indicador de uso del sitio (secciones y formularios más usados) para medir mejora antes/después de la migración.
+
+## Actores
+- **Cliente**: Lourdes Munguía "Lulú" (conduce la sesión), Andrea Quintana "Andy" (sin comentarios adicionales en esta sesión).
+- **Go Virtual**: Aldo Álvarez (automatización de reportes de inventario, evaluación de mapa de calor), Abigail Estrada (coordinación), Sharon Mendoza (revisión técnica de inventario en vivo), Antonio "Tony" Estrada (nuevo PM, presentado en esta sesión).
+- Mencionados sin presencia: Paola (agencias, republicación de unidades), Oliver (logos, del lado cliente), Pablo (confirma avance de capacitación de Autofox).
+
+## Riesgos / pendientes
+- 3 actividades marcadas en amarillo en el tracker corresponden al mismo archivo/listado de agencias (números WhatsApp) — riesgo de no completarse esta semana si no se recibe el insumo a tiempo; se movería a la siguiente semana.
+- Bug de visualización de imágenes en Autofox: en capacitación de agencias a fines de junio; pendiente confirmar si la causa es de enfoque/orientación de imagen o del proceso de carga (mismo tema referenciado en Contexto Técnico).
+- Feed de Intelimotor es compartido entre todos los clientes de Intelimotor (no exclusivo de Autoexplora) — limita qué información granular puede exponerse directamente.
+
+## Fechas / hitos
+- Sesión realizada un lunes (referencia implícita, mismo periodo de Fase 2, ~22 junio 2026 en adelante).
+- Automatización del reporte de inventario: objetivo "mediados de la próxima semana".
+- Propuesta de herramienta de mapa de calor / tagueo: entrega de propuesta "esta misma semana".
+- Entrega de logos y base de datos de agencias por parte del cliente: mismo día / mañana siguiente a la sesión.

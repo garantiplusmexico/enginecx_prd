@@ -1,0 +1,43 @@
+# Condensado — Contexto_Negocio_Relacion_Autoexplora.md.txt
+
+## Decisiones
+- Periodo de prueba de 2 meses (julio–agosto 2026) para evaluar la continuidad de la relación comercial GV–Autoexplora; revisión final el 3 de agosto de 2026.
+- Juan Berner (GV) asume responsabilidad pública por la falta de un project scoping document al inicio del proyecto y por fallas en la auditoría de la integración de leads con Intelimotor.
+- Se está removiendo/cambiando personal de GV que operaba el proyecto.
+- Indicación de NO continuar trabajando con la plataforma de agentes virtuales (Darwin AI) por el momento.
+- Se hará una minuta formal por escrito de los acuerdos de la "Revisión Integral".
+- Posible descuento del 50% o no cobro de los 2 meses de prueba, dependiendo del resultado de la revisión del 3 de agosto.
+
+## Alcance / requerimientos
+- Formalizar documentación de scoping, PRDs y planes de desarrollo (antes inexistente) — urgencia explícita del cliente.
+- Mayor involucramiento del equipo de procesos y técnico del cliente durante el periodo de prueba.
+- Línea directa Juan Berner ↔ contraparte ejecutiva del cliente para escalar decisiones críticas.
+- Cualquier plan de proyecto debe tener nivel de detalle granular: responsable específico, fecha, dependencia externa identificada.
+
+## Actores
+- **Go Virtual**: Juan Berner (dirección de cuenta), Abigail "Abi" Estrada (PM/SEO/QA), Sharon Mendoza (desarrollo/cronograma), Aldo Álvarez (operaciones/IT/BI), Germán Delgado (dashboards Darwin AI), Luis Sánchez, Vivian, Paola, Carlos Flores, Tony (Antonio Estrada).
+- **Autoexplora / Autofin / Autogine**: Lourdes Munguía "Lu" (líder de proyecto cliente), Andrea Quintana "Andy" (tickets/leads), Fer Márquez (enlace TI/Intelimotor), Cristian Mendoza (segundo al mando, SEO), Claudia Guevara "Clau" (directora de proyecto), Sofía (UX). Escalado ejecutivo: Salvador Brito, Jorge García, Jalil Daher, Carlos Rodriguez.
+- **Intelimotor**: Mario Villarreal (cuenta), Edgar Bahena (ingeniero principal), Fernanda García/Estefanía (soporte).
+- **Darwin AI**: Germán Delgado (GV) como punto de contacto.
+
+## Riesgos / pendientes
+- Alto riesgo de terminación de contrato en la revisión del 3 de agosto de 2026 si no hay mejora demostrable.
+- Vencimiento del contrato de servicio DVA Logística el 31 de julio de 2026, sin renovación automática — decisión pendiente.
+- Confirmar si la pausa de Darwin AI sigue vigente antes de retomar cualquier iniciativa relacionada con el chatbot.
+- Todo trabajo de desarrollo/documentación entregado en las próximas semanas se presentará como evidencia en la revisión del 3 de agosto — la calidad y trazabilidad de la documentación pesa directamente en la continuidad del contrato.
+
+## Fechas / hitos
+- Kickoff formal de migración: ~27 abril 2026.
+- Go-Live Fase 1: 15 junio 2026.
+- Inicio Fase 2 (mejoras post-migración): 22 junio 2026.
+- Ventana de ejecución Fase 2 (34 tickets): 22 junio – 24 julio 2026.
+- Compromiso de acceso completo del cliente al CMS: fin de julio 2026.
+- Vencimiento contrato DVA Logística: 31 julio 2026.
+- Reunión de decisión de continuidad de contrato: 3 de agosto de 2026.
+
+## Reglas de comunicación (a respetar en cualquier entregable de cara al cliente)
+- Tono no acusatorio ni confrontacional hacia el cliente ni terceros (Intelimotor, DealerOn).
+- Formato WhatsApp-compatible en mensajes a cliente: texto plano, asteriscos para negritas, viñetas, sin tablas.
+- Minutas/action items: formato "Tarea - Responsable persona específica - Fecha", agrupado por parte responsable.
+- Separar briefs internos (contexto técnico completo) de mensajes a cliente (lenguaje simple, cálido, sin jerga).
+- Validar afirmaciones citando línea y cita textual del transcript antes de comunicar al cliente.

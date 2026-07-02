@@ -1,0 +1,34 @@
+# Condensado — Revisión Integral Proyecto Sitio Web Autoexplora.txt
+
+## Decisiones
+- Se acuerda un periodo de prueba de 2 meses (julio-agosto). Las 2 mensualidades de ese periodo quedan "congeladas"/en una bolsa: al final, el cliente decide unilateralmente si las paga completas, al 50%, o no las paga, según resultado.
+- Juan Berner (GV) reconoce públicamente: no hubo project scoping document al inicio ("por andar a las carreras"), no hubo auditoría profunda de la integración de leads con Intelimotor, y GV confió solo en la respuesta "OK" del sistema sin doble validación.
+- GV está moviendo/cambiando al personal que operaba el proyecto.
+- Se recibió la indicación de NO seguir trabajando con la plataforma de agentes virtuales (Darwin AI) por el momento — aunque el contrato no se puede cancelar (periodo vigente), se evalúa mantenerlo con ajustes (ej. actualización por modelo de interés en lugar de por ubicación).
+- Se acuerda una reunión de decisión final el 3 de agosto de 2026 a las 5pm (idealmente presencial), donde GV presentará estado antes/después, números y flujos; la definición final quedaría a más tardar el 1 de septiembre.
+- Se hará una minuta/convenio formal por escrito de todo lo acordado, firmado por ambas partes.
+- GV se compromete a un "rediscovery" de dos semanas: levantamiento de flujos actuales, definición de indicadores cualitativos/cuantitativos de desempeño de la plataforma, y actualización del plan de proyecto.
+
+## Alcance / requerimientos
+- El cliente solicita explícitamente que se les compartan los flujos de navegación/conversión existentes (hoy no están documentados ni ubicables) — ejemplo citado: confusión sobre "child sites" (en realidad contenedores/licencias de ubicación, no micrositios).
+- Acceso completo del cliente al CMS de Brick comprometido para finales de julio 2026 (contrasta con la percepción del cliente de que en DealerOn "nunca tuvieron acceso").
+- El cliente pide reportes de venta con trazabilidad y visibilidad de todo el proceso desde que llega el lead hasta la conversión (BDC → cita → venta), incluyendo contexto del lead para quien atiende.
+- Grupo de trabajo conjunto GV + cliente (procesos + técnico) para auditoría completa de flujos de leads.
+
+## Actores
+- **Cliente (escalado ejecutivo)**: Salvador Brito, Jorge García, Jalil Daher, Carlos Rodriguez, Claudia Guevara "Clau" (convocó la reunión).
+- **Go Virtual**: Juan Berner (fundador, 16 años de la compañía, asume responsabilidad y lidera la respuesta), Aldo Álvarez (mencionado como director de tecnología y operaciones, tomará "rol protagónico").
+- Mención de un especialista de Darwin AI (nombre confuso en transcript: "Alejandro" o "Germán", posible referencia a Germán Delgado) — no confirmar sin verificar.
+
+## Riesgos / pendientes
+- **Riesgo de terminación de contrato**: Jalil Daher declara explícitamente "no estoy contento con Go Virtual"; Salvador Brito advierte que en 2 meses podrían cortar la relación si el costo-beneficio no mejora (cita inversión de ~$11,000 o $4,500 USD/mes vs. resultado de ventas percibido).
+- Discrepancia de inventario no cuadra por diferencias de "foto"/corte horario entre el feed de Intelimotor (no en línea, actualización por hora) y la expectativa del negocio de que fuera en tiempo real — fuente de quejas recurrentes en grupo de WhatsApp del cliente.
+- Confusión sobre acceso al CMS: el cliente entendía que en DealerOn "siempre lo tuvieron", pero "Norma" (TI del cliente) reportó que no — pendiente de aclarar internamente por GV.
+- Pendiente que GV comparta con el cliente: la lista de funcionalidades acordadas al inicio del proyecto vs. estado actual, y los flujos completos de Darwin AI e inventarios.
+- Toda esta reunión es evidencia crítica de contexto: cualquier trabajo de desarrollo entregado en las próximas semanas será juzgado en la revisión de continuidad.
+
+## Fechas / hitos
+- Reunión de "Revisión Integral" (esta transcripción): fecha de la crisis escalada, punto de partida del periodo de prueba.
+- Rediscovery/diagnóstico conjunto: ~2 semanas desde esta reunión.
+- Reunión de seguimiento: 3 de agosto de 2026, 5pm, idealmente presencial.
+- Definición final de continuidad de contrato: a más tardar 1 de septiembre de 2026.

@@ -1,0 +1,440 @@
+Aldo Álvarez • 00:00:00
+¿O quieres que revisitemos punto por punto lo que me fuiste comentando el viernes? Algunas son dudas, otras tengo comentarios. Pues
+
+Lourdes Munguia • 00:00:09
+creo que los temas más importantes que traemos, que en este caso es la mejora del sitio, y ya posterior, pues justo como alguna observación o alguna solicitud adicional que se tenga. Como ven,
+
+Aldo Álvarez • 00:00:24
+ok. Entonces, vamos a revisar el timetable de las mejores para el sitio.
+
+Lourdes Munguia • 00:00:31
+Sí, no sé si me pueden ayudar a presentar porque no me deja por alguna razón.
+
+Abigail Estrada • 00:00:42
+¿Tienes el archivo abierto, Tony?
+
+Antonio Estrada • 00:00:48
+Sí, aquí ando. Déjame, ya lo estoy compartiendo.
+
+Antonio Estrada • 00:01:03
+Listo.
+
+Lourdes Munguia • 00:01:05
+Vale, muchas gracias. Estuve justo revisando el plan,
+
+Lourdes Munguia • 00:01:10
+la cosa, si ahorita ven dos pestañitas, justo agregué todas las actividades que ya sé o las mejoras que ya implementamos. En fase 1, justo para que se puedan leer como en este archivo, no, porque justo ahí me lo pidió Clau. Ya está como, como check y todo pues está entregado, no. En la pestaña 2 que viene en mejoras de fase 2 viene justo el seguimiento de la semana pasada y lo que vamos a tener esta semana y lo que sigue. Y justo vi el contraste de la pestañita 3 que es cronograma versus la pestañita de mejoras Mejoras Fase 2, en la columna de, creo que es la columna B, que está más a la izquierda,
+
+Lourdes Munguia • 00:01:58
+ahí, este, la C, perdón. Estuve checando justamente las actividades versus lo que tengo en la pestañita 2 de Mejoras Fase 2 y veo que algunas cosas se repiten. De hecho, por ejemplo, lo que no puse en bold que es de la sección C, justo lo que se repite. No sé ahí si tenga alguna razón de ser, porque por ejemplo vi lo de formulario de Vende tu Auto, que justamente es enviar el correo,
+
+Aldo Álvarez • 00:02:28
+implementarlo
+
+Lourdes Munguia • 00:02:28
+y todo, y me fui más abajo y se repetía. Entonces no sé si para ustedes tenga algún sentido tenerlo dos veces, o sean actividades o entregables diferentes, nada más como para entender.
+
+Abigail Estrada • 00:02:47
+Este específico.
+
+Abigail Estrada • 00:02:57
+Ok, hay algunas tareas que se repiten. Bueno, no es que se repitan, es que algunas tenemos con dependencia de ustedes y algunas son tareas de revisión.
+
+Lourdes Munguia • 00:03:15
+Porque, o sea, revisé y realmente el texto del concepto es el mismo, pero no sé si valdría la pena solo ponerlo una vez y a lo mejor más adelante en una columna pues ponerle comentarios Autoexplora, comentarios Go Virtual, como para Porque justo revisé,
+
+Abigail Estrada • 00:03:32
+igual
+
+Lourdes Munguia • 00:03:32
+cambiamos
+
+Abigail Estrada • 00:03:33
+el texto para que sea más claro
+
+Abigail Estrada • 00:03:37
+y que no confunda, pero en realidad las tareas están ahí porque digamos que son como tareas asignadas a ustedes para que se puedan completar.
+
+Lourdes Munguia • 00:03:48
+Sí, digo, ahí sí me pueden ayudar a hacerle doble check porque sí, como
+
+Abigail Estrada • 00:03:52
+que me causó
+
+Lourdes Munguia • 00:03:53
+duda de que se repetían dos actividades. De hecho, las pueden notar porque están en bold. Las que yo hice match con el archivo, que es la pestañita 2 de mejoras fase 2, y lo que no está en bold es lo que vi como duplicado. Es nomás justo ahí identificar como por qué, y si hay justo algún comentario por parte de nosotros o de ustedes, pues valdría a lo mejor la pena dejar un solo, una sola actividad, y adelante pues justo colocar el comentario, ¿no? Para que sea como mejor la lectura, no sé cómo vean.
+
+Abigail Estrada • 00:04:28
+Igual cambiamos en la redacción de la tarea para que se entienda que es una tarea de revisión y puede, pueda usar el, en la contabilización de tareas podamos tener claro cuántas nos faltan.
+
+Lourdes Munguia • 00:04:42
+Pero
+
+Abigail Estrada • 00:04:43
+si no te preocupes, lo revisamos.
+
+Lourdes Munguia • 00:04:46
+Vale. Y dentro de este mismo plan vi que justo el viernes se cumplieron ciertas, este, actualizaciones que en este caso justo revisé y todas ya fueron concluidas. Ahí pues digo, les agradezco. Queda pendiente justo la parte del error de la visualización de las imágenes, que esto pues es un tema de Autofox, que es un aplicativo interno. Ya el equipo de agencias está recibiendo capacitación. De hecho, ahí Pablo me confirmó. En cuanto pues tengan ya un avance y demás, les les comento para que podamos revisar y ver ahí si es del lado de la carga que están haciendo las agencias o hay algún tema en el enfoque de la imagen, ¿no? Que, o sea, ya me mandaron ahí justo el link, pero nada más como para hacer doble check, ¿no? En lo que carguen las agencias.
+
+Lourdes Munguia • 00:05:45
+Listo.
+
+Abigail Estrada • 00:05:45
+Y dentro
+
+Lourdes Munguia • 00:05:48
+Dentro de estas actividades viene la parte de la entrega de los logos, que justamente hoy se los mando. Mi compañero Oliver está justo trabajando en ese entregable para poderlo tener y que nos ayuden a hacer esta actualización. En la parte de la base, que justamente es la que estoy trabajando, ya estoy por concluirla porque lo que estoy haciendo es justo verificar con cada agencia que la información que hayan registrado sea correcta. Y hay algunos campos que todavía están pendientes, pero mi intención pues ya es tenerlo hoy, máximo mañana en la mañana, y podérselos entregar. Aquí justamente era lo que te comentaba, Abby, si es posible que me ayuden actualizando la fecha de entrega y sobre eso pues la fecha de resolución de su lado.
+
+Abigail Estrada • 00:06:38
+De acuerdo. Aquí, Sharon, no sé, y Tony, no sé si ya tuvieron chance de revisarlo para actualizar la fecha de entrega.
+
+Antonio Estrada • 00:06:48
+Sí, justo lo revisamos hace rato. Tenemos 3 marcadas. Sé que nos habías puesto solo 2, Lulú, pero todas tienen relación con lo mismo. Entonces, como en la misma, en el mismo archivo viene el listado con números correspondientes de cada agencia, de números de WhatsApp, este listado de agencias con nombre modificado, entonces son parte de, son las mismas tareas que corresponden a un mismo archivo. Entonces nada más para que sepas por qué los modifiqué los 3, los puse en amarillito justo para poder revisar y entender los que son parte del mismo. Con
+
+Lourdes Munguia • 00:07:24
+Char
+
+Antonio Estrada • 00:07:25
+estábamos justo revisando, sin caso de que se recibieran el primero o más allá,
+
+Lourdes Munguia • 00:07:32
+pues
+
+Antonio Estrada • 00:07:32
+prácticamente ya la actividad se quería quedaría comprometida, ya no alcanzaríamos a atenderlo dentro de esta misma semana. Entonces,
+
+Lourdes Munguia • 00:07:41
+ya se estaría
+
+Antonio Estrada • 00:07:42
+moviendo hacia la siguiente.
+
+Lourdes Munguia • 00:07:44
+Sí, justo les decía que esa fecha me ayuden a actualizarla, porque al final va a haber una actualización.
+
+Antonio Estrada • 00:07:53
+Ok.
+
+Lourdes Munguia • 00:07:54
+Que en la pestañita 2 sería el punto de la celda 16 y 17. Ya en el plan ustedes me ayudan a actualizarlo para que usted tengan más fechas, ¿no?
+
+Antonio Estrada • 00:08:04
+Correcto. Sí, síntoma.
+
+Lourdes Munguia • 00:08:07
+Y bueno, de ahí en fuera creo que vamos check. Estoy ya trabajando en la parte de los insumos para los correos, para lo que hay que actualizar, ¿no? Con tema de los assets que necesitan. No sé si de este plan, ¿no? Del avance que se tiene, tengan algún comentario.
+
+Abigail Estrada • 00:08:36
+Abby,
+
+Antonio Estrada • 00:08:36
+Tony.
+
+Abigail Estrada • 00:08:37
+No, realmente,
+
+Abigail Estrada • 00:08:40
+igual si nos puedes contar un poco sobre los avances, ¿ves algún tema que pudiera bloquearnos, algo que pudiera retrasarnos?
+
+Sharon Mendoza • 00:08:53
+De momento
+
+Lourdes Munguia • 00:08:54
+No,
+
+Sharon Mendoza • 00:08:55
+no más allá de los puntos que se comentaron ahorita, que es la dependencia de la información.
+
+Sharon Mendoza • 00:09:04
+Y pues bueno, tal como acaba de comentar Lulú, que ya nos va a compartir la parte de los logos,
+
+Lourdes Munguia • 00:09:10
+pues
+
+Sharon Mendoza • 00:09:10
+con ese ajuste sí podríamos estar avanzando para la entrega que está prevista.
+
+Abigail Estrada • 00:09:21
+De
+
+Lourdes Munguia • 00:09:23
+acuerdo. El siguiente punto sería el tema de las, de la republicación de unidades en Intelimotor, ¿no? De Infinity Polanco, Kia Patriotismo y Nissan Imperio Abasto. Revisando con Paola, me comenta que ya republicaron. Entonces justo mi pregunta es si ya se ven las unidades. Y de aquí a Chilpancingo, me comentó Paola que creo
+
+Abigail Estrada • 00:09:49
+que
+
+Lourdes Munguia • 00:09:50
+van a tardar, yo creo, por ahí del miércoles, jueves, a tener las unidades cargadas.
+
+Lourdes Munguia • 00:09:59
+No sé si detectaron algo en el sitio, avísame.
+
+Sharon Mendoza • 00:10:06
+Dame un segundo,
+
+Abigail Estrada • 00:10:07
+Luz,
+
+Sharon Mendoza • 00:10:08
+para entrar a revisar. Y poder confirmar si ya estaba recibiendo unidades.
+
+Sharon Mendoza • 00:10:19
+Comentaste que era— ¿patriotismo?
+
+Lourdes Munguia • 00:10:24
+Ajá.
+
+Sharon Mendoza • 00:10:38
+Te robo un poquito la pantalla, Toni.
+
+Sharon Mendoza • 00:10:48
+De este lado, Lulú, justo ya estamos recibiendo unidades de las 3 agencias. Entonces, con Infinity Polanco tenemos 12 unidades. Me parece que es de las que revisamos, bueno, más bien me pediste revisar el día de hoy. Si no me equivoco, el resumen era 13 unidades publicadas. Únicamente vemos 12 porque la unidad faltante está publicada en otra agencia, que si no me equivoco era Imperio Oriente, debido a la regla de la duplicidad de bits. Imperio Oriente la publicó antes que Infinity Polanco, por eso es que esa unidad nos llega en esa otra agencia y no en Infinity Polanco.
+
+Sharon Mendoza • 00:11:39
+De Kia Patriotismo ya tenemos 13 unidades y de Nissan Imperio tenemos 7, 7 unidades.
+
+Lourdes Munguia • 00:11:51
+O sea, con el inventario que te compartí en la mañana, si te cuadro, la actividad?
+
+Sharon Mendoza • 00:11:59
+Dame un segundito para poder confirmar lo que les envié.
+
+Sharon Mendoza • 00:12:11
+Pero sí, mira,
+
+Sharon Mendoza • 00:12:15
+de lo que vendría siendo Imperio Tlahuac,
+
+Sharon Mendoza • 00:12:21
+En el momento en el que tú nos mandaste el archivo teníamos 26 unidades. De esas 26 unidades, 3 estaban en despublicado, si no me equivoco, y ustedes tenían una unidad más que a nosotros no nos estaba llegando. En la actualización de la siguiente hora de Intelimotor, la unidad nos llegó. Junto con un cambio adicional de un BIM de los que teníamos ahí como despublicados, cambió a publicado. Entonces, para el momento en el que yo te compartí este, pues, este cruce, nosotros ya en lugar de 26 teníamos 28 unidades, y eso pues ya estaba más de acuerdo con las 30 unidades que teníamos con ustedes en el CSB, y únicamente se quedaron 2 en despublicadas. Entonces, eso en cuanto a Imperio Tláhuac. De Quiahtlipantzingo, bueno, ya nos comentaste que van a demorar un poco en tener más unidades. Sin embargo, nuevamente, la única que ahorita viene en el CSB que tú nos compartes está en no publicado. Entonces es por eso que es normal que de este lado no tengamos la agencia. Esto para no mostrar un resultado de 0 unidades por la agencia. Entonces por eso no la vamos a encontrar de este lado. Cuando tengamos las unidades publicadas es que vamos a poder visualizarlas en el sitio.
+
+Sharon Mendoza • 00:14:06
+Después tenemos Nissan Imperia Busto. En el sitio tenemos 3 unidades y concuerdan totalmente con las unidades que tenemos en el CSV que tú nos compartes, ya que solamente hay 3 con estado de publicado y el resto están en despublicado o no publicado. Entonces esto está correcto. Y lo que te comentaba de Infini-Ti Pulanco, con ustedes nos muestran 13 unidades, pero el sitio únicamente muestra 12 porque la tercera, la tercera, la, bueno, la unidad faltante que corresponde a este bien está publicada en Imperio Oriente. Entonces, por eso es que no la tenemos visible. En el inventario de Infinity Polanco.
+
+Lourdes Munguia • 00:15:03
+Okay.
+
+Sharon Mendoza • 00:15:06
+Y listo.
+
+Lourdes Munguia • 00:15:07
+Vale, sí, para pasar el reporte, este, pues bueno, creo que ahí con la parte de Chilpancingo, sí, igual ahorita le volví a preguntar a Paola y me comentan que como es nueva, creo que hay como de personal, pero pues ella nos va a ayudar a empujar a que carguen la información para que se refleje. Entonces, en cuanto ya esté cargado, les aviso para que podamos
+
+Sharon Mendoza • 00:15:31
+crear
+
+Lourdes Munguia • 00:15:32
+la información.
+
+Sharon Mendoza • 00:15:35
+De acuerdo,
+
+Lourdes Munguia • 00:15:36
+adelante, Aldo.
+
+Aldo Álvarez • 00:15:37
+Esto tiene que ver justo con el tercer punto que me comentabas de la actualización del reporte de inventarios. Hoy tuve oportunidad de platicar con Sharon del proceso donde me
+
+Lourdes Munguia • 00:15:48
+comparten
+
+Aldo Álvarez • 00:15:49
+el archivo CSV, yo comparo contra el sitio y hago un resumen. Lo vamos a automatizar para que esté siempre disponible. Entonces, lo que sí es que probablemente en el periodo en el que lo voy a automatizar, o sea, probablemente pierdas visibilidad algunos días. Vamos a estar tratando de actualizarlo cada 2 o 3 días, no va a ser diario en este periodo en lo que estoy actualizando, pero en cuanto yo automatice, que yo espero termino a mediados de la próxima semana, ya vas a empezar a verlo todos los días. En que yo sigo de manera proactiva, te vamos a decir cuando haya discrepancias. O sea, por ejemplo, tú me dices
+
+Lourdes Munguia • 00:16:20
+que hay
+
+Aldo Álvarez • 00:16:20
+30 unidades en una y yo veo 29, pero porque la otra está en otra ubicación, yo ya te te puedo decir en qué ubicación está para que lo tengas por anticipado.
+
+Aldo Álvarez • 00:16:30
+Ya lo trabajamos con el equipo, le vamos a invertir recursos, y yo creo que la próxima semana te mostramos el resultado.
+
+Lourdes Munguia • 00:16:36
+De acuerdo, cierto. Sí, sí, sobre todo para evitar que lo de ahorita, no, que a lo mejor esta agencia
+
+Aldo Álvarez • 00:16:43
+nos
+
+Lourdes Munguia • 00:16:44
+reportó la diferencia, y pues al final nosotros estar como todo el tiempo monitoreando, y al contrario, no reportarles, oye,
+
+Aldo Álvarez • 00:16:50
+porque
+
+Lourdes Munguia • 00:16:50
+esto no está bien. Porque
+
+Aldo Álvarez • 00:16:52
+no,
+
+Lourdes Munguia • 00:16:53
+no, no puedo.
+
+Aldo Álvarez • 00:16:55
+Lo único que valdría la pena, si quieres, un poco para reducir cargas de trabajo, es notamos que en la información que nos comparte Intellimotors a nosotros versus la que te comparte a ti, que tú nos reenvías, tú sí tienes el detalle de publicado y despublicado de Diggeron, que es una columna que nosotros no tenemos. Entonces, si pudiéramos platicar con Intellimotors para que nos den acceso a esa información, entonces ya nos la compartirían directo y tú ya no me tienes que mandar el file. Más bien, en cuanto yo lo reciba de Intellimotors, te hago el estudio te lo deposito en un espacio y tú ya lo consultas. Entonces así pudiera ser poquito más ágil.
+
+Lourdes Munguia • 00:17:30
+Pero por ejemplo, ¿tú necesitarías un acceso o qué tipo de información?
+
+Aldo Álvarez • 00:17:36
+No, ya hoy nos manda. Sharon, ¿puedes mostrar la diferencia entre los dos documentos, entre el que nos comparte Yuvia y que nos comparten nosotros en Tally?
+
+Sharon Mendoza • 00:17:47
+Sí, denme un segundo para abrirlas.
+
+Lourdes Munguia • 00:17:53
+Spanish.
+
+Sharon Mendoza • 00:17:54
+Um, well,
+
+Aldo Álvarez • 00:17:55
+this
+
+Sharon Mendoza • 00:17:56
+is the complete.
+
+Sharon Mendoza • 00:18:04
+Okay, this is
+
+Aldo Álvarez • 00:18:05
+the
+
+Sharon Mendoza • 00:18:05
+last one.
+
+Sharon Mendoza • 00:18:11
+This is the— this is the archivo that you nos compartes, Lulu. Entonces, justo a la columna que se refiere Aldo es a esta, ¿no? Porque con esta es con la que hacemos el cruce de la información que tenemos en el sitio y con la que tienen ustedes. Esta es lo del detalle justo de publicado, despublicado o no publicado, pero Intelimotor a nosotros nos manda algo como esto,
+
+Sharon Mendoza • 00:18:46
+que tal cual es únicamente información básica que nosotros mostramos en el sitio. Es decir, de dónde proviene el bien, si está nuevo, usado, año, marca, modelo, versión, características, fotografías, si es que hay algún, algún comentario por parte de las agencias. Posibles tags, pero de dónde se encuentra, fecha
+
+Aldo Álvarez • 00:19:14
+de
+
+Sharon Mendoza • 00:19:14
+adquisición, y es
+
+Lourdes Munguia • 00:19:15
+todo.
+
+Sharon Mendoza • 00:19:16
+Esto es
+
+Aldo Álvarez • 00:19:16
+lo único
+
+Sharon Mendoza • 00:19:17
+que nosotros vemos.
+
+Abigail Estrada • 00:19:18
+Y algo importante también a mencionar es que este feed es de todos los clientes que tenemos con Intellimotor, o sea, no solamente de AutoExplorer.
+
+Sharon Mendoza • 00:19:28
+Entonces
+
+Aldo Álvarez • 00:19:28
+lo que vamos a hacer, si quieres, para agilizarlo, es podemos disparar nosotros un correo a Intellimotor. Podemos copiar el reporte que tú nos mandas, Julio, y decirles oye, ayúdame a generar un reporte como este o da un acceso para poder consultar este tipo de información, para poder dar estatus constantemente a Autoexplora. Lo que te pediría es que nos apoyes sobre ese correo para que Intelemotors sí nos dé la información o el acceso, y con eso pues ya nosotros podemos hacer el reporte.
+
+Lourdes Munguia • 00:19:56
+Vale, sí, está bien, de acuerdo, lo consulto y cualquier cosa les aviso. El
+
+Aldo Álvarez • 00:20:04
+otro
+
+Lourdes Munguia • 00:20:05
+punto es, justo platicando con Cristian, me comentó si era posible que nos puedan apoyar con algún mapa de calor del sitio actual para ir viendo, o sea, qué secciones utilizan más los usuarios. Y en este caso, si los formularios pues también son utilizados, ¿no? Y a lo mejor en
+
+Aldo Álvarez • 00:20:27
+qué
+
+Lourdes Munguia • 00:20:27
+hora
+
+Sharon Mendoza • 00:20:28
+y cuáles.
+
+Lourdes Munguia • 00:20:29
+Son en mayor frecuencia usados. No sé si esto puede ser posible y también saber si tienen de casualidad algún, no sé, mapa o indicador del sitio anterior, o sea, como para que también veamos esa diferencia del antes y el después.
+
+Aldo Álvarez • 00:20:48
+Mira, ahí, y si yo digo algo que no es, por favor me corrigen, Avishar. O sea, el sitio anterior Percé no tenía un aplicativo para medir mapa de calor. De hecho, el actual tampoco lo tiene porque estamos evaluando apenas un par de herramientas para poder implementar. Porque ojo, esto ya te hablo yo de mi experiencia. A lo mejor hoy en día hay otro tipo de herramientas que apenas estoy empezando a explorar para darte alguna alternativa, pero en mi experiencia las herramientas de mapa de calor tenían que ver con la atención visual del cliente y eso requería estudios con cámaras y lentes y era verdaderamente un show sacar un mapa de calor. Oye, en día no sé si ya hay una herramienta que mide, o sea, per se la navegación del clic, per se el movimiento del mouse, per se el ABCD. Y si encuentro una alternativa, esta misma semana tengo una propuesta de más o menos cómo se ve, para cuándo lo tendríamos y lo exploramos. El sitio anterior no lo tendría, entonces el comparativo no hay. Si no se puede hacer eso, entonces lo que haríamos sería más bien hacer una evaluación por tagueo. Que el tagueo significa, o sea, cada botón tiene su tagueo. Yo sí puedo medir los clics de los botones y entonces simular el mapa de calor de acuerdo a la concentración de los clics. Me va a tomar un poquito más de tiempo, pero al final esa es la alternativa más compleja, pero que es factible. Entonces déjame evaluar, o sea, un par de herramientas para darte alguna alternativa. En el transcurso de la semana te la comparto y ya te doy fecha de entrega.
+
+Lourdes Munguia • 00:22:16
+Sí, por favor, para ir viendo cómo se comporta
+
+Aldo Álvarez • 00:22:20
+el
+
+Lourdes Munguia • 00:22:20
+sitio, qué sección también es la que probablemente usen más, y eso nos va a ayudar a nosotros a mejorar aún mejor el sitio, ¿no?
+
+Aldo Álvarez • 00:22:29
+Sí, claro.
+
+Lourdes Munguia • 00:22:32
+No sé si tengan algún otro punto que agregar. La verdad es que de mi lado estoy che.
+
+Aldo Álvarez • 00:22:37
+De lo que me comentaste el viernes nomás quedó uno. Yo me preguntaba si te confirmara el primer formato del tema de las condiciones de financiamiento de BBVA.
+
+Lourdes Munguia • 00:22:48
+Ah, no, no te preocupes, eso ya lo encontré.
+
+Aldo Álvarez • 00:22:51
+Lo
+
+Lourdes Munguia • 00:22:51
+encontré en un correo que mandó Sharon y también estaría ya cubierto.
+
+Aldo Álvarez • 00:22:57
+OK, sinceras disculpas porque la verdad yo me quedé con dudas, no te pude contestar, perdóname, pero qué bueno que ya encontraste el formato.
+
+Lourdes Munguia • 00:23:05
+No te preocupes, sí, ya lo tengo. Ya nada más justo de la parte del plan, si me pueden ayudar a hacerle doble check sobre esas funciones que yo
+
+Aldo Álvarez • 00:23:16
+la
+
+Lourdes Munguia • 00:23:16
+verdad los vi duplicados. De cualquier forma, ya les puse en la pestaña 1 y 2, fase 1 y 2, y ya vienen tal cual lo que ya hemos avanzado. Este, en cuanto yo tenga los entregables de los assets pendientes que les debo, se los mando, y la base también, que es la que más importa ahorita entregar para ustedes.
+
+Aldo Álvarez • 00:23:38
+Ok, claro que sí.
+
+Abigail Estrada • 00:23:41
+De acuerdo, muchas
+
+Aldo Álvarez • 00:23:42
+gracias.
+
+Lourdes Munguia • 00:23:43
+Muchas
+
+Aldo Álvarez • 00:23:43
+gracias. No sé si
+
+Abigail Estrada • 00:23:47
+Fer o Andy tengan algún otro tema.
+
+Andrea Quintana • 00:23:52
+No, todo bien.
+
+Abigail Estrada • 00:23:55
+Muy bien, perfecto.
+
+Lourdes Munguia • 00:23:57
+Listo,
+
+Abigail Estrada • 00:23:57
+pues
+
+Lourdes Munguia • 00:23:58
+muchas gracias.
+
+Aldo Álvarez • 00:23:59
+Gracias, buena tarde.
+
+Abigail Estrada • 00:24:00
+Gracias a ustedes, buena tarde, bye.

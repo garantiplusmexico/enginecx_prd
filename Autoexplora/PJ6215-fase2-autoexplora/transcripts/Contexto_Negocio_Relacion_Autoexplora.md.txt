@@ -1,0 +1,176 @@
+﻿Contexto de Negocio y Relación Comercial — Proyecto Autoexplora
+Preparado por: Go Virtual (GV) — equipo de cuenta Autoexplora Fecha de corte: 1 de julio de 2026 Uso sugerido: contexto interno / no técnico. Complementa al documento "Contexto Técnico — Proyecto Autoexplora".
+
+
+________________
+
+
+1. Resumen ejecutivo
+Autoexplora es la plataforma digital de venta de autos seminuevos certificados operada por Grupo Autofin / Grupo Autogine, con aproximadamente 49 ubicaciones de agencias/dealers en México, multimarca. El sitio web es desarrollado y operado por Go Virtual (GV) bajo un contrato de servicios continuo de aproximadamente 1 año a la fecha.
+
+
+El proyecto atraviesa actualmente una migración de plataforma (ver documento técnico) cuya Fase 1 concluyó el 15 de junio de 2026, y se encuentra en Fase 2 (mejoras post-migración) entre el 22 de junio y el 24 de julio de 2026.
+
+
+En paralelo, el proyecto enfrenta una crisis de relación con el cliente: en una reunión de "Revisión Integral" reciente, ejecutivos senior de Autofin/Autogine expresaron insatisfacción fuerte con Go Virtual. Se acordó un período de prueba de 2 meses (julio–agosto 2026), con revisión final programada para el 3 de agosto de 2026, donde se decidirá si continúa la relación comercial.
+
+
+Este contexto es relevante para priorización interna, comunicación con el cliente y para entender la urgencia de formalizar documentación (scoping, PRDs, planes de desarrollo) que antes no existía.
+
+
+________________
+
+
+2. La reunión de "Revisión Integral" — qué pasó
+Quejas centrales del cliente (escalado ejecutivo)
+* Salvador Brito, Jorge García, Jalil Daher (directivos de Autofin/Autogine) y Carlos Rodriguez expresaron que:
+   * No tienen certidumbre de nada respecto al proyecto.
+   * Llevan ~1 año pagando el servicio sin haber tenido, desde el inicio, una definición de alcance clara (scoping document, especificación, hasta dónde llega la entrega de GV y qué queda fuera).
+   * No sabían que el CMS no era "en línea" / autoservicio como el negocio lo entendía — dependían de GV para cualquier cambio de contenido.
+   * Hubo funcionalidades no solicitadas que aparecieron en el sitio sin aviso previo (ej. leyenda en inglés de "valor CFE", un "botón verde") — percibido como falta de comunicación proactiva del proveedor.
+   * La pérdida de leads no fue detectada a tiempo por GV; se identificó tarde y por insistencia del cliente.
+   * Jalil Daher fue el más directo: "no estoy contento con Go Virtual" y cuestionó por qué, después de 1 año, la relación no había alcanzado el nivel de involucramiento necesario para que el proyecto funcionara bien.
+Respuesta de Go Virtual (Juan Berner)
+* Asumió responsabilidad explícita y sin evasivas: reconoció que no hubo project scoping document al inicio, que fue "por andar a las carreras" (por priorizar velocidad de entrega sobre proceso), y que fue un error compartido no haber detenido el proyecto para definir alcance formalmente.
+* Reconoció fallas específicas en el diseño funcional de la integración de leads con Intelimotor, y que GV no hizo una auditoría más profunda ni una doble validación de que los leads realmente llegaban (solo se confiaba en la respuesta "OK" del sistema).
+* Comunicó que se están moviendo/cambiando personas que operaban el proyecto del lado de GV.
+* Comunicó que se recibió la indicación de no continuar trabajando con la plataforma de agentes virtuales (Darwin AI) por el momento — decisión relevante para cualquier trabajo relacionado con el chatbot del sitio.
+* Propuso: armar un grupo de trabajo conjunto (GV + cliente) para hacer una auditoría completa de los flujos de leads y procesos, y ofreció compartir experiencia de otros proyectos (ej. integración de CRM con capa de datos unificada, referencia a un caso con Salesforce) como posible mejora futura — no comprometido, solo mencionado como posibilidad.
+Acuerdo alcanzado
+* Periodo de prueba de 2 meses: julio y agosto de 2026.
+* Durante ese periodo, GV se compromete a: mayor involucramiento del equipo de procesos y del equipo técnico del cliente, línea directa Juan Berner ↔ contraparte ejecutiva del cliente para escalar decisiones críticas sin que se "dejen pasar" temas que puedan impactar negativamente el proyecto.
+* Se hará una minuta formal por escrito de todos los acuerdos de esta reunión ("a blanco y negro").
+* Reunión de decisión final: 3 de agosto de 2026. En esa sesión, GV presentará el estado antes/después, números, flujos, y potencialmente alguien de Autoexplora dará su propia perspectiva. El cliente se reserva el derecho de decidir unilateralmente si continúa, corta la relación, o negocia condiciones (se mencionó incluso la posibilidad de descuento del 50% o no cobro de los 2 meses de prueba, dependiendo del resultado).
+
+
+Implicación práctica: cualquier trabajo de desarrollo, documentación o mejora entregado por el agente de Claude Code en las próximas semanas es, en la práctica, evidencia que se presentará en la revisión del 3 de agosto. La calidad, trazabilidad y profesionalismo de la documentación generada tiene peso directo en la continuidad del contrato.
+
+
+________________
+
+
+3. Actores y roles
+Go Virtual (agencia — proveedor)
+Persona
+	Rol
+	Juan Berner
+	Liderazgo/dirección de cuenta; relación ejecutiva con el cliente; asumió responsabilidad pública por falta de scoping document y errores del proyecto
+	Abigail "Abi" Estrada
+	Product Manager / coordinadora de proyecto; SEO, QA, comunicación con Intelimotor, análisis de leads e inventario
+	Sharon Mendoza
+	Desarrollo / gestión de cronograma de la migración a Brick; lead técnico de avance semana a semana
+	Aldo Álvarez
+	Operaciones / IT / Business Intelligence; dashboards, flujos de decisión, template SEO
+	Germán Delgado
+	Dashboards de Darwin AI (chatbot), reporting
+	Luis Sánchez, Vivian, Paola, Carlos Flores, Tony (Antonio Estrada)
+	Soporte de proyecto / presentación de materiales
+	Autoexplora / Grupo Autofin / Grupo Autogine (cliente)
+Persona
+	Rol
+	Lourdes Munguía ("Lu")
+	Líder de proyecto del lado cliente; punto de contacto principal para seguimiento operativo
+	Andrea Quintana ("Andy")
+	Coordinación de tickets, altas/bajas de agencias, leads
+	Fer Márquez
+	Enlace con Intelimotor/TI (equipo de "Norma" = TI de Grupo Autogine)
+	Cristian Mendoza
+	Segundo al mando; Cliente lead en sesiones de SEO
+	Claudia Guevara ("Clau")
+	Directora de proyecto; escaló la insatisfacción con el proveedor
+	Sofía
+	Especialista UX
+	Escalado ejecutivo (Revisión Integral): Salvador Brito, Jorge García, Jalil Daher, Carlos Rodriguez
+	Directivos de Autofin/Autogine; exigieron scoping document, acordaron periodo de prueba de 2 meses
+	Intelimotor (plataforma CRM/feed de terceros)
+Persona
+	Rol
+	Mario Villarreal
+	Contacto de cuenta
+	Edgar Bahena
+	Ingeniero/técnico principal; conexión de feeds, deduplicación de VIN, endpoints
+	Fernanda García / Estefanía
+	Soporte técnico, coordinación de pruebas
+	Darwin AI (chat/asistente virtual)
+Persona
+	Rol
+	Germán Delgado (GV)
+	Punto de contacto para dashboards de Darwin
+	
+
+________________
+
+
+4. Historial y estado del proyecto (hitos de negocio)
+Hito
+	Fecha
+	Estado
+	Kickoff formal de migración
+	~27 abril 2026
+	Completado
+	Objetivo original de despliegue
+	1 junio 2026
+	No cumplido,  recorrido por retraso de insumos de Intelimotor
+	Go-Live (Fase 1)
+	15 junio 2026
+	Completado
+	Inicio de Fase 2 (mejoras post-migración)
+	22 junio 2026
+	En curso
+	Ventana de ejecución de Fase 2 (34 tickets)
+	22 junio – 24 julio 2026
+	En curso
+	Fecha límite de acceso completo del cliente al CMS
+	Fin de julio 2026
+	Pendiente — compromiso explícito de GV
+	Vencimiento de contrato de servicio DVA Logística
+	31 julio 2026
+	Pendiente decisión de renovación
+	Reunión de decisión sobre continuidad del contrato
+	3 agosto 2026
+	Pendiente — fecha crítica
+	
+
+________________
+
+
+5. Contrato de servicio — DVA Logística Integral Corporativa
+* Vigencia: agosto 2025 – julio 2026.
+* Sin cláusula de renovación automática; cualquier extensión requiere acuerdo formal por escrito (Cláusula Sexta + Cláusula Vigésima Primera del contrato).
+* Vencimiento: 31 de julio de 2026 — decisión pendiente de renovación, seguimiento con Juan Berner.
+* Coincide temporalmente con la revisión de continuidad del proyecto general (3 de agosto de 2026); ambas decisiones probablemente están conectadas en la conversación con el cliente aunque sean instrumentos formales distintos.
+
+
+________________
+
+
+6. Comunicación y gobernanza — reglas de trabajo a respetar
+* Tono de comunicación con el cliente: minutas y mensajes deben ser concisos, orientados a operación, y evitar lenguaje que suene acusatorio o confrontacional hacia el cliente o terceros (Intelimotor, DealerOn) — crítico dado el contexto de tensión descrito en la sección 2.
+* Formato WhatsApp-compatible: texto plano, asteriscos para negritas, viñetas, sin tablas.
+* Formato de minutas / action items: Tarea - Responsable persona específica - Fecha (sin paréntesis), agrupado por parte responsable (Go Virtual, Autoexplora, TI/Sistemas, equipos de datos/origen).
+* Distinción entre briefs internos y mensajes al cliente: los internos llevan contexto técnico completo y lenguaje directo; los de cliente usan lenguaje simple, tono cálido, sin jerga, y sin dejar implícitas tareas abiertas que no se hayan explicitado con claridad.
+* Validación de hechos: antes de finalizar comunicaciones al cliente, se validan afirmaciones específicas citando número de línea de transcript y cita textual.
+* El cliente pidió explícitamente que cualquier plan de proyecto tenga nivel de detalle granular: responsable específico, fecha, y dependencia externa identificada (p. ej. "depende de Intelimotor desde tal fecha, tienen 3-4 días para dar visto bueno") — esto para poder "empujar" a las partes dependientes desde su lado.
+
+
+________________
+
+
+7. Áreas abiertas / pendientes de negocio a la fecha de corte
+* Minuta formal por escrito de los acuerdos de la Revisión Integral (comprometida por Salvador Brito).
+* Acceso completo del cliente al CMS de Brick (compromiso a fin de julio 2026).
+* Decisión de renovación de contrato DVA Logística (vence 31 julio 2026).
+* Reunión de revisión de continuidad de la relación comercial GV–Autoexplora (3 agosto 2026), el resultado puede impactar el alcance/prioridad de cualquier trabajo en curso, incluyendo desarrollo.
+* Confirmar si la pausa en el trabajo con Darwin AI (agentes virtuales) sigue vigente antes de retomar cualquier iniciativa relacionada.
+
+
+________________
+
+
+8. Nota de uso para el agente de Claude Code
+Este documento es contexto de negocio, no técnico. Su propósito es que cualquier PRD, plan de desarrollo o entregable considere:
+
+
+1. La urgencia de generar documentación formal (scoping, alcance, responsables, dependencias) que antes faltó — esto es en sí mismo parte de lo que se evaluará en la revisión del 3 de agosto.
+2. Que cualquier comunicación generada hacia el cliente siga el tono y formato descritos en la sección 6.
+3. Que el trabajo entregado en julio tiene valor adicional como "evidencia" de mejora de proceso ante el cliente, más allá de su valor funcional.

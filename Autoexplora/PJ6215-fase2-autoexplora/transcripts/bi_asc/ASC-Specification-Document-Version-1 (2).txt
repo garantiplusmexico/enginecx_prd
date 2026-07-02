@@ -1,0 +1,2838 @@
+﻿Automotive Standards Council for GA4 Specification & Discussion Guide 
+Last Edited 11/17/2022
+Table of Contents 
+Introduction 4 ASC Specification Framework 5 Implementation Considerations 6 GA4 Online Training and Live Workshops 7 Analytic Refresher: Event-Based Measurement 8 ASC Conversion Events Framework 9 ASC Event Example: Form Submissions 10 Engagement Events vs Conversion Events 11 Chat Service Conversion Event Example 12 ASC Data Layer - Powering Shared Parameter Data 15 
+View The Latest Data Layer Details 18 Mapping and Formatting ASC Data for Parameters 20 
+ASC Event Names 21 asc_comm_engagement 22 asc_comm_submission 24 asc_comm_submission_parts 26 asc_comm_submission_sales 28 asc_comm_submission_sales_appt 30 asc_comm_submission_service 32 asc_comm_submission_service_appt 34 asc_click_to_call 36 asc_cta_interaction 38 asc_element_configuration 40 asc_form_engagement 41 asc_form_submission 43 asc_form_submission_parts 45 asc_form_submission_sales 47 asc_form_submission_sales_appt 49 asc_form_submission_service 51 asc_form_submission_service_appt 53 item_purchase 55 asc_element_configuration 56 asc_media_interaction 57 asc_menu_interaction 59 asc_pageview 60 asc_retail_process 62 asc_special_offer 66 
+2
+asc_video_call_engagement 67 asc_video_call_submission 68 asc_video_call_submission_sales 69 asc_video_call_submission_service 70 asc_voice_engagement 71 asc_voice_engagement_30 73 asc_voice_submission 74 asc_voice_submission_parts 76 asc_voice_submission_sales 78 asc_voice_submission_sales_appt 80 asc_voice_submission_service 82 asc_voice_submission_service_appt 84 
+Master List of ASC Parameters 86 ASC Data Layer 88 
+Appendix 89 Session Level Automatically Collected Parameters 89 Revision History 90 List of Automotive Standards Council Members 91 
+LATEST WORKING DOCUMENTS 
+  
+3
+Introduction 
+This document has been created to support the GA4 Specification created by the Automotive Standards Council (ASC). This document will be updated periodically as revisions to the specification are made. The update history will be listed in the Appendix section of this document and the latest version of the specification can always be downloaded on the official ASC website: https://automotivestandardscouncil.com/. 
+The GA4 Specification was created to support the needs of automotive, RV, motorsports, and marine dealers and the companies that support the retail network. That includes manufacturers, software developers, agencies, and management consultants. 
+The creation of this specification would not be possible without the combined resources and expertise of over 75 companies serving the dealer community. We recognize the hard work that the Founding Members of the Automotive Standards Council invested in this effort to streamline the use of GA4 as a reliable data source for consumer activity on dealership websites and retailing platforms. 
+The ASC specification can facilitate consistent data reporting and greater interoperability between software products that exist on dealership websites. The ASC specification is not a replacement for thoughtful preparation and installation of GA4 events, conversion metrics, and customized reporting. The Council strongly recommends that dealers consult with their website provider on how they are supporting and maintaining the ASC Specification. 
+Suggestions for the ASC Specification can be sent to: 
+submissions@automotivestandardscouncil.com 
+  
+
+4
+ASC Specification Framework 
+The ASC Specification outlines the events, parameters, and parameter values that members of Council pledge to support in their software applications. Founding Council members are responsible for developing and maintaining the integrity of the GA4 Specification. 
+Software products which adhere to the ASC Specification can be submitted to the Council each year for certification. Software applications that demonstrate support for the ASC Specification will receive an ASC Certified Badge that can be used in their sales presentation and marketing campaigns. 
+Details on the certification process will be released in Q1 of 2023. Software companies do not have to be a member of the Council to have their products certified. A sample of the certification badge is shown below, however the official certification badge will vary slightly, include the product name, and show 2023 as the certification year. 
+  
+
+Software companies are not limited to sending only ASC events into GA4 nor are they required to use the reporting templates that will be offered to the public. Over time, additional events will likely be added to the specification to allow it to be a scalable, robust framework to document the activities of consumers who shop online or in the dealership. Council members are required to update their applications in a timely manner when major changes to the ASC Specification are released. 
+5
+Implementation Considerations 
+In the current version of GA4, implementation of the ASC Specification will require manual configurations for each dealer’s GA4 property. We hope, over time, Google will provide multi-site administrative tools that will allow certain maintenance functions to be centralized or executed via their API. 
+While ASC event names will be present in GA4 properties, if the dealer is using ASC Certified products, a trained Google analytics professional must still: 
+● Mark which events will be considered conversions by the Council 
+● Create the event-scoped custom dimensions, limited to 50 
+● Create the user-scoped custom dimensions, limited to 25 
+● Create custom events, if needed, based on ASC event parameters 
+● Create custom events based on unique events created by software developers ● Create reporting templates based on ASC events 
+Note: Not all ASC event parameters will be recommended to be named as custom dimensions for reporting purposes. There are over 50 event parameters in the ASC specification, so the most important parameters should be selected as custom dimensions. The good news is that all event parameters, and the data they contain, can be exported to a third-party database for more complex analysis and reporting that is not easily supported in GA4. 
+This document will outline events that the Council believes should be considered conversion events, but each dealer may want to add additional conversion events for their reporting. The Council has intentionally limited the number of events considered to be a conversion. This was done to reduce the need to manually update thousands of dealer GA4 accounts when a new conversion event name is created. The use of event parameters will allow for scalable growth and reduce maintenance time, while still allowing dealers to differentiate conversions by vendor, department, and location. 
+It is common for dealers to change website providers or some of the software tools that enhance their online experience. The specification will reduce the loss of data issues associated with changing vendor products, as long as each company being used for dealership operations is ASC Certified. 
+6
+GA4 Online Training and Live Workshops 
+There are a number of resources that are available online for general GA4 training. Google has a rich library of information on GA4 which starts on this page: https://bit.ly/3sWAnEa 
+If you prefer video training on general GA4 principles, LinkedIn has a great training library that is for free on this page: https://bit.ly/3T7Mdpw 
+Check With Your Website Company 
+Most automotive website platforms are developing GA4 support programs and training. Dealers should check to first see if their website company is a member of the Council. If not, encourage them to support this industry specification. If their website provider is an ASC member, ask about the support packages that they offer to further support and customize GA4 for your business. 
+Customized Automotive Industry Training for GA4 
+Training on the ASC Specification will be offered both online and at regional one-day workshops. A number of the Automotive Standards Council members, with deep experience with GA4, will be involved in training agencies and dealers. 
+Please visit the official ASC website for dates for training: 
+https://automotivestandardscouncil.com/. 
+Digital Marketing Strategies Conference (DMSC) in Austin 
+The next large-scale GA4 training event will be at the Digital Marketing Strategies Conference (DMSC) which will be held on May 21-23rd in Austin Texas. Dealers should mark their calendar to attend and lock in early bird tickets by visiting https://digitalmarketingstrategies.org/. 
+By May 2023, the Council should have numerous examples of custom reporting, dashboards, and advertising performance improvements as a result of the new specification. 
+7
+Analytic Refresher: Event-Based Measurement 
+GA4 is a measurement platform that uses events to track what consumers do on a website or mobile app. Every time a consumer visits a dealership website and clicks/swipes/hovers on page elements, an event can fire into GA4. 
+In the current implementations of Google Analytics (called Universal Analytics), website companies and members of the vendor community have different levels of support for Google Analytics. Not all click/swipe/hover actions are sent into Google Analytics, and when they are sent, each vendor has their own naming convention. 
+The lack of standards has created countless hours of work for dealers, website companies, and agencies that have to support 50+ implementations of event names and conversion goals. The potential of the ASC Specification is that if the majority of vendors that serve dealers support the specification, event naming will be standardized and reporting templates can work for all website platforms and the secondary tools that sit on top of the website. 
+  
+
+In the example above, there are dozens of places that consumers can click, swipe, slide, or play based on this website design. There is a menu system on the left, a search bar at the top, and buttons/photos for each vehicle. Every time something changes on this page, an event can be sent into GA4. Website platforms, which are ASC Certified, will send events with the names the Automotive Standards Council has defined in this document. 
+8
+ASC Conversion Events Framework 
+The events that the ASC is recommending to be labeled as conversion events are in green below. Keep in mind that the four core engagement events (red) like asc_comm_engagement, asc_form_engagement, asc_video_call_engagement, and asc_voice_engagement are the basis for the specific conversion events (green) that can be surfaced in dealer reports. 
+asc_comm_engagement 
+asc_comm_submission 
+asc_comm_submission_parts 
+asc_comm_submission_sales 
+asc_comm_submission_sales_appt 
+asc_comm_submission_service 
+asc_comm_submission_service_appt 
+asc_click_to_call 
+asc_cta_interaction 
+asc_element_configuration 
+asc_form_engagement 
+asc_form_submission 
+asc_form_submission_parts 
+asc_form_submission_sales 
+asc_form_submission_sales_appt 
+asc_form_submission_service 
+asc_form_submission_service_appt 
+asc_login 
+asc_media_interaction 
+asc_menu_interaction 
+asc_pageview 
+asc_purchase 
+asc_retail_process 
+asc_special_offer 
+asc_video_call_engagement 
+asc_video_call_submission 
+asc_video_call_submission_sales 
+asc_video_call_submission_service 
+asc_voice_engagement 
+asc_voice_engagement_30 
+asc_voice_submisson 
+asc_voice_submission_parts 
+asc_voice_submission_sales 
+asc_voice_submission_sales_appt 
+asc_voice_submission_service 
+asc_voice_submission_service_appt 
+9
+ASC Event Example: Form Submissions 
+One great example of why the ASC Specification will help dealers optimize their advertising campaigns is how the specification documents conversion outcomes. In the past, with Universal Analytics, a dealer may have had a conversion goal configured when a lead form on their website was completed. In many implementations, the form goal did not specify the form type. Was the form for sales, service, parts, or a general inquiry? Knowing the conversion outcome, by department, is critical for optimizing Google Ads. 
+  
+In the example above, when a lead form is completed and the CTA submission button is clicked, website companies who support the ASC Specification will send a CTA button click event (asc_cta_interaction). Then, they will send into GA4 a general form conversion event (asc_form_submission) and a department conversion event (asc_form_submission_sales). 
+Website companies who are following the ASC Specification should also send an event when the consumer completes each field of the form, using the asc_form_engagement event. This way, dealers and programmers can see where the consumer stopped typing in information if the form was not completed and submitted. 
+10
+Engagement Events vs Conversion Events 
+In the ASC Specification, we have defined over 35 event names, and a select number of events are to be marked in Google Analytics 4 (GA4) as conversion events. Conversion events are used to optimize advertising campaigns and to build custom KPI reports. 
+There are four “core” engagement events that produce most of the ASC conversion events. These four core events are: 
+1. asc_comm_engagement (chat, messaging, and SMS applications) 2. asc_form_engagement (standard website / application forms) 3. asc_video_call_engagement (future support for video collaboration tools) 4. asc_voice_engagement (voice / telephony platforms that support GA4) 
+These events fire many times during a consumer visit to a dealer’s website, and each time they are sent into GA4, the parameters will likely change. If we build on the previous example, when a form opens on a website page, the asc_form_emgagement event will be sent into GA4 with a parameter comm_status = start. Each time a field on the form is completed, the event can 
+fire again with comm_status = engage. 
+When the form is completed, and let’s use a service appointment form, and the “submit” button is clicked, a series of events will fire into GA4: 
+1. asc_cta_interaction with parameters that include element_text = submit 2. asc_form_engagement with parameters that include comm_status = crm_update 3. asc_form_submission with parameters that include department = service and comm_status = crm_update 
+4. asc_form_submission_service_appt with parameters that include department = service and comm_status = appt_booked 
+You might see from this example that the asc_form_engagement event includes conversion and NON conversion activities so that is why it is NOT set as a conversion event. We created detailed conversion events, by department, based on the four “core” engagement events. By calling out specific event outcomes, as new conversion events, we have reduced the support 
+time required to manually create conversion events in each dealer’s GA property. 
+Why? As of the creation of this specification, there is no easy way to propagate new events based on existing event names. 
+11
+Chat Service Conversion Event Example 
+The asc_comm_engagement event has a parameter for the department and a parameter called comm_status. These two parameters are the primary drivers for the chat or SMS conversions events in the specification. 
+If a dealer report needed to know how many chat sessions resulted in a service appointment, the report would use asc_comm_submission_service_appt and tally these events over the reporting range. This event would be labeled as a conversion and not the core event called asc_comm_engagement. 
+So, the number of chat service appointments is the asc_chat_engagement event with the following key parameters: 
+comm_type = chat 
+department = service 
+comm_status = appt_booked 
+We expect all companies that are ASC Certified to send into GA4 all engagement and conversion events in the specification. For example, all chat platforms will be expected to send the “chat” related events, but they don’t have to worry about the website events. 
+12
+Handling Digital Retailing Events 
+Digital retailing tools on dealership websites will trigger a number of ASC events when they are started. Once started, the digital retailing software providers will be sending the asc_retail_process event, many times, as the consumer works their way through the online sales process. They will use other ASC events when they present forms, chat windows, or other standard tools that are mapped to ASC events. 
+  
+In the example above, the website company would be responsible for sending the asc_cta_interaction event into GA4 with parameters that include element_text = start my express and element_type = digital_retailing. The website provider would not be responsible for buttons that are generated on a website page using javascript which would then become the responsibility of the digital retailing company to send the asc_cta_interaction event. 
+Then the digital retailing software provider will start sending asc_retail_process events every time a consumer clicks on their online sales workflow. In a real shopping session, the digital retailing provider could be sending 20-40 asc_retail_process events into GA4, with different parameters. The digital retailing company will always set the event_owner parameter with their company name. Larger companies, with many products (i.e., Cox Automotive) would set the event_owner parameter to the product solution (i.e., Dealer.com). 
+What about Digital Retailing forms? 
+When digital retailing tools use forms, to unlock information or to collect data for trade or finance workflows, the digital retailing company must use the same asc_form_engagement and asc_form_submission event names. 
+13
+Notes On The Word “Lead” 
+The ASC members have decided to avoid the use of the word “lead” because it can imply different things to dealers. For example, each form submission will be tracked with the asc_form_submission event with parameters that will give dealers the ability to sort consumer data by department and vendor. 
+A form submission to check availability is often referred to as a “lead,” but a form submission for a job application would not be called a lead. The specification will allow dealers to tally form submissions for the business departments that best apply to the objective of their report design. 
+Weighting of GA4 Events 
+Engagement and conversion events are not meant to imply equal weight. For example, the asc_click_to_call event does not know if the call was connected with the dealership’s telephony system. The actual number of connected calls will be much lower. However, with an ASC certified telephony partner, reporting will show how many calls, originating from a website, were connected using the asc_voice_submission event. 
+Notes 
+____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ ____________________________________________________________________________ 
+14
+ASC Data Layer - Powering Shared Parameter Data 
+To enable all applications running on dealership websites to submit the correct ASC event parameters into GA4, the Council has proposed the creation of a specification for a common data layer (i.e. asc_data_layer) which would include all the proper tagging specifications and variables. This separate scope of work will allow a common set of variable names to be surfaced in the data layer to allow event parameters to be filled. 
+For example, many ASC events have the capacity to send information regarding a specific vehicle of interest in the parameter fields shown below in yellow: 
+department 
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	crm_update
+	start, close, engage, inject, send_deal, send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, 
+Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	
+
+
+
+The website company that is publishing the vehicle detail page (VDP) will know many of these values since they are displaying them on the HTML page. However, for a chat company, they 
+15
+might have to scrape the page to get this information. To reduce error and simplify the GA4 event parameter data streams, we are suggesting that many of the event parameters be surfaced as variables in the asc_data_layer. ASC Council members are working on the initial draft and those details will be included in this document as well. 
+ASC Data Layer Structure 
+DataLayer Name: asc_datalayer 
+Values should be in all lowercase. If necessary, multiple values should be separated by a pipe character ( | ), empty values should populate an empty string. 
+Parameter 
+	Definition 
+	Example
+	store_name 
+	Legal name of website customer 
+	abc dealer of anytown
+	oem_code
+	Code assigned by the manufacturer to the dealer 
+	23563
+	oem_brand
+	Legal name of manufacturer tied to the website customer 
+	ford
+	affiliation
+	Name of the company associated with event, but not the event owner
+	dealer_eprocess, dealer_inspire, dealer_venom, dealer_dot_com, dealeron
+	language
+	The current language of the page being viewed 
+	en, es, fr
+	currency 
+	Currency code used to display price 
+	usd, cad, eur, gbp, frf
+	page_type 
+	Type of page event took place on.
+	item, itemlist, contact, directions, service, parts, accessories, 
+body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, 
+commercial, showroom
+	items
+	Array of item (vehicle) parameters to be populated anywhere vehicle details are available (srp/vdp)
+	array of multiple items on srp or array of single item on vdp
+	{key}.item_category
+	Industry Category of item associated with event 
+	luxury
+	{key}.item_color
+	Standard human readable color of item associated with event 
+	black, red, blue, green
+	{key}.item_condition
+	Industry Condition of item associated with event
+	new, used, cpo, dealer_cpo, oem_cpo
+	{key}.item_fuel_type
+	Industry Fuel Type of item associated with event 
+	gas, ev, electric, diesel
+	
+
+
+
+16
+{key}.item_id
+	Unique vehicle identification number, serial number, which is assigned by manufacturer 
+	1FMCU9G63NUB47778
+	{key}.item_inventory_date
+	Date the vehicle was added to the inventory 
+	2022-04-05
+	{key}.item_make
+	Industry Make (Brand) of item associated with event 
+	ford
+	{key}.item_model
+	Industry Model of item associated with event 
+	escape
+	{key}.item_number
+	Unique inventory stock number assigned by the dealer 
+	NUB47778
+	{key}.item_payment
+	Payment shown, or selected which is associated with the event 
+	finance
+	{key}.item_type
+	Type of item associated with event, Body Style if vehicle 
+	coupe
+	{key}.item_variant
+	Variant name of item associated with event, Trim if vehicle 
+	se
+	{key}.item_year
+	Year of item that is associated with event was manufactured, Year marketed if vehicle 
+	2022
+	{key}.item_price 
+	MSRP of item associated with event 
+	38674
+	events
+	array of ASC events having taken place since previous page load - reverse order
+	all events should be pushed to "window.asc_datalayer.events" in the same way you would push to the Google "dataLayer"
+	measurement_ids 
+	arrays of measurement IDs
+	  
+
+	platform_custom
+	parameters specific to each web site provider that may be used
+	Unregulated - use this as an array, a string, or however is needed for provider to populate necessary information
+	
+
+
+
+17
+View The Latest Data Layer Details 
+Use this QR Code to visit the latest details and resources on the ASC data layer that may be more updated than this document. 
+  
+
+18
+Visual Example of the Datalayer 
+● asc_datalayer should be used as the standard data layer name and should be defined at the window level 
+● all values should be in lowercase 
+● While the current state of this data layer does not require multiple values for any parameters, any future state requiring multiple values for a parameter should be passed as pipe-delimited ( | ) 
+● "items" should always be passed as an array regardless of the number of items in the array. If there are no vehicles, "items" should still be passed as an empty array 
+● asc_datalayer parameters should always match the naming convention of the event parameters they are for when possible 
+  
+19
+Mapping and Formatting ASC Data for Parameters 
+Developers will want to understand how the data values for ASC event parameters will be formatted. Since the detailed information might be too small to read in a booklet format, everyone is the development community is encouraged to review this Google Sheet, which will always be updated with the latest mapping and formatting requirements: 
+https://docs.google.com/spreadsheets/d/1DZLmW9Cp5CA8J1py28xYM6SXRIEeEsagCIIEutjGL eU/edit?usp=sharing 
+Use this QR Code to visit the Google sheet listed above. 
+  
+
+20
+ASC Event Names 
+The following section is the current list of ASC event names in alphabetical order and the parameters associated with each event. We have followed Google’s guidelines that event names use lowercase letters and multi-word names are separated by an underscore. We also support the default event names and parameters that are associated with the base installation of GA4. 
+View The latest data on event names: 
+  
+
+Suggestions for the ASC Specification can be sent to: 
+submissions@automotivestandardscouncil.com 
+21
+asc_comm_engagement 
+This event will be sent into GA4 every time a consumer engages with a CHAT or SMS platform. This event will fire each time a consumer replies to a communication. In a long chat/SMS conversation, this event could fire over ten times with different parameters. The parameters for this event include: 
+event_owner 
+	edmunds 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	sms 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native
+	whatsapp, google, wechat, messenger, apple, native
+	element_position 
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	send_payment
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	
+
+
+
+22
+item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+When the communication platform is first loaded and visible to the consumer, the event can be sent into GA4 with basic parameters but should include comm_status = load. 
+When the consumer first engages with the platform, then the communication event should be sent into GA4 with the parameter comm_status = start. 
+Every time a consumer sends a message back (via chat or sms) the communication event should be sent into GA4 with the parameter comm_status = engage. 
+If the consumer indicates which department they would like to speak with, the communication event would be sent into GA4 with the parameter department set to the correct department. 
+During a communication session, if a dealership employee (or bot) sends the consumer a deal proposal, appointment scheduler link, payment calculator, etc., then the application should use the other comm_status parameters that are shown. 
+If there is no activity for a given period of time, and the communication platform times out, the communication event should be sent into GA4 with comm_status = timeout. 
+If the communication platform can identify the employee or agent that is handling the communication, their identification number can be placed in the affiliation parameter. Employee names should not be placed in this parameter. 
+23
+asc_comm_submission 
+This event will be sent into GA4 when a chat/sms session collects consumer information that is deemed worthy (by the company) to crm_update into the dealer’s CRM. The parameters for this event include: 
+event_owner 
+	gubagoo 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	chat 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native
+	whatsapp, google, wechat, messenger, apple, native
+	element_position 
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	crm_update
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	
+
+
+
+24
+item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+If the chat session was not initiated on a product page, where the item information can be scraped or item parameters retrieved from the data layer, the item parameters should be empty or filled with data (padded) the ASC establishes for a parameter that is intentionally empty. 
+If the communication platform can identify the employee or agent that is handling the communication, their identification number can be placed in the afilliation_id parameter. Employee names should not be placed in this parameter. 
+In most cases, the department parameter should be filled with the appropriate department inside the dealership. If the department can not be determined from the chat session, department = unknown. 
+25
+asc_comm_submission_parts 
+This would follow the same parameter pattern as the asc_comm_submission event with the exception that the department would be set to parts or accessories, which is shown below: 
+event_owner 
+	gubagoo 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	chat 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native
+	whatsapp, google, wechat, messenger, apple, native
+	element_position 
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	parts | accessories
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	crm_update
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	
+
+
+
+26
+item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+27
+asc_comm_submission_sales 
+This would follow the same parameter pattern as the asc_comm_submission event with the exception that the department would be set to a sales department, which is shown below: 
+event_owner 
+	carnow 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	chat 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native
+	whatsapp, google, wechat, messenger, apple, native
+	element_position 
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department
+	sales | credit | 
+trade
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	crm_update
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	
+
+
+
+28
+item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+29
+asc_comm_submission_sales_appt 
+This would follow the same parameter pattern as the asc_comm_submission event with the exception that the department would be set to sales departments and the comm_status would indicate that an appointment was set, which is shown below: 
+event_owner 
+	activengage 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	chat 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native
+	whatsapp, google, wechat, messenger, apple, native
+	element_position 
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	sales | credit | trade
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	appt_booked
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	
+
+
+
+30
+item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+31
+asc_comm_submission_service 
+This would follow the same parameter pattern as the asc_comm_submission event with the exception that the department would be set to service departments, which is shown below: 
+event_owner 
+	gubagoo 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	chat 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native
+	whatsapp, google, wechat, messenger, apple, native
+	element_position 
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	service | quick_lube
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	crm_update
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	
+
+
+
+32
+item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+33
+asc_comm_submission_service_appt 
+This would follow the same parameter pattern as the asc_comm_submission event with the exception that the department would be set to service departments and the comm_status would indicate that an appointment was booked, which is shown below: 
+event_owner 
+	conversations 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	chat 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native
+	whatsapp, google, wechat, messenger, apple, native
+	element_position 
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	service | quick_lube
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	appt_booked
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	
+
+
+
+34
+item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+35
+asc_click_to_call 
+This event will be sent into GA4 when a consumer clicks on a phone number on a device which triggers a voice call to be initiated. The phone number may be a (static) text number or it can be a dynamic number (DNI) which is presented by a telephony partner using javascript. 
+If the phone number is fixed, then the website platform will likely be the event_owner, otherwise the event_owner will be the DNI provider (shown below) or a specialty product that sits on the website which displays a phone number. 
+The parameters for this event include: 
+event_owner 
+	marchex 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_phone_numb er 
+	800-333-1234
+	Visible phone number that was clicked or the destination phone number
+	department
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation 
+	marchex
+	marchex, callrevu, call_source, interactivetel, carwars
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	
+
+
+
+36
+item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+37
+asc_cta_interaction 
+This event will be sent into GA4 every time a consumer clicks on a call-to-action button, image, or hyperlinked text on a content page. This event is not intended to be used for menus (see asc_menu_interaction). This event would also be used in conjunction with forms. When the consumer clicks the “submit” button, this event is used. The parameters for this event include: 
+event_owner 
+	dealeron 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	element_text
+	Customize 
+Payments
+	whatever is shown on the CTA button / image
+	element_color 
+	green 
+	color of CTA button, if available or applicable
+	element_order 
+	1 
+	represents the order of the cta buttons, if known
+	element_type 
+	digital_retailing
+	header, banner, popup, form, digital_retailing_tool, trade_tool, chat_tool, accessibility_tool, search_tool, scheduling_tool, gallery, map, footer, video, item_details
+	event_action
+	
+
+	
+
+	event_action_result redirect
+	
+
+	play, restart, vr_play, spin, popup, slideout, exit, error, search, calc, start, stop, redirect, open, close, increase, decrease, clear, check, uncheck, next_step
+	link_url
+	/storefront/ford/20 23_ford_stock_56 2837.aspx
+	destination URL, if applicable
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	
+
+
+
+38
+item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, 
+commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+If the asc_cta_interaction was not initiated on a product page, where the item information can be scraped or item parameters retrieved from the data layer, the item parameters should be empty or filled with data (padded) the ASC establishes for a parameter that is intentionally empty. 
+In some cases, a website platform may not be able to populate element_color, element_order, and element_type if the software being launched is installed by a third party. In other cases, the website company may not be able to populate element_text when the CTA is an image. Since the asc_cta_interaction event is an important engagement event, all efforts should be made to check these parameters when changes to website pages are made. 
+There are other cases where a third-party software tool resides on the dealer’s website, such as an overlay, which has its own CTA button. A good example would be a persistent chat window with a CTA labeled “start chat”. In this case, the chat company would be responsible for sending the asc_cta_interaction event into GA4. 
+The asc_cta_interaction event would be used on forms for the final submit button, which sends the form to the dealer’s CRM. If the consumer does not complete the required fields, the asc_cta_interaction event would fire with the event_action_result= error. If all the fields were filled in correctly, then the cta_interaction event would fire with event_action_result = success. 
+39
+asc_element_configuration 
+event_owner 
+	digital_motors
+	
+
+	page_type 
+	item
+	
+
+	event_action_result 
+	search
+	
+
+	event_action 
+	swipe_left 
+	Determine what triggered the configuration
+	product_name 
+	impel
+	To determine if configuration happened on a base website product, or an added product
+	element_state 
+	active 
+	If toggle or checkbox, was it active or inactive
+	element_type 
+	digital_retailing_tool
+	To determine if this was on an item list filter, or search bar, site config, language toggle, or other high level element.
+	element_subtype 
+	mega_menu
+	To determine if what was interacted with was a button, or field, or other sub type
+	element_title 
+	Mileage 
+	To determine what the configuration was called
+	element_text 
+	Get Price 
+	What the configuration showed to the customer
+	element_value 
+	Any Model 
+	What was used in the configuration
+	element_color 
+	#544B45
+	Useful for AB testing to see what gets higher interaction rates
+	element_position 
+	center_right
+	To determine where on the page/tool the configuration took place
+	element_order 
+	1
+	To determine how far down a list the 
+configuration was
+	
+
+
+
+40
+asc_form_engagement 
+This event would fire during the consumer engagement with a form element, which will eventually be the event that triggers secondary asc_form_submission events, when the comm_status = crm_update. 
+event_owner 
+	dealer_eprocess 
+	Who is pushing the event
+	page_type 
+	item
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	form 
+	chat, sms, voice, video, form, email
+	comm_status 
+	start
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	element_text 
+	Get ePrice 
+	CTA text (if available)
+	department 
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	form_name 
+	inventory_lead
+	the name of the form your platform uses to identify the form
+	form_type 
+	consumer_contact
+	item, consumer_contact, trade, recall, parts, accessories, service_appointment, pre-order, finance_credit, human_resources, body_shop, custom, research, surveys, unknown
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	
+
+
+
+41
+item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+42
+asc_form_submission 
+This event would be sent into GA4 when a software platform sends a consumer data record into the dealer’s CRM. This event is not designed to know if the consumer had previously submitted their information into the dealer’s CRM. The parameters for this event include: 
+event_owner 
+	dealer_eprocess 
+	Who is pushing the event
+	page_type 
+	item
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	form 
+	chat, sms, voice, video, form, email
+	comm_outcome 
+	crm_update
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	submission_id 
+	8394 
+	numeric counter (if assigned)
+	element_text 
+	Get ePrice 
+	CTA TEXT (if available)
+	department 
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	form_name 
+	inventory_lead
+	the name of the form your platform uses to identify the form
+	form_type 
+	consumer_contact
+	item, consumer_contact, trade, recall, parts, accessories, service_appointment, pre-order, finance_credit, human_resources, body_shop, custom, research, surveys, unknown
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	
+
+
+
+43
+item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+This event would not fire when a consumer clicks on a CTA button labeled “submit” on a form (see: asc_cta_interaction), and the required fields are incomplete. This event only fires on a successful completion of a form. 
+The form_name parameter would be the name the software platform uses to identify the form design that was presented to the consumer. If testing is being done on required fields or design choices, this field can help differentiate results for A/B testing. 
+The form_type parameter would be used to describe the purpose of the form since there are many forms that can be used for each department. 
+44
+asc_form_submission_parts 
+This event is sent into GA4 when a software platform sends a consumer data record into the dealer’s CRM for the parts department. This event would fire when the department was equal to sales, credit, or trade. Other departments could also be added to this list as the list is expanded. 
+event_owner 
+	dealeron 
+	Who is pushing the event
+	page_type 
+	item
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	form 
+	chat, sms, voice, video, form, email
+	comm_outcome 
+	crm_update
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	submission_id 
+	8394 
+	numeric counter (if assigned)
+	element_text 
+	Get ePrice 
+	CTA text (if available)
+	department 
+	parts
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	form_name 
+	inventory_lead
+	the name of the form your platform uses to identify the form
+	form_type 
+	consumer_contact
+	item, consumer_contact, trade, recall, parts, accessories, service_appointment, pre-order, finance_credit, human_resources, body_shop, custom, research, surveys, unknown
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	
+
+
+
+45
+item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+46
+asc_form_submission_sales 
+This event is sent into GA4 when a software platform sends a consumer data record into the dealer’s CRM for the sales department. This event would fire when the department was equal to sales, credit, or trade. Other departments could also be added to this list as the list is expanded. 
+event_owner 
+	dealer_dot_com 
+	Who is pushing the event
+	page_type 
+	item
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	form 
+	chat, sms, voice, video, form, email
+	comm_outcome 
+	crm_update
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	submission_id 
+	8394 
+	numeric counter (if assigned)
+	element_text 
+	Get ePrice 
+	CTA TEXT (if available)
+	department 
+	credit
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	form_name 
+	inventory_lead
+	the name of the form your platform uses to identify the form
+	form_type 
+	consumer_contact
+	item, consumer_contact, trade, recall, parts, accessories, service_appointment, pre-order, finance_credit, human_resources, body_shop, custom, research, surveys, unknown
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	
+
+
+
+47
+item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+48
+asc_form_submission_sales_appt 
+This event would be sent into GA4 when a software platform sends a consumer data record into the dealer’s CRM for the sales department that is associated with an appointment, like a test drive or a b-back visit. This event would fire when the department was equal to sales, credit, or trade. Other departments could also be added to this list as the list is expanded. 
+event_owner 
+	dealer_eprocess 
+	Who is pushing the event
+	page_type 
+	item
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	form 
+	chat, sms, voice, video, form, email
+	comm_outcome 
+	appt_booked
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	submission_id 
+	8394 
+	numeric counter (if assigned)
+	element_text 
+	Get ePrice 
+	CTA text (if available)
+	department 
+	sales | trade | credit
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	form_name 
+	inventory_lead
+	the name of the form your platform uses to identify the form
+	form_type 
+	consumer_contact
+	item, consumer_contact, trade, recall, parts, accessories, service_appointment, pre-order, finance_credit, human_resources, body_shop, custom, research, surveys, unknown
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda,
+	
+
+
+
+49
+
+
+	
+
+	Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 7/2/2022 
+	
+
+	date item was entered into inventory
+	
+
+
+
+50
+asc_form_submission_service 
+This event would be sent into GA4 when a software platform sends a consumer data record into the dealer’s CRM for the service department. This event would fire when the department was equal to sales, credit, or trade. Other departments could also be added to this list as the list is expanded. 
+event_owner 
+	dealer_eprocess 
+	Who is pushing the event
+	page_type 
+	service
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	form 
+	chat, sms, voice, video, form, email
+	comm_outcome 
+	crm_update
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	submission_id 
+	8394 
+	numeric counter (if assigned)
+	element_text 
+	Get ePrice 
+	CTA TEXT (if available)
+	department
+	service | 
+quick_lube
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	form_name 
+	inventory_lead
+	the name of the form your platform uses to identify the form
+	form_type 
+	consumer_contact
+	item, consumer_contact, trade, recall, parts, accessories, service_appointment, pre-order, finance_credit, human_resources, body_shop, custom, research, surveys, unknown
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda,
+	
+
+
+
+51
+
+
+	
+
+	Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+52
+asc_form_submission_service_appt 
+This event would be sent into GA4 when a software platform sends a consumer data record into the dealer’s CRM for the service department. This event would fire when the department was equal to sales, credit, or trade. Other departments could also be added to this list as the list is expanded. 
+event_owner 
+	dealer_eprocess 
+	Who is pushing the event
+	page_type 
+	service
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	form 
+	chat, sms, voice, video, form, email
+	comm_outcome 
+	appt_booked
+	start, close, engage, inject, send_deal, 
+send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	submission_id 
+	8394 
+	numeric counter (if assigned)
+	element_text 
+	Get ePrice 
+	CTA TEXT (if available)
+	department
+	service | 
+quick_lube
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	form_name 
+	inventory_lead
+	the name of the form your platform uses to identify the form
+	form_type
+	consumer_contac t
+	item, consumer_contact, trade, recall, parts, accessories, service_appointment, pre-order, finance_credit, human_resources, body_shop, custom, research, surveys, unknown
+	item_id 
+	
+
+	4Y1SL65848Z41 item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda,
+	
+
+
+
+53
+
+
+	
+
+	Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+54
+item_purchase 
+This event has yet to be defined in version 1.0 of the specification. 
+Note: this is the reference for the Google “purchase” event: 
+https://developers.google.com/analytics/devguides/collection/ga4/reference/events#purchase 55
+asc_element_configuration 
+This event would be sent into GA4 when a consumer clicks on search filters on a product listings page (i.e. SRP) showing multiple products. Each time a checkbox, slider, or value is entered into a search filter, the event would fire. 
+event_owner 
+	digital_motors 
+	Who is pushing the event
+	page_type 
+	item
+	
+
+	event_action_result 
+	search
+	
+
+	event_action 
+	swipe_left 
+	Determine what triggered the configuration
+	product_name 
+	impel
+	To determine if configuration happened on a base website product, or an added product
+	element_state 
+	active 
+	If toggle or checkbox, was it active or inactive
+	element_type
+	digital_retailing_to ol
+	To determine if this was on an item list filter, or search bar, site config, language toggle, or other high level element.
+	element_subtype 
+	mega_menu
+	To determine if what was interacted with was a button, or field, or other sub type
+	element_title 
+	mileage 
+	To determine what the configuration was called
+	element_text 
+	Get Price 
+	What the configuration showed to the customer
+	element_value 
+	Any Model 
+	What was used in the configuration
+	element_color 
+	#544B45
+	Useful for AB testing to see what gets higher interaction rates
+	element_position 
+	center_right
+	To determine where on the page /tool the configuration took place
+	element_order 
+	1
+	To determine how far down a list the 
+configuration was
+	
+
+
+
+56
+asc_media_interaction 
+This event would be sent into GA4 when a consumer views a media element on any page. The media can be a video, slider, gallery, images, 360° spin technology. The event is designed to support any media player and functionality. 
+The page_type will allow us to show which page the media was viewed on.The media_type parameter can show what type of media it was, and we have added media_link as a parameter in case the media has a hyperlink to move to another page, like at the end of a video or a hyperlink on each image. 
+We added creative_name to allow each item in the gallery, if applicable, to have its own name. Each time a consumer clicks or swipes to advance, stop, or rewind media, the event will fire into GA4. 
+event_owner 
+	dealer_inspire 
+	Who is pushing the event
+	page_type 
+	item
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	event_action_result 
+	play
+	play, restart, vr_play, spin, popup, slideout, exit, error, search, calc, start, stop, redirect, open, close, increase, decrease, clear, check, uncheck, next_step
+	affiliation 
+	Impel
+	Name of company if different from website company
+	media_type 
+	video
+	video, image, vr, slider, gallery, offer, 
+360_platform
+	link_url
+	
+
+	allows each image (for example) or video to have a unique hyperlink, if applicable
+	creative_name
+	
+
+	allows each image (for example) to have its own name
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	
+
+
+
+57
+item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+58
+asc_menu_interaction 
+This event would be sent into GA4 when a consumer engages with a menu navigation system on the dealer’s website or on a third-party retailing tool (example: Roadster menus). Since a specific menu choice, like Schedule Service, can be on more than one menu tree, we added element_type to show the parent tree of the menu choice. 
+event_owner 
+	dealeron 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	element_text
+	schedule 
+service 
+	The text on the link that they clicked
+	element_subtype hamburger
+	
+
+	cta_button, cta_icon, nav_button, nav_icon, nav_tab, hamburger_menu, mega_menu, sidebar_menu, inline_menu, hyperlink, content, share_icon, image, input_field, toggle, dropdown,
+	element_type 
+	service
+	The menu tree that this menu item was under, since dealers can duplicate menu choices
+	event_action 
+	click
+	click, slide, open, close, exit, increase, decrease, clear, check, uncheck, redirect
+	
+
+
+
+59
+asc_pageview 
+In GA4, there is a standard event named page_view which Google can automatically send every time a new page is displayed. Since the ASC Specification has additional parameters that Google does not support by default, we will overwrite the standard Google event with these parameters. By doing this, the correct number of page views will fire. 
+This event will be fired into GA4 on EVERY page. 
+The two events item_pageview and itemlist_pageview will fire for specific pages, but Google will not see these events as page views, and the page_views event will not be corrupted. 
+event_owner 
+	sincro 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, 
+build_to_order, custom, 
+complaint, employment, recall, finance, credit, trade, 
+commercial, showroom
+	error_code
+	
+
+	Error code if the page does not load properly
+	item_id 
+	4Y1SL65848Z41
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549
+	item stock number assigned by dealer
+	item_price 
+	552643
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, 
+Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, 
+Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	
+
+
+
+60
+item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, 
+crossover, truck, 
+commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, 
+economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022
+	date item was entered into inventory
+	item_results 
+	5
+	If the page was not intended to show results this value should be set to NULL
+	
+
+
+
+61
+asc_retail_process 
+This event would fire into GA4 multiple times during a sales, trade, or credit application process since they have many steps. The goal of this event is to track the progress of a consumer in the dealer’s online sales process. Unlike a simple form, which could be completed in a minute, digital retailing workflows are multi-step and can have many different paths to an eventual sale. 
+The related concern with this event is: when does the conversion event form_submission fire into GA4? Should the event fire each time one major step of the online sales process is completed, or should one event be fired at the end of the consumer’s visit? The ASC members generally feel that when each form is completed, a conversion event should be generated. 
+TRADE START EXAMPLE 
+There is a button on a Dealer eProcess Vehicle Detail Page (VDP) called “Customize Payments” that fires the CarNow DR tool. The simplified event stream could look like: 
+1. asc_cta_interaction event fires with parameters element_text = customize payments and event_owner = dealer_eprocess. 
+2. The asc_retail_process event fires with flow_name = trade and flow_outcome=open and event_owner=carnow 
+Then the consumer starts to fill out some information. Because the previous event was when the software opened, we want to send an event that the consumer started typing in data, to mark engagement with the form. 
+3. The asc_retail_process event fires again with flow_name = trade and flow_outcome=start and event_owner=carnow 
+When the consumer completes their trade information with all required fields, they will likely click on a “Next” button on the form/page, which would fire two events: 
+4. Retail_process event fires with flow_name = trade and flow_outcome=success and event_owner=carnow 
+asc_cta_interaction event fires with event_owner=carnow and element_text=next and event_action_result=next_step 
+If the consumer leaves a required field blank, then only one event would be sent; the asc_cta_interaction event with these parameters: 
+62
+asc_cta_interaction event fires with event_owner=carnow and element_text=next and event_action_result=error 
+If the consumer moves to the next step, which is credit, the next event would be: 
+5. The asc_retail_process event fires with flow_name = credit and 
+event_action_result=open and event_owner=carnow 
+If the consumer exits, without typing in any credit information, then this event would fire. 
+6. Retail_process event fires with flow_name = credit and event_action_result=close and event_owner=carnow 
+If the consumer did start to complete the application, then the event would be: 
+7. Retail_process event fires with flow_name = credit and event_action_result=start and event_owner=carnow 
+When the consumer completes their credit application and clicks on the “Submit” button, then two events would be sent: 
+8. The asc_retail_process event fires with flow_name = credit and 
+event_action_result=success and event_owner=carnow 
+asc_cta_interaction event fires with event_owner=carnow and element_text=submit and event_action_result=next_step (or it could be a redirect, or one of the other choices) 
+The event_action_result=start parameter would allow reports to be created to see how many people started each sales step, and the event_action_result=success parameter would be able to show how many sales steps were completed. 
+After each event_action_result = “success” in the retail process, IF a lead form is sent to the dealer’s CRM, then the asc_form_submission event would fire. 
+Otherwise, when the session is completed, only one asc_form_submission event would be fired into GA4. This way, the number of form submission events will match up with the number of leads sent into the dealer’s CRM. 
+63
+event_owner 
+	sincro 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	flow_name 
+	financing
+	start, contact_info, trade, financing, accessories, pick_bank, finalize_deal, credit_app, soft_pull, compare, 
+upload_photos, upload_video, lease, delivery, service_plans, 
+conditional_incentives
+	element_title 
+	downpayment
+	the data field that is associated with this event
+	flow_outcome 
+	recalc
+	start, stop, close, recalc, download, submit, unlock, proceed, lead, approved, declined, error, added, removed
+	item_payment 
+	lease 
+	lease, finance, cash
+	flow_stage 
+	2500
+	the data in the field, if applicable, when its entered or changed
+	item_id 
+	4Y1SL65848Z41
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck 
+	sedan, coupe, suv, cuv, crossover, truck,
+	
+
+
+
+64
+
+
+	
+
+	commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+65
+asc_special_offer 
+This event would fire into GA4 when a pop-up or overlay offer is displayed on a dealer’s website. These offers can pop up automatically, or they can be triggered by a CTA button. As the consumer engages with the offer tool, the software company may send this event multiple times with the parameter flow_outcome = engage. 
+If the offer tool sends a form into the dealer’s CRM, then the company would also send the form_submission event. 
+event_owner 
+	autoleadstar 
+	Who is pushing the event
+	page_type 
+	item
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	promotion_name 
+	lock-in price
+	
+
+	department
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	product_name
+	
+
+	
+
+	element_position 
+	popup
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	flow_outcome 
+	success
+	start, stop, close, recalc, download, submit, unlock, proceed, lead, approved, declined, error, added, removed
+	
+
+
+
+When a button on a special offer form (i.e. submit) is clicked, the software application should always send the asc_special_offer event into GA4 with the parameter flow_outcome = success before sending the asc_form_submission event. 
+If the form is not filled out correctly, the software company would send the asc_special_offer event into GA4 with the parameter flow_outcome = error. This is very similar to the logic used for regular application CTA buttons. 
+66
+asc_video_call_engagement 
+event_owner 
+	dealer_inspire 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	video 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native 
+	whatsapp, google, wechat, messenger, apple, native
+	element_posit ion
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	engage
+	start, close, engage, inject, send_deal, send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number SNT72549 
+	
+
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_conditio n 
+	new 
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category domestic 
+	
+
+	luxury, domestic, foreign, economy, accessories, unknown
+	
+
+
+
+67
+item_fuel_typ e 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventor y_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+asc_video_call_submission 
+event_owner 
+	dealer_inspire 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	video 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native 
+	whatsapp, google, wechat, messenger, apple, native
+	element_posit ion
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	send_deal
+	start, close, engage, inject, send_deal, send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number SNT72549 
+	
+
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_conditio n 
+	new 
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	
+
+
+
+68
+item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category domestic 
+	
+
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_typ e 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventor y_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+asc_video_call_submission_sales 
+event_owner 
+	dealer_inspire 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	video 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native 
+	whatsapp, google, wechat, messenger, apple, native
+	element_posit ion
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	send_deal
+	start, close, engage, inject, send_deal, send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number SNT72549 
+	
+
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_conditio n 
+	new 
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	
+
+
+
+69
+item_year 
+	2023 
+	model year
+	item_make
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category domestic 
+	
+
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_typ e 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventor y_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+asc_video_call_submission_service 
+event_owner 
+	dealer_inspire 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	comm_type 
+	video 
+	chat, sms, voice, video, form, email
+	affiliation 
+	native 
+	whatsapp, google, wechat, messenger, apple, native
+	element_posit ion
+	bottom_right
+	top, top_left, top_right, bottom, bottom_right, bottom_left, slide_left, slide_right, floating, pop-up
+	department 
+	service
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327
+	user id in the messaging system, bot, outsourced, multi-user
+	comm_status 
+	appt_set
+	start, close, engage, inject, send_deal, send_payment, send_appt, directions, idle, timeout, load, video_start, video_end, connect, ring, appt_set, crm_update, appt_booked, blocked, failed, connected
+	
+
+
+
+70
+item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_conditio n 
+	new 
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category domestic 
+	
+
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_typ e 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventor y_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+asc_voice_engagement 
+This is the main event that will detail voice engagement between the consumer and the dealer. Conversion events will be built off this event. 
+event_owner 
+	marchex 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	department 
+	sales 
+	sales, service, parts, body_shop, admin
+	affiliation_id 
+	6327 
+	user id or extension in phone system
+	comm_type 
+	voice
+	
+
+	comm_phone_n umber 
+	7328641485 
+	dealer's phone number used in communication
+	
+
+
+
+71
+comm_duration _seconds 
+	145 
+	call duration in seconds
+	comm_status 
+	answered
+	unanswered, ivr_abandon, transfer_abandon, hold_time_abandon, conversation, voicemail, answered, phone_tree_keypress
+	comm_segment
+	session-based, 
+channel-based, static
+	identify and segment based on Tracking Type in Vendor Platform
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type
+	
+
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	truck
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_ date
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+72
+asc_voice_engagement_30 
+This is the main event that will detail voice engagement between the consumer and the dealer. Conversion events will be built off this event. 
+event_owner 
+	marchex 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, 
+employment, recall, finance, credit, trade, commercial, showroom
+	department
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327 
+	user id or extension in phone system
+	comm_type 
+	voice
+	
+
+	comm_phone_ number 
+	7328641485 
+	dealer's phone number used in communication
+	comm_duration _seconds 
+	>30s 
+	call duration in seconds
+	comm_status 
+	connected 
+	pre-connection and connection status
+	comm_status
+	unanswered, ivr_abandon, transfer_abandon, 
+hold_time_abandon, 
+conversation, voicemail, answered, 
+phone_tree_keypress 
+	post-connection handling status
+	comm_outcom e
+	opportunity
+	appt_booked, vehicle_ordered, parts_ordered, get_back_commitment, not_opportunity, robocall, opportunity, unknown
+	affiliation_id 
+	109283192 
+	unique identifier for the specific call
+	comm_segmen t
+	session_based, 
+channel_based, static
+	identify and segment based on Tracking Type in Vendor Platform
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition new 
+	
+
+	new, used, salvage, dealer_cpo, oem_cpo,
+	
+
+
+
+73
+
+
+	
+
+	cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, 
+Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, 
+accessories, unknown
+	item_fuel_type diesel
+	
+
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory _date
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+asc_voice_submission 
+This event would be fired into GA4 with a slight delay as the ASC-certified telephony platform analyzes the call transcript to see if this was a business opportunity and for which department. 
+event_owner 
+	marchex 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	department
+	sales
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327 
+	user id or extension in phone system
+	comm_type 
+	voice
+	
+
+	comm_phone_nu mber 
+	7328641485 
+	dealer's phone number used in communication
+	
+
+
+
+74
+comm_duration_ seconds 
+	345 
+	call duration in seconds
+	comm_status 
+	connected 
+	pre-connection and connection status
+	comm_status 
+	answered
+	unanswered, ivr_abandon, transfer_abandon, hold_time_abandon, conversation, voicemail, answered, phone_tree_keypress
+	comm_outcome
+	opportunity
+	appt_booked, vehicle_ordered, parts_ordered, get_back_commitment, not_opportunity, robocall, opportunity, unknown
+	affiliation_id 
+	109283192 
+	unique identifier for the specific call
+	comm_segment
+	session_based, 
+channel_based, static
+	identify and segment based on Tracking Type in Vendor Platform
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_d ate
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+75
+asc_voice_submission_parts 
+This event would fire when the post call analysis indicated that the call was a sales opportunity for the parts department. 
+event_owner 
+	marchex 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	department
+	parts
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327 
+	user id or extension in phone system
+	comm_type 
+	voice
+	
+
+	comm_phone_number 
+	7328641485
+	dealer's phone number used in 
+communication
+	comm_duration_seconds 345 
+	
+
+	call duration in seconds
+	comm_status 
+	connected 
+	pre-connection and connection status
+	comm_status 
+	answered
+	unanswered, ivr_abandon, 
+transfer_abandon, hold_time_abandon, conversation, voicemail, answered, phone_tree_keypress
+	comm_outcome 
+	opportunity
+	appt_booked, vehicle_ordered, 
+parts_ordered, get_back_commitment, not_opportunity, robocall, opportunity, unknown
+	affiliation_id 
+	109283192 
+	unique identifier for the specific call
+	comm_segment
+	session_based, 
+channel_based, static
+	identify and segment based on Tracking Type in Vendor Platform
+	item_id 
+	4Y1SL65848Z41
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643
+	MSRP for New Vehicles | Dealer price for used
+	
+
+
+
+76
+item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover, Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_date 
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+77
+asc_voice_submission_sales 
+This event would fire when the post call analysis indicated that the call was a sales opportunity for the sales department. 
+event_owner 
+	marchex 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	department 
+	sales | credit | trade
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327 
+	user id or extension in phone system
+	comm_type 
+	voice
+	
+
+	comm_phone_nu mber
+	7328641485 
+	dealer's phone number used in communication
+	comm_duration_ seconds
+	345 
+	call duration in seconds
+	comm_status 
+	connected 
+	pre-connection and connection status
+	comm_status 
+	answered
+	unanswered, ivr_abandon, transfer_abandon, hold_time_abandon, conversation, voicemail, answered, phone_tree_keypress
+	comm_outcome 
+	opportunity
+	appt_booked, vehicle_ordered, parts_ordered, get_back_commitment, not_opportunity, robocall, opportunity, unknown
+	affiliation_id 
+	109283192 
+	unique identifier for the specific call
+	comm_segment
+	session_based, 
+channel_based, static
+	identify and segment based on Tracking Type in Vendor Platform
+	item_id 
+	4Y1SL65848Z41 
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643 
+	MSRP for New Vehicles | Dealer price for used
+	item_condition 
+	new
+	new, used, salvage, dealer_cpo, oem_cpo, cpo, unknown
+	item_year 
+	2023 
+	model year
+	item_make 
+	chevrolet 
+	Chevrolet, Ford, Nissan, Stellantis, Land Rover,
+	
+
+
+
+78
+
+
+	
+
+	Jaguar, Buick, GMC, Volvo, Mercedes-Benz, Audi, BMW, Alfa Romeo, Fiat, MINI, Toyota, Honda, Acura, Lexus
+	item_model 
+	silverado 
+	model of product
+	item_variant 
+	SS 
+	trim level of model
+	item_color 
+	black 
+	color of product
+	item_type 
+	truck
+	sedan, coupe, suv, cuv, crossover, truck, commercial_truck, van, trailer, 5th_wheel, luxury, domestic,
+	item_category 
+	domestic
+	luxury, domestic, foreign, economy, accessories, unknown
+	item_fuel_type 
+	diesel
+	gas, diesel, liquified_natural_gas, electric, propane, nitrogen, methane, unknown
+	item_inventory_d ate
+	7/2/2022 
+	date item was entered into inventory
+	
+
+
+
+79
+asc_voice_submission_sales_appt 
+This event would fire when the post-call analysis indicated that the call was a sales opportunity for the sales department, and a firm appointment was set. 
+event_owner 
+	dealer_inspire 
+	Who is pushing the event
+	page_type 
+	home
+	item, itemlist, contact, directions, service, parts, accessories, body_shop, home, build_to_order, custom, complaint, employment, recall, finance, credit, trade, commercial, showroom
+	department 
+	sales | credit | trade
+	sales, service, parts, trade, credit, body_shop, admin, accessories, hr, custom_shop, rentals, unknown, quick_lube
+	affiliation_id 
+	6327 
+	user id or extension in phone system
+	comm_type 
+	voice
+	
+
+	comm_phone_number 
+	7328641485
+	dealer's phone number used in 
+communication
+	comm_duration_seconds 345 
+	
+
+	call duration in seconds
+	comm_status 
+	connected 
+	pre-connection and connection status
+	comm_status 
+	answered
+	unanswered, ivr_abandon, 
+transfer_abandon, hold_time_abandon, conversation, voicemail, answered, phone_tree_keypress
+	comm_outcome 
+	appt_booked
+	appt_booked, vehicle_ordered, 
+parts_ordered, get_back_commitment, not_opportunity, robocall, opportunity, unknown
+	affiliation_id 
+	109283192 
+	unique identifier for the specific call
+	comm_segment
+	session_based, 
+channel_based, static
+	identify and segment based on Tracking Type in Vendor Platform
+	item_id 
+	4Y1SL65848Z41
+	item identification number (i.e. VIN# or Serial#)
+	item_number 
+	SNT72549 
+	item stock number assigned by dealer
+	item_price 
+	552643
+	MSRP for New Vehicles | Dealer price for used
+	
+
+
+
+80

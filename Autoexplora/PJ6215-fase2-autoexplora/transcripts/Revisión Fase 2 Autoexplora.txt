@@ -1,0 +1,953 @@
+Abigail Estrada • 00:00:03
+¿Y te respondió el chat? Creo que me muteé antes, justo cuando te respondí, pero bueno, todo bien por acá, gracias.
+
+Sharon Mendoza • 00:00:16
+Andy,
+
+Abigail Estrada • 00:00:18
+Lulú, Fer, ¿cómo están?
+
+Lourdes Munguía • 00:00:23
+Hola, bien, bien, ¿ustedes qué tal?
+
+Abigail Estrada • 00:00:25
+Muy bien, gracias.
+
+Lourdes Munguía • 00:00:28
+Hola.
+
+Lourdes Munguía • 00:00:42
+Listo, esperamos salir más de su lado o ya comenzamos.
+
+Abigail Estrada • 00:00:48
+No, ya desde nuestro lado estamos todos. Bueno,
+
+Lourdes Munguía • 00:00:55
+les voy a poner mi pantalla para que vayamos validando justo lo que hemos estado checando en conjunto. Un segundo.
+
+Lourdes Munguía • 00:01:29
+No sé si ya ven mi pantalla.
+
+Sharon Mendoza • 00:01:35
+Aún no.
+
+Lourdes Munguía • 00:01:44
+No sé por qué no me deja.
+
+Lourdes Munguía • 00:01:57
+Abby, ¿me puedes ayudar a compartir? Que creo que no me
+
+Abigail Estrada • 00:01:59
+deja,
+
+Lourdes Munguía • 00:01:59
+no sé por qué. No
+
+Abigail Estrada • 00:02:01
+te preocupes, señor Lara.
+
+Lourdes Munguía • 00:02:04
+Sí,
+
+Abigail Estrada • 00:02:04
+gracias.
+
+Lourdes Munguía • 00:02:17
+Listo.
+
+Abigail Estrada • 00:02:22
+¿Ahí lo ven bien?
+
+Lourdes Munguía • 00:02:23
+Sí, ya.
+
+Lourdes Munguía • 00:02:26
+Mira, Sean, ¿dónde están todos los comentarios? No sé la de fase 2, pero—
+
+Abigail Estrada • 00:02:33
+Ah, ok, ok.
+
+Abigail Estrada • 00:02:36
+Esto está
+
+Lourdes Munguía • 00:02:39
+mal. Ahí justo, bueno, les compartimos ya todos los comentarios que en su momento se implementaron en fase 1. Sin embargo, hay comentarios que todavía siguen ahí pendientes por tema de entrega de un insumo o por una dependencia, no, ya sea Exagono o algún tema de petición. Aquí, por ejemplo, digo Yo hice un Excel con estos comentarios, pero realmente está todo aquí en la presentación. Viene la parte del formulario de Vende Tu Auto que está en el slide 13, que es
+
+Abigail Estrada • 00:03:12
+esto.
+
+Lourdes Munguía • 00:03:15
+Sí, en el slide 13,
+
+Lourdes Munguía • 00:03:23
+es la 64.
+
+Lourdes Munguía • 00:03:29
+Aquí nada más como justo para entender la dinámica que traemos, cuando hay puntitos verdes quiere decir que pues ese ajuste ya fue aplicado en
+
+Abigail Estrada • 00:03:36
+el
+
+Lourdes Munguía • 00:03:36
+sitio productivo, y cuando hay puntitos rojos, morados, pues solamente ahí hay una pendiente, ¿no? Por parte de Go Virtual.
+
+Abigail Estrada • 00:03:44
+Este,
+
+Lourdes Munguía • 00:03:45
+justo para que ahí identifiquen los cambios. En este caso, en el slide 13 tenemos Vende tu Auto, que aquí justamente El comentario es hoy en día pues no se manda un correo a través de este formulario, no. Entonces la petición es poderlo enviar para que el usuario sepa de la información que está solicitando y de cualquier forma se dé seguimiento. Entonces aquí justo lo comentaba Sharon, ¿cuál es el formato, el peso, el diseño que requieren para poderlo compartir?
+
+Sharon Mendoza • 00:04:17
+Me parece que en otro momento, Lulú, te he pasado ya las especificaciones. Creo que fue en una sesión
+
+Abigail Estrada • 00:04:25
+que
+
+Sharon Mendoza • 00:04:26
+justo necesitamos el diseño, ya sea en un Figma
+
+Lourdes Munguía • 00:04:31
+o
+
+Sharon Mendoza • 00:04:32
+en un formato de imagen, eso como referencia. Posteriormente necesitamos la plantilla en HTML
+
+Lourdes Munguía • 00:04:44
+y
+
+Sharon Mendoza • 00:04:44
+también necesitamos los assets, por ejemplo, si van a incluir alguna imagen, algún logo, o algún fondo, por ejemplo. Entonces, esos serían como los assets. Y adicionalmente, en caso de que ustedes no nos vayan a proporcionar el HTML, entonces necesitaríamos especificaciones completas del diseño que ustedes están implementando, ya sea en Figma o a través de Photoshop, etcétera. Es decir, tipografía, tamaños, colores, Si llegara a haber alguna línea, qué grosor tiene, con qué color está, etcétera. Entonces necesitamos prácticamente que toda esa especificación.
+
+Lourdes Munguía • 00:05:29
+Ok, en caso de que no te podamos compartir HTML, ¿ustedes nos pueden ayudar a implementarlo?
+
+Sharon Mendoza • 00:05:35
+Y solamente en esta segunda parte, la referencia Y las especificaciones completas. Ok,
+
+Lourdes Munguía • 00:05:48
+y esto se integraría ya dentro de fase 2, no, o sea, justo en la fecha que ahorita nos confirmen para fase 2.
+
+Sharon Mendoza • 00:05:55
+Sí,
+
+Lourdes Munguía • 00:05:57
+de acuerdo. En el slide 14 y 15 viene justamente el formulario de guía de precios, que es justamente el que trae Exagono. Aquí ya vi que se corrigieron las altas y bajas, no, los tonos que traíamos. Sin embargo, mi duda es en la parte del estilo, porque se ve diferente a los formularios restantes. ¿Cuándo pudiera quedar ese ajuste?
+
+Lourdes Munguía • 00:06:25
+En el paso 1, 2, 3, ahí se ve como diferente el estilo, la tipografía, al resto de los formularios que tenemos.
+
+Sharon Mendoza • 00:06:33
+El equipo de Exagono ya homologó tanto como era posible en este momento,
+
+Lourdes Munguía • 00:06:40
+de
+
+Sharon Mendoza • 00:06:40
+acuerdo a los alcances del proyecto. Lo único que en este momento teníamos, tenemos más bien pendientes con ellos, es la parte del envío de correo. E igual ellos estarían en espera de él y de esta referencia que ustedes nos compartan.
+
+Lourdes Munguía • 00:06:59
+El formato sería el mismo que el anterior, ¿no?
+
+Sharon Mendoza • 00:07:01
+Sí.
+
+Lourdes Munguía • 00:07:02
+Ok.
+
+Abigail Estrada • 00:07:03
+Solo algo importante, para estas implementaciones, ¿están consideradas para fase 2? Pero tenemos una dependencia directa del entregable de diseño. Entonces, por poner un ejemplo, evaluamos el volumen de ajustes que se van a hacer en fase 2, establecemos una fecha, pero les vamos a compartir dentro de ese project plan cuándo sería la fecha límite para revisar, recibir el diseño, perdón, y que se puede implementar. Vale,
+
+Lourdes Munguía • 00:07:36
+sí, sí, sí, de hecho tiene que haber un plan de trabajo para entregarles yo las cosas que requieran, validaciones, y pues solamente la liberación que nos compartan de la fase 2.
+
+Abigail Estrada • 00:07:48
+Exacto.
+
+Lourdes Munguía • 00:07:51
+Bueno, justo ya se mencionó lo del correo de guía de precios. Tenemos el formulario de agenda tu cita en el slide 24.
+
+Lourdes Munguía • 00:08:02
+Bueno, más bien en el slide 21, perdón. Nos vamos al cotizador de crédito, que ahí justamente traemos una leyenda pendiente que decía que si el auto que estás cotizando no está disponible, te lo mandan de alguna otra ciudad o estado. Aquí ya lo revisé con Vivian del equipo de agencias y me comentó que sí hay que omitirlo porque realmente no es una garantía al 100% para poder cumplir con el cliente. Por uno, por el tema que si hay inventario Y 2, este, pues si realmente cumple o no esta regla, no. Entonces sí hay que omitir esta leyenda. Igual ahorita yo se los coloco ahí en la presentación para que pues ya sea un cambio a aplicar.
+
+Lourdes Munguía • 00:08:47
+En el slide 24 tenemos el formulario de Agenda Tu Cita, que aquí hoy en día en el formulario no se manda ningún correo. Entonces pues sí genera un gran valor mandar un correo. Para que lo puedan considerar. Y pues entiendo que también serán bajo las mismas características, ¿verdad? De los corros anteriores.
+
+Sharon Mendoza • 00:09:08
+Sí,
+
+Abigail Estrada • 00:09:08
+nada más, Lulú, voy a poner aquí el comentario de que se va a eliminar la leyenda, ¿vale?
+
+Lourdes Munguía • 00:09:13
+Así, sí, sí,
+
+Abigail Estrada • 00:09:25
+sí. Ahora sí, estábamos en cuál es la, en este 27, no,
+
+Lourdes Munguía • 00:09:30
+27. Si nos vamos al 28, ahí justamente viene el calendario.
+
+Lourdes Munguía • 00:09:39
+Exacto, ahí lo que le comentaba en su momento Sharon es justo yo hice el ejercicio el día de hoy, no, hoy estamos a 22 de junio. En teoría pues tendría que venir justo el día 20 24, 93, no, 23. Este, porque justamente pues perdemos ahí 2 días, tanto 22 como 23. Entonces no sé ustedes cómo nos pueden ayudar a que justo no se pierdan esos 2 días para que el usuario pueda agendar esa cita. Digo, entiendo que lo hacen porque justamente ahorita no hay un parámetro de tiempo ni nada con la agencia, pero aquí, ¿qué ustedes sugieren para que no se pierdan esos 2 días, ¿no? Porque hoy es lunes y digamos, ejemplo, yo lo veo a las 9 de la mañana, 10 de la mañana, y me está agendando cita hasta el 24, o sea, un día,
+
+Abigail Estrada • 00:10:29
+2
+
+Lourdes Munguía • 00:10:29
+días posterior, ¿no? Entonces ahí justo no sé si pueda ser quizá el 23 habilitar solo los horarios de la tarde o ver justo la forma de que pues no nos vayamos hasta el segundo día.
+
+Abigail Estrada • 00:10:46
+Aquí, Lulú, básicamente dependeríamos de ustedes en el sentido de que nos dijeran, por ejemplo, que la agencia puede recibir citas. O sea, esto es algo que se definió a nivel desarrollo justamente para evitar que las agencias recibieran estos leads, por ejemplo, de hoy 22.
+
+Lourdes Munguía • 00:11:11
+y
+
+Abigail Estrada • 00:11:11
+lo que se tarda el BDC o lo que tardan en contactar al LEAD para agendar la cita, y a lo mejor lo quieren para hoy mismo, pero pues ya no va a poder quedar la cita agendada para hoy mismo por este tiempo que lleva la gestión del LEAD. Por eso se definió con esa extensión. Pero si tú nos dices, sabes qué, este, que se puedan registrar el mismo día con, no sé, 5 horas de diferencia, por ejemplo, ahorita pues ya es la 1, entonces 5 horas serían básicamente las 6 de la tarde, por lo tanto pues ya no habría horarios, por decirlo así,
+
+Lourdes Munguía • 00:11:48
+entonces
+
+Abigail Estrada • 00:11:48
+quedarían para el 23. O sea, el punto es que definamos ustedes cuánto tiempo tardan en que el lead recorra todo el funnel para que se pueda realmente agendar la cita y evitar generar estos roces con los clientes, ¿no?
+
+Abigail Estrada • 00:12:06
+Desde nuestra perspectiva es un roce, o digamos, es una molestia más gestionable para el cliente decir hay cita hasta dentro de 2 días, a decir agendé para hoy y nunca me contactaron, no me dijeron nada, yo quería llevar mi coche y pues no pasó, ¿no? Entonces lo que ustedes definan nosotros lo podemos ajustar sin problema.
+
+Lourdes Munguía • 00:12:30
+Sí, yo creo que aquí igual te confirmo, este, Abby, aquí algo importante que platiqué con Sharon es que justo sí o sí se necesita necesita una implementación, ¿no? Para que tanto los horarios como las fechas en disponibilidad con las agencias concuerden, porque hoy en día en el formulario pues no existe. Entonces, ¿esa implementación se puede considerar para fase 2 o conlleva ya más esfuerzo para ustedes a fase 3?
+
+Sharon Mendoza • 00:12:54
+En
+
+Abigail Estrada • 00:12:54
+realidad, de nuestro lado aquí, Char, este, adelante si quieres, creo que tú tienes más claro el punto.
+
+Sharon Mendoza • 00:13:01
+Sí, gracias. Justo, Lolo, al menos de nuestro lado lo estamos considerando para fase 2, tomando en cuenta, claro, la importancia que tiene este punto, ¿no?, de agendar las citas de servicio. Sin embargo, en este momento, para esta implementación, estaríamos en dependencia de ustedes. Es decir, necesitaríamos, si es necesario, pues agendar la sesión con, y la verdad no recuerdo el nombre de la persona que nos presentaste la semana pasada. Gonzalo. Ah, Gonzalo, justo, que él se encarga de esta parte de Smart IT, para que entonces yo le pueda presentar directamente los hallazgos que hemos tenido con anterioridad al intentar hacer esta implementación y que justo podamos llegar a una solución. Para poder implementarlo.
+
+Lourdes Munguía • 00:13:57
+Entonces,
+
+Sharon Mendoza • 00:13:58
+por ejemplo, si tú me consigues esta sesión en esta semana, pues nosotros podemos comenzar a trabajar, porque no solamente serían cambios que nosotros estaríamos haciendo en el sitio,
+
+Lourdes Munguía • 00:14:13
+sino
+
+Sharon Mendoza • 00:14:13
+que también necesitamos que de parte de Gonzalo nos apoyen con ciertas cosas para implementar y que podamos hacer esto, ¿no? Entonces no sería un trabajo rápido. Entonces, entre más pronto podamos comenzarlo, vamos a poder sí cumplirlo dentro de fase 2.
+
+Lourdes Munguía • 00:14:32
+Ok, sí, sí, sí, este, digo, yo ahorita ya lo anoté. Entonces ahí lo consideramos para que se pueda implementar, no, porque sí, esa es creo que de las implementaciones más importantes para que podamos generar algún lead o importancia de venta. Entonces sí. Lo consideramos y les comparto lo que requieren.
+
+Sharon Mendoza • 00:14:53
+De acuerdo. Mientras tanto, de nuestro lado, pues tal como comentaba Abby, quedamos a espera de que nos confirmes si habilitamos el día siguiente o esta regla, ¿no? Que de su lado definan para al menos de momento tenerlo más
+
+Sharon Mendoza • 00:15:14
+apto, apto el formulario, ¿no? Para los clientes. De
+
+Lourdes Munguía • 00:15:19
+acuerdo, listo. Ahora vamos al slide 36, que justamente trae el tema de la sección de inventario. Aquí, por ejemplo, en su momento les habíamos compartido la propuesta de que nos ayuden colocando plaquitas, así como lo hicieron con la oferta especial, pero justo que sea como de único dueño, no, este, qué más, auto nuevo, justo como para crear esa esa urgencia, ¿no? O
+
+Sharon Mendoza • 00:15:49
+interés
+
+Lourdes Munguía • 00:15:49
+por parte de los compradores. Aquí creo que me habías comentado, Sharon, que eran 2 tags más, ¿verdad? Dentro de la imagen de cada auto.
+
+Sharon Mendoza • 00:15:57
+Es correcto. Y justo este ajuste tiene un circulito morado porque igual estaría en dependencia de ustedes, ya que en este momento nuestro inventario ya tiene soporte para poder obtener esta información dentro de un apartado en especial para que entonces nosotros podamos colocar estos tags. Si es necesario que de tu lado, bueno, no, más bien va a ser necesario que tengamos una sesión con el equipo para poder definir cómo es que nos estarían enviando esta información. En este caso Tendríamos que revisar con Intelimotor
+
+Lourdes Munguía • 00:16:42
+para
+
+Sharon Mendoza • 00:16:42
+que pueda añadir una columna adicional para que ustedes puedan llenarla. Es decir, de su lado, sus concesionarios nos van a tener que indicar, por ejemplo, si fueran a registrar un Mazda 3, qué tag necesitan para ese Mazda 3.
+
+Lourdes Munguía • 00:17:04
+Entonces
+
+Sharon Mendoza • 00:17:05
+sería esa cuestión de revisarlo con Intel y motor y listo. Prácticamente nosotros, como te digo, ya tenemos esto listo para poder leerlo. Entonces la implementación sería bastante ágil.
+
+Lourdes Munguía • 00:17:21
+Vale, de acuerdo. Sí, sí, sí, sí, igual aquí si gustan lo checo con el equipo para que también podamos tener esa información. Del slide 41
+
+Lourdes Munguía • 00:17:35
+tenemos aquí justamente agregar un banner lateral, lo que también se compartió en muchos comentarios de fase 1, sobre todo por la parte de aumentar ahí, o más bien agregar publicidad de valor, algún mensaje como que nos ayude para la venta. Por eso justo la petición de que solamente existieran 3 autos en cada feed. No sé, ahí justo si lo podemos integrar en la fase 2 y que también nos puedan confirmar el formato, la medida, para poderlo compartir.
+
+Sharon Mendoza • 00:18:09
+Sí, este ajuste ya lo estamos revisando de manera interna. Solamente me gustaría verificar, de acuerdo a lo que acabas de comentar, Lu, mira, en este momento Dentro del inventario lo que nosotros tenemos es una grilla, que son recuadros con recuadros adentro,
+
+Sharon Mendoza • 00:18:34
+que viene siendo de 3 vehículos. Este, entonces ahorita solamente vemos 3 de su lado. Entonces sí sería necesario que añadiéramos nuevamente la
+
+Lourdes Munguía • 00:18:50
+cuarta
+
+Sharon Mendoza • 00:18:50
+columna, porque en su momento nos habían hecho la solicitud de pasar de 3 a 4 columnas y después pasar de 4 a 3 por la cuestión de que los vehículos se veían bastante apretados. Entonces sí me gustaría entender nada más ahí cómo está la solicitud. Adelante.
+
+Abigail Estrada • 00:19:12
+Y creo que sería importante, Lulú, a lo que se refiere Sharon es Sé que de aquí visualizamos este banner, pero hablando ya como dentro de la estructura de la página, o sea, los fierros, por así decirlo, el formato es que entonces hay 4 columnas.
+
+Lourdes Munguía • 00:19:29
+Este
+
+Abigail Estrada • 00:19:30
+banner, por ejemplo, aparece en esta fila, pero la fila de abajo no necesariamente trae un banner, entonces traería 4 vehículos. La fila de arriba igual, ¿no? Entonces se puede agregar este banner Pero lo que se va a hacer justo lo que dice Sharon, agregar una columna adicional, lo que hará que estén más compactos también los vehículos. Y puede ser que tengamos este banner aquí y a lo mejor otro banner en otra, en otra parte dentro de la misma página, ya con el formato de las
+
+Lourdes Munguía • 00:20:00
+4
+
+Abigail Estrada • 00:20:00
+columnas.
+
+Lourdes Munguía • 00:20:03
+Sí, sí, o sea, sí, justo va a ser que otra vez agregamos 4 columnas. Sería que nos den una propuesta de cómo se puede ver este banner. He visto que de repente puede ser un banner que aparece aparezca, ¿no? Como dinámico dentro del sitio, pero será cuestión de que nos ayuden ahí con esa propuesta. Creo que vi una propuesta ahí en un sitio, se los mando si quieren para que lo valoren, pero sí, o sea, justo la idea es que pues ya no se amontone más el inventario, ¿no?
+
+Sharon Mendoza • 00:20:33
+Pues
+
+Lourdes Munguía • 00:20:35
+aquí lo dejamos como pendiente, pero les mando la propuesta para ver cómo lo podemos colocar.
+
+Lourdes Munguía • 00:20:43
+Viene la parte del slide 47 donde justamente los logos del carrusel en el home en PC se ven bien, pero en móvil se ven chiquitos. Entonces ahí justo que nos ayuden con ese ajuste, porque al final pues yo me metí en tanto en Android como en iPhone y sí se aprecian en las dos vistas pequeñas. Nada más como agrandar ligeramente, en PC se ven bien, entonces justo sería una adecuación para ese carrusel.
+
+Lourdes Munguía • 00:21:20
+Aquí
+
+Sharon Mendoza • 00:21:23
+es el
+
+Lourdes Munguía • 00:21:23
+slide 47.
+
+Sharon Mendoza • 00:21:26
+Lulú, sobre esa parte tengo una duda, ya que
+
+Lourdes Munguía • 00:21:31
+en
+
+Sharon Mendoza • 00:21:32
+slides más abajo también
+
+Lourdes Munguía • 00:21:34
+hay
+
+Sharon Mendoza • 00:21:35
+y solicitudes como de actualización de los logos.
+
+Sharon Mendoza • 00:21:45
+No sé si justo todo esto va en conjunto para
+
+Lourdes Munguía • 00:21:50
+la actualización
+
+Sharon Mendoza • 00:21:51
+de ese carrusel.
+
+Lourdes Munguía • 00:21:53
+Es que son secciones diferentes porque esta, la que estamos viendo en el slide 47, es la sección, este es el carrusel, pero creo que también se refieren a la sección de donde está concesionarias.
+
+Lourdes Munguía • 00:22:07
+Que también vienen los logos de las páginas.
+
+Abigail Estrada • 00:22:09
+¿Esa es la otra slide a la que te refieres, no, Sharon?
+
+Sharon Mendoza • 00:22:12
+Sí, sí, sí. Esta es
+
+Abigail Estrada • 00:22:14
+la misma
+
+Sharon Mendoza • 00:22:15
+sección,
+
+Abigail Estrada • 00:22:15
+¿no?
+
+Sharon Mendoza • 00:22:15
+Las de la sección 69 son también de ese carrusel del
+
+Lourdes Munguía • 00:22:20
+home. Sí, es un comentario que agregaron la semana pasada. Está Gaby de UX, ella justo tiene la noción de los logos y comentó esta actualización. Ahí yo les tengo que mandar obviamente los logos en una carpeta, este, para que lo puedan hacer ajustar. Pero sí, son logos que nos compartieron.
+
+Sharon Mendoza • 00:22:43
+Aunque entonces, para confirmar, de su lado nos estarían compartiendo los logos para este carrusel.
+
+Lourdes Munguía • 00:22:49
+Sí,
+
+Sharon Mendoza • 00:22:51
+y ahí
+
+Lourdes Munguía • 00:22:52
+les voy a agregar justo que también se tienen que actualizar en la sección de concesionarias porque ya ven que vienen también los logos. Para que esté de cierta forma homologado.
+
+Sharon Mendoza • 00:23:02
+De acuerdo, solamente como comentario, Lulú, para el requerimiento de este carrusel necesitaríamos que todos los logos tengan el ancho y el alto igual.
+
+Lourdes Munguía • 00:23:20
+Ok, ahí esa medida me la pueden compartir para
+
+Sharon Mendoza • 00:23:26
+Ok, sí, la comparto, pero bien puede ser un 800 x 800 sin problemas.
+
+Lourdes Munguía • 00:23:34
+Yo creo que
+
+Abigail Estrada • 00:23:35
+sería mejor uno rectangular, ¿no? Para los que son así chaparritos.
+
+Sharon Mendoza • 00:23:40
+Lo que sucede es que este carrusel está configurado
+
+Lourdes Munguía • 00:23:45
+para—
+
+Abigail Estrada • 00:23:46
+Ah, sí, son
+
+Sharon Mendoza • 00:23:48
+cubitos. Como es automático y va moviéndose considerando ciertos pasos, o sea, ciertos logos para que no se vayan a cortar. Entonces es por eso que tienen que estar del mismo tamaño
+
+Lourdes Munguía • 00:24:05
+las
+
+Sharon Mendoza • 00:24:05
+imágenes, porque si no, justo podemos correr el riesgo de que las imágenes, los logos, se corten porque ya no van a quedar del mismo espacio distribuidos en todo el espacio del carrusel.
+
+Lourdes Munguía • 00:24:19
+Entonces
+
+Sharon Mendoza • 00:24:19
+esa es la cuestión. Y si de su lado consideran que esto no es suficiente, es decir, como mencionaba Abby, que se necesita que sean unos mucho más anchos que otros, pues entonces solamente tener en cuenta que estaríamos perdiendo ahora sí que la cuestión del del corte de los logos.
+
+Lourdes Munguía • 00:24:46
+Pero
+
+Sharon Mendoza • 00:24:46
+si ustedes están de acuerdo con eso,
+
+Lourdes Munguía • 00:24:48
+para
+
+Sharon Mendoza • 00:24:48
+que los logos se vean correctamente, entonces lo podemos hacer.
+
+Lourdes Munguía • 00:24:54
+O sea, yo más bien miré con los tamaños que tenemos actualmente en el sitio, porque
+
+Sharon Mendoza • 00:24:58
+en el
+
+Lourdes Munguía • 00:24:58
+sitio se ven bien, pero te digo justo que en móvil se ven chiquitos. O sea, ahí nada más hay que agrandarlos ligeramente, pero en PC sí, los tamaños están bien. De
+
+Sharon Mendoza • 00:25:09
+acuerdo,
+
+Sharon Mendoza • 00:25:12
+listo.
+
+Lourdes Munguía • 00:25:12
+Nos vamos al slide 63 y ahí justamente es implementar la funcionalidad de compartir el auto, ya sea en redes sociales, en WhatsApp, o inclusive en correo, ¿no? Que era una funcionalidad que el anterior sitio tenía. Aquí les puse como la evidencia en donde prácticamente usaban compartir y llenaban cierta información. Inclusive hasta podían personalizar de para mi amiga Sharon, para mi amigo Abigail, ¿no? Y ya te llegaba hacia el correo, que también ahí lo tengo, se los comparto. Sería básicamente habilitar esta funcionalidad del correo y habilitar compartir en redes o en WhatsApp, porque hoy en día pues tenemos solamente la parte de copiar la liga y ya tú lo compartes, pero creo que no es tan funcional. Entonces justo también para que nos puedan ayudar a complementar e integrarlo en fase 2.
+
+Sharon Mendoza • 00:26:05
+Sí, de acuerdo. De nuestro lado ya estamos revisando la parte de la implementación tanto del envío por mensaje y correo. Aún estamos definiendo cuáles de estas funcionalidades podemos tener en esta fase 2, y también la parte de compartir en redes sociales. Entonces esto sí está considerado para esta
+
+Lourdes Munguía • 00:26:30
+fase.
+
+Sharon Mendoza • 00:26:30
+Ok,
+
+Lourdes Munguía • 00:26:31
+de acuerdo. Y si nos vamos ahora al slide 52, 53 y 54, sería homologar justamente las agencias, ¿no? Que esto pues bueno, tenemos la dependencia con Paola para que pueda republicar las unidades y que pues justamente se puedan ver correctamente. Este, hasta el momento no me ha confirmado que ya quedó, pero espero que entre hoy y mañana
+
+Abigail Estrada • 00:27:01
+queden
+
+Lourdes Munguía • 00:27:01
+ya republicadas para que se puedan visualizar correctamente.
+
+Sharon Mendoza • 00:27:07
+De acuerdo,
+
+Lourdes Munguía • 00:27:09
+traemos justamente en la sección del inventario, en el slide 62, que es la sección de precio. Ahí en el anterior sitio pues veíamos justamente la opción de contado, financiamiento, ¿no? Que esto pues sí nos ayuda para tener el costo de contado o en financiamiento. Hoy en día no está en el sitio, entonces justo para que nos puedan ayudar a implementarlo Se considera en fase 2.
+
+Sharon Mendoza • 00:27:37
+Y justamente sobre este ajuste, Lulú, sí tenemos un poco de,
+
+Sharon Mendoza • 00:27:46
+tal vez sería conflicto. Es decir, ¿a qué me refiero? En este momento nosotros la parte de precio la estamos filtrando de acuerdo a los precios que obtenemos del inventario de cada uno de los vehículos. Para la parte de financiamiento, las reglas que colocaba Dileron no eran precisamente reales de un financiamiento, es decir, desde nuestro lado prácticamente que tendríamos que definir reglas genéricas para poder hacer este financiamiento. Sin embargo, para Autoexplora, sería importante
+
+Lourdes Munguía • 00:28:31
+que
+
+Sharon Mendoza • 00:28:31
+ustedes consideren y nos autoricen que podamos hacer ese tipo de implementaciones, ya que, por ejemplo, en este momento, si revisamos la calculadora de financiamiento, pues no todos los vehículos cuentan con financiamiento. No tenemos como tal pues financiamientos definidos, por ejemplo, de 3000 pesos al mes, así. Entonces es una implementación mucho más grande a considerar, y que si realmente
+
+Lourdes Munguía • 00:29:05
+de
+
+Sharon Mendoza • 00:29:05
+su lado lo que buscan es que sea información real, pues entonces es algo que sí, sí necesitamos definir correctamente. Y que sí podría llevar un poco más de tiempo de desarrollar.
+
+Lourdes Munguía • 00:29:23
+O sea, que lo que traía Dileron era un estimado, o sea, no 100% el real del—
+
+Sharon Mendoza • 00:29:29
+Sí, es
+
+Lourdes Munguía • 00:29:30
+correcto. De
+
+Sharon Mendoza • 00:29:32
+hecho, no correspondía con lo que realmente eran las reglas de financiamiento, era simplemente financiamiento general. Que ofrecía Dilleron en cuanto a calculadora. Entonces, bueno, ese es un dato importante a compartirte.
+
+Lourdes Munguía • 00:29:52
+Ok, sí, igual me lo llevo para ahí pasar comentarios internos y les confirmo, ¿no? En caso de que sí lo vayamos a implementar. Nos vamos ahora al slide 71, que aquí es un comentario de Gaby. Nuestra UX en la 71.
+
+Lourdes Munguía • 00:30:16
+Bueno, creo que no se ve.
+
+Lourdes Munguía • 00:30:20
+No, creo que es en la 67, perdón. Es que eliminé algunas. Gabi me hace mención a que justo en estos pasos
+
+Abigail Estrada • 00:30:29
+del formulario
+
+Lourdes Munguía • 00:30:31
+lo hagamos con un poquito de mayor diseño, como justo el ejemplo de la derecha, donde viene el iconito, donde viene la descripción. Inclusive hasta que cuando nos posicionamos el cursor en el paso 1 nos dé una breve descripción, no, de justo si estamos añadiendo auto de interés, al auto en el que pues quieres, justo en el que estás interesado, no, tu auto es el auto que quieres vender, o sea, como dar pequeñas descripciones que en este caso solamente se las compartiríamos, pero eso es un poco en la implementación que Gaby nos está solicitando para mejorar la experiencia de este formulario. No sé si tengan alguna duda y se pueda justamente implementar en fase 2.
+
+Sharon Mendoza • 00:31:13
+Bueno, inicialmente había visto que nos solicitaban implementar una imagen o visual, entonces si esto es así estaríamos a la espera de que nos compartan este asset para poder implementarlo y que claro nos indiquen si quedaría como banner, si quedaría arriba del formulario abajo
+
+Lourdes Munguía • 00:31:39
+como
+
+Sharon Mendoza • 00:31:40
+un modal.
+
+Sharon Mendoza • 00:31:43
+Pero con lo que comentas ahorita, Lulú, me parece que es como un poco más de en cuestión como de desarrollo, y hay que modificar el desarrollo. Sin embargo, sí me gustaría que nos pudieran proveer de alguna guía, ya sea si esto es un diseño personalizado, que entonces nos pudieran apoyar para poder plasmar esta idea que tiene Gaby, o si esto lo están sacando de un lugar de referencia, que nos puedan compartir la referencia para tenerla en cuenta y poder determinar el tiempo de desarrollo de esto. Adicionalmente, mencionar que de esta
+
+Lourdes Munguía • 00:32:26
+forma
+
+Sharon Mendoza • 00:32:26
+están
+
+Lourdes Munguía • 00:32:26
+todos
+
+Sharon Mendoza • 00:32:27
+los formularios actuales del sitio, entonces Si hacemos esta modificación en este formulario, pues sí me gustaría que de su lado nos pudieran asegurar si únicamente esta implementación va a quedar para este formulario o si también va a ser para el resto, para que entonces lo tomemos en cuenta también.
+
+Lourdes Munguía • 00:32:52
+Sí, seguramente sí para el resto. Aquí pues tendríamos que identificar qué tipo de iconos y qué acomodo vamos a tener. Porque sí, aquí pues está Gaby, nos muestra la diferencia. Pero igual, si quieren, también lo valido para que les pueda compartir yo los artes.
+
+Sharon Mendoza • 00:33:12
+Sí, perfecto.
+
+Lourdes Munguía • 00:33:17
+Y ahora sí nos vamos al slide 66. Tenemos ahí justamente una un banner que nos direcciona a la sección de nosotros, ¿no? Aquí justamente
+
+Lourdes Munguía • 00:33:34
+sería sustituido por el tema de que se hace mucho scroll tanto en móvil por la sección de los más vendidos, ¿no? Y aquí justamente como es una implementación nueva, pues sí requeriríamos ahí una propuesta de su lado para que se vea de la mejor forma posible, que creo que se puede homologar un poquito con el carrusel que ya traemos abajo de las marcas, pero aquí sería justamente como tipo inventario, no, o sea, que se vea la imagen, que se vea el costo, porque al final es una comparativa de los más vendidos. Entonces justamente aquí para que nos puedan ayudar con esa propuesta y pues nos puedan dar ahí el listado.
+
+Lourdes Munguía • 00:34:10
+Nada
+
+Andrea Quintana • 00:34:11
+más quisiera corregir que sería más bien los más buscados y abajo la parte de los que están en oferta.
+
+Andrea Quintana • 00:34:23
+Sí, y bajo su recomendación, digo, sé que ustedes llevan diferentes sitios web de
+
+Lourdes Munguía • 00:34:29
+varios
+
+Andrea Quintana • 00:34:30
+autos y me gustaría saber, o sea, de nuestro lado se ve puntualizado, o como ven ahí, que fueran dos carruseles, ¿no? La parte de los más buscados y la parte de ofertas. Sin embargo,
+
+Sharon Mendoza • 00:34:44
+¿qué
+
+Andrea Quintana • 00:34:44
+tan viable lo ven ustedes? O sea,
+
+Lourdes Munguía • 00:34:47
+¿creen
+
+Andrea Quintana • 00:34:47
+que es recomendable o es mejor tener como solamente
+
+Sharon Mendoza • 00:34:56
+uno. Okay,
+
+Sharon Mendoza • 00:35:01
+me parece que aquí depende mucho del enfoque que estemos buscando para mejorar en el sitio, ya que por ejemplo este vendría siendo bloque 3. Es decir, en el primer bloque
+
+Lourdes Munguía • 00:35:20
+tenemos
+
+Sharon Mendoza • 00:35:21
+lo que viene siendo nuestro carrusel de banners, en el bloque 2 nuestro buscador de vehículos, ya sea por marca, modelo o precio, presupuesto más bien. Tal vez una propuesta sería integrar este bloque de 1 o 2 carruseles junto con el bloque 2, como para que se sienta que está un poco homologado.
+
+Sharon Mendoza • 00:35:51
+En cuanto a qué es mejor, que no, miren, de acuerdo a lo que nos han venido comentando sobre qué se busca, que el sitio ya no sea tan largo especialmente en mobile. O sea, en base a ese comentario, entonces yo podría decir tal vez uno. ¿Cuál? Bueno, de forma digamos que más sencilla, más rápida, el que podríamos implementar es el de oferta, ya que ese manejo sí lo tenemos en este momento.
+
+Sharon Mendoza • 00:36:32
+Y bueno, correspondería a la parte de promociones, ¿no? Entonces una propuesta de ese tipo sí podríamos manejar en fase 2. Y si lo que queremos es ver, ya sea destacados o más buscados, etcétera, algún otro filtro diferente, ya de por sí esto sí necesitaríamos considerarlo como un adicional, es decir, porque no lo tenemos implementado en este momento. Entonces, de alguna forma necesitamos que ustedes también nos manden cuál fue el más buscado o cuál es el que necesitan que mostremos en este apartado. Entonces sí podría llegar a haber un poco más de complicación para implementar esa parte. Entonces eso, eso como a grandes rasgos sobre lo que podemos hacer en este momento, de acuerdo también a los comentarios que hemos recibido de su lado. Sin embargo, Sí, el enfoque del sitio está
+
+Lourdes Munguía • 00:37:38
+prácticamente
+
+Sharon Mendoza • 00:37:39
+cubriéndose más
+
+Lourdes Munguía • 00:37:40
+a la
+
+Sharon Mendoza • 00:37:41
+parte de vender y no tanto de que conozcan lo que es Autoexplora. Entonces, en un futuro,
+
+Lourdes Munguía • 00:37:49
+que
+
+Sharon Mendoza • 00:37:50
+justo espero que sea en fase 3, por ejemplo, podamos implementar más carruseles
+
+Lourdes Munguía • 00:37:56
+y
+
+Sharon Mendoza • 00:37:56
+para que justo cumplamos la solicitud de que el sitio no sea tan largo, entonces evaluar si el resto de información que tenemos abajo de este que vendría siendo bloque 3, si es de valor y si queremos mantenerlo ahí, o lo moveríamos, o lo rediseñaríamos. Es como un trabajo mucho más amplio que sí tendríamos que ir validando en conjunto para poder, pues, prácticamente dejar el sitio lo más impecable posible. Esos serían mis comentarios al respecto. No sé si hay alguna duda, si me di a entender correctamente. Sí,
+
+Lourdes Munguía • 00:38:38
+sí,
+
+Sharon Mendoza • 00:38:38
+sí,
+
+Lourdes Munguía • 00:38:38
+todo claro. Muy bien. Está justo como el tiempo que comentas de implementación, pues sí, pues vámonos por el banner de oferta que lo pueden tener en fase 2 con la información que se tiene. Y bueno, si en el Inter podemos tener la información de los más buscados pues se los compartimos para que se pueda implementar.
+
+Sharon Mendoza • 00:39:02
+Sí, de acuerdo. Esto también podemos llegar a comentarlo en esta sesión con Intel y Motorola antes de tenerla. Va a ser muy importante que tanto de su lado como del nuestro tengamos claro todas las implementaciones que queramos hacer. Por
+
+Lourdes Munguía • 00:39:20
+ejemplo,
+
+Sharon Mendoza • 00:39:21
+lo de que nos manden los tags, lo de poder tener identificados, ¿no? Para este tipo de filtros adicionales para que entonces podamos como que aprovechar estas mejoras que nos va a apoyar el equipo de Intelimotor a tener, para que entonces ya lo podamos ir implementando mucho más
+
+Lourdes Munguía • 00:39:39
+fácil
+
+Sharon Mendoza • 00:39:40
+y rápido.
+
+Sharon Mendoza • 00:39:42
+Ok,
+
+Lourdes Munguía • 00:39:42
+sí, sí, sí, igual contemplo esta semana la sesión para que podamos pues tener ya solución de estos casos, ¿no?
+
+Lourdes Munguía • 00:39:52
+Nos faltan 3 slides, que son las 70. Ahí justamente tuvimos un focus hace una semana y cachito, donde nos decían los, el equipo de agencias, que pusiéramos el WhatsApp como de más, con mayor protagonismo, no, dentro justo de la navegación del sitio. Es justo por eso el comentario del botoncito del WhatsApp. Ponerlo hasta arriba, seguido de los otros 2 botones. Y también en estos botones de la descripción del auto, o sea, no ponerlo en segundo lugar, sino en el primer lugar para que sea visible y se pueda justo
+
+Lourdes Munguía • 00:40:31
+hacer clic de inmediato.
+
+Sharon Mendoza • 00:40:35
+Ahí
+
+Andrea Quintana • 00:40:36
+nada más me gustaría hacer hincapié en que, bueno, ahora Go Virtual ya no va a estar, entonces no le veo caso que lo trabajen,
+
+Lourdes Munguía • 00:40:44
+que
+
+Andrea Quintana • 00:40:44
+retrabajen, vaya. Y por ahí había platicado con Abby, te había comentado Abby, que nos gustaría que dentro del sitio web se puedan agregar los números de WhatsApp de las agencias, que eso fue algo que nos pidieron directamente tanto directores como los gerentes, que tengan los números y que directamente se puedan contactar contactar con la agencia. Eso creo que daría una mayor, mejor contacto, ¿no? Que llevarlos a la gente virtual que nada más les está dando 40 vueltas y no les da como la atención puntual, como es lo que queremos. Entonces no sé si ya tengas ahí alguna respuesta, Abby, de lo que te comentaba, si esto es posible. O sea, lo hemos visto en otras agencias o en otras páginas, pero sí queremos que ustedes nos digan, ¿no? Esos alcances.
+
+Abigail Estrada • 00:41:36
+Dentro del vehículo, justo leyendo la información de la ubicación, se debería de poder poner que el WhatsApp manda el teléfono de las agencias. Lo que necesito revisar con Sharon y David, que son parte del equipo que están implementándolo, es cómo lo podríamos hacer y si el día de
+
+Lourdes Munguía • 00:41:56
+hoy
+
+Abigail Estrada • 00:41:56
+contamos con la información que necesitamos para que se pueda implementar. Adicional, el de la burbuja que está en el home, ver cuál sería la forma justamente de que esto suceda, de poder tener la información de cuál es la agencia más cercana o la agencia de interés y mandarlos ese número. Es un poco, por decirlo de alguna forma, más sencillo implementarlo dentro del inventario porque ahí tenemos información que ya nos muestra la ubicación, pero en otras páginas del sitio como es el home o cualquier otro lugar donde no estamos consumiendo como alguna ubicación, podría llegar a ser un poco más, este,
+
+Sharon Mendoza • 00:42:39
+complejo.
+
+Abigail Estrada • 00:42:41
+Pero lo investigamos para poder darles una respuesta, si es algo que se puede implementar de manera rápida,
+
+Andrea Quintana • 00:42:48
+si
+
+Abigail Estrada • 00:42:48
+necesitamos ajustar algo en el feed, o si algo más necesitamos analizarlo de parte de ustedes para poder implementarlo,
+
+Lourdes Munguía • 00:42:57
+vale.
+
+Andrea Quintana • 00:42:58
+Sino, de hecho, o sea, justo la parte de WhatsApp quedaría dentro de los vehículos, porque en un home, digo, no me haría sentido si te va a llevar a— tendríamos que tener un número destinado
+
+Lourdes Munguía • 00:43:11
+y
+
+Andrea Quintana • 00:43:11
+una persona para que esté atendiendo, cosa que ahorita no lo tenemos. Entonces lo ideal, y por eso les comentaba, os quise levantar la mano en este punto, porque para qué los vamos a poner a trabajar ahorita en una fase 2 y enfocarlos a que hagan que este botón de WhatsApp esté en la parte de arriba cuando en realidad pues el agente virtual ya les habíamos comentado que no va a estar. Y ahí entendemos, hay algunos temas con respecto a pagos y esas cosas, eso es como un punto y aparte. Y no quiero como llevarme a esto, sino a la parte de no quiero hacerlos trabajar, porque los vamos a trabajar en algo que ya no va a estar, no, sino enfocarnos en lo que sí funciona, en lo que sí queremos que esté, que sería esta parte de WhatsApp, como bien comentaba Xavi, en el inventario vinculado a la agencia correspondiente. En este caso nosotros ya tenemos actualizados los números de cada una de las agencias con sus teléfonos correspondientes a Intelimotor, que serían a los que estarían cayendo, vale. Entonces, en ese sentido, si esa es la información que ustedes necesitan, no se preocupen, se la vamos a compartir sin problema, vale. Pero este, justo ese era el punto, el que no vayan ustedes a esta parte, que veamos esta parte, pero para qué lo vamos
+
+Lourdes Munguía • 00:44:30
+a cambiar
+
+Andrea Quintana • 00:44:31
+o van ustedes a trabajar en algo que ya no va a estar vigente.
+
+Lourdes Munguía • 00:44:34
+Muy
+
+Abigail Estrada • 00:44:36
+bien, adelante, chef.
+
+Sharon Mendoza • 00:44:40
+Gracias. Andy, ¿podrías justo compartirnos esta información
+
+Lourdes Munguía • 00:44:47
+que
+
+Sharon Mendoza • 00:44:47
+comentas para verificar primero que nada que tengamos actualizados estos números de todas las agencias antes de poder proceder a una implementación. En la parte del inventario, pues justo les confirmo, o sea, sí podríamos hacerlo. Requiere de un ajuste, digamos, de nivel medio porque hay que hacer un poquito de lógica por ahí, más no sería pues digamos tardado de un mes, por ejemplo, tal vez solamente un par de días. Pero bueno, justo como pasó uno, me gustaría poder verificar que tengamos los datos correctos de todas las agencias. Y en cuanto a la burbuja de WhatsApp en el home o en cualquier otra sección,
+
+Sharon Mendoza • 00:45:43
+Mira, de este lado sí me gustaría proponer que se evalúe si de su lado consideran que ha funcionado bien y que han obtenido buenos prospectos a través de este botón. No me refiero a mantener el agente virtual, no, no, sino a generar un pequeño directorio es decir, que al momento de hacer clic, en lugar de que directamente me mande a un WhatsApp genérico, general, a la gente, que justo el usuario pueda ver el listado de estados o agencias y le haga clic ahora sí que a la que desee, es decir, a través del directorio. De acuerdo a que ustedes tienen muchas agencias, posiblemente tendríamos que evaluar si es algo que podemos hacer a través como de una ventana flotante
+
+Sharon Mendoza • 00:46:47
+y a través de como pasos. Es decir, que primero elija el estado y posteriormente de un listado de agencias a cuál se quiere comunicar, y posteriormente eso ya lo lleve al WhatsApp en específico de esa agencia. O en su defecto tener una página, una página específica para el directorio de estos WhatsApp. Entonces, al hacerle clic, nos manda de ese lado y pueda buscar su agencia directamente. Entonces, esas son como las opciones que en este momento se me ocurren como para darle solución a esta parte. Sin embargo, justo se las planteo, y de su lado pues espero que me puedan ayudar a evaluarlas también, y para que entonces
+
+Andrea Quintana • 00:47:32
+justo
+
+Sharon Mendoza • 00:47:32
+encontremos la mejor solución. E igual, claro, no, si me comentan que lo que sí quieren es retirar el botón, sin problema, igual lo retiramos.
+
+Sharon Mendoza • 00:47:44
+Adelante, Fer.
+
+Fer Márquez • 00:47:46
+Perdón, me perdí un poquito, como que se me lagué el audio. Entonces, ¿no podríamos tener el botón de WhatsApp que direccione directo a la agencia de acuerdo al modelo, o sea, de donde esté. Por ejemplo, estoy viendo esta camioneta y es de, no sé, se me ocurre más a Buenavista, ¿no va a poder dirigir hacia ese lado?
+
+Sharon Mendoza • 00:48:10
+No, sí, sí, o sea, aquí serían dos partes. En la captura de abajo, que es justo del inventario, o sea, sin problema podemos hacer que dirija al WhatsApp en específico de esa agencia. Entonces eso no hay problema. En la captura de arriba, que es el botón de WhatsApp general como del sitio, ya que no está precisamente un usuario viendo un vehículo, pues una solución que propongo es que
+
+Fer Márquez • 00:48:39
+tengamos
+
+Sharon Mendoza • 00:48:40
+un directorio de ese lado.
+
+Fer Márquez • 00:48:44
+Ok, ya, perdóname, sí es que me perdí un poquito porque como el audio se me lagué, no alcancé a escuchar todo. Yo soy la que está entendiendo más, pero ya, muchas gracias.
+
+Sharon Mendoza • 00:48:53
+Sí, de nada.
+
+Andrea Quintana • 00:48:55
+Ahí está nada más, Sharon, para cerrar, digamos, este punto. ¿Nos podrías compartir esta propuesta, digamos, y ya evaluarla para ver si se queda o no se queda el WhatsApp flotante en el principal? Y qué necesitaríamos de nuestro lado, es decir, compartirles un número para que esté vinculado o No sé si necesitan algo de nuestro lado y cómo funcionaría. Es decir, si está en el directorio, nada más seleccionarían los usuarios en la agencia y con eso los enviaría directamente a ellos. O sea, nada más compartirnos eso y ya nosotros para evaluarlo. Por fin,
+
+Sharon Mendoza • 00:49:37
+sí, sin problema.
+
+Sharon Mendoza • 00:49:40
+Como te comentaba, lo único que sí necesitaríamos Pues justo sería este listado que comentan que tienen de los números por agencia, no porque no los tengamos, sino para antes de hacer la implementación, tanto para el inventario y en caso de que decidan lo del directorio, que entonces nos aseguremos de que sí tenemos la información al día.
+
+Andrea Quintana • 00:50:07
+No, sí, y aparte es importante, o sea, eso sí se los compartimos, porque deben de ser sí o sí los que están conectados a Intelimotor para que caigan directamente en la herramienta.
+
+Sharon Mendoza • 00:50:19
+Sí, de acuerdo.
+
+Andrea Quintana • 00:50:28
+Listo, muchas
+
+Lourdes Munguía • 00:50:29
+gracias.
+
+Sharon Mendoza • 00:50:30
+Bien, Andy.
+
+Sharon Mendoza • 00:50:44
+Sí,
+
+Lourdes Munguía • 00:50:48
+¿tú
+
+Sharon Mendoza • 00:50:50
+no se escuchas, Lulú?
+
+Lourdes Munguía • 00:50:53
+No
+
+Abigail Estrada • 00:50:56
+se puede escuchar.
+
+Sharon Mendoza • 00:50:59
+Hola,
+
+Lourdes Munguía • 00:50:59
+hola. Se quita mi cámara, creo que es el internet. ¿Ya me escuchan?
+
+Sharon Mendoza • 00:51:07
+No te preocupes. De este lado sí.
+
+Lourdes Munguía • 00:51:13
+Ok, delay, pero bueno, ya es el último slide, sería el 71, y ahí pues prácticamente un comentario de Gaby, que es de UX. Me tocó darle un poquito de mayor diseño a la parte de comparar autos.
+
+Lourdes Munguía • 00:51:33
+¿Cuál
+
+Abigail Estrada • 00:51:34
+es la Lulu?
+
+Sharon Mendoza • 00:51:36
+Es de Abby, el 71.
+
+Abigail Estrada • 00:51:39
+Ah, ok.
+
+Lourdes Munguía • 00:51:40
+Sí,
+
+Abigail Estrada • 00:51:43
+aquí está el botoncito,
+
+Lourdes Munguía • 00:51:46
+está arriba, pero también en el botón. Entonces justo el comentario que me dio Abby es que pues hay muchos botones, ¿no? O sea, otra vez arriba, dejar los que ya tenemos, pero este de comparar vehículo, darle un diseño diferente. Para que sí sea obviamente un call to action, comparar, pero que sea separado de los botones, porque si no se ven ya 4 botones y pues justo ahí como que no suma, no, o sea, como que es más información. Es prácticamente, ya sea colocarle una flechita en un diseño diferente que el cliente entienda que pues es un comprar vehículos o autos, y en la parte de arriba también pues a poner a lo mejor, no sé, una flechita, algún iconito. Que entienda justamente el usuario pues qué es comprar un auto. Entonces esos son los comentarios de Gaby. No sé si tengan alguna duda en general.
+
+Sharon Mendoza • 00:52:41
+Adelante, Andy.
+
+Sharon Mendoza • 00:52:57
+Por si acaso estás en
+
+Andrea Quintana • 00:53:02
+mute. Hola, hola, ¿me escuchan?
+
+Abigail Estrada • 00:53:06
+Sí,
+
+Andrea Quintana • 00:53:07
+perdón, es que quería hablar pero me sacó esta cosa, como que está fallando mucho el internet. Justo en esta parte de la herramienta de comparar vehículos. Creo que sería importante que la resaltemos en la parte de arriba, como bien mencionas,
+
+Andrea Quintana • 00:53:29
+viable quitar el botón. O más bien, creo que necesitamos alguna forma, o sea, lo hablo así para que también Fer lo considere, pero necesitamos hacer como un ejercicio
+
+Sharon Mendoza • 00:53:45
+en
+
+Andrea Quintana • 00:53:45
+el cómo comparar el vehículo, y a lo mejor ponerlo como la página del home en comparte vehículo de esta forma o algo así, porque entiendo que si dan clic en el corazón se guarda, pero no es tan evidente para un público, o sea, un usuario que entra por primera vez a Autoexplora no sabe que al darle clic en el corazón se guarda este vehículo y puede hacer la comparativa con otro vehículo, ya sea similar o algo así. Entonces Sí, sí coincido en que son muchísimos botones. Quizá podrían cambiarse también el color, o sea, no sé, mejorar el diseño para que no sean como todos iguales y se vea de más, too much de botones. Pero sí, tampoco creo que el usuario como tal entienda la parte de comparar.
+
+Andrea Quintana • 00:54:36
+De acuerdo,
+
+Sharon Mendoza • 00:54:40
+nos lo llevamos y les damos una propuesta.
+
+Andrea Quintana • 00:54:46
+Ok, ahí también, por ejemplo, lo he platicado con Cris, que ahorita andaba en otra reunión, no se pudo conectar, pero creo que hay algo ideal o algo que a lo mejor hayamos pensado, que digo, no lo queremos como un pop-up porque hay pop-ups en varias partes del sitio, pero que sí sea una acción o realice una acción, digamos, identificando que el usuario ya estuvo, no sé, pensábamos en a lo mejor 20, 25, 30 segundos en la página, y entonces le muestre como una alerta, un destello, no sé, algo de animación, digamos, en cuestión del sitio web, algo que pueda mostrarle
+
+Andrea Quintana • 00:55:33
+la parte de compara este vehículo, ¿no? O sea, ¿te interesa este vehículo? Compáralo con algo, alguno similar, vaya. Y entonces haya como esta animación, digo, no sé, no sé, a lo mejor estoy hablando como usuario, pero qué tan difícil sería como en esta parte de mostrar algo en cuanto al corazón y que diga compara este vehículo con otro similar, ¿no? Justo como para eso les decía. Alguien que sí está interesado se queda en el sitio y está más de 25 segundos, yo creo, viendo el vehículo, viendo las fotos, o viendo las características, o leyendo más, ¿no? Entonces creo que sería como esa parte para poder pues invitar también a los usuarios. Creo que es algo que no hemos explotado mucho porque en realidad pues no lo hemos mostrado tanto al usuario.
+
+Sharon Mendoza • 00:56:30
+De acuerdo, revisamos qué podemos hacer de ese lado como para mejorar esta parte de la experiencia.
+
+Sharon Mendoza • 00:56:41
+Les comentamos, y si en esta oportunidad igual podemos presentarles una propuesta Bueno, se las mostramos en todo caso.
+
+Lourdes Munguía • 00:56:53
+Muy bien,
+
+Andrea Quintana • 00:56:54
+sí, muchísimas gracias.
+
+Lourdes Munguía • 00:56:56
+Serían todos los comentarios. Los siguientes pasos serían justo que nos puedan confirmar cuál es ese periodo de validación, de que nosotros les compartamos los insumos, que nos justo compartan el link de prueba para validar, demos visto bueno, y sobre eso se libera esta fase de 2, considerando pues todos esos tiempos y todo lo que requieren para tener este plan de trabajo y que pues quede implementado en el menor tiempo posible.
+
+Andrea Quintana • 00:57:25
+Y yo quiero agregar algo, no sé si ustedes han tenido oportunidad de entrar, me parece es Dalton Seminovos, en la parte del simulador de crédito, el cómo funciona. Digo, no lo pude, no tuve oportunidad de agregarlo en la presentación, andaba con otras cosas, pero se los agrego para que igual lo puedan revisar. Ahí este, Abby y Sharon, en la parte del simulador de crédito me gusta mucho cómo se muestra, o sea, la parte de cómo le va dando este camino y esta trazabilidad al usuario. Creo que está bastante bien. Este, entiendo que obviamente eso también lo tendremos que hablar con Exagono, ¿no? Porque tienen que ver con la parte de una tarjeta de crédito, o más bien con BBVA. Son nada más ahí como para que ustedes me expliquen y veamos de qué forma sí podemos mejorarlo. Uno de los comentarios que les platicamos en la semana pasada, que tuvimos un, este, ahí se me fue, un focus group con los gerentes, y era uno de los comentarios, ¿no? Que todo está basado en BBVA, y les comentamos, ahí sí hacemos mucho hincapié en que pues solo es un precio de Simulatops, justamente como para tener una comparativa, pero no es como, ah, si ahí me sale esto, es esto, ¿no? Entonces no queremos hacerlo tanto así, pero lo que, a lo que voy es que queremos mejorar esta parte del sitio en cuanto a cómo que el usuario lo vea mucho más agradable, digamos, dentro de la página. No queremos cambiar todo el diseño, no queremos obviamente copiar todo lo que está haciendo Dalton o esta parte de Dalton, sino mejorar, ¿no? O ver cómo con esta funcionalidad que ellos tienen, cómo mejorarlo en nuestro sitio.
+
+Sharon Mendoza • 00:59:19
+Sí, de acuerdo, lo revisamos, Andy.
+
+Abigail Estrada • 00:59:24
+Muy bien,
+
+Lourdes Munguía • 00:59:25
+sí,
+
+Abigail Estrada • 00:59:25
+nos metemos a darle un vistazo. Igual, si mantienen alguna otra referencia para los otros ajustes visuales que se van a hacer, si nos la quieren compartir, aunque independientemente después nos compartan el diseño ya de Autoexplora como tal, nos servirían mucho estas referencias también para entender más a fondo de dónde surgió la idea, ¿no?
+
+Andrea Quintana • 00:59:51
+Sí, justo te lo agrego ahí en la presentación en un ratito. Va,
+
+Abigail Estrada • 00:59:56
+súper, sí, muchísimas gracias.
+
+Lourdes Munguía • 00:59:58
+Listo,
+
+Andrea Quintana • 00:59:59
+gracias.
+
+Lourdes Munguía • 01:00:00
+Entonces quedamos en espera de las fechas, ¿saben, Sharon? Y pues cualquiera cosa que también necesiten o esté pendiente, me avisan para poderlo mandar. Vale,
+
+Abigail Estrada • 01:00:10
+sí, nada más un último punto. Este, Lulú, creo que no conocías a Tony. Andy y Fer ya lo conocían porque estuvieron, este, pues bueno, en la creación de la primera versión del sitio. Tony es Project Manager dentro de Go Virtual. Entonces ahorita ya para las siguientes fases del proyecto nos vamos a estar apoyando mucho en él y en su equipo para el seguimiento de las implementaciones, fechas, etcétera. Para que Sharon nos ayudó muchísimo en esta migración donde se requería mucho enfoque, mucho conocimiento técnico de lo que va, lo que teníamos que emigrar, pero igual el objetivo es que ella pueda tener más tiempo de enfoque en desarrollo y en los puntos críticos dentro del sitio, y que Tony nos pueda apoyar a liberar este punto de seguimiento y demás, vale. Entonces, cualquier cosa, Tony está en el grupo. Igual ahorita, este, Tony, si quieres mandarle un mensajito a Lulú para que sepa cuál es tu número,
+
+Lourdes Munguía • 01:01:13
+estaría
+
+Abigail Estrada • 01:01:14
+buenísimo. Y listo, eso. Muy
+
+Lourdes Munguía • 01:01:18
+bien, pues mucho gusto,
+
+Antonio Estrada • 01:01:20
+Tony,
+
+Lourdes Munguía • 01:01:21
+y bienvenido
+
+Antonio Estrada • 01:01:21
+al
+
+Lourdes Munguía • 01:01:21
+proyecto.
+
+Antonio Estrada • 01:01:23
+Muchas gracias, Lulú. Aquí de regreso, y ahorita te mando mensajito para que ubiques mi número ahí.
+
+Lourdes Munguía • 01:01:29
+Listo. Mi cara, porque nuestro internet acá está muy intermitente, pero sí, nos estamos viendo en las sesiones, y pues bueno, cualquier duda que tengan, este, estoy al pendiente.
+
+Abigail Estrada • 01:01:42
+Súper, muchas gracias. Buenos días para todos. Gracias.

@@ -2,6 +2,6 @@
   "project_id": "health-endpoint-generales",
   "unidad": "Gplus Seguros",
   "sistema": "Gplus-Seguros",
-  "prd_id": "",
-  "prd_dir": "Gplus-Seguros/health-endpoint-generales"
+  "prd_id": "0710",
+  "prd_dir": "Gplus-Seguros/PJ0710-health-endpoint-generales"
 }

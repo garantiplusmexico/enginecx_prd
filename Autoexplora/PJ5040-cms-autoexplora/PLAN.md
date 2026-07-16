@@ -17,6 +17,24 @@
 
 ---
 
+## 0. Estimación de tiempos
+
+> Supuesto: **1 desarrollador full-time** dedicado (Strapi + integración en el sitio). Se da rango porque el plan marca riesgos de curva de aprendizaje de Strapi y el modelo de publicación aún no reconciliado (§11) — eso puede mover el número hacia el límite alto.
+
+| Fase | Incluye | Tareas | Días hábiles (rango) |
+|---|---|---|---|
+| **Fase 0 — Configuración** | Scaffold Strapi, Postgres, S3, `CLAUDE.md`, Docker/ECS | T-01 a T-05 | 3 – 4 días |
+| **Fase 1 — Banners (P1)** | Auth/roles, CRUD banners, validación+póster, reordenamiento por vigencia, publicación dos etapas + webhook, integración en el sitio, auditoría | T-06 a T-12 | 6.5 – 9 días |
+| **Fase 2 — Blog (P2)** | Content type artículo, editor enriquecido + embeds, consumo en el sitio | T-13 a T-15 | 3.5 – 4 días |
+| **Fase 3 — Textos estáticos (P3)** | Content type texto estático, consumo en el sitio | T-16 a T-17 | 1 – 1.5 días |
+| **Fase 4 — Endurecimiento** | Manejo de errores/observabilidad, despliegue final + monitoreo | T-18 a T-19 | 1 – 2 días |
+| **Total proyecto (P1+P2+P3)** | | 19 tareas | **~15 – 20.5 días hábiles** (≈ 3 a 4 semanas) |
+| **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-12 | **~9.5 – 13 días hábiles** (≈ 2 a 2.5 semanas) |
+
+**Riesgo de deadline:** al 31 de julio de 2026 quedan pocos días hábiles restantes. El alcance completo (P1+P2+P3) no cabe con 1 desarrollador; incluso solo P1 queda muy ajustado o ligeramente por encima. Confirma el riesgo ya señalado en §11: lo más realista es priorizar Fase 0 + Fase 1 (P1) y aplicar el recorte de alcance previsto por el PRD, salvo que se sume un segundo desarrollador en paralelo (uno en Strapi/backend, otro en la integración del sitio), lo que podría comprimir el total en un 30–40%.
+
+---
+
 ## 1. Resumen técnico
 
 CMS acotado y **aislado** para que el cliente Autoexplora gestione su propio contenido (banners, blog, textos estáticos) sin depender del equipo interno. Construido **obligatoriamente sobre Strapi** (RNF-11), es un servicio **independiente** del panel de cliente general (Fase 2, no comprometida).

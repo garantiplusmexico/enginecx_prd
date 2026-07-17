@@ -8,7 +8,7 @@
 | Repositorio | `autoexplora-cms` — `git@github.com:Sitios-Web-Go-Virtual/autoexplora-cms.git` |
 | Rama | `feature/PJ5040-cms-autoexplora-mvp` |
 | Responsable actual | Sharon Mendoza |
-| Última actualización | 2026-07-16 |
+| Última actualización | 2026-07-17 |
 | Modelo de ejecución | claude-sonnet-5 — esfuerzo: máximo |
 | Estado general | 🟡 En progreso |
 
@@ -16,7 +16,7 @@
 
 ## Resumen de estado
 
-**Fase 0 completada.** Repositorio `autoexplora-cms` creado, bootstrapeado (ramas `main`/`develop`/`pre-qa`/`qa`) y con scaffold de Strapi funcionando en la rama `feature/PJ5040-cms-autoexplora-mvp`: conecta a PostgreSQL local, tiene el provider de media S3 configurado (código listo, prueba real de subida pendiente de bucket/credenciales), `CLAUDE.md` generado, y una imagen Docker que construye y corre localmente con health check OK. Siguiente paso: Fase 1 (P1 — banners, auth, publicación en dos etapas).
+**Fase 0 completada, con un cambio de arquitectura de despliegue posterior.** Repositorio `autoexplora-cms` creado, bootstrapeado (ramas `main`/`develop`/`pre-qa`/`qa`) y con scaffold de Strapi funcionando en la rama `feature/PJ5040-cms-autoexplora-mvp`: conecta a PostgreSQL local, tiene el provider de media S3 configurado. El 2026-07-17 el programador confirmó buckets S3 reales (`govirtual-autoexplora-cms-prod`/`-qa`) y decidió **no usar Docker/ECS/Fargate**: el despliegue será en una **instancia EC2 con Nginx + systemd**, con **PostgreSQL local en la misma instancia** (no RDS). Se rehizo T-05 en consecuencia (Dockerfile/ECS retirados, sustituidos por `deploy/nginx.conf` + `deploy/strapi.service` + guía EC2). Siguiente paso: Fase 1 (P1 — banners, auth, publicación en dos etapas).
 
 ---
 
@@ -25,10 +25,10 @@
 | ID | Tarea | Completada por | Fecha | Notas |
 |---|---|---|---|---|
 | T-01 | Scaffold de Strapi con TypeScript | Claude Code | 2026-07-16 | Verificado: `npm run develop` levanta el admin contra Postgres local |
-| T-02 | Configurar Strapi con PostgreSQL (dev local + RDS prod) | Claude Code | 2026-07-16 | Postgres local vía Postgres.app (sin Homebrew); prod 100% por env vars/Secrets Manager, sin hardcode |
-| T-03 | Conectar Media Library a S3 | Claude Code | 2026-07-16 | 🟡 Código completo (`@strapi/provider-upload-aws-s3` instalado y configurado) y arranque verificado; **prueba real de subida pendiente** — ver Tareas bloqueadas |
+| T-02 | Configurar Strapi con PostgreSQL (dev local + Postgres local en EC2 para qa/prod) | Claude Code | 2026-07-16 | Postgres local vía Postgres.app (sin Homebrew); qa/prod 100% por env vars/Secrets Manager, sin hardcode |
+| T-03 | Conectar Media Library a S3 | Claude Code | 2026-07-16 | 🟡 Código completo (`@strapi/provider-upload-aws-s3` instalado y configurado) y arranque verificado; buckets reales confirmados (`govirtual-autoexplora-cms-prod`/`-qa`); **prueba real de subida sigue pendiente** — ver Tareas bloqueadas |
 | T-04 | Ejecutar `/init` en el repo del CMS | Claude Code | 2026-07-16 | `CLAUDE.md` generado con stack, comandos y arquitectura |
-| T-05 | Dockerfile + despliegue ECS/Fargate | Claude Code | 2026-07-16 | Imagen construida y contenedor corrido localmente con Docker Desktop; health check `/_health` → 204; `deploy/task-definition.json` y `deploy/README.md` listos |
+| T-05 | Nginx + systemd para despliegue en EC2 *(rehecha 2026-07-17)* | Claude Code | 2026-07-16 → 2026-07-17 | Versión original (Dockerfile + ECS/Fargate, verificada con Docker Desktop) **retirada** por decisión de infraestructura del programador. Versión actual: `deploy/nginx.conf`, `deploy/strapi.service`, `deploy/README.md` — no verificable hasta que exista la instancia EC2 real (la crea el equipo de infraestructura) |
 
 ---
 
@@ -65,7 +65,8 @@
 
 | ID | Tarea | Motivo del bloqueo | Quién debe resolverlo |
 |---|---|---|---|
-| T-03 (prueba real) | Verificar subida de archivo a S3 desde el admin | Falta bucket S3 y credenciales de un usuario IAM dedicado (permisos mínimos, no personales) | Sharon Mendoza — en proceso de solicitarlos |
+| T-03 (prueba real) | Verificar subida de archivo a S3 desde el admin | Ya hay buckets y credenciales; falta ejecutar la prueba real (pendiente de retomar con un usuario admin de Strapi creado) | Claude Code, en la próxima sesión de trabajo |
+| T-05 (verificación real) | Verificar `deploy/nginx.conf` + `deploy/strapi.service` en una instancia real | La instancia EC2 no existe aún; la aprovisiona el equipo de infraestructura del cliente | Equipo de infraestructura del cliente |
 
 ---
 
@@ -79,6 +80,9 @@
 | Scaffold de Strapi generado en carpeta temporal y movido al repo | `create-strapi-app` exige un directorio vacío; el repo ya tenía `.git`, `.gitignore` y `README.md` del bootstrap. Se generó en `/tmp` y se fusionó preservando `.git` y el README del proyecto. | Ninguno — resultado final idéntico a un scaffold directo. |
 | Docker Desktop instalado por el programador durante la ejecución | No había runtime Docker disponible al iniciar T-05; el programador lo instaló para poder verificar el Dockerfile localmente en vez de dejarlo como bloqueo. | T-05 quedó verificado (build + run + health check) en vez de solo documentado. |
 | S3 (T-03): código completo, verificación real diferida | No existe aún bucket S3 ni usuario IAM dedicado. Se decidió no usar credenciales personales/admin del programador (regla de mínimo privilegio de `infraestructura.md`) — se solicitará un usuario IAM dedicado con permisos acotados al bucket. | La tarea T-03 se considera completa en código; la subida de prueba real queda como tarea bloqueada explícita (ver arriba), no como pendiente silenciosa. |
+| **Cambio de arquitectura de despliegue: EC2+Nginx+systemd en vez de Docker/ECS+Fargate** | El programador confirmó (2026-07-17) que se usará una instancia EC2 con Nginx y PostgreSQL local, sin Docker. Es una excepción explícita a los defaults de Engine (`infraestructura.md`: "ECS+Fargate para todos los nuevos desarrollos"; `arquitectura.md` marca el patrón app+BD en una sola instancia como monolítico, no recomendado para proyectos nuevos). Aceptada como decisión de infraestructura del cliente. | Se retiró el trabajo de T-05 basado en Docker (ya commiteado y verificado) y se rehizo con Nginx/systemd. Ver riesgo nuevo en `PLAN.md` §11 (app+BD en la misma instancia, sin RDS → backups manuales). |
+| **PostgreSQL sin RDS: backups manuales** | Consecuencia directa de correr Postgres en la misma EC2 que la app. AWS no gestiona backups/HA en este esquema. | Documentado en `deploy/README.md` §3: mínimo, `pg_dump` programado. Pendiente de implementar cuando exista la instancia. |
+| **Un solo usuario IAM con acceso a ambos buckets S3 (prod y qa)** | El programador confirmó que las credenciales entregadas son de un usuario con acceso a los dos buckets, no separado por ambiente. | Riesgo aceptado y documentado (`PLAN.md` §11); no bloquea el desarrollo. Recomendable separar en el futuro. |
 
 ---
 
@@ -93,9 +97,11 @@
 | `config/plugins.ts` | Creado (provider `aws-s3` configurado) | T-03 |
 | `.env.example` | Creado (vars de BD y S3) | T-02/T-03 |
 | `src/`, `database/migrations/.gitkeep`, `public/`, `types/` | Creado | T-01 |
-| `CLAUDE.md` | Creado | T-04 |
-| `Dockerfile`, `.dockerignore` | Creado | T-05 |
-| `deploy/task-definition.json`, `deploy/README.md` | Creado | T-05 |
+| `CLAUDE.md` | Creado, luego modificado (sección Deployment) | T-04 / rework T-05 |
+| `Dockerfile`, `.dockerignore`, `deploy/task-definition.json` | Creado y luego **eliminado** (cambio de arquitectura) | T-05 → rework |
+| `deploy/nginx.conf`, `deploy/strapi.service` | Creado | Rework T-05 |
+| `deploy/README.md` | Creado, luego reescrito (EC2 en vez de ECS) | T-05 → rework |
+| `.env.example` | Modificado (buckets S3 reales) | Rework T-05 |
 
 ---
 
@@ -105,6 +111,8 @@
 |---|---|---|
 | `4d30ad1` | Inicializar repositorio autoexplora-cms | 2026-07-16 |
 | `b50a92e` | [cms-autoexplora] Fase 0 - Scaffold e infraestructura base | 2026-07-16 |
+| `b44d14a` | [cms-autoexplora] Rehacer T-05 - Despliegue EC2 + Nginx + systemd (sin Docker) | 2026-07-17 |
+| `c2131e2` (enginecx_prd) | cms-autoexplora Actualizar plan - Despliegue EC2 + Nginx + systemd | 2026-07-17 |
 
 ---
 
@@ -115,8 +123,9 @@
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
 - Siguiente paso: Fase 1 (T-06 en adelante — auth/roles, banners, publicación en dos etapas).
-- Pendiente de confirmar antes de T-10: modelo de publicación borrador→`dev`→producción (ver PLAN.md §3 y §12).
-- Pendiente (bloqueado): bucket S3 + usuario IAM dedicado para completar la verificación real de T-03.
+- Pendiente de confirmar antes de T-10: modelo de publicación borrador→`dev`→producción (ver PLAN.md §3 y §12). Nota: el plan tenía un error — decía "confirmar antes de Fase 3" pero T-10 (la implementación) está en Fase 1; corregir el criterio real es confirmar antes de T-10, no antes de Fase 3.
+- Despliegue: **EC2 + Nginx + systemd, sin Docker** (cambio del 2026-07-17). La instancia no existe aún — la crea el equipo de infraestructura del cliente. `deploy/nginx.conf` y `deploy/strapi.service` están listos pero no verificados en una instancia real.
+- Bucket S3 confirmado y credenciales entregadas — falta ejecutar la prueba real de subida (necesita antes un usuario admin de Strapi, ver pregunta pendiente de la conversación con el programador).
 
 ---
 

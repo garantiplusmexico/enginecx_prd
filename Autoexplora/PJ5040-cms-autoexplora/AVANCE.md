@@ -48,8 +48,8 @@
 | T-07 | Content type Banner | |
 | T-08 | Validación de archivos y póster obligatorio | |
 | T-09 | Reordenamiento automático de banners por vigencia | |
-| T-10 | Publicación en dos etapas (Draft & Publish + webhook) | Confirmar modelo de publicación (pregunta abierta PRD §13) |
-| T-11 | Integración mínima en el sitio `autoexplora-alfa` | |
+| T-10 | Publicación en dos etapas (Draft & Publish + webhook) | ✅ Modelo confirmado 2026-07-17 — sin bloqueo |
+| T-11 | Integración mínima en el sitio `autoexplora-alfa` | ✅ Rama base confirmada 2026-07-17 (`dev`) — sin bloqueo |
 | T-12 | Registro de auditoría | |
 | T-13 | Content type Article (P2) | |
 | T-14 | Editor de texto enriquecido con embeds (P2) | |
@@ -84,6 +84,8 @@
 | **PostgreSQL sin RDS: backups manuales** | Consecuencia directa de correr Postgres en la misma EC2 que la app. AWS no gestiona backups/HA en este esquema. | Documentado en `deploy/README.md` §3: mínimo, `pg_dump` programado. Pendiente de implementar cuando exista la instancia. |
 | **Un solo usuario IAM con acceso a ambos buckets S3 (prod y qa)** | El programador confirmó que las credenciales entregadas son de un usuario con acceso a los dos buckets, no separado por ambiente. | Riesgo aceptado y documentado (`PLAN.md` §11); no bloquea el desarrollo. Recomendable separar en el futuro. |
 | **`ACL: undefined` explícito en `config/plugins.ts`** | El bucket usa "Bucket owner enforced" (ACLs deshabilitadas, default de S3 desde abril 2023). El provider de Strapi intenta mandar `ACL: public-read` salvo que se le indique lo contrario, y S3 rechaza cualquier header de ACL en estos buckets con `AccessControlListNotSupported`. | La subida a S3 ahora funciona (verificado). Como efecto secundario, `isPrivate()` del provider (que depende de `ACL === 'private'`) nunca puede ser `true` en este tipo de bucket — el control de acceso público/privado queda 100% en manos de la bucket policy, no de Strapi. |
+| **Modelo de publicación confirmado: Draft & Publish + webhook** | El programador confirmó (2026-07-17) la recomendación ya documentada en `PLAN.md` §3, cerrando la pregunta abierta del PRD §13. | Desbloquea T-10 sin necesidad de validación adicional del equipo. |
+| **Rama base del sitio confirmada: `dev`** | El programador confirmó (2026-07-17) que, como `autoexplora-alfa` no tiene `develop`, los cambios de integración (T-11, T-15, T-17) se basan en `dev` — excepción al flujo estándar de Engine, ya documentada en `PLAN.md` §12. | Desbloquea T-11 sin necesidad de validación adicional del equipo del sitio. |
 
 ---
 
@@ -124,7 +126,8 @@
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
 - Siguiente paso: Fase 1 (T-06 en adelante — auth/roles, banners, publicación en dos etapas).
-- Pendiente de confirmar antes de T-10: modelo de publicación borrador→`dev`→producción (ver PLAN.md §3 y §12). Nota: el plan tenía un error — decía "confirmar antes de Fase 3" pero T-10 (la implementación) está en Fase 1; corregir el criterio real es confirmar antes de T-10, no antes de Fase 3.
+- ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3). T-10 puede ejecutarse sin más validaciones.
+- ✅ Rama base del sitio confirmada (2026-07-17): `dev` (no `develop`/`main`). T-11/T-15/T-17 se ramifican desde ahí.
 - Despliegue: **EC2 + Nginx + systemd, sin Docker** (cambio del 2026-07-17). La instancia no existe aún — la crea el equipo de infraestructura del cliente. `deploy/nginx.conf` y `deploy/strapi.service` están listos pero no verificados en una instancia real.
 - Bucket S3: subida real verificada (2026-07-17) tras el fix de ACL en `config/plugins.ts`. **Bloqueado**: falta bucket policy de lectura pública en ambos buckets — solicitada a Alexis Herrera. Sin ella, las imágenes/videos no se van a ver ni en el admin ni en el sitio en producción.
 - Primer usuario admin de Strapi ya creado por el programador directamente en `http://localhost:1337/admin`.

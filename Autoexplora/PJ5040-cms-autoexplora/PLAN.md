@@ -64,7 +64,7 @@ CMS acotado y **aislado** para que el cliente Autoexplora gestione su propio con
 - [ ] **Instancia EC2** (Ubuntu recomendado, a definir por el equipo de infraestructura) con PostgreSQL local y Nginx; aprovisionamiento fuera del alcance de este plan.
 - [ ] Secrets definidos: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, credenciales S3, credenciales DB (nunca en código — AWS Secrets Manager / variables de entorno).
 - [ ] `CLAUDE.md` presente en el repo del CMS (ejecutar `/init` en el repo nuevo tras el scaffold de Strapi).
-- [ ] **Decisión técnica confirmada** sobre el modelo de publicación borrador→`dev`→producción (ver §11, riesgo abierto del PRD) antes de iniciar la Fase 3.
+- [x] **Decisión técnica confirmada** (2026-07-17, por el programador) sobre el modelo de publicación borrador→`dev`→producción: Draft & Publish nativo de Strapi + webhook (ver §3).
 - [ ] Disponibilidad de Memo para dudas puntuales sobre infra/API existente.
 
 ---
@@ -117,7 +117,7 @@ Usar el **Draft & Publish nativo de Strapi** como fuente de estados, con **dos e
 - **Preview (`dev`):** el sitio en su despliegue de preview consulta la API de Strapi incluyendo contenido en estado *draft* (`publicationState=preview`). Corresponde a la rama `dev` del sitio.
 - **Producción:** el sitio de producción consulta solo contenido *published*. "Publicar" en Strapi = promover el registro a *published*; un **webhook** de Strapi dispara la revalidación/rebuild del sitio de producción.
 
-> Esta es la opción de menor fricción y menor riesgo para el deadline. La alternativa (escritura directa a la rama `dev` del repo git del sitio) es más frágil y se descarta salvo indicación contraria. **Confirmar con el equipo antes de la Fase 3** (pregunta abierta del PRD §13).
+> Esta es la opción de menor fricción y menor riesgo para el deadline. La alternativa (escritura directa a la rama `dev` del repo git del sitio) es más frágil y se descarta salvo indicación contraria. **✅ Confirmado por el programador el 2026-07-17** (pregunta abierta del PRD §13, ya cerrada).
 
 ---
 
@@ -298,7 +298,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 
 | Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| Modelo borrador→`dev`→prod no reconciliado con Strapi (pregunta abierta PRD §13) | Alta | Alto | Adoptar Draft & Publish + webhook (§3); **confirmar antes de Fase 3**; no bloquear P1 en la variante git |
+| ~~Modelo borrador→`dev`→prod no reconciliado con Strapi~~ (pregunta abierta PRD §13) | ~~Alta~~ | ~~Alto~~ | ✅ **Resuelto 2026-07-17**: Draft & Publish + webhook (§3), confirmado por el programador |
 | Deadline estricto (31 jul) con P1+P2+P3 | Alta | Alto | Guardarraíl: recortar a P1 (Fase 0+1); priorizar entrega de banners y publicación |
 | Curva de aprendizaje de Strapi / límites de plugins y MCP | Media | Medio | Usar features nativas (Draft & Publish, Users & Permissions, provider S3); evitar customización innecesaria |
 | Conexión Media Library ↔ S3 (pregunta abierta PRD) | Media | Medio | Usar `@strapi/provider-upload-aws-s3` oficial; validar en Fase 0 (T-03) |
@@ -319,13 +319,13 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 
 2. **Rama base / control de versiones:**
    - El CMS es un **repo nuevo** (`autoexplora-cms`). Al inicializarlo, crear la estructura de ramas de Engine (`main`, `develop`, `pre-qa`, `qa`) y trabajar la funcional desde `develop`: `feature/PJ5040-cms-autoexplora-mvp`.
-   - ⚠️ **En el repo del sitio `autoexplora-alfa` NO existe `develop`.** Sí existen `dev` (usada como preview del flujo de publicación del PRD) y `qa`. Para los cambios del sitio (T-11, T-15, T-17), la rama base sería `main` según el flujo estándar de Engine, PERO el equipo del sitio trabaja con `dev`. **Confirmar con el equipo del sitio** qué rama base usar antes de tocar `autoexplora-alfa`. Se recomienda alinear el repo del sitio al estándar Engine (crear `develop`).
+   - ⚠️ **En el repo del sitio `autoexplora-alfa` NO existe `develop`.** Sí existen `dev` (usada como preview del flujo de publicación del PRD) y `qa`. **✅ Confirmado por el programador (2026-07-17): la rama base para los cambios del sitio (T-11, T-15, T-17) es `dev`**, no `main`/`develop` del flujo estándar de Engine — excepción explícita, documentada aquí.
 
 3. **`dev` tiene dos significados aquí — no confundir:** en el PRD, `dev` es la **rama/entorno de preview del sitio** (destino del contenido en borrador). En el flujo de Engine, `develop` es la rama de integración de desarrollo. Este plan usa Draft & Publish de Strapi como fuente de estados (§3), de modo que "preview" no depende de escribir en la rama git del sitio.
 
 4. **Alcance vs. deadline:** el guardarraíl del PRD manda recortar a **solo P1** si se excede el 31 jul 2026. Las Fases 2 (blog) y 3 (textos) están marcadas como recortables; entregar Fase 0 + Fase 1 completas primero.
 
-5. **Preguntas abiertas del PRD a cerrar antes/durante Fase 3:** modelo de publicación (¿entornos Strapi vs. flujo git?), conexión media↔S3, y si se reutiliza algo de la API de Memo (en el MVP: no).
+5. **Preguntas abiertas del PRD:** modelo de publicación ✅ resuelto (Draft & Publish + webhook); conexión media↔S3 ✅ resuelto (T-03, con bucket policy de lectura pública aún pendiente — ver riesgo nuevo); reutilización de la API de Memo — en el MVP: no.
 
 6. **No se refactoriza** el código existente del sitio salvo lo mínimo para consumir el contenido; el inventario (GRID/Brick) queda intacto.
 

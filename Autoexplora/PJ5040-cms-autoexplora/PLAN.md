@@ -271,6 +271,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 - **Instancia EC2** (Ubuntu recomendado) para el CMS Strapi — aprovisionada por el equipo de infraestructura, fuera del alcance de este plan. Corre Nginx (reverse proxy/TLS) + Strapi (proceso systemd) + PostgreSQL local, los tres en la misma instancia.
 - **Sin RDS**: backups, parches y alta disponibilidad de PostgreSQL quedan a cargo del equipo (no gestionados por AWS) — programar `pg_dump` periódico como mínimo. Riesgo documentado en §11.
 - **S3**: buckets `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa` ya provisionados; credenciales IAM entregadas (un solo usuario con acceso a ambos — riesgo en §11).
+- ⚠️ **Bucket policy de lectura pública pendiente** (bloqueante para que las imágenes/videos se vean en el sitio): ambos buckets tienen ACLs deshabilitadas ("Bucket owner enforced"), por lo que el acceso público debe otorgarse vía **bucket policy** (`s3:GetObject` público), no ACL. El usuario IAM `autoexplora-cms` no tiene permiso para gestionar policies (`AccessDenied` confirmado) — requiere que alguien con más privilegios (Alexis Herrera / admin de la cuenta AWS) la aplique, y revise que "Block Public Access" no la bloquee. Solicitud enviada el 2026-07-17.
 - **Route 53 / Cloudflare** para el dominio del admin del CMS (p. ej. `cms.autoexplora...`); TLS vía Nginx+certbot o proxy de Cloudflare.
 - **Consola AWS:** confirmar en cuál vive esta instancia (varias marcadas "por definir" en `infraestructura.md`).
 - El sitio `autoexplora-alfa` ya restringe imágenes remotas a su bucket S3 en `next.config.ts` — habrá que **agregar los hosts de los buckets `govirtual-autoexplora-cms-prod`/`-qa`** a los remotos permitidos.
@@ -308,6 +309,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 | App + BD en la misma instancia EC2 (sin RDS) | Media | Alto | Backups manuales (`pg_dump` programado); si la instancia falla, se pierde app y datos juntos. Decisión de infraestructura ya tomada por el programador — mitigar con backups frecuentes, no revertir sin autorización |
 | Un solo usuario IAM con acceso a ambos buckets S3 (prod y qa) | Baja | Medio | Sin aislamiento entre ambientes a nivel de credencial; una fuga de la credencial de qa expone también prod. Aceptado por el programador; recomendable separar en el futuro |
 | Instancia EC2 no existe aún (la crea el equipo de infraestructura) | Media | Medio | Fase 0 (T-05) deja Nginx/systemd/guía listos pero sin poder verificar en la instancia real hasta que exista; verificación real pendiente |
+| Buckets S3 sin bucket policy de lectura pública (ACLs deshabilitadas) | Alta | Alto | Sin ella, banners/blog/textos no se ven ni en preview ni en producción. El usuario IAM del CMS no puede aplicarla (`AccessDenied`); requiere a Alexis Herrera o admin de la cuenta AWS. Solicitada 2026-07-17; bloquea el uso real de T-03/T-07 en adelante hasta resolverse |
 
 ---
 

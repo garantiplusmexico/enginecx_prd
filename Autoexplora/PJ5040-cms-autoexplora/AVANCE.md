@@ -26,7 +26,7 @@
 |---|---|---|---|---|
 | T-01 | Scaffold de Strapi con TypeScript | Claude Code | 2026-07-16 | Verificado: `npm run develop` levanta el admin contra Postgres local |
 | T-02 | Configurar Strapi con PostgreSQL (dev local + Postgres local en EC2 para qa/prod) | Claude Code | 2026-07-16 | Postgres local vía Postgres.app (sin Homebrew); qa/prod 100% por env vars/Secrets Manager, sin hardcode |
-| T-03 | Conectar Media Library a S3 | Claude Code | 2026-07-16 | 🟡 Código completo (`@strapi/provider-upload-aws-s3` instalado y configurado) y arranque verificado; buckets reales confirmados (`govirtual-autoexplora-cms-prod`/`-qa`); **prueba real de subida sigue pendiente** — ver Tareas bloqueadas |
+| T-03 | Conectar Media Library a S3 | Claude Code | 2026-07-17 | ✅ Subida real verificada: archivo de prueba confirmado en `govirtual-autoexplora-cms-qa` (5 objetos — original + 4 tamaños responsivos). Requirió fix: `config/plugins.ts` necesita `ACL: undefined` explícito porque el bucket tiene ACLs deshabilitadas ("Bucket owner enforced"); sin esto, la subida fallaba con `AccessControlListNotSupported`. **Lectura pública sigue bloqueada** — ver Tareas bloqueadas |
 | T-04 | Ejecutar `/init` en el repo del CMS | Claude Code | 2026-07-16 | `CLAUDE.md` generado con stack, comandos y arquitectura |
 | T-05 | Nginx + systemd para despliegue en EC2 *(rehecha 2026-07-17)* | Claude Code | 2026-07-16 → 2026-07-17 | Versión original (Dockerfile + ECS/Fargate, verificada con Docker Desktop) **retirada** por decisión de infraestructura del programador. Versión actual: `deploy/nginx.conf`, `deploy/strapi.service`, `deploy/README.md` — no verificable hasta que exista la instancia EC2 real (la crea el equipo de infraestructura) |
 
@@ -65,7 +65,7 @@
 
 | ID | Tarea | Motivo del bloqueo | Quién debe resolverlo |
 |---|---|---|---|
-| T-03 (prueba real) | Verificar subida de archivo a S3 desde el admin | Ya hay buckets y credenciales; falta ejecutar la prueba real (pendiente de retomar con un usuario admin de Strapi creado) | Claude Code, en la próxima sesión de trabajo |
+| T-03 (lectura pública) | Los objetos subidos a S3 no son accesibles públicamente (`403 Forbidden` al pedir la URL directa) — la miniatura sale rota en el admin, y lo mismo pasaría en el sitio en producción | Falta una **bucket policy** de lectura pública (`s3:GetObject`) en ambos buckets + revisar "Block Public Access" del bucket. El usuario IAM `autoexplora-cms` no tiene permiso (`s3:PutBucketPolicy`/`s3:GetBucketPolicy` → `AccessDenied`, confirmado) | Alexis Herrera / quien administre la cuenta AWS — solicitud ya enviada por el programador (2026-07-17) |
 | T-05 (verificación real) | Verificar `deploy/nginx.conf` + `deploy/strapi.service` en una instancia real | La instancia EC2 no existe aún; la aprovisiona el equipo de infraestructura del cliente | Equipo de infraestructura del cliente |
 
 ---
@@ -83,6 +83,7 @@
 | **Cambio de arquitectura de despliegue: EC2+Nginx+systemd en vez de Docker/ECS+Fargate** | El programador confirmó (2026-07-17) que se usará una instancia EC2 con Nginx y PostgreSQL local, sin Docker. Es una excepción explícita a los defaults de Engine (`infraestructura.md`: "ECS+Fargate para todos los nuevos desarrollos"; `arquitectura.md` marca el patrón app+BD en una sola instancia como monolítico, no recomendado para proyectos nuevos). Aceptada como decisión de infraestructura del cliente. | Se retiró el trabajo de T-05 basado en Docker (ya commiteado y verificado) y se rehizo con Nginx/systemd. Ver riesgo nuevo en `PLAN.md` §11 (app+BD en la misma instancia, sin RDS → backups manuales). |
 | **PostgreSQL sin RDS: backups manuales** | Consecuencia directa de correr Postgres en la misma EC2 que la app. AWS no gestiona backups/HA en este esquema. | Documentado en `deploy/README.md` §3: mínimo, `pg_dump` programado. Pendiente de implementar cuando exista la instancia. |
 | **Un solo usuario IAM con acceso a ambos buckets S3 (prod y qa)** | El programador confirmó que las credenciales entregadas son de un usuario con acceso a los dos buckets, no separado por ambiente. | Riesgo aceptado y documentado (`PLAN.md` §11); no bloquea el desarrollo. Recomendable separar en el futuro. |
+| **`ACL: undefined` explícito en `config/plugins.ts`** | El bucket usa "Bucket owner enforced" (ACLs deshabilitadas, default de S3 desde abril 2023). El provider de Strapi intenta mandar `ACL: public-read` salvo que se le indique lo contrario, y S3 rechaza cualquier header de ACL en estos buckets con `AccessControlListNotSupported`. | La subida a S3 ahora funciona (verificado). Como efecto secundario, `isPrivate()` del provider (que depende de `ACL === 'private'`) nunca puede ser `true` en este tipo de bucket — el control de acceso público/privado queda 100% en manos de la bucket policy, no de Strapi. |
 
 ---
 
@@ -94,7 +95,7 @@
 | `package.json`, `package-lock.json`, `tsconfig.json`, `favicon.png` | Creado | T-01 |
 | `config/database.ts`, `config/server.ts` | Creado | T-01/T-02 |
 | `config/admin.ts`, `config/api.ts`, `config/middlewares.ts` | Creado | T-01 |
-| `config/plugins.ts` | Creado (provider `aws-s3` configurado) | T-03 |
+| `config/plugins.ts` | Creado, luego modificado (`ACL: undefined` — fix de subida) | T-03 |
 | `.env.example` | Creado (vars de BD y S3) | T-02/T-03 |
 | `src/`, `database/migrations/.gitkeep`, `public/`, `types/` | Creado | T-01 |
 | `CLAUDE.md` | Creado, luego modificado (sección Deployment) | T-04 / rework T-05 |
@@ -125,7 +126,8 @@
 - Siguiente paso: Fase 1 (T-06 en adelante — auth/roles, banners, publicación en dos etapas).
 - Pendiente de confirmar antes de T-10: modelo de publicación borrador→`dev`→producción (ver PLAN.md §3 y §12). Nota: el plan tenía un error — decía "confirmar antes de Fase 3" pero T-10 (la implementación) está en Fase 1; corregir el criterio real es confirmar antes de T-10, no antes de Fase 3.
 - Despliegue: **EC2 + Nginx + systemd, sin Docker** (cambio del 2026-07-17). La instancia no existe aún — la crea el equipo de infraestructura del cliente. `deploy/nginx.conf` y `deploy/strapi.service` están listos pero no verificados en una instancia real.
-- Bucket S3 confirmado y credenciales entregadas — falta ejecutar la prueba real de subida (necesita antes un usuario admin de Strapi, ver pregunta pendiente de la conversación con el programador).
+- Bucket S3: subida real verificada (2026-07-17) tras el fix de ACL en `config/plugins.ts`. **Bloqueado**: falta bucket policy de lectura pública en ambos buckets — solicitada a Alexis Herrera. Sin ella, las imágenes/videos no se van a ver ni en el admin ni en el sitio en producción.
+- Primer usuario admin de Strapi ya creado por el programador directamente en `http://localhost:1337/admin`.
 
 ---
 

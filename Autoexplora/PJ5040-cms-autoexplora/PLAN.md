@@ -23,7 +23,7 @@
 
 | Fase | Incluye | Tareas | Días hábiles (rango) |
 |---|---|---|---|
-| **Fase 0 — Configuración** | Scaffold Strapi, Postgres, S3, `CLAUDE.md`, Docker/ECS | T-01 a T-05 | 3 – 4 días |
+| **Fase 0 — Configuración** | Scaffold Strapi, Postgres, S3, `CLAUDE.md`, Nginx/systemd (EC2) | T-01 a T-05 | 3 – 4 días |
 | **Fase 1 — Banners (P1)** | Auth/roles, CRUD banners, validación+póster, reordenamiento por vigencia, publicación dos etapas + webhook, integración en el sitio, auditoría | T-06 a T-12 | 6.5 – 9 días |
 | **Fase 2 — Blog (P2)** | Content type artículo, editor enriquecido + embeds, consumo en el sitio | T-13 a T-15 | 3.5 – 4 días |
 | **Fase 3 — Textos estáticos (P3)** | Content type texto estático, consumo en el sitio | T-16 a T-17 | 1 – 1.5 días |
@@ -48,10 +48,10 @@ CMS acotado y **aislado** para que el cliente Autoexplora gestione su propio con
 
 **Stack:**
 - **CMS/Backend:** Strapi (Node.js) — **excepción justificada al default .NET Core 8**, impuesta por el PRD (RNF-11). Ver §12.
-- **BD:** PostgreSQL (RDS en producción) — alineado al default de Engine (`stack.md`).
-- **Almacenamiento:** Amazon S3 (bucket de la consola correspondiente).
+- **BD:** PostgreSQL — **excepción al default RDS**: instancia local en la misma **EC2** que corre el CMS (decisión de infraestructura confirmada por el programador, ver §12). No AWS-managed (backups/HA quedan a cargo del equipo, no de RDS).
+- **Almacenamiento:** Amazon S3 — buckets `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa`.
 - **Frontend del sitio:** Next.js 16 / React 19 (el que ya usa el proyecto — se respeta).
-- **Despliegue:** Docker en **ECS + Fargate** (default para nuevos servicios), ALB + Route 53/Cloudflare.
+- **Despliegue:** **EC2 (Ubuntu) + Nginx (reverse proxy) + systemd** (proceso de Strapi) — **excepción al default Docker/ECS+Fargate**, decisión de infraestructura confirmada por el programador. Ver §12. La instancia la aprovisiona el equipo de infraestructura (no este plan).
 
 ---
 
@@ -60,8 +60,8 @@ CMS acotado y **aislado** para que el cliente Autoexplora gestione su propio con
 - [ ] PRD validado por el responsable (Abigail Estrada / Alexis Herrera).
 - [ ] **Repositorio nuevo `autoexplora-cms` creado** en `Sitios-Web-Go-Virtual` con acceso al equipo de desarrollo.
 - [ ] Acceso confirmado al repo del sitio `autoexplora-alfa` (rama `dev` para preview).
-- [ ] **Bucket S3** aprovisionado para media del CMS + credenciales IAM (usuario/role de mínimo privilegio).
-- [ ] **RDS PostgreSQL** (o instancia Postgres) disponible para Strapi; cadena de conexión como secret.
+- [x] **Buckets S3** `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa` — credenciales IAM entregadas (un solo usuario con acceso a ambos buckets; ver riesgo en §11).
+- [ ] **Instancia EC2** (Ubuntu recomendado, a definir por el equipo de infraestructura) con PostgreSQL local y Nginx; aprovisionamiento fuera del alcance de este plan.
 - [ ] Secrets definidos: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, credenciales S3, credenciales DB (nunca en código — AWS Secrets Manager / variables de entorno).
 - [ ] `CLAUDE.md` presente en el repo del CMS (ejecutar `/init` en el repo nuevo tras el scaffold de Strapi).
 - [ ] **Decisión técnica confirmada** sobre el modelo de publicación borrador→`dev`→producción (ver §11, riesgo abierto del PRD) antes de iniciar la Fase 3.
@@ -74,29 +74,43 @@ CMS acotado y **aislado** para que el cliente Autoexplora gestione su propio con
 Patrón **Frontend + Backend separados** (`arquitectura.md` §2): dominio único de contenido, requiere BD y lógica de negocio, no justifica microservicios. Strapi provee admin UI + API; el sitio Next.js la consume.
 
 ```
-                    ┌─────────────────────────────────────────┐
-                    │  CMS Strapi (ECS + Fargate)             │
-  Usuario editor →  │  · Admin UI (login rol "editor")        │
-  (Autoexplora)     │  · Content types: Banner / Article /    │
-                    │    StaticText / AuditLog                │
-                    │  · Validación archivos + póster         │
-                    │  · Reordenamiento por vigencia (cron)   │
-                    │  · API REST/GraphQL                     │
-                    └───────┬──────────────────┬──────────────┘
-                            │                  │
-                   ┌────────▼──────┐   ┌───────▼────────┐
-                   │ RDS Postgres  │   │   Amazon S3    │
-                   │ (contenido)   │   │ (imágenes/video)│
-                   └───────────────┘   └────────────────┘
-                            │
+                    ┌───────────────────────────────────────────────┐
+                    │  Instancia EC2 (Ubuntu)                       │
+                    │  ┌───────────────────────────────────────┐    │
+  Usuario editor →  │  │  Nginx (reverse proxy, TLS)           │    │
+  (Autoexplora)     │  └──────────────┬────────────────────────┘    │
+                    │                 ▼                             │
+                    │  ┌───────────────────────────────────────┐    │
+                    │  │  Strapi (proceso systemd)             │    │
+                    │  │  · Admin UI (login rol "editor")      │    │
+                    │  │  · Content types: Banner / Article /  │    │
+                    │  │    StaticText / AuditLog              │    │
+                    │  │  · Validación archivos + póster       │    │
+                    │  │  · Reordenamiento por vigencia (cron) │    │
+                    │  │  · API REST/GraphQL                   │    │
+                    │  └──────────────┬────────────────────────┘    │
+                    │                 ▼                             │
+                    │  ┌───────────────────────────────────────┐    │
+                    │  │  PostgreSQL (local, mismo EC2)        │    │
+                    │  └───────────────────────────────────────┘    │
+                    └────────────────┬──────────────────────────────┘
+                                     │
+                            ┌────────▼────────┐
+                            │   Amazon S3     │
+                            │ (imágenes/video)│
+                            │ buckets prod/qa │
+                            └─────────────────┘
+                                     │
           Publicación en dos etapas (borrador→dev→prod)
-                            │
-                    ┌───────▼───────────────────────────┐
+                                     │
+                    ┌────────────────▼──────────────────┐
                     │  Sitio Autoexplora (Next.js)       │
                     │  preview (rama dev) → producción   │
                     │  consume API de contenido Strapi   │
-                    └────────────────────────────────────┘
+                    └─────────────────────────────────────┘
 ```
+
+> ⚠️ Nota de arquitectura: alojar Strapi y PostgreSQL en la misma instancia EC2 es, en términos de `arquitectura.md`, un patrón más cercano al monolítico (❌ no recomendado para proyectos nuevos) que al de "Frontend + Backend separados". Es una decisión de infraestructura explícita del programador (ver §12), no la recomendación por defecto de Engine.
 
 **Modelo de publicación en dos etapas (RF-06 / RNF-02) — decisión de diseño recomendada:**
 Usar el **Draft & Publish nativo de Strapi** como fuente de estados, con **dos entornos de consumo** en el sitio:
@@ -113,23 +127,24 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
 
 ### Fase 0 — Scaffold e infraestructura base
 
-- [ ] **T-01** — Crear repo `autoexplora-cms` y scaffold de Strapi (última versión estable) con TypeScript.
+- [x] **T-01** — Crear repo `autoexplora-cms` y scaffold de Strapi (última versión estable) con TypeScript.
   - Archivos: proyecto Strapi base, `Dockerfile`, `.env.example`, `README.md`.
   - Criterio: `npm run develop` levanta el admin en local contra Postgres local.
 
-- [ ] **T-02** — Configurar Strapi con PostgreSQL (dev local + RDS prod) vía variables de entorno.
+- [x] **T-02** — Configurar Strapi con PostgreSQL (dev local + Postgres local en EC2 para qa/prod) vía variables de entorno.
   - Archivos: `config/database.ts`, `config/server.ts`, `.env.example`.
-  - Criterio: Strapi conecta a Postgres en local y las credenciales de prod se leen solo de env/Secrets Manager.
+  - Criterio: Strapi conecta a Postgres en local y las credenciales de qa/prod se leen solo de env/Secrets Manager (no de RDS — Postgres corre en la misma EC2 que Strapi).
 
-- [ ] **T-03** — Conectar Media Library a S3 (`@strapi/provider-upload-aws-s3`).
+- [x] **T-03** — Conectar Media Library a S3 (`@strapi/provider-upload-aws-s3`).
   - Archivos: `config/plugins.ts`, `.env.example`.
-  - Criterio: una subida de prueba desde el admin queda almacenada en el bucket S3.
+  - Criterio: una subida de prueba desde el admin queda almacenada en el bucket S3. Código y arranque verificados en Fase 0; prueba real pendiente de confirmar ahora que ya hay buckets/credenciales (ver AVANCE.md).
 
-- [ ] **T-04** — Ejecutar `/init` en el repo del CMS para generar `CLAUDE.md`.
+- [x] **T-04** — Ejecutar `/init` en el repo del CMS para generar `CLAUDE.md`.
   - Criterio: `CLAUDE.md` documenta stack, comandos y estructura de Strapi.
 
-- [ ] **T-05** — `Dockerfile` + definición de despliegue ECS/Fargate (task definition, servicio, ALB, health check) y dominio en Route 53/Cloudflare.
-  - Criterio: imagen construye y corre localmente vía Docker; documento de despliegue listo para infra.
+- [x] **T-05** — Configuración de **Nginx** (reverse proxy) + **systemd** (proceso de Strapi) para despliegue en EC2, y dominio en Route 53/Cloudflare. *(Rehecho — originalmente era Docker/ECS/Fargate; ver decisión en §12.)*
+  - Archivos: `deploy/nginx.conf`, `deploy/strapi.service`, `deploy/README.md`.
+  - Criterio: configuración lista para que el equipo de infraestructura la aplique cuando la instancia EC2 exista; documentado el proceso de arranque (`systemctl start strapi`), health check (`/_health`) y proxy Nginx.
 
 ### Fase 1 — P1: Acceso multiusuario, banners y publicación en dos etapas
 
@@ -187,8 +202,8 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
 
 - [ ] **T-18** — Manejo de errores y mensajes claros (formato/peso/subida/publicación) + observabilidad (logs).
   - Criterio (RNF-06/RNF-09/RNF-10): mensajes de error claros para usuarios no técnicos; logs de publicaciones y fallos.
-- [ ] **T-19** — Despliegue a ECS/Fargate, verificación 24/7 (health checks) y monitoreo de facturación AWS.
-  - Criterio (RNF-04): CMS disponible; alertas de billing configuradas.
+- [ ] **T-19** — Despliegue a la instancia EC2 (Nginx + systemd), verificación 24/7 (health checks, `systemctl enable` para arranque automático) y monitoreo de facturación AWS.
+  - Criterio (RNF-04): CMS disponible; servicio se reinicia solo ante fallo/reinicio de la instancia; alertas de billing configuradas.
 
 ---
 
@@ -230,7 +245,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 |---|---|---|
 | `DATABASE_URL` / `DATABASE_*` | Conexión PostgreSQL | Dev / Prod |
 | `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT` | Secrets core de Strapi | Dev / Prod |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_BUCKET` | Provider S3 de media | Dev / Prod |
+| `AWS_ACCESS_KEY_ID`, `AWS_ACCESS_SECRET`, `AWS_REGION`, `AWS_BUCKET` | Provider S3 de media (`AWS_BUCKET` = `govirtual-autoexplora-cms-prod` o `-qa` según ambiente) | Dev / QA / Prod |
 | `STRAPI_API_URL` (en el sitio) | Base URL de la API de contenido | Dev / Prod |
 | `STRAPI_API_TOKEN` (en el sitio, server-only) | Token de lectura hacia Strapi | Dev / Prod |
 | `PREVIEW_WEBHOOK_SECRET` | Firma del webhook de publicación | Prod |
@@ -253,12 +268,12 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 
 ## 9. Consideraciones de infraestructura
 
-- **Nuevo servicio ECS + Fargate** para el CMS Strapi: task definition, servicio, ALB, health check, autoscaling básico. Estimar costo (Fargate + RDS + S3 + ALB) y configurar alertas de billing.
-- **RDS PostgreSQL** para el contenido (o instancia Postgres justificada por costo).
-- **S3** bucket dedicado para media del CMS.
-- **Route 53 / Cloudflare** para el dominio del admin del CMS (p. ej. `cms.autoexplora...`).
-- **Consola AWS:** desplegar en la consola correspondiente a Go Virtual/Autoexplora (confirmar cuál; `infraestructura.md` marca varias "por definir").
-- El sitio `autoexplora-alfa` ya restringe imágenes remotas a su bucket S3 en `next.config.ts` — habrá que **agregar el host de media de Strapi/S3** a los remotos permitidos.
+- **Instancia EC2** (Ubuntu recomendado) para el CMS Strapi — aprovisionada por el equipo de infraestructura, fuera del alcance de este plan. Corre Nginx (reverse proxy/TLS) + Strapi (proceso systemd) + PostgreSQL local, los tres en la misma instancia.
+- **Sin RDS**: backups, parches y alta disponibilidad de PostgreSQL quedan a cargo del equipo (no gestionados por AWS) — programar `pg_dump` periódico como mínimo. Riesgo documentado en §11.
+- **S3**: buckets `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa` ya provisionados; credenciales IAM entregadas (un solo usuario con acceso a ambos — riesgo en §11).
+- **Route 53 / Cloudflare** para el dominio del admin del CMS (p. ej. `cms.autoexplora...`); TLS vía Nginx+certbot o proxy de Cloudflare.
+- **Consola AWS:** confirmar en cuál vive esta instancia (varias marcadas "por definir" en `infraestructura.md`).
+- El sitio `autoexplora-alfa` ya restringe imágenes remotas a su bucket S3 en `next.config.ts` — habrá que **agregar los hosts de los buckets `govirtual-autoexplora-cms-prod`/`-qa`** a los remotos permitidos.
 
 ---
 
@@ -272,7 +287,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 - [ ] Guardar borrador → visible en preview (`dev`); publicar → visible en producción; despublicar/revertir disponible (RF-06/RF-07/RNF-05).
 - [ ] Media almacenada en S3 (RF-12).
 - [ ] Auditoría de acciones por usuario registrada (RNF-03).
-- [ ] CMS desplegado en ECS/Fargate y disponible 24/7 (RNF-04).
+- [ ] CMS desplegado en la instancia EC2 (Nginx + systemd) y disponible 24/7 (RNF-04).
 - [ ] **(P2, si tiempo)** CRUD de blog con editor enriquecido y embeds (RF-08/RF-09).
 - [ ] **(P3, si tiempo)** Edición de textos estáticos por sección (RF-10).
 
@@ -290,6 +305,9 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 | Falta de accesos (repo/AWS) al iniciar | Media | Alto | Bloquear como prerequisito (§2) antes de Fase 0 |
 | Migración de contenido hardcodeado del sitio más grande de lo previsto | Media | Medio | Migración incremental; en P1 solo banners; blog/textos según tiempo |
 | Sanitización de embeds del editor (XSS) | Baja | Medio | Sanitizar HTML/embeds; whitelist de dominios (YouTube/redes) |
+| App + BD en la misma instancia EC2 (sin RDS) | Media | Alto | Backups manuales (`pg_dump` programado); si la instancia falla, se pierde app y datos juntos. Decisión de infraestructura ya tomada por el programador — mitigar con backups frecuentes, no revertir sin autorización |
+| Un solo usuario IAM con acceso a ambos buckets S3 (prod y qa) | Baja | Medio | Sin aislamiento entre ambientes a nivel de credencial; una fuga de la credencial de qa expone también prod. Aceptado por el programador; recomendable separar en el futuro |
+| Instancia EC2 no existe aún (la crea el equipo de infraestructura) | Media | Medio | Fase 0 (T-05) deja Nginx/systemd/guía listos pero sin poder verificar en la instancia real hasta que exista; verificación real pendiente |
 
 ---
 
@@ -308,6 +326,10 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 5. **Preguntas abiertas del PRD a cerrar antes/durante Fase 3:** modelo de publicación (¿entornos Strapi vs. flujo git?), conexión media↔S3, y si se reutiliza algo de la API de Memo (en el MVP: no).
 
 6. **No se refactoriza** el código existente del sitio salvo lo mínimo para consumir el contenido; el inventario (GRID/Brick) queda intacto.
+
+7. **Excepción de despliegue (importante):** el default de Engine para servicios nuevos es **Docker en ECS + Fargate** con **RDS PostgreSQL** (`infraestructura.md`, `stack.md`). El programador confirmó (2026-07-17) que este proyecto usará en su lugar **una instancia EC2 con Nginx** como reverse proxy, **PostgreSQL local** en la misma instancia (no RDS), y **systemd** para correr el proceso de Strapi (sin Docker). La instancia la aprovisiona el equipo de infraestructura del cliente, no este plan. Esta excepción queda documentada aquí; si hace falta registrarla formalmente con el Gerente de TI, es responsabilidad del programador. Fase 0 (T-05) fue rehecha para reflejar este cambio — el Dockerfile/definición ECS original se retiró del repo `autoexplora-cms` y se sustituyó por `deploy/nginx.conf`, `deploy/strapi.service` y `deploy/README.md`.
+
+8. **Buckets S3 confirmados:** `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa`. Credenciales IAM ya entregadas al programador (un solo usuario con acceso a ambos buckets — ver riesgo en §11).
 
 ---
 

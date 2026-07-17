@@ -26,9 +26,11 @@
 |---|---|---|---|---|
 | T-01 | Scaffold de Strapi con TypeScript | Claude Code | 2026-07-16 | Verificado: `npm run develop` levanta el admin contra Postgres local |
 | T-02 | Configurar Strapi con PostgreSQL (dev local + Postgres local en EC2 para qa/prod) | Claude Code | 2026-07-16 | Postgres local vía Postgres.app (sin Homebrew); qa/prod 100% por env vars/Secrets Manager, sin hardcode |
-| T-03 | Conectar Media Library a S3 | Claude Code | 2026-07-17 | ✅ Subida real verificada: archivo de prueba confirmado en `govirtual-autoexplora-cms-qa` (5 objetos — original + 4 tamaños responsivos). Requirió fix: `config/plugins.ts` necesita `ACL: undefined` explícito porque el bucket tiene ACLs deshabilitadas ("Bucket owner enforced"); sin esto, la subida fallaba con `AccessControlListNotSupported`. **Lectura pública sigue bloqueada** — ver Tareas bloqueadas |
+| T-03 | Conectar Media Library a S3 | Claude Code | 2026-07-17 | ✅ Completamente verificado, incluyendo lectura pública. Subida real confirmada en `govirtual-autoexplora-cms-qa`. Fix de subida: `config/plugins.ts` necesita `ACL: undefined` explícito (bucket con ACLs deshabilitadas, "Bucket owner enforced"). Lectura pública requirió **dos pasos** en AWS (aplicados por Alexis Herrera, 2026-07-17): (1) bucket policy de `s3:GetObject` público, (2) destildar las 2 opciones de "Block Public Access" relacionadas a bucket policies. Verificado con `curl` → `200 OK` sobre la URL directa del objeto. |
 | T-04 | Ejecutar `/init` en el repo del CMS | Claude Code | 2026-07-16 | `CLAUDE.md` generado con stack, comandos y arquitectura |
 | T-05 | Nginx + systemd para despliegue en EC2 *(rehecha 2026-07-17)* | Claude Code | 2026-07-16 → 2026-07-17 | Versión original (Dockerfile + ECS/Fargate, verificada con Docker Desktop) **retirada** por decisión de infraestructura del programador. Versión actual: `deploy/nginx.conf`, `deploy/strapi.service`, `deploy/README.md` — no verificable hasta que exista la instancia EC2 real (la crea el equipo de infraestructura) |
+| T-06 | Autenticación y rol único "editor" | Claude Code | 2026-07-17 | Corrección de alcance sobre el plan: el mecanismo correcto es el RBAC nativo del Admin Panel (rol "Editor" de fábrica), no el plugin Users & Permissions (ese es para usuarios finales de un sitio público). Permisos otorgados por bootstrap idempotente (`src/bootstrap/ensureEditorPermissions.ts`). Verificado en BD: solo Banner + Media Library, sin Settings/Users/Roles |
+| T-07 | Content type Banner | Claude Code | 2026-07-17 | Rediseñado durante pruebas manuales (ver Decisiones): Dynamic Zone con componentes Imagen/Video, desktop+mobile en ambos, sin campo `sección` ni `altText` propio. CRUD y Draft & Publish verificados por el programador en el admin |
 
 ---
 
@@ -44,9 +46,7 @@
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-06 | Autenticación y rol único "editor" | |
-| T-07 | Content type Banner | |
-| T-08 | Validación de archivos y póster obligatorio | |
+| T-08 | Validación de archivos y póster obligatorio | Póster ya requerido nativamente por el schema (T-07); falta solo validación de formato/peso |
 | T-09 | Reordenamiento automático de banners por vigencia | |
 | T-10 | Publicación en dos etapas (Draft & Publish + webhook) | ✅ Modelo confirmado 2026-07-17 — sin bloqueo |
 | T-11 | Integración mínima en el sitio `autoexplora-alfa` | ✅ Rama base confirmada 2026-07-17 (`dev`) — sin bloqueo |
@@ -65,7 +65,6 @@
 
 | ID | Tarea | Motivo del bloqueo | Quién debe resolverlo |
 |---|---|---|---|
-| T-03 (lectura pública) | Los objetos subidos a S3 no son accesibles públicamente (`403 Forbidden` al pedir la URL directa) — la miniatura sale rota en el admin, y lo mismo pasaría en el sitio en producción | Falta una **bucket policy** de lectura pública (`s3:GetObject`) en ambos buckets + revisar "Block Public Access" del bucket. El usuario IAM `autoexplora-cms` no tiene permiso (`s3:PutBucketPolicy`/`s3:GetBucketPolicy` → `AccessDenied`, confirmado) | Alexis Herrera / quien administre la cuenta AWS — solicitud ya enviada por el programador (2026-07-17) |
 | T-05 (verificación real) | Verificar `deploy/nginx.conf` + `deploy/strapi.service` en una instancia real | La instancia EC2 no existe aún; la aprovisiona el equipo de infraestructura del cliente | Equipo de infraestructura del cliente |
 
 ---
@@ -86,6 +85,10 @@
 | **`ACL: undefined` explícito en `config/plugins.ts`** | El bucket usa "Bucket owner enforced" (ACLs deshabilitadas, default de S3 desde abril 2023). El provider de Strapi intenta mandar `ACL: public-read` salvo que se le indique lo contrario, y S3 rechaza cualquier header de ACL en estos buckets con `AccessControlListNotSupported`. | La subida a S3 ahora funciona (verificado). Como efecto secundario, `isPrivate()` del provider (que depende de `ACL === 'private'`) nunca puede ser `true` en este tipo de bucket — el control de acceso público/privado queda 100% en manos de la bucket policy, no de Strapi. |
 | **Modelo de publicación confirmado: Draft & Publish + webhook** | El programador confirmó (2026-07-17) la recomendación ya documentada en `PLAN.md` §3, cerrando la pregunta abierta del PRD §13. | Desbloquea T-10 sin necesidad de validación adicional del equipo. |
 | **Rama base del sitio confirmada: `dev`** | El programador confirmó (2026-07-17) que, como `autoexplora-alfa` no tiene `develop`, los cambios de integración (T-11, T-15, T-17) se basan en `dev` — excepción al flujo estándar de Engine, ya documentada en `PLAN.md` §12. | Desbloquea T-11 sin necesidad de validación adicional del equipo del sitio. |
+| **T-06: RBAC nativo del Admin Panel en vez del plugin Users & Permissions** | El plan original decía "plugin Users & Permissions", pero ese plugin es para autenticación de usuarios finales de un sitio público — no aplica a quien entra al admin de Strapi. El sistema correcto es el RBAC nativo (Settings > Roles), usando el rol "Editor" que Strapi trae de fábrica. | Corrección de alcance sin impacto en el criterio de aceptación (login de editor con permisos acotados) — solo cambia el mecanismo técnico. |
+| **T-07: Banner rediseñado con Dynamic Zone (Imagen/Video) tras prueba manual** | Al probar el formulario, el programador identificó 3 problemas de producto: (1) el campo "sección" era redundante (un solo carrusel en home, no multi-sitio); (2) el póster aparecía aunque no se hubiera elegido tipo de media, sin flujo progresivo; (3) faltaba soporte de versiones desktop/mobile separadas. Se resolvió con una Dynamic Zone de dos Componentes (Imagen/Video), cada uno con sus propios campos desktop/mobile — logra la UX progresiva pedida usando UI nativa de Strapi, sin construir un formulario custom (que sí hubiera arriesgado el deadline). | Cambia el modelo de datos de Banner respecto al PRD original (RF-03 decía "por sección"); documentado como decisión de producto del programador. Bonus: el póster obligatorio en video (RF-04) ahora se cumple nativamente vía `required: true` en el componente, sin necesitar lifecycle hook para esa parte — T-08 se reduce a validar formato/peso de archivo. |
+| **`altText` propio eliminado de los componentes de Banner** | El programador notó que Strapi ya provee "texto alternativo" nativo por archivo en la Media Library — el campo custom era redundante. | Ninguno — simplificación, sin pérdida de funcionalidad. |
+| **Bucket policy de lectura pública aplicada (Alexis Herrera, 2026-07-17)** | Tras la bucket policy inicial, seguía dando `403` porque nunca se había guardado ninguna policy (confirmado con "No hay ninguna política que mostrar" en la consola). Se le compartió el JSON exacto de policy pública (`s3:GetObject`) para ambos buckets; tras aplicarla, verificado con `curl` → `200 OK`. | T-03 queda 100% cerrado, incluyendo lectura pública — ya no hay bloqueo pendiente de S3. |
 
 ---
 
@@ -105,6 +108,10 @@
 | `deploy/nginx.conf`, `deploy/strapi.service` | Creado | Rework T-05 |
 | `deploy/README.md` | Creado, luego reescrito (EC2 en vez de ECS) | T-05 → rework |
 | `.env.example` | Modificado (buckets S3 reales) | Rework T-05 |
+| `src/api/banner/` (schema, controller, service, routes) | Creado | T-07 |
+| `src/components/banner/image-content.json`, `video-content.json` | Creado, luego modificado (se quitó `altText`) | T-07 |
+| `src/bootstrap/ensureEditorPermissions.ts` | Creado (idempotente, con auto-actualización de campos) | T-06 |
+| `src/index.ts` | Modificado (conecta el bootstrap) | T-06 |
 
 ---
 
@@ -116,6 +123,10 @@
 | `b50a92e` | [cms-autoexplora] Fase 0 - Scaffold e infraestructura base | 2026-07-16 |
 | `b44d14a` | [cms-autoexplora] Rehacer T-05 - Despliegue EC2 + Nginx + systemd (sin Docker) | 2026-07-17 |
 | `c2131e2` (enginecx_prd) | cms-autoexplora Actualizar plan - Despliegue EC2 + Nginx + systemd | 2026-07-17 |
+| `1b950ad` | [cms-autoexplora] Fix T-03 - Deshabilitar ACL en provider S3 | 2026-07-17 |
+| `d209e3d` (enginecx_prd) | cms-autoexplora Actualizar avance y plan - T-03 verificado, bloqueo bucket policy | 2026-07-17 |
+| `a9a759f` (enginecx_prd) | cms-autoexplora Confirmar modelo de publicación y rama base del sitio | 2026-07-17 |
+| `18f22ad` | [cms-autoexplora] Fase 1 - T-06/T-07: rol Editor + content type Banner | 2026-07-17 |
 
 ---
 
@@ -125,11 +136,13 @@
 - Rama activa: `feature/PJ5040-cms-autoexplora-mvp`.
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
-- Siguiente paso: Fase 1 (T-06 en adelante — auth/roles, banners, publicación en dos etapas).
+- Siguiente paso: Fase 1, T-08 en adelante (validación de formato/peso de archivo — el póster ya es obligatorio nativamente desde T-07).
 - ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3). T-10 puede ejecutarse sin más validaciones.
 - ✅ Rama base del sitio confirmada (2026-07-17): `dev` (no `develop`/`main`). T-11/T-15/T-17 se ramifican desde ahí.
 - Despliegue: **EC2 + Nginx + systemd, sin Docker** (cambio del 2026-07-17). La instancia no existe aún — la crea el equipo de infraestructura del cliente. `deploy/nginx.conf` y `deploy/strapi.service` están listos pero no verificados en una instancia real.
-- Bucket S3: subida real verificada (2026-07-17) tras el fix de ACL en `config/plugins.ts`. **Bloqueado**: falta bucket policy de lectura pública en ambos buckets — solicitada a Alexis Herrera. Sin ella, las imágenes/videos no se van a ver ni en el admin ni en el sitio en producción.
+- ✅ Bucket S3: subida y **lectura pública** verificadas de punta a punta (2026-07-17). Ya no hay bloqueos de S3.
+- Banner (T-07) usa **Dynamic Zone** (`content`, componentes `banner.image-content`/`banner.video-content`), no campos planos — cualquier trabajo futuro sobre Banner (T-08, T-09, T-11) debe considerar esta estructura, no la original del PRD/plan.
+- El rol Editor recibe permisos por código en `src/bootstrap/ensureEditorPermissions.ts` — al agregar Article (T-13) o StaticText (T-16), extender `EDITOR_MANAGED_CONTENT_TYPES` ahí, no dar permisos manualmente desde el admin.
 - Primer usuario admin de Strapi ya creado por el programador directamente en `http://localhost:1337/admin`.
 
 ---

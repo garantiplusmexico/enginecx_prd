@@ -148,17 +148,17 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
 
 ### Fase 1 — P1: Acceso multiusuario, banners y publicación en dos etapas
 
-- [ ] **T-06** — Configurar autenticación y rol único "editor" (plugin Users & Permissions).
-  - Archivos: config de roles/permisos, seed opcional.
-  - Criterio (RF-01/RF-02/RNF-01): un usuario "editor" dado de alta por Go Virtual entra al admin; no hay autoservicio de altas; los permisos del rol se limitan a los content types del MVP.
+- [x] **T-06** — Configurar autenticación y rol único "editor". *(Corrección de alcance: no es el plugin Users & Permissions — ese es para usuarios finales de un sitio público. Es el RBAC nativo del Admin Panel de Strapi, usando el rol "Editor" de fábrica.)*
+  - Archivos: `src/bootstrap/ensureEditorPermissions.ts` (permisos por código, idempotente), `src/index.ts`.
+  - Criterio (RF-01/RF-02/RNF-01): un usuario "editor" dado de alta por Go Virtual entra al admin; no hay autoservicio de altas; los permisos del rol se limitan a los content types del MVP. ✅ Verificado en BD: solo Banner + Media Library, sin Settings/Users/Roles.
 
-- [ ] **T-07** — Content type **Banner** (sección, tipo imagen/video, archivo, póster, enlace destino, orden/posición, vigencia inicio/fin opcional, estado).
-  - Archivos: `src/api/banner/**` (schema, controller, service, routes).
-  - Criterio (RF-03): CRUD completo de banners por sección desde el admin.
+- [x] **T-07** — Content type **Banner**. *(Rediseñado 2026-07-17 tras prueba manual — ver §12 nota 9: Dynamic Zone con componentes `banner.image-content`/`banner.video-content` en vez de campos planos; sin campo "sección"; desktop+mobile en ambos tipos.)*
+  - Archivos: `src/api/banner/**` (schema, controller, service, routes), `src/components/banner/image-content.json`, `src/components/banner/video-content.json`.
+  - Criterio: CRUD completo de banners desde el admin, con Draft & Publish. ✅ Verificado manualmente por el programador (imagen y video, guardar borrador → publicar, media en S3).
 
-- [ ] **T-08** — Validación de archivos y póster obligatorio en video (lifecycle hooks / validación custom).
-  - Archivos: `src/api/banner/content-types/banner/lifecycles.ts`, util de validación compartida.
-  - Criterio (RF-04/RF-11): rechaza formato inválido (solo JPG/WebP imagen, MP4 video); imagen >1 MB y video >10 MB bloqueados; video >10 MB muestra aviso sugiriendo embed; video sin póster no se guarda ni publica.
+- [ ] **T-08** — Validación de formato/peso de archivo. *(Alcance reducido: el póster obligatorio en video ya lo resuelve nativamente el schema de T-07 vía `required: true` — ya no requiere lifecycle hook para esa parte.)*
+  - Archivos: lifecycle hooks o validación custom en `src/components/banner/` / `src/api/banner/`.
+  - Criterio (RF-11): rechaza formato inválido (solo JPG/WebP imagen, MP4 video); imagen >1 MB y video >10 MB bloqueados; video >10 MB muestra aviso sugiriendo embed.
 
 - [ ] **T-09** — Reordenamiento automático de banners por vigencia (recompactar posiciones al caducar).
   - Archivos: `src/api/banner/services/reorder.ts`, tarea cron (`config/cron-tasks.ts`) + hook al editar vigencia.
@@ -213,7 +213,9 @@ Strapi genera y gestiona el esquema PostgreSQL automáticamente a partir de los 
 
 | Tabla (auto-generada) | Tipo de cambio | Descripción |
 |---|---|---|
-| `banners` | Nueva | Banner: sección, tipo, media, póster, enlace, orden, vigencia, estado |
+| `banners` | Nueva | Banner: contenido (Dynamic Zone imagen/video), enlace, orden, vigencia, estado (Draft & Publish) |
+| `components_banner_image_contents` | Nueva | Componente: imagen desktop, imagen mobile |
+| `components_banner_video_contents` | Nueva | Componente: video desktop/mobile + póster desktop/mobile (obligatorios) |
 | `articles` | Nueva | Artículo de blog (P2) |
 | `categories` / `tags` | Nueva | Taxonomía de blog (P2, si aplica) |
 | `static_texts` | Nueva | Textos estáticos por sección (P3) |
@@ -271,7 +273,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 - **Instancia EC2** (Ubuntu recomendado) para el CMS Strapi — aprovisionada por el equipo de infraestructura, fuera del alcance de este plan. Corre Nginx (reverse proxy/TLS) + Strapi (proceso systemd) + PostgreSQL local, los tres en la misma instancia.
 - **Sin RDS**: backups, parches y alta disponibilidad de PostgreSQL quedan a cargo del equipo (no gestionados por AWS) — programar `pg_dump` periódico como mínimo. Riesgo documentado en §11.
 - **S3**: buckets `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa` ya provisionados; credenciales IAM entregadas (un solo usuario con acceso a ambos — riesgo en §11).
-- ⚠️ **Bucket policy de lectura pública pendiente** (bloqueante para que las imágenes/videos se vean en el sitio): ambos buckets tienen ACLs deshabilitadas ("Bucket owner enforced"), por lo que el acceso público debe otorgarse vía **bucket policy** (`s3:GetObject` público), no ACL. El usuario IAM `autoexplora-cms` no tiene permiso para gestionar policies (`AccessDenied` confirmado) — requiere que alguien con más privilegios (Alexis Herrera / admin de la cuenta AWS) la aplique, y revise que "Block Public Access" no la bloquee. Solicitud enviada el 2026-07-17.
+- ✅ **Bucket policy de lectura pública aplicada** (2026-07-17, por Alexis Herrera) en ambos buckets — `s3:GetObject` público + ajuste de "Block Public Access". Verificado con `curl` → `200 OK` sobre un objeto real.
 - **Route 53 / Cloudflare** para el dominio del admin del CMS (p. ej. `cms.autoexplora...`); TLS vía Nginx+certbot o proxy de Cloudflare.
 - **Consola AWS:** confirmar en cuál vive esta instancia (varias marcadas "por definir" en `infraestructura.md`).
 - El sitio `autoexplora-alfa` ya restringe imágenes remotas a su bucket S3 en `next.config.ts` — habrá que **agregar los hosts de los buckets `govirtual-autoexplora-cms-prod`/`-qa`** a los remotos permitidos.
@@ -309,7 +311,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 | App + BD en la misma instancia EC2 (sin RDS) | Media | Alto | Backups manuales (`pg_dump` programado); si la instancia falla, se pierde app y datos juntos. Decisión de infraestructura ya tomada por el programador — mitigar con backups frecuentes, no revertir sin autorización |
 | Un solo usuario IAM con acceso a ambos buckets S3 (prod y qa) | Baja | Medio | Sin aislamiento entre ambientes a nivel de credencial; una fuga de la credencial de qa expone también prod. Aceptado por el programador; recomendable separar en el futuro |
 | Instancia EC2 no existe aún (la crea el equipo de infraestructura) | Media | Medio | Fase 0 (T-05) deja Nginx/systemd/guía listos pero sin poder verificar en la instancia real hasta que exista; verificación real pendiente |
-| Buckets S3 sin bucket policy de lectura pública (ACLs deshabilitadas) | Alta | Alto | Sin ella, banners/blog/textos no se ven ni en preview ni en producción. El usuario IAM del CMS no puede aplicarla (`AccessDenied`); requiere a Alexis Herrera o admin de la cuenta AWS. Solicitada 2026-07-17; bloquea el uso real de T-03/T-07 en adelante hasta resolverse |
+| ~~Buckets S3 sin bucket policy de lectura pública~~ (ACLs deshabilitadas) | ~~Alta~~ | ~~Alto~~ | ✅ **Resuelto 2026-07-17**: Alexis Herrera aplicó bucket policy de `s3:GetObject` público + ajustó Block Public Access en ambos buckets. Verificado con `curl` → `200 OK` |
 
 ---
 
@@ -331,7 +333,12 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 
 7. **Excepción de despliegue (importante):** el default de Engine para servicios nuevos es **Docker en ECS + Fargate** con **RDS PostgreSQL** (`infraestructura.md`, `stack.md`). El programador confirmó (2026-07-17) que este proyecto usará en su lugar **una instancia EC2 con Nginx** como reverse proxy, **PostgreSQL local** en la misma instancia (no RDS), y **systemd** para correr el proceso de Strapi (sin Docker). La instancia la aprovisiona el equipo de infraestructura del cliente, no este plan. Esta excepción queda documentada aquí; si hace falta registrarla formalmente con el Gerente de TI, es responsabilidad del programador. Fase 0 (T-05) fue rehecha para reflejar este cambio — el Dockerfile/definición ECS original se retiró del repo `autoexplora-cms` y se sustituyó por `deploy/nginx.conf`, `deploy/strapi.service` y `deploy/README.md`.
 
-8. **Buckets S3 confirmados:** `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa`. Credenciales IAM ya entregadas al programador (un solo usuario con acceso a ambos buckets — ver riesgo en §11).
+8. **Buckets S3 confirmados:** `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa`. Credenciales IAM ya entregadas al programador (un solo usuario con acceso a ambos buckets — ver riesgo en §11). Bucket policy de lectura pública aplicada 2026-07-17 — ✅ resuelto.
+
+9. **T-06/T-07 corregidos tras prueba manual (2026-07-17):**
+   - **T-06:** el plan original decía "plugin Users & Permissions" — es un error; ese plugin es para autenticación de usuarios finales de un sitio público, no para quien entra al admin de Strapi. Se usa el RBAC nativo del Admin Panel (rol "Editor" de fábrica), con permisos otorgados por código (`src/bootstrap/ensureEditorPermissions.ts`), idempotente.
+   - **T-07:** al probar el formulario, el programador decidió tres cambios de producto: (1) eliminar el campo "sección" (RF-03 hablaba de banners "por sección", pero en la práctica es un solo carrusel en el home, no multi-storefront); (2) requerir versión **desktop y mobile por separado** para imagen y video (no estaba en el PRD original); (3) resolver la UX "el póster no debe aparecer hasta elegir el tipo de banner" con una **Dynamic Zone** de dos Componentes (`banner.image-content`/`banner.video-content`) — usa el picker nativo de Strapi para lograr un flujo progresivo, evitando construir un formulario custom en React (que sí hubiera arriesgado el deadline del 31 jul). Efecto colateral positivo: el póster obligatorio en video (RF-04) ahora lo garantiza el schema (`required: true`) sin necesitar lifecycle hook — T-08 se reduce a validar formato/peso de archivo.
+   - Se quitó también un campo `altText` propio de los componentes: Strapi ya provee texto alternativo nativo por archivo en la Media Library.
 
 ---
 

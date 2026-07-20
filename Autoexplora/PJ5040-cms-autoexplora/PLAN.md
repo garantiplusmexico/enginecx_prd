@@ -160,9 +160,9 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
   - Archivos: `src/lifecycles/validateUploadedFiles.ts` (hook global vía `strapi.db.lifecycles.subscribe` sobre `plugin::upload.file`).
   - Criterio (RF-11): rechaza formato inválido (solo JPG/WebP imagen, MP4 video); imagen >1 MB y video >10 MB bloqueados; video >10 MB muestra aviso sugiriendo embed. ✅ Verificado: 8 casos unitarios + prueba manual en el admin.
 
-- [ ] **T-09** — Reordenamiento automático de banners por vigencia (recompactar posiciones al caducar).
-  - Archivos: `src/api/banner/services/reorder.ts`, tarea cron (`config/cron-tasks.ts`) + hook al editar vigencia.
-  - Criterio (RF-05): al caducar un banner, los de posiciones inferiores suben (2→1, 3→2…) sin intervención del usuario.
+- [x] **T-09** — Reordenamiento automático de banners por vigencia (recompactar posiciones al caducar).
+  - Archivos: `src/api/banner/services/reorder.ts`, `config/cron-tasks.ts` (cada 5 min), `src/lifecycles/recompactBannersOnChange.ts` (hook reactivo al crear/editar).
+  - Criterio (RF-05): al caducar un banner, los de posiciones inferiores suben (2→1, 3→2…) sin intervención del usuario. ✅ Verificado con script standalone.
 
 - [ ] **T-10** — Publicación en dos etapas: habilitar Draft & Publish y exponer API con `publicationState` (preview vs published) + webhook de publicación.
   - Archivos: config del content type (draftAndPublish), config de webhooks, doc del contrato de API.

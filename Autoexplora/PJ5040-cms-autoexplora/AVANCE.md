@@ -16,7 +16,7 @@
 
 ## Resumen de estado
 
-**Fase 0 completada, con un cambio de arquitectura de despliegue posterior.** Repositorio `autoexplora-cms` creado, bootstrapeado (ramas `main`/`develop`/`pre-qa`/`qa`) y con scaffold de Strapi funcionando en la rama `feature/PJ5040-cms-autoexplora-mvp`: conecta a PostgreSQL local, tiene el provider de media S3 configurado. El 2026-07-17 el programador confirmó buckets S3 reales (`govirtual-autoexplora-cms-prod`/`-qa`) y decidió **no usar Docker/ECS/Fargate**: el despliegue será en una **instancia EC2 con Nginx + systemd**, con **PostgreSQL local en la misma instancia** (no RDS). Se rehizo T-05 en consecuencia (Dockerfile/ECS retirados, sustituidos por `deploy/nginx.conf` + `deploy/strapi.service` + guía EC2). Siguiente paso: Fase 1 (P1 — banners, auth, publicación en dos etapas).
+**Fase 0 completada. Fase 1 en progreso: T-06 a T-09 completas.** Repositorio `autoexplora-cms` con scaffold de Strapi funcionando en la rama `feature/PJ5040-cms-autoexplora-mvp`: PostgreSQL local, S3 con lectura/escritura pública verificadas, rol Editor con permisos acotados a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de formato/peso de archivos, y reordenamiento automático por vigencia (cron + hook reactivo). Despliegue: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada. Pendiente: CORS en buckets S3 (solicitado a Alexis). Siguiente paso: T-10 (publicación en dos etapas + webhook).
 
 ---
 
@@ -32,6 +32,7 @@
 | T-06 | Autenticación y rol único "editor" | Claude Code | 2026-07-17 | Corrección de alcance sobre el plan: el mecanismo correcto es el RBAC nativo del Admin Panel (rol "Editor" de fábrica), no el plugin Users & Permissions (ese es para usuarios finales de un sitio público). Permisos otorgados por bootstrap idempotente (`src/bootstrap/ensureEditorPermissions.ts`). Verificado en BD: solo Banner + Media Library, sin Settings/Users/Roles |
 | T-07 | Content type Banner | Claude Code | 2026-07-17 | Rediseñado durante pruebas manuales (ver Decisiones): Dynamic Zone con componentes Imagen/Video, desktop+mobile en ambos, sin campo `sección` ni `altText` propio. CRUD y Draft & Publish verificados por el programador en el admin |
 | T-08 | Validación de formato y peso de archivos | Claude Code | 2026-07-20 | Alcance reducido: póster obligatorio ya resuelto en T-07 (schema), esta tarea solo valida formato/peso. Implementado como hook global (`strapi.db.lifecycles.subscribe` sobre `plugin::upload.file`) — aplica a todo el CMS, no solo Banner. Verificado: 8 casos unitarios en los límites exactos + prueba manual en el admin |
+| T-09 | Reordenamiento automático de banners por vigencia | Claude Code | 2026-07-20 | Dos disparadores: cron cada 5 min (respaldo pasivo) + hook reactivo en afterCreate/afterUpdate (inmediato, con guardia anti-reentrancia). Banner expirado se despublica vía Document Service (`unpublish`), preservando el borrador (reversible). Verificado con script standalone: el hook reactivo recompactó automáticamente al crear los datos de prueba, antes de la llamada manual |
 
 ---
 
@@ -47,7 +48,6 @@
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-09 | Reordenamiento automático de banners por vigencia | |
 | T-10 | Publicación en dos etapas (Draft & Publish + webhook) | ✅ Modelo confirmado 2026-07-17 — sin bloqueo |
 | T-11 | Integración mínima en el sitio `autoexplora-alfa` | ✅ Rama base confirmada 2026-07-17 (`dev`) — sin bloqueo |
 | T-12 | Registro de auditoría | |
@@ -116,6 +116,10 @@
 | `src/bootstrap/ensureEditorPermissions.ts` | Creado (idempotente, con auto-actualización de campos) | T-06 |
 | `src/index.ts` | Modificado (conecta el bootstrap, luego el hook de validación) | T-06 / T-08 |
 | `src/lifecycles/validateUploadedFiles.ts` | Creado | T-08 |
+| `src/api/banner/services/reorder.ts` | Creado | T-09 |
+| `config/cron-tasks.ts` | Creado | T-09 |
+| `src/lifecycles/recompactBannersOnChange.ts` | Creado | T-09 |
+| `config/server.ts` | Modificado (cron habilitado) | T-09 |
 
 ---
 
@@ -132,6 +136,8 @@
 | `a9a759f` (enginecx_prd) | cms-autoexplora Confirmar modelo de publicación y rama base del sitio | 2026-07-17 |
 | `18f22ad` | [cms-autoexplora] Fase 1 - T-06/T-07: rol Editor + content type Banner | 2026-07-17 |
 | `281b6cb` | [cms-autoexplora] Fase 1 - T-08: validación de formato y peso de archivos | 2026-07-20 |
+| `0fb79c5` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-08 completada, hallazgo CORS S3 | 2026-07-20 |
+| `8f352bb` | [cms-autoexplora] Fase 1 - T-09: reordenamiento automático de banners por vigencia | 2026-07-20 |
 
 ---
 
@@ -141,14 +147,15 @@
 - Rama activa: `feature/PJ5040-cms-autoexplora-mvp`.
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
-- Siguiente paso: Fase 1, T-09 en adelante (reordenamiento automático de banners por vigencia).
+- Siguiente paso: Fase 1, T-10 en adelante (publicación en dos etapas: exponer `publicationState` + webhook).
 - ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3). T-10 puede ejecutarse sin más validaciones.
 - ✅ Rama base del sitio confirmada (2026-07-17): `dev` (no `develop`/`main`). T-11/T-15/T-17 se ramifican desde ahí.
 - Despliegue: **EC2 + Nginx + systemd, sin Docker** (cambio del 2026-07-17). La instancia no existe aún — la crea el equipo de infraestructura del cliente. `deploy/nginx.conf` y `deploy/strapi.service` están listos pero no verificados en una instancia real.
 - ✅ Bucket S3: subida y lectura pública verificadas de punta a punta (2026-07-17). **Bloqueado**: falta configurar CORS en ambos buckets (solicitado a Alexis 2026-07-20) — sin esto, las miniaturas no se ven en el admin ni probablemente en el sitio.
-- Banner (T-07) usa **Dynamic Zone** (`content`, componentes `banner.image-content`/`banner.video-content`), no campos planos — cualquier trabajo futuro sobre Banner (T-09, T-11) debe considerar esta estructura, no la original del PRD/plan.
+- Banner (T-07) usa **Dynamic Zone** (`content`, componentes `banner.image-content`/`banner.video-content`), no campos planos — cualquier trabajo futuro sobre Banner (T-11) debe considerar esta estructura, no la original del PRD/plan.
 - Validación de archivos (T-08) es un hook **global** (`src/lifecycles/validateUploadedFiles.ts`), no específico de Banner — ya cubre cualquier content type futuro que suba imágenes/video.
 - El rol Editor recibe permisos por código en `src/bootstrap/ensureEditorPermissions.ts` — al agregar Article (T-13) o StaticText (T-16), extender `EDITOR_MANAGED_CONTENT_TYPES` ahí, no dar permisos manualmente desde el admin.
+- T-09 (reordenamiento) corre vía cron cada 5 min (`config/cron-tasks.ts`) + hook reactivo (`src/lifecycles/recompactBannersOnChange.ts`, con guardia anti-reentrancia). Banner expirado se despublica (no se elimina), preservando el borrador.
 - Primer usuario admin de Strapi ya creado por el programador directamente en `http://localhost:1337/admin`.
 
 ---

@@ -16,7 +16,7 @@
 
 ## Resumen de estado
 
-**Fase 0 completada. Fase 1 en progreso: T-06 a T-09 completas.** Repositorio `autoexplora-cms` con scaffold de Strapi funcionando en la rama `feature/PJ5040-cms-autoexplora-mvp`: PostgreSQL local, S3 con lectura/escritura pública verificadas, rol Editor con permisos acotados a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de formato/peso de archivos, y reordenamiento automático por vigencia (cron + hook reactivo). Despliegue: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada. Pendiente: CORS en buckets S3 (solicitado a Alexis). Siguiente paso: T-10 (publicación en dos etapas + webhook).
+**Fase 0 completada. Fase 1 en progreso: T-06 a T-10 completas.** Repositorio `autoexplora-cms` con scaffold de Strapi funcionando en la rama `feature/PJ5040-cms-autoexplora-mvp`: PostgreSQL local, S3 con lectura/escritura pública verificadas, rol Editor con permisos acotados a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de formato/peso de archivos, reordenamiento automático por vigencia (cron + hook reactivo), y publicación en dos etapas con webhook (contrato de API `status=draft|published`, corregido de la sintaxis v4 que tenía el plan). Despliegue: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada. Pendiente: CORS en buckets S3 (solicitado a Alexis). Siguiente paso: T-11 (integración mínima en el sitio `autoexplora-alfa`).
 
 ---
 
@@ -33,6 +33,7 @@
 | T-07 | Content type Banner | Claude Code | 2026-07-17 | Rediseñado durante pruebas manuales (ver Decisiones): Dynamic Zone con componentes Imagen/Video, desktop+mobile en ambos, sin campo `sección` ni `altText` propio. CRUD y Draft & Publish verificados por el programador en el admin |
 | T-08 | Validación de formato y peso de archivos | Claude Code | 2026-07-20 | Alcance reducido: póster obligatorio ya resuelto en T-07 (schema), esta tarea solo valida formato/peso. Implementado como hook global (`strapi.db.lifecycles.subscribe` sobre `plugin::upload.file`) — aplica a todo el CMS, no solo Banner. Verificado: 8 casos unitarios en los límites exactos + prueba manual en el admin |
 | T-09 | Reordenamiento automático de banners por vigencia | Claude Code | 2026-07-20 | Dos disparadores: cron cada 5 min (respaldo pasivo) + hook reactivo en afterCreate/afterUpdate (inmediato, con guardia anti-reentrancia). Banner expirado se despublica vía Document Service (`unpublish`), preservando el borrador (reversible). Verificado con script standalone: el hook reactivo recompactó automáticamente al crear los datos de prueba, antes de la llamada manual |
+| T-10 | Publicación en dos etapas (API + webhook) | Claude Code | 2026-07-20 | **Hallazgo:** el plan decía `publicationState` (sintaxis Strapi v4) — corregido a `status=draft\|published` (Strapi v5), verificado empíricamente con token real. Webhook registrado por código (idempotente), verificado end-to-end con receptor HTTP local: `entry.publish`/`entry.unpublish` llegaron con el secreto correcto al publicar/despublicar un banner real |
 
 ---
 
@@ -48,7 +49,6 @@
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-10 | Publicación en dos etapas (Draft & Publish + webhook) | ✅ Modelo confirmado 2026-07-17 — sin bloqueo |
 | T-11 | Integración mínima en el sitio `autoexplora-alfa` | ✅ Rama base confirmada 2026-07-17 (`dev`) — sin bloqueo |
 | T-12 | Registro de auditoría | |
 | T-13 | Content type Article (P2) | |
@@ -120,6 +120,8 @@
 | `config/cron-tasks.ts` | Creado | T-09 |
 | `src/lifecycles/recompactBannersOnChange.ts` | Creado | T-09 |
 | `config/server.ts` | Modificado (cron habilitado) | T-09 |
+| `src/bootstrap/ensurePublicationWebhook.ts` | Creado | T-10 |
+| `config/custom.ts` | Creado (`SITE_REVALIDATE_WEBHOOK_URL`/`PREVIEW_WEBHOOK_SECRET`) | T-10 |
 
 ---
 
@@ -138,6 +140,8 @@
 | `281b6cb` | [cms-autoexplora] Fase 1 - T-08: validación de formato y peso de archivos | 2026-07-20 |
 | `0fb79c5` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-08 completada, hallazgo CORS S3 | 2026-07-20 |
 | `8f352bb` | [cms-autoexplora] Fase 1 - T-09: reordenamiento automático de banners por vigencia | 2026-07-20 |
+| `1e1a6a9` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-09 completada | 2026-07-20 |
+| `cd78590` | [cms-autoexplora] Fase 1 - T-10: publicación en dos etapas (contrato de API + webhook) | 2026-07-20 |
 
 ---
 
@@ -147,7 +151,9 @@
 - Rama activa: `feature/PJ5040-cms-autoexplora-mvp`.
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
-- Siguiente paso: Fase 1, T-10 en adelante (publicación en dos etapas: exponer `publicationState` + webhook).
+- Siguiente paso: Fase 1, T-11 en adelante (integración mínima en el sitio `autoexplora-alfa`).
+- ⚠️ **Contrato de API corregido:** usar `status=draft`/`status=published`, **no** `publicationState` (eso era Strapi v4; en v5 da error). `status=draft` muestra el borrador de TODO, incluso lo ya publicado — es lo que debe usar el preview del sitio.
+- Webhook de publicación (`site-revalidation`) se registra solo/automáticamente cuando `SITE_REVALIDATE_WEBHOOK_URL` tiene valor — el sitio (T-11) debe definir su endpoint de revalidación y compartir esa URL + acordar `PREVIEW_WEBHOOK_SECRET`.
 - ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3). T-10 puede ejecutarse sin más validaciones.
 - ✅ Rama base del sitio confirmada (2026-07-17): `dev` (no `develop`/`main`). T-11/T-15/T-17 se ramifican desde ahí.
 - Despliegue: **EC2 + Nginx + systemd, sin Docker** (cambio del 2026-07-17). La instancia no existe aún — la crea el equipo de infraestructura del cliente. `deploy/nginx.conf` y `deploy/strapi.service` están listos pero no verificados en una instancia real.

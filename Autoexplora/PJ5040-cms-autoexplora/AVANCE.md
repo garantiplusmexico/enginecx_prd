@@ -5,10 +5,10 @@
 | Campo | Detalle |
 |---|---|
 | Plan de origen | `PLAN.md` |
-| Repositorio | `autoexplora-cms` — `git@github.com:Sitios-Web-Go-Virtual/autoexplora-cms.git` |
-| Rama | `feature/PJ5040-cms-autoexplora-mvp` |
+| Repositorio | `autoexplora-cms` — `git@github.com:Sitios-Web-Go-Virtual/autoexplora-cms.git` (CMS) y `autoexplora-alfa` — `git@github.com:Sitios-Web-Go-Virtual/autoexplora-alfa.git` (sitio, desde T-11) |
+| Rama | `feature/PJ5040-cms-autoexplora-mvp` en ambos repos (en `autoexplora-alfa`, creada desde `dev`) |
 | Responsable actual | Sharon Mendoza |
-| Última actualización | 2026-07-17 |
+| Última actualización | 2026-07-20 |
 | Modelo de ejecución | claude-sonnet-5 — esfuerzo: máximo |
 | Estado general | 🟡 En progreso |
 
@@ -16,7 +16,7 @@
 
 ## Resumen de estado
 
-**Fase 0 completada. Fase 1 en progreso: T-06 a T-10 completas.** Repositorio `autoexplora-cms` con scaffold de Strapi funcionando en la rama `feature/PJ5040-cms-autoexplora-mvp`: PostgreSQL local, S3 con lectura/escritura pública verificadas, rol Editor con permisos acotados a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de formato/peso de archivos, reordenamiento automático por vigencia (cron + hook reactivo), y publicación en dos etapas con webhook (contrato de API `status=draft|published`, corregido de la sintaxis v4 que tenía el plan). Despliegue: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada. Pendiente: CORS en buckets S3 (solicitado a Alexis). Siguiente paso: T-11 (integración mínima en el sitio `autoexplora-alfa`).
+**Fase 0 completada. Fase 1 en progreso: T-06 a T-11 completas.** CMS (`autoexplora-cms`) con Postgres local, S3 con lectura/escritura/CORS/CSP verificados, rol Editor acotado a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de archivos, reordenamiento automático por vigencia, y publicación en dos etapas con webhook. **Desde T-11, el sitio (`autoexplora-alfa`) también forma parte de este plan**: el home ya consume banners reales del CMS (`lib/server/strapiApi.ts`, fetch server-only), verificado en los 3 escenarios (borrador/vacío/publicado). Despliegue del CMS: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada (solicitada a Alexis, 2026-07-20). Siguiente paso: T-12 (registro de auditoría).
 
 ---
 
@@ -34,6 +34,7 @@
 | T-08 | Validación de formato y peso de archivos | Claude Code | 2026-07-20 | Alcance reducido: póster obligatorio ya resuelto en T-07 (schema), esta tarea solo valida formato/peso. Implementado como hook global (`strapi.db.lifecycles.subscribe` sobre `plugin::upload.file`) — aplica a todo el CMS, no solo Banner. Verificado: 8 casos unitarios en los límites exactos + prueba manual en el admin |
 | T-09 | Reordenamiento automático de banners por vigencia | Claude Code | 2026-07-20 | Dos disparadores: cron cada 5 min (respaldo pasivo) + hook reactivo en afterCreate/afterUpdate (inmediato, con guardia anti-reentrancia). Banner expirado se despublica vía Document Service (`unpublish`), preservando el borrador (reversible). Verificado con script standalone: el hook reactivo recompactó automáticamente al crear los datos de prueba, antes de la llamada manual |
 | T-10 | Publicación en dos etapas (API + webhook) | Claude Code | 2026-07-20 | **Hallazgo:** el plan decía `publicationState` (sintaxis Strapi v4) — corregido a `status=draft\|published` (Strapi v5), verificado empíricamente con token real. Webhook registrado por código (idempotente), verificado end-to-end con receptor HTTP local: `entry.publish`/`entry.unpublish` llegaron con el secreto correcto al publicar/despublicar un banner real |
+| T-11 | Integración mínima en el sitio `autoexplora-alfa` | Claude Code | 2026-07-20 | Primer cambio de código en `autoexplora-alfa` (rama `feature/PJ5040-cms-autoexplora-mvp` creada desde `dev`). Fetch server-only (`lib/server/strapiApi.ts`) invocado directo desde `app/page.tsx` (Server Component) — sin ruta `/api/*` intermedia, decisión deliberada para no construir el endpoint de revalidación instantánea todavía (ISR de 2 min es suficiente por ahora). `HomeCarousel.tsx` pasó de array hardcodeado a prop `slides`; de paso se corrigió el LCP (estaba fijo al índice 2, debe ser el 0). Token de solo lectura para el sitio, verificado con `POST → 403`. Verificado en navegador: borrador visible, vacío sin error, publicado visible |
 
 ---
 
@@ -49,7 +50,6 @@
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-11 | Integración mínima en el sitio `autoexplora-alfa` | ✅ Rama base confirmada 2026-07-17 (`dev`) — sin bloqueo |
 | T-12 | Registro de auditoría | |
 | T-13 | Content type Article (P2) | |
 | T-14 | Editor de texto enriquecido con embeds (P2) | |
@@ -122,6 +122,12 @@
 | `config/server.ts` | Modificado (cron habilitado) | T-09 |
 | `src/bootstrap/ensurePublicationWebhook.ts` | Creado | T-10 |
 | `config/custom.ts` | Creado (`SITE_REVALIDATE_WEBHOOK_URL`/`PREVIEW_WEBHOOK_SECRET`) | T-10 |
+| `config/middlewares.ts` | Modificado (CSP: hosts S3 en `img-src`/`media-src`) | T-03 (fix) |
+| **`autoexplora-alfa`**: `lib/server/strapiApi.ts` | Creado | T-11 |
+| **`autoexplora-alfa`**: `app/page.tsx` | Modificado (fetch server-side de banners) | T-11 |
+| **`autoexplora-alfa`**: `app/components/HomeCarousel.tsx` | Modificado (array hardcodeado → prop `slides`; fix LCP) | T-11 |
+| **`autoexplora-alfa`**: `next.config.ts` | Modificado (hosts S3 del CMS en `remotePatterns`) | T-11 |
+| **`autoexplora-alfa`**: `.env.example`/`.env` | Modificado (`STRAPI_API_URL`/`STRAPI_API_TOKEN`/`STRAPI_PUBLICATION_STATUS`) | T-11 |
 
 ---
 
@@ -142,6 +148,11 @@
 | `8f352bb` | [cms-autoexplora] Fase 1 - T-09: reordenamiento automático de banners por vigencia | 2026-07-20 |
 | `1e1a6a9` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-09 completada | 2026-07-20 |
 | `cd78590` | [cms-autoexplora] Fase 1 - T-10: publicación en dos etapas (contrato de API + webhook) | 2026-07-20 |
+| `d1990e9` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-10 completada, corrección de API v5 | 2026-07-20 |
+| `414dddb` (enginecx_prd) | cms-autoexplora Registrar solicitud de aprovisionamiento EC2 a Alexis | 2026-07-20 |
+| `c3337d6` (enginecx_prd) | cms-autoexplora Cerrar T-03 - CORS + CSP resueltos, miniaturas visibles | 2026-07-20 |
+| `ea1c177` | [cms-autoexplora] Fix T-03 - Permitir buckets S3 en Content Security Policy | 2026-07-20 |
+| `2fad324` (autoexplora-alfa) | [cms-autoexplora] Fase 1 - T-11: consumir banners del CMS en el home | 2026-07-20 |
 
 ---
 
@@ -151,18 +162,20 @@
 - Rama activa: `feature/PJ5040-cms-autoexplora-mvp`.
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
-- Siguiente paso: Fase 1, T-11 en adelante (integración mínima en el sitio `autoexplora-alfa`).
-- ⚠️ **Contrato de API corregido:** usar `status=draft`/`status=published`, **no** `publicationState` (eso era Strapi v4; en v5 da error). `status=draft` muestra el borrador de TODO, incluso lo ya publicado — es lo que debe usar el preview del sitio.
-- Webhook de publicación (`site-revalidation`) se registra solo/automáticamente cuando `SITE_REVALIDATE_WEBHOOK_URL` tiene valor — el sitio (T-11) debe definir su endpoint de revalidación y compartir esa URL + acordar `PREVIEW_WEBHOOK_SECRET`.
-- ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3). T-10 puede ejecutarse sin más validaciones.
-- ✅ Rama base del sitio confirmada (2026-07-17): `dev` (no `develop`/`main`). T-11/T-15/T-17 se ramifican desde ahí.
-- Despliegue: **EC2 + Nginx + systemd, sin Docker** (cambio del 2026-07-17). La instancia no existe aún — la crea el equipo de infraestructura del cliente. `deploy/nginx.conf` y `deploy/strapi.service` están listos pero no verificados en una instancia real.
-- ✅ Bucket S3: subida y lectura pública verificadas de punta a punta (2026-07-17). **Bloqueado**: falta configurar CORS en ambos buckets (solicitado a Alexis 2026-07-20) — sin esto, las miniaturas no se ven en el admin ni probablemente en el sitio.
-- Banner (T-07) usa **Dynamic Zone** (`content`, componentes `banner.image-content`/`banner.video-content`), no campos planos — cualquier trabajo futuro sobre Banner (T-11) debe considerar esta estructura, no la original del PRD/plan.
+- Siguiente paso: Fase 1, T-12 en adelante (registro de auditoría).
+- ⚠️ **Contrato de API corregido:** usar `status=draft`/`status=published`, **no** `publicationState` (eso era Strapi v4; en v5 da error). `status=draft` muestra el borrador de TODO, incluso lo ya publicado — es lo que usa el preview del sitio.
+- ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3).
+- ✅ Rama base del sitio confirmada (2026-07-17): `dev`. Desde T-11, `autoexplora-alfa` también vive en `feature/PJ5040-cms-autoexplora-mvp` (creada desde `dev`), en `~/Documents/BRICK-sites/autoexplora-alfa`.
+- Despliegue del CMS: **EC2 + Nginx + systemd, sin Docker**. La instancia no existe aún — solicitada a Alexis Herrera (2026-07-20). `deploy/nginx.conf` y `deploy/strapi.service` listos pero no verificados en una instancia real.
+- ✅ Bucket S3: subida, lectura pública, CORS y CSP — todo verificado (2026-07-17 a 2026-07-20). Sin bloqueos de S3 activos.
+- Banner (T-07) usa **Dynamic Zone** (`content`, componentes `banner.image-content`/`banner.video-content`), no campos planos — cualquier trabajo futuro sobre Banner (T-13 Article puede reusar el patrón) debe considerar esta estructura, no la original del PRD/plan.
 - Validación de archivos (T-08) es un hook **global** (`src/lifecycles/validateUploadedFiles.ts`), no específico de Banner — ya cubre cualquier content type futuro que suba imágenes/video.
 - El rol Editor recibe permisos por código en `src/bootstrap/ensureEditorPermissions.ts` — al agregar Article (T-13) o StaticText (T-16), extender `EDITOR_MANAGED_CONTENT_TYPES` ahí, no dar permisos manualmente desde el admin.
 - T-09 (reordenamiento) corre vía cron cada 5 min (`config/cron-tasks.ts`) + hook reactivo (`src/lifecycles/recompactBannersOnChange.ts`, con guardia anti-reentrancia). Banner expirado se despublica (no se elimina), preservando el borrador.
 - Primer usuario admin de Strapi ya creado por el programador directamente en `http://localhost:1337/admin`.
+- **T-11 pendiente de conectar a futuro:** el webhook `site-revalidation` (T-10) sigue sin registrarse porque `SITE_REVALIDATE_WEBHOOK_URL` está vacía — se decidió deliberadamente no construir el endpoint de revalidación instantánea en T-11 (ISR de 2 min es suficiente por ahora); queda como mejora aditiva para T-18 (endurecimiento), sin rework.
+- El sitio (`autoexplora-alfa`) consume Strapi vía `lib/server/strapiApi.ts`, invocado directo desde `app/page.tsx` (Server Component) — no hay ruta `/api/banners` intermedia; el token (`STRAPI_API_TOKEN`, solo lectura sobre Banner) nunca llega al navegador.
+- Token de solo lectura para el sitio ya generado en Strapi (tipo `custom`, permisos `api::banner.banner.find`/`.findOne`), guardado en `autoexplora-alfa/.env` local (no versionado).
 
 ---
 

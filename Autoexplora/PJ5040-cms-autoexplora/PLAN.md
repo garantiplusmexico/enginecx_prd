@@ -170,9 +170,9 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
   - Archivos: `src/bootstrap/ensurePublicationWebhook.ts` (registro idempotente del webhook), `config/custom.ts` (`SITE_REVALIDATE_WEBHOOK_URL`/`PREVIEW_WEBHOOK_SECRET`).
   - Criterio (RF-06/RF-07/RNF-02/RNF-05): guardar = draft consumible en preview; publicar = published; despublicar/revertir disponible; el cliente nunca escribe directo en producción. ✅ Verificado: contrato de API confirmado empíricamente (`status=draft|published`); webhook probado end-to-end con receptor local (`entry.publish`/`entry.unpublish` con secreto correcto).
 
-- [ ] **T-11** — Integración mínima en el sitio `autoexplora-alfa`: consumir banners P1 desde la API de Strapi (preview en `dev`, published en prod).
-  - Archivos (sitio): capa server-only de fetch a Strapi (patrón proxy, análogo a `lib/server/gridApi.ts`), componente/sección de banners, variables de entorno del sitio.
-  - Criterio: los banners publicados en Strapi se ven en producción; los borradores se ven en preview (`dev`); el token de Strapi nunca llega al navegador.
+- [x] **T-11** — Integración mínima en el sitio `autoexplora-alfa`: consumir banners P1 desde la API de Strapi (preview en `dev`, published en prod).
+  - Archivos (sitio): `lib/server/strapiApi.ts` (fetch server-only, análogo a `lib/server/brickGroupInfo.ts` — más simple que `gridApi.ts`), `app/page.tsx` (invoca el fetch directo, sin ruta `/api/*` intermedia), `app/components/HomeCarousel.tsx` (recibe `slides` por prop en vez de array hardcodeado), `next.config.ts`.
+  - Criterio: los banners publicados en Strapi se ven en producción; los borradores se ven en preview (`dev`); el token de Strapi nunca llega al navegador. ✅ Verificado en navegador (borrador/vacío/publicado) y token confirmado de solo lectura (`POST` → `403`).
 
 - [ ] **T-12** — Registro de auditoría (usuario + acción + entidad + fecha/hora) para crear/editar/publicar/despublicar.
   - Archivos: content type/`AuditLog` o middleware de auditoría, lifecycle hooks.
@@ -251,7 +251,8 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 | `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT` | Secrets core de Strapi | Dev / Prod |
 | `AWS_ACCESS_KEY_ID`, `AWS_ACCESS_SECRET`, `AWS_REGION`, `AWS_BUCKET` | Provider S3 de media (`AWS_BUCKET` = `govirtual-autoexplora-cms-prod` o `-qa` según ambiente) | Dev / QA / Prod |
 | `STRAPI_API_URL` (en el sitio) | Base URL de la API de contenido | Dev / Prod |
-| `STRAPI_API_TOKEN` (en el sitio, server-only) | Token de lectura hacia Strapi | Dev / Prod |
+| `STRAPI_API_TOKEN` (en el sitio, server-only) | Token de lectura hacia Strapi (custom, solo `api::banner.banner.find`/`.findOne`) | Dev / Prod |
+| `STRAPI_PUBLICATION_STATUS` (en el sitio) | `draft` en preview (`dev`) / `published` en producción | Dev / Prod |
 | `SITE_REVALIDATE_WEBHOOK_URL` (en el CMS) | URL del endpoint de revalidación del sitio; sin ella, el webhook no se registra (T-11 debe proveerla) | Prod |
 | `PREVIEW_WEBHOOK_SECRET` (en el CMS y el sitio) | Firma del webhook de publicación (header `X-Webhook-Secret`) | Prod |
 

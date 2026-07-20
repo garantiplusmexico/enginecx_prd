@@ -65,7 +65,7 @@
 
 | ID | Tarea | Motivo del bloqueo | Quién debe resolverlo |
 |---|---|---|---|
-| T-05 (verificación real) | Verificar `deploy/nginx.conf` + `deploy/strapi.service` en una instancia real | La instancia EC2 no existe aún; la aprovisiona el equipo de infraestructura del cliente | Equipo de infraestructura del cliente |
+| T-05 (verificación real) | Verificar `deploy/nginx.conf` + `deploy/strapi.service` en una instancia real | La instancia EC2 no existe aún | Alexis Herrera — solicitud de aprovisionamiento enviada 2026-07-20 (specs: Ubuntu, puertos 80/443/22, Postgres solo local; pendiente confirmar consola AWS, qa/prod separadas o compartidas, y dominio) |
 | T-03 (preview de miniaturas) | Las miniaturas de imagen/video no se ven en la Media Library del admin (aparecen como imagen rota), aunque las URLs son públicamente accesibles (`curl` → `200 OK`) | Falta configurar **CORS** en ambos buckets S3 — el bucket no manda encabezados `Access-Control-Allow-Origin`, necesarios para que el navegador renderice las imágenes (aunque `curl` no los necesita) | Alexis Herrera / quien administre la cuenta AWS — solicitud enviada 2026-07-20 |
 
 ---

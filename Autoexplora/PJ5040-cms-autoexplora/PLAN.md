@@ -156,9 +156,9 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
   - Archivos: `src/api/banner/**` (schema, controller, service, routes), `src/components/banner/image-content.json`, `src/components/banner/video-content.json`.
   - Criterio: CRUD completo de banners desde el admin, con Draft & Publish. ✅ Verificado manualmente por el programador (imagen y video, guardar borrador → publicar, media en S3).
 
-- [ ] **T-08** — Validación de formato/peso de archivo. *(Alcance reducido: el póster obligatorio en video ya lo resuelve nativamente el schema de T-07 vía `required: true` — ya no requiere lifecycle hook para esa parte.)*
-  - Archivos: lifecycle hooks o validación custom en `src/components/banner/` / `src/api/banner/`.
-  - Criterio (RF-11): rechaza formato inválido (solo JPG/WebP imagen, MP4 video); imagen >1 MB y video >10 MB bloqueados; video >10 MB muestra aviso sugiriendo embed.
+- [x] **T-08** — Validación de formato/peso de archivo. *(Alcance reducido: el póster obligatorio en video ya lo resuelve nativamente el schema de T-07 vía `required: true` — ya no requiere lifecycle hook para esa parte. Implementado como hook global sobre todo el CMS, no solo Banner.)*
+  - Archivos: `src/lifecycles/validateUploadedFiles.ts` (hook global vía `strapi.db.lifecycles.subscribe` sobre `plugin::upload.file`).
+  - Criterio (RF-11): rechaza formato inválido (solo JPG/WebP imagen, MP4 video); imagen >1 MB y video >10 MB bloqueados; video >10 MB muestra aviso sugiriendo embed. ✅ Verificado: 8 casos unitarios + prueba manual en el admin.
 
 - [ ] **T-09** — Reordenamiento automático de banners por vigencia (recompactar posiciones al caducar).
   - Archivos: `src/api/banner/services/reorder.ts`, tarea cron (`config/cron-tasks.ts`) + hook al editar vigencia.
@@ -312,6 +312,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 | Un solo usuario IAM con acceso a ambos buckets S3 (prod y qa) | Baja | Medio | Sin aislamiento entre ambientes a nivel de credencial; una fuga de la credencial de qa expone también prod. Aceptado por el programador; recomendable separar en el futuro |
 | Instancia EC2 no existe aún (la crea el equipo de infraestructura) | Media | Medio | Fase 0 (T-05) deja Nginx/systemd/guía listos pero sin poder verificar en la instancia real hasta que exista; verificación real pendiente |
 | ~~Buckets S3 sin bucket policy de lectura pública~~ (ACLs deshabilitadas) | ~~Alta~~ | ~~Alto~~ | ✅ **Resuelto 2026-07-17**: Alexis Herrera aplicó bucket policy de `s3:GetObject` público + ajustó Block Public Access en ambos buckets. Verificado con `curl` → `200 OK` |
+| Buckets S3 sin configuración de CORS | Alta | Medio | Las miniaturas de imagen/video no se ven en el admin (aunque las URLs son públicas) porque el navegador necesita encabezados `Access-Control-Allow-Origin` que el bucket no manda. Solicitado a Alexis Herrera (2026-07-20): CORS con `AllowedMethods: GET`, `AllowedOrigins: "*"` en ambos buckets. No bloquea el desarrollo backend, sí la experiencia visual en admin/sitio hasta resolverse |
 
 ---
 

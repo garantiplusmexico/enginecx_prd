@@ -31,6 +31,7 @@
 | T-05 | Nginx + systemd para despliegue en EC2 *(rehecha 2026-07-17)* | Claude Code | 2026-07-16 → 2026-07-17 | Versión original (Dockerfile + ECS/Fargate, verificada con Docker Desktop) **retirada** por decisión de infraestructura del programador. Versión actual: `deploy/nginx.conf`, `deploy/strapi.service`, `deploy/README.md` — no verificable hasta que exista la instancia EC2 real (la crea el equipo de infraestructura) |
 | T-06 | Autenticación y rol único "editor" | Claude Code | 2026-07-17 | Corrección de alcance sobre el plan: el mecanismo correcto es el RBAC nativo del Admin Panel (rol "Editor" de fábrica), no el plugin Users & Permissions (ese es para usuarios finales de un sitio público). Permisos otorgados por bootstrap idempotente (`src/bootstrap/ensureEditorPermissions.ts`). Verificado en BD: solo Banner + Media Library, sin Settings/Users/Roles |
 | T-07 | Content type Banner | Claude Code | 2026-07-17 | Rediseñado durante pruebas manuales (ver Decisiones): Dynamic Zone con componentes Imagen/Video, desktop+mobile en ambos, sin campo `sección` ni `altText` propio. CRUD y Draft & Publish verificados por el programador en el admin |
+| T-08 | Validación de formato y peso de archivos | Claude Code | 2026-07-20 | Alcance reducido: póster obligatorio ya resuelto en T-07 (schema), esta tarea solo valida formato/peso. Implementado como hook global (`strapi.db.lifecycles.subscribe` sobre `plugin::upload.file`) — aplica a todo el CMS, no solo Banner. Verificado: 8 casos unitarios en los límites exactos + prueba manual en el admin |
 
 ---
 
@@ -46,7 +47,6 @@
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-08 | Validación de archivos y póster obligatorio | Póster ya requerido nativamente por el schema (T-07); falta solo validación de formato/peso |
 | T-09 | Reordenamiento automático de banners por vigencia | |
 | T-10 | Publicación en dos etapas (Draft & Publish + webhook) | ✅ Modelo confirmado 2026-07-17 — sin bloqueo |
 | T-11 | Integración mínima en el sitio `autoexplora-alfa` | ✅ Rama base confirmada 2026-07-17 (`dev`) — sin bloqueo |
@@ -66,6 +66,7 @@
 | ID | Tarea | Motivo del bloqueo | Quién debe resolverlo |
 |---|---|---|---|
 | T-05 (verificación real) | Verificar `deploy/nginx.conf` + `deploy/strapi.service` en una instancia real | La instancia EC2 no existe aún; la aprovisiona el equipo de infraestructura del cliente | Equipo de infraestructura del cliente |
+| T-03 (preview de miniaturas) | Las miniaturas de imagen/video no se ven en la Media Library del admin (aparecen como imagen rota), aunque las URLs son públicamente accesibles (`curl` → `200 OK`) | Falta configurar **CORS** en ambos buckets S3 — el bucket no manda encabezados `Access-Control-Allow-Origin`, necesarios para que el navegador renderice las imágenes (aunque `curl` no los necesita) | Alexis Herrera / quien administre la cuenta AWS — solicitud enviada 2026-07-20 |
 
 ---
 
@@ -89,6 +90,8 @@
 | **T-07: Banner rediseñado con Dynamic Zone (Imagen/Video) tras prueba manual** | Al probar el formulario, el programador identificó 3 problemas de producto: (1) el campo "sección" era redundante (un solo carrusel en home, no multi-sitio); (2) el póster aparecía aunque no se hubiera elegido tipo de media, sin flujo progresivo; (3) faltaba soporte de versiones desktop/mobile separadas. Se resolvió con una Dynamic Zone de dos Componentes (Imagen/Video), cada uno con sus propios campos desktop/mobile — logra la UX progresiva pedida usando UI nativa de Strapi, sin construir un formulario custom (que sí hubiera arriesgado el deadline). | Cambia el modelo de datos de Banner respecto al PRD original (RF-03 decía "por sección"); documentado como decisión de producto del programador. Bonus: el póster obligatorio en video (RF-04) ahora se cumple nativamente vía `required: true` en el componente, sin necesitar lifecycle hook para esa parte — T-08 se reduce a validar formato/peso de archivo. |
 | **`altText` propio eliminado de los componentes de Banner** | El programador notó que Strapi ya provee "texto alternativo" nativo por archivo en la Media Library — el campo custom era redundante. | Ninguno — simplificación, sin pérdida de funcionalidad. |
 | **Bucket policy de lectura pública aplicada (Alexis Herrera, 2026-07-17)** | Tras la bucket policy inicial, seguía dando `403` porque nunca se había guardado ninguna policy (confirmado con "No hay ninguna política que mostrar" en la consola). Se le compartió el JSON exacto de policy pública (`s3:GetObject`) para ambos buckets; tras aplicarla, verificado con `curl` → `200 OK`. | T-03 queda 100% cerrado, incluyendo lectura pública — ya no hay bloqueo pendiente de S3. |
+| **T-08: validación como hook global, no por content type** | RF-11 describe la validación de formato/peso como aplicable a "cada subida", no específica de Banner. Se implementó vía `strapi.db.lifecycles.subscribe` sobre `plugin::upload.file` en vez de un lifecycle propio de Banner. | Cubre automáticamente Article (T-13) y StaticText (T-16) sin duplicar lógica cuando se construyan esos content types. |
+| **CORS pendiente en los buckets S3 (nuevo hallazgo, 2026-07-20)** | Al probar T-08, el programador notó que las miniaturas no se ven en la Media Library aunque las URLs son públicas. Se diagnosticó: falta configuración de CORS en los buckets — el navegador la requiere para renderizar imágenes remotas (aunque `curl`/descarga directa no la necesite). Se compartió el JSON de CORS a Alexis Herrera. | No bloquea el desarrollo backend (Strapi guarda/sirve bien los archivos); sí afecta la experiencia visual en el admin y eventualmente en el sitio. Pendiente de aplicar. |
 
 ---
 
@@ -111,7 +114,8 @@
 | `src/api/banner/` (schema, controller, service, routes) | Creado | T-07 |
 | `src/components/banner/image-content.json`, `video-content.json` | Creado, luego modificado (se quitó `altText`) | T-07 |
 | `src/bootstrap/ensureEditorPermissions.ts` | Creado (idempotente, con auto-actualización de campos) | T-06 |
-| `src/index.ts` | Modificado (conecta el bootstrap) | T-06 |
+| `src/index.ts` | Modificado (conecta el bootstrap, luego el hook de validación) | T-06 / T-08 |
+| `src/lifecycles/validateUploadedFiles.ts` | Creado | T-08 |
 
 ---
 
@@ -127,6 +131,7 @@
 | `d209e3d` (enginecx_prd) | cms-autoexplora Actualizar avance y plan - T-03 verificado, bloqueo bucket policy | 2026-07-17 |
 | `a9a759f` (enginecx_prd) | cms-autoexplora Confirmar modelo de publicación y rama base del sitio | 2026-07-17 |
 | `18f22ad` | [cms-autoexplora] Fase 1 - T-06/T-07: rol Editor + content type Banner | 2026-07-17 |
+| `281b6cb` | [cms-autoexplora] Fase 1 - T-08: validación de formato y peso de archivos | 2026-07-20 |
 
 ---
 
@@ -136,12 +141,13 @@
 - Rama activa: `feature/PJ5040-cms-autoexplora-mvp`.
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
-- Siguiente paso: Fase 1, T-08 en adelante (validación de formato/peso de archivo — el póster ya es obligatorio nativamente desde T-07).
+- Siguiente paso: Fase 1, T-09 en adelante (reordenamiento automático de banners por vigencia).
 - ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3). T-10 puede ejecutarse sin más validaciones.
 - ✅ Rama base del sitio confirmada (2026-07-17): `dev` (no `develop`/`main`). T-11/T-15/T-17 se ramifican desde ahí.
 - Despliegue: **EC2 + Nginx + systemd, sin Docker** (cambio del 2026-07-17). La instancia no existe aún — la crea el equipo de infraestructura del cliente. `deploy/nginx.conf` y `deploy/strapi.service` están listos pero no verificados en una instancia real.
-- ✅ Bucket S3: subida y **lectura pública** verificadas de punta a punta (2026-07-17). Ya no hay bloqueos de S3.
-- Banner (T-07) usa **Dynamic Zone** (`content`, componentes `banner.image-content`/`banner.video-content`), no campos planos — cualquier trabajo futuro sobre Banner (T-08, T-09, T-11) debe considerar esta estructura, no la original del PRD/plan.
+- ✅ Bucket S3: subida y lectura pública verificadas de punta a punta (2026-07-17). **Bloqueado**: falta configurar CORS en ambos buckets (solicitado a Alexis 2026-07-20) — sin esto, las miniaturas no se ven en el admin ni probablemente en el sitio.
+- Banner (T-07) usa **Dynamic Zone** (`content`, componentes `banner.image-content`/`banner.video-content`), no campos planos — cualquier trabajo futuro sobre Banner (T-09, T-11) debe considerar esta estructura, no la original del PRD/plan.
+- Validación de archivos (T-08) es un hook **global** (`src/lifecycles/validateUploadedFiles.ts`), no específico de Banner — ya cubre cualquier content type futuro que suba imágenes/video.
 - El rol Editor recibe permisos por código en `src/bootstrap/ensureEditorPermissions.ts` — al agregar Article (T-13) o StaticText (T-16), extender `EDITOR_MANAGED_CONTENT_TYPES` ahí, no dar permisos manualmente desde el admin.
 - Primer usuario admin de Strapi ya creado por el programador directamente en `http://localhost:1337/admin`.
 

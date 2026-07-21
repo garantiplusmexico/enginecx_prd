@@ -16,7 +16,7 @@
 
 ## Resumen de estado
 
-**Fase 0 completada. Fase 1 en progreso: T-06 a T-11 completas.** CMS (`autoexplora-cms`) con Postgres local, S3 con lectura/escritura/CORS/CSP verificados, rol Editor acotado a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de archivos, reordenamiento automático por vigencia, y publicación en dos etapas con webhook. **Desde T-11, el sitio (`autoexplora-alfa`) también forma parte de este plan**: el home ya consume banners reales del CMS (`lib/server/strapiApi.ts`, fetch server-only), verificado en los 3 escenarios (borrador/vacío/publicado). Despliegue del CMS: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada (solicitada a Alexis, 2026-07-20). Siguiente paso: T-12 (registro de auditoría).
+**Fase 0 completada. Fase 1 (P1) completa: T-06 a T-12.** CMS (`autoexplora-cms`) con Postgres local, S3 con lectura/escritura/CORS/CSP verificados, rol Editor acotado a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de archivos, reordenamiento automático por vigencia, publicación en dos etapas con webhook, y registro de auditoría (create/update/publish/unpublish, verificado en vivo con usuario real). El sitio (`autoexplora-alfa`) ya consume banners reales del CMS desde T-11. Despliegue del CMS: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada (solicitada a Alexis, 2026-07-20). **Guardarraíl del PRD:** con P1 completo, el compromiso mínimo del 31 jul ya está cubierto; P2 (blog) y P3 (textos) son las siguientes si el tiempo lo permite. Siguiente paso: T-13 (content type Article, P2) o cerrar Fase 1 aquí según tiempo disponible.
 
 ---
 
@@ -35,6 +35,7 @@
 | T-09 | Reordenamiento automático de banners por vigencia | Claude Code | 2026-07-20 | Dos disparadores: cron cada 5 min (respaldo pasivo) + hook reactivo en afterCreate/afterUpdate (inmediato, con guardia anti-reentrancia). Banner expirado se despublica vía Document Service (`unpublish`), preservando el borrador (reversible). Verificado con script standalone: el hook reactivo recompactó automáticamente al crear los datos de prueba, antes de la llamada manual |
 | T-10 | Publicación en dos etapas (API + webhook) | Claude Code | 2026-07-20 | **Hallazgo:** el plan decía `publicationState` (sintaxis Strapi v4) — corregido a `status=draft\|published` (Strapi v5), verificado empíricamente con token real. Webhook registrado por código (idempotente), verificado end-to-end con receptor HTTP local: `entry.publish`/`entry.unpublish` llegaron con el secreto correcto al publicar/despublicar un banner real |
 | T-11 | Integración mínima en el sitio `autoexplora-alfa` | Claude Code | 2026-07-20 | Primer cambio de código en `autoexplora-alfa` (rama `feature/PJ5040-cms-autoexplora-mvp` creada desde `dev`). Fetch server-only (`lib/server/strapiApi.ts`) invocado directo desde `app/page.tsx` (Server Component) — sin ruta `/api/*` intermedia, decisión deliberada para no construir el endpoint de revalidación instantánea todavía (ISR de 2 min es suficiente por ahora). `HomeCarousel.tsx` pasó de array hardcodeado a prop `slides`; de paso se corrigió el LCP (estaba fijo al índice 2, debe ser el 0). Token de solo lectura para el sitio, verificado con `POST → 403`. Verificado en navegador: borrador visible, vacío sin error, publicado visible |
+| T-12 | Registro de auditoría | Claude Code | 2026-07-20 | Content type `AuditLog` sin Draft & Publish. Implementado con `strapi.documents.use()` (no un hook de BD genérico) para distinguir sin ambigüedad create/update/publish/unpublish — internamente publicar es un delete+create que un hook de BD no puede diferenciar de forma confiable de una edición. Usuario obtenido de `strapi.requestContext.get().state.user`. Escritura del log en try/catch, nunca bloquea la acción real. **Verificado en vivo: las 4 acciones sobre un banner real quedaron registradas con el usuario correcto. Completa el alcance P1 del MVP (T-06 a T-12).** |
 
 ---
 
@@ -50,7 +51,6 @@
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-12 | Registro de auditoría | |
 | T-13 | Content type Article (P2) | |
 | T-14 | Editor de texto enriquecido con embeds (P2) | |
 | T-15 | Consumo de blog en el sitio (P2) | |
@@ -128,6 +128,8 @@
 | **`autoexplora-alfa`**: `app/components/HomeCarousel.tsx` | Modificado (array hardcodeado → prop `slides`; fix LCP) | T-11 |
 | **`autoexplora-alfa`**: `next.config.ts` | Modificado (hosts S3 del CMS en `remotePatterns`) | T-11 |
 | **`autoexplora-alfa`**: `.env.example`/`.env` | Modificado (`STRAPI_API_URL`/`STRAPI_API_TOKEN`/`STRAPI_PUBLICATION_STATUS`) | T-11 |
+| `src/api/audit-log/` (schema, controller, service, routes) | Creado | T-12 |
+| `src/lifecycles/auditLog.ts` | Creado | T-12 |
 
 ---
 
@@ -153,6 +155,8 @@
 | `c3337d6` (enginecx_prd) | cms-autoexplora Cerrar T-03 - CORS + CSP resueltos, miniaturas visibles | 2026-07-20 |
 | `ea1c177` | [cms-autoexplora] Fix T-03 - Permitir buckets S3 en Content Security Policy | 2026-07-20 |
 | `2fad324` (autoexplora-alfa) | [cms-autoexplora] Fase 1 - T-11: consumir banners del CMS en el home | 2026-07-20 |
+| `ff1ad66` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-11 completada | 2026-07-20 |
+| `f2da662` | [cms-autoexplora] Fase 1 - T-12: registro de auditoría (completa P1) | 2026-07-20 |
 
 ---
 
@@ -162,7 +166,8 @@
 - Rama activa: `feature/PJ5040-cms-autoexplora-mvp`.
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
-- Siguiente paso: Fase 1, T-12 en adelante (registro de auditoría).
+- ✅ **P1 completo (T-06 a T-12).** Siguiente paso: decidir con el programador si se continúa a P2 (T-13, Article) o se cierra Fase 1 aquí según tiempo disponible antes del 31 jul.
+- Auditoría (T-12): content type `AuditLog` (sin Draft & Publish), poblado vía `strapi.documents.use()` — extender `TRACKED_UIDS` en `src/lifecycles/auditLog.ts` al agregar Article (T-13)/StaticText (T-16), igual que con `EDITOR_MANAGED_CONTENT_TYPES`.
 - ⚠️ **Contrato de API corregido:** usar `status=draft`/`status=published`, **no** `publicationState` (eso era Strapi v4; en v5 da error). `status=draft` muestra el borrador de TODO, incluso lo ya publicado — es lo que usa el preview del sitio.
 - ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3).
 - ✅ Rama base del sitio confirmada (2026-07-17): `dev`. Desde T-11, `autoexplora-alfa` también vive en `feature/PJ5040-cms-autoexplora-mvp` (creada desde `dev`), en `~/Documents/BRICK-sites/autoexplora-alfa`.

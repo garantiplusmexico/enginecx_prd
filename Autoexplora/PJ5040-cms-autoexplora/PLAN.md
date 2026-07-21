@@ -174,9 +174,11 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
   - Archivos (sitio): `lib/server/strapiApi.ts` (fetch server-only, análogo a `lib/server/brickGroupInfo.ts` — más simple que `gridApi.ts`), `app/page.tsx` (invoca el fetch directo, sin ruta `/api/*` intermedia), `app/components/HomeCarousel.tsx` (recibe `slides` por prop en vez de array hardcodeado), `next.config.ts`.
   - Criterio: los banners publicados en Strapi se ven en producción; los borradores se ven en preview (`dev`); el token de Strapi nunca llega al navegador. ✅ Verificado en navegador (borrador/vacío/publicado) y token confirmado de solo lectura (`POST` → `403`).
 
-- [ ] **T-12** — Registro de auditoría (usuario + acción + entidad + fecha/hora) para crear/editar/publicar/despublicar.
-  - Archivos: content type/`AuditLog` o middleware de auditoría, lifecycle hooks.
-  - Criterio (RNF-03/RNF-10): cada acción sobre una pieza queda registrada y consultable; logs de publicaciones y errores emitidos.
+- [x] **T-12** — Registro de auditoría (usuario + acción + entidad + fecha/hora) para crear/editar/publicar/despublicar.
+  - Archivos: `src/api/audit-log/` (content type, sin Draft & Publish), `src/lifecycles/auditLog.ts` (middleware `strapi.documents.use()`, no lifecycle hook de BD — distingue con precisión las 4 acciones).
+  - Criterio (RNF-03/RNF-10): cada acción sobre una pieza queda registrada y consultable; logs de publicaciones y errores emitidos. ✅ Verificado en vivo: las 4 acciones sobre un banner real, cada una atribuida al usuario correcto.
+
+**P1 completo con esta tarea (T-06 a T-12).**
 
 ### Fase 2 — P2: Gestión de blog *(recortable si se excede el deadline)*
 

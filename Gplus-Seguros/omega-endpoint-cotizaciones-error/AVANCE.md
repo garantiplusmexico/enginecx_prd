@@ -17,7 +17,7 @@
 
 ## Resumen de estado
 
-**Fase 0 — Preparación completada** ✅. Rama funcional creada desde `develop` y publicada (T-01), y build baseline de `cotizador_omega` verificado (T-02): `dotnet build` con **0 errores** (51 warnings preexistentes del proyecto, no relacionados con este cambio). Listo para arrancar la **Fase 1 — Implementación del endpoint** (T-03 → T-05). Sin cambios de código todavía en el repo del proyecto.
+**Fases 0 y 1 completadas** ✅. El endpoint `GET cotizaciones-error` está implementado en `cotizador_omega`: DTO de respuesta (T-03), controller (T-04) y consulta a la vista `vr_cotizaciones_aseguradora` con filtro de error, orden por recencia y límite de 10 (T-05). `dotnet build` con **0 errores**. Pendiente la **Fase 2 — Verificación y cierre** (T-06 pruebas manuales con JWT, T-07 commit final).
 
 ---
 
@@ -26,10 +26,10 @@
 | Fase | ID (BD) | Tareas | Días est. (rango) | Fecha inicio | Fecha fin | Días ejecutados | Días restantes | Estatus |
 |---|---|---|---|---|---|---|---|---|
 | **Fase 0 — Preparación (P1)** | 3 | T-01 a T-02 | 0.5 | 2026-07-23 | 2026-07-23 | 0.5 | 0 | ✅ Completada |
-| **Fase 1 — Implementación del endpoint (P1)** | 4 | T-03 a T-05 | 1 – 2 | | | 0 | 2 | ⏳ Pendiente |
+| **Fase 1 — Implementación del endpoint (P1)** | 4 | T-03 a T-05 | 1 – 2 | 2026-07-23 | 2026-07-23 | 0.5 | 0 | ✅ Completada |
 | **Fase 2 — Verificación y cierre (P2)** | 5 | T-06 a T-07 | 0.5 – 1 | | | 0 | 1 | ⏳ Pendiente |
-| **Total proyecto (P1+P2)** | — | 7 tareas | ~2 – 3.5 | 2026-07-23 | | 0.5 | ~3 | 🟡 En progreso |
-| **Solo P1 (guardarraíl del PRD)** | — | T-01 a T-05 | ~1.5 – 2.5 | 2026-07-23 | | 0.5 | ~2 | 🟡 En progreso |
+| **Total proyecto (P1+P2)** | — | 7 tareas | ~2 – 3.5 | 2026-07-23 | | 1 | ~1 | 🟡 En progreso |
+| **Solo P1 (guardarraíl del PRD)** | — | T-01 a T-05 | ~1.5 – 2.5 | 2026-07-23 | 2026-07-23 | 1 | 0 | ✅ Completada |
 
 ---
 
@@ -39,6 +39,9 @@
 |---|---|---|---|---|
 | T-01 | Crear rama funcional desde `develop` actualizado | Claude Code | 2026-07-23 | `feature/omega-endpoint-cotizaciones-error` creada y publicada en el remoto |
 | T-02 | Verificar build baseline de `cotizador_omega` | Claude Code | 2026-07-23 | `dotnet build` OK: 0 errores, 51 warnings preexistentes. Dependencia `LogsMonitorClient` presente |
+| T-03 | Crear DTO `CotizacionErrorDTO` en `Models/DTO` | Claude Code | 2026-07-23 | Propiedades `folio`, `aseguradora`, `error` (estilo lowercase del proyecto) |
+| T-04 | Crear `CotizacionesErrorController` con el GET | Claude Code | 2026-07-23 | Ruta `cotizaciones-error`, `[Authorize]` sin rol (endpoint libre), patrón `ReporteController` |
+| T-05 | Implementar la consulta | Claude Code | 2026-07-23 | `vr_cotizaciones_aseguradora` + filtro `error_aseguradora`, `OrderByDescending(fecha_registro)`, `Take(10)`, `ToListAsync` |
 
 ---
 
@@ -54,10 +57,7 @@
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-03 | Crear DTO `CotizacionErrorDTO` en `Models/DTO` | — |
-| T-04 | Crear `CotizacionesErrorController` con el GET | — |
-| T-05 | Implementar la consulta (vista `vr_cotizaciones_aseguradora`, filtro error, orden desc, take 10) | — |
-| T-06 | Pruebas manuales y validación funcional | — |
+| T-06 | Pruebas manuales y validación funcional (levantar servicio + JWT) | — |
 | T-07 | Commit final y push de la rama | — |
 
 ---
@@ -76,6 +76,9 @@
 |---|---|---|
 | Endpoint libre (sin rol) | Confirmado por el solicitante | Solo `[Authorize]` + JWT global, sin `Roles` |
 | Error = todos los tipos (`error_aseguradora` no vacío) | Confirmado por el solicitante | No se filtra por origen del error (NATS u otro) |
+| Fuente de datos: vista `vr_cotizaciones_aseguradora` | Ya resuelve folio + nombre de aseguradora + error + fecha en una entidad de solo lectura; menor riesgo que armar el join | Sin cambios de esquema ni en `Program.cs` |
+| Filtro `error_aseguradora != null && != ""` (no `IsNullOrWhiteSpace`) | `IsNullOrWhiteSpace` no se traduce a SQL en EF Core/Npgsql | La comparación se ejecuta en la BD |
+| Propiedades del DTO en minúscula (`folio`, `aseguradora`, `error`) | Consistencia con los DTOs existentes de Omega (JSON en lowercase) | JSON de salida homogéneo con el resto de la API |
 
 ---
 
@@ -83,7 +86,8 @@
 
 | Archivo | Tipo de cambio | Tarea relacionada |
 |---|---|---|
-| — | — | — |
+| `Services/cotizador/cotizador_omega/Models/DTO/CotizacionErrorDTO.cs` | Creado | T-03 |
+| `Services/cotizador/cotizador_omega/Controllers/CotizacionesErrorController.cs` | Creado | T-04, T-05 |
 
 ---
 
@@ -91,7 +95,7 @@
 
 | Hash | Mensaje | Fecha |
 |---|---|---|
-| — | — | — |
+| `0d3548a0` | [omega-endpoint-cotizaciones-error] Fase 1 - Endpoint de consulta de cotizaciones con error (repo `gp_seguros`) | 2026-07-23 |
 
 ---
 

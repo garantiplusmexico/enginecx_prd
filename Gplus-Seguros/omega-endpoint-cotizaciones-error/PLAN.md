@@ -36,8 +36,8 @@ Se agrega un **endpoint GET de solo lectura** al microservicio `cotizador_omega`
 - [ ] **Repo hermano `LogsMonitorClient` presente** en `C:/Proyectos/EngineCX/LogsMonitorClient` — `cotizador_omega.csproj` lo referencia por ruta relativa; sin él el build falla. ✔ presente en el árbol de proyectos.
 - [ ] Variables de entorno de desarrollo disponibles para levantar `cotizador_omega` en local: `CONNECTION_STRING` (`GPSeguros_Connection`), `SIGNING_KEY` y config `Authentication:Issuer/Audience/SigningKey` para emitir/validar el JWT de prueba.
 - [ ] `CLAUDE.md` presente en el repositorio. ✔ existe.
-- [ ] Confirmar el **alcance de "error"** con el equipo (ver §12, decisión asumida): se incluyen **todas** las cotizaciones con `error_aseguradora` seteado, no solo las excluidas de NATS por excepción de aseguradora.
-- [ ] Confirmar si el endpoint requiere **restricción por rol** además de la autenticación (ver §8, RNF-02 del PRD estaba "por definir").
+- [x] **Alcance de "error" confirmado:** se incluyen **todas** las cotizaciones con `error_aseguradora` seteado (todos los tipos), no solo las excluidas de NATS por excepción de aseguradora.
+- [x] **Permisos confirmados:** el endpoint es **libre** (sin restricción por rol); se mantiene únicamente la autenticación estándar de Omega (`[Authorize]` / JWT). No se añaden roles.
 
 ---
 
@@ -149,7 +149,7 @@ Respuesta 200 (ejemplo):
 ## 8. Consideraciones de seguridad
 
 - **Autenticación:** cubierta por la política global `RequireAuthenticatedUser` + JWT Bearer (`Program.cs` líneas 31-36 y 86-99). El controller lleva `[Authorize]` explícito por claridad. Sin token → 401.
-- **Autorización por rol (pendiente de confirmar):** RNF-02 del PRD dejó el esquema de permisos "por definir". Si se requiere restringir a un rol específico (p. ej. soporte/monitoreo), añadir `[Authorize(Roles = "...")]` en el método — patrón ya usado en otros endpoints del servicio. Marcado como decisión a validar (§12).
+- **Autorización por rol:** **confirmado que el endpoint es libre** — no se restringe por rol. Se mantiene solo la autenticación estándar (`[Authorize]` + JWT global). No se añade `[Authorize(Roles = ...)]`.
 - **Datos sensibles:** el endpoint expone folio, nombre de aseguradora y mensaje de error. No expone datos personales del cliente ni credenciales. El mensaje de error proviene de `NormalizarErrorAseguradora` (ya truncado/normalizado); no incluye stack traces.
 - **Consultas parametrizadas:** se usa LINQ sobre EF Core (parametrizado por diseño). Sin concatenación de SQL.
 - **Secrets:** ninguno nuevo; todo por variables de entorno / configuración existente.
@@ -181,8 +181,8 @@ Respuesta 200 (ejemplo):
 |---|---|---|---|
 | El repo hermano `LogsMonitorClient` no está presente y el build de `cotizador_omega` falla | Media | Alto | Verificar su presencia en `C:/Proyectos/EngineCX/LogsMonitorClient` antes de compilar (T-02, prerequisito). |
 | La vista `vr_cotizaciones_aseguradora` no contenga los campos/filas esperadas en QA/prod (definiciones distintas por ambiente) | Baja | Medio | Confirmar la definición de la vista en el ambiente objetivo; si no aplica, usar la alternativa desde tablas (`cotizacion_aseguradora` + include `cotizacion`/`aseguradora`). |
-| Ambigüedad en la definición de "error" (todas vs solo excluidas de NATS) | Media | Medio | Decisión asumida: todas las que tengan `error_aseguradora` (§12). Validar con el solicitante antes de cerrar. |
-| Alcance de permisos no definido (RNF-02) | Media | Bajo | Entregar con `[Authorize]` (autenticado); añadir rol si el negocio lo pide (§8). |
+| ~~Ambigüedad en la definición de "error"~~ | — | — | **Resuelto:** todas las cotizaciones con `error_aseguradora` no vacío (todos los tipos). Confirmado por el solicitante. |
+| ~~Alcance de permisos no definido (RNF-02)~~ | — | — | **Resuelto:** endpoint libre, sin rol; solo `[Authorize]` estándar. Confirmado por el solicitante. |
 | Volumen de datos degrade la consulta sin índice | Baja | Bajo | `Take(10)` acota el resultado; evaluar índice solo si QA lo evidencia (§5). |
 
 ---
@@ -193,7 +193,8 @@ Decisiones tomadas durante la generación del plan (a validar antes de ejecutar)
 
 1. **Fuente de datos = vista `vr_cotizaciones_aseguradora`** en lugar de armar el join manualmente. Es de solo lectura, ya resuelve el nombre de la aseguradora y trae `fecha_registro` y `error_aseguradora`. Alternativa lista si la vista no sirve en algún ambiente: `repo.All<cotizacion_aseguradora>(new[]{"cotizacion","aseguradora"})` filtrando `error_aseguradora`, ordenando por `cotizacion.fecha_registro` y proyectando `nombre_comercial`.
 2. **Folio = `id_cotizacion`.** El modelo `cotizacion` no tiene un campo "folio" propio; el folio de negocio de la cotización es su `id_cotizacion`. (El campo `folio` string vive en `cotizacion_aseguradora` y es el folio que devuelve la aseguradora — distinto; no es el solicitado por el PRD.)
-3. **Definición de "error" = `error_aseguradora` no vacío**, tal como lo usa el código productivo. Incluye todos los tipos de error (Timeout, Homologación, Paquete no disponible, etc.), no solo las exclusiones de NATS por excepción de aseguradora. Confirmar con el solicitante si el alcance debe acotarse.
+3. **Definición de "error" = `error_aseguradora` no vacío**, tal como lo usa el código productivo. **Confirmado por el solicitante:** incluye **todos** los tipos de error (Timeout, Homologación, Paquete no disponible, etc.), no solo las exclusiones de NATS por excepción de aseguradora.
+   - **Permisos (confirmado):** el endpoint es **libre** — sin restricción por rol; solo autenticación estándar (`[Authorize]` + JWT global).
 4. **Ruta `cotizaciones-error`** siguiendo el patrón kebab-case del repo (`reporte-cotizaciones`). Los controllers de Omega no versionan la URI con `v1/` (convención propia del proyecto); se respeta esa convención existente en lugar de introducir versionado nuevo. Si el equipo prefiere versionar, ajustar a `v1/cotizaciones-error`.
 5. **Sin cambios en `Program.cs`.** El `cotizaciones_dbContext` ya está registrado y el repositorio se instancia en el controller, como el resto del servicio. No hay rate limiting configurado en Omega, así que no se añade (se respeta el proyecto).
 

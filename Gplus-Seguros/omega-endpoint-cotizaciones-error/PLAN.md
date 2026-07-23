@@ -10,10 +10,10 @@
 | Rama | `feature/omega-endpoint-cotizaciones-error` |
 | Tipo | Feature (solo lectura) |
 | Responsable | Alexis Salvador Herrera Garcia |
-| Folio PRD | *(pendiente — se captura al registrar en BD, tipo `PJ####`)* |
+| Folio PRD | `PRueba1` |
 | Fecha de generación | 2026-07-23 |
 | Estado | Borrador |
-| ID plan (BD) | *(lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | 13 |
 
 ---
 
@@ -205,9 +205,9 @@ Estimación en **días hábiles** por fase. Feature pequeña, de solo lectura, s
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Preparación (P1)** | Rama funcional + build baseline | T-01 a T-02 | 0.5 día | |
-| **Fase 1 — Implementación del endpoint (P1)** | DTO, controller y consulta (RF-01 a RF-04) | T-03 a T-05 | 1 – 2 días | |
-| **Fase 2 — Verificación y cierre (P2)** | Pruebas manuales + commit/push | T-06 a T-07 | 0.5 – 1 día | |
+| **Fase 0 — Preparación (P1)** | Rama funcional + build baseline | T-01 a T-02 | 0.5 día | 3 |
+| **Fase 1 — Implementación del endpoint (P1)** | DTO, controller y consulta (RF-01 a RF-04) | T-03 a T-05 | 1 – 2 días | 4 |
+| **Fase 2 — Verificación y cierre (P2)** | Pruebas manuales + commit/push | T-06 a T-07 | 0.5 – 1 día | 5 |
 | **Total proyecto (P1+P2)** | | 7 tareas | ~2 – 3.5 días hábiles (≈ 0.5 semana) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-05 | ~1.5 – 2.5 días hábiles | — |
 

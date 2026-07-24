@@ -36,6 +36,7 @@
 | T-10 | Publicación en dos etapas (API + webhook) | Claude Code | 2026-07-20 | **Hallazgo:** el plan decía `publicationState` (sintaxis Strapi v4) — corregido a `status=draft\|published` (Strapi v5), verificado empíricamente con token real. Webhook registrado por código (idempotente), verificado end-to-end con receptor HTTP local: `entry.publish`/`entry.unpublish` llegaron con el secreto correcto al publicar/despublicar un banner real |
 | T-11 | Integración mínima en el sitio `autoexplora-alfa` | Claude Code | 2026-07-20 | Primer cambio de código en `autoexplora-alfa` (rama `feature/PJ5040-cms-autoexplora-mvp` creada desde `dev`). Fetch server-only (`lib/server/strapiApi.ts`) invocado directo desde `app/page.tsx` (Server Component) — sin ruta `/api/*` intermedia, decisión deliberada para no construir el endpoint de revalidación instantánea todavía (ISR de 2 min es suficiente por ahora). `HomeCarousel.tsx` pasó de array hardcodeado a prop `slides`; de paso se corrigió el LCP (estaba fijo al índice 2, debe ser el 0). Token de solo lectura para el sitio, verificado con `POST → 403`. Verificado en navegador: borrador visible, vacío sin error, publicado visible |
 | T-12 | Registro de auditoría | Claude Code | 2026-07-20 | Content type `AuditLog` sin Draft & Publish. Implementado con `strapi.documents.use()` (no un hook de BD genérico) para distinguir sin ambigüedad create/update/publish/unpublish — internamente publicar es un delete+create que un hook de BD no puede diferenciar de forma confiable de una edición. Usuario obtenido de `strapi.requestContext.get().state.user`. Escritura del log en try/catch, nunca bloquea la acción real. **Verificado en vivo: las 4 acciones sobre un banner real quedaron registradas con el usuario correcto. Completa el alcance P1 del MVP (T-06 a T-12).** |
+| *(fuera de plan)* | Mejora **parcial** de UI del admin (RNF-08) | Claude Code | 2026-07-23 → 24 | No es una tarea T-XX del plan — pedido directo del programador. Logo de marca (login + menú), color `#02132D` reemplazando el azul default de Strapi (se probó también `#FFB000`, se descartó), etiquetas/descripciones en español para Banner/componentes/AuditLog vía `src/bootstrap/ensureSpanishLabels.ts` (mismo patrón idempotente que roles/webhooks). **Deliberadamente incompleta** — se retoma para pulir más adelante (más descripciones, revisión de otros textos), priorizando ahora Fase 2. |
 
 ---
 
@@ -130,6 +131,8 @@
 | **`autoexplora-alfa`**: `.env.example`/`.env` | Modificado (`STRAPI_API_URL`/`STRAPI_API_TOKEN`/`STRAPI_PUBLICATION_STATUS`) | T-11 |
 | `src/api/audit-log/` (schema, controller, service, routes) | Creado | T-12 |
 | `src/lifecycles/auditLog.ts` | Creado | T-12 |
+| `src/admin/app.tsx` (activado desde `.example.tsx`), `src/admin/extensions/brick-logo.png`, `src/admin/assets.d.ts` | Creado | UI (fuera de plan) |
+| `src/bootstrap/ensureSpanishLabels.ts` | Creado | UI (fuera de plan) |
 
 ---
 
@@ -157,6 +160,8 @@
 | `2fad324` (autoexplora-alfa) | [cms-autoexplora] Fase 1 - T-11: consumir banners del CMS en el home | 2026-07-20 |
 | `ff1ad66` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-11 completada | 2026-07-20 |
 | `f2da662` | [cms-autoexplora] Fase 1 - T-12: registro de auditoría (completa P1) | 2026-07-20 |
+| `e2daa1c` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-12 completada, P1 completo | 2026-07-20 |
+| `33ef5ea` | [cms-autoexplora] Mejora parcial de UI del admin (logo, color de marca, etiquetas en español) | 2026-07-24 |
 
 ---
 

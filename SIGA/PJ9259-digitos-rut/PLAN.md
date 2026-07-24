@@ -13,8 +13,8 @@
 | Responsable | Alejandro Govea Hernandez |
 | Folio PRD | `PJ9259` |
 | Fecha de generación | 2026-07-24 |
-| Estado | Borrador |
-| ID plan (BD) | *(pm_plan_desarrollo.id — lo escribe el flujo al registrar el plan)* |
+| Estado | Validado |
+| ID plan (BD) | 32 |
 | Modelo | Claude Opus 4.8 (`claude-opus-4-8`) — esfuerzo: normal |
 
 ---
@@ -211,10 +211,10 @@ No se agregan secrets ni variables nuevas.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Descubrimiento** | Decisiones de conteo RUT, inventario de máscaras/pantallas | T-01 a T-02 | 0.5 – 1 día | |
-| **Fase 1 — RUT Chile (P1)** | PaisesService + máscaras + dealers + flag fiscal | T-03 a T-06 | 1 – 2 días | |
-| **Fase 2 — HP Chile (P1)** | Quitar máscara fija HP + verificar Create/cotizador | T-07 a T-08 | 0.5 – 1 día | |
-| **Fase 3 — Pruebas** | Matriz Chile + smoke MX/CO | T-09 a T-10 | 0.5 – 1 día | |
+| **Fase 0 — Descubrimiento** | Decisiones de conteo RUT, inventario de máscaras/pantallas | T-01 a T-02 | 0.5 – 1 día | 69 |
+| **Fase 1 — RUT Chile (P1)** | PaisesService + máscaras + dealers + flag fiscal | T-03 a T-06 | 1 – 2 días | 70 |
+| **Fase 2 — HP Chile (P1)** | Quitar máscara fija HP + verificar Create/cotizador | T-07 a T-08 | 0.5 – 1 día | 71 |
+| **Fase 3 — Pruebas** | Matriz Chile + smoke MX/CO | T-09 a T-10 | 0.5 – 1 día | 72 |
 | **Total proyecto (P1)** | | 10 tareas | ~2.5 – 5 días hábiles (≈ 0.5 – 1 semana) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 (MVP funcional) | T-01 a T-08 | ~2 – 4 días hábiles | — |
 

@@ -14,7 +14,7 @@
 | Folio PRD | `PJ1894` |
 | Fecha de generación | 2026-07-23 |
 | Estado | Borrador |
-| ID plan (BD) | *(se asigna al autorizar commit)* |
+| ID plan (BD) | 20 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -227,9 +227,9 @@ Solo se requiere ambiente con `HubBaseCountryCode` / proyecto Chile para validar
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Verificación y rama (P1)** | Branch + baseline export/vistas CHL | T-01 a T-02 | 0.25 – 0.5 días | |
-| **Fase 1 — Etiquetas + export + vista (P1)** | Headers Excel, helpers PaisCL, DetailsCHL | T-03 a T-05 | 0.25 – 0.5 días | |
-| **Fase 2 — Pruebas y cierre (P1)** | Export CHL, vistas CHL, smoke MX/CO, commit | T-06 a T-09 | 0.25 – 0.5 días | |
+| **Fase 0 — Verificación y rama (P1)** | Branch + baseline export/vistas CHL | T-01 a T-02 | 0.25 – 0.5 días | 24 |
+| **Fase 1 — Etiquetas + export + vista (P1)** | Headers Excel, helpers PaisCL, DetailsCHL | T-03 a T-05 | 0.25 – 0.5 días | 25 |
+| **Fase 2 — Pruebas y cierre (P1)** | Export CHL, vistas CHL, smoke MX/CO, commit | T-06 a T-09 | 0.25 – 0.5 días | 26 |
 | **Total proyecto (P1)** | | 9 tareas | **~0.75 – 1.5 días hábiles (≈ &lt; 1 semana)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 | T-01 a T-09 | **~0.75 – 1.5 días hábiles** | — |
 

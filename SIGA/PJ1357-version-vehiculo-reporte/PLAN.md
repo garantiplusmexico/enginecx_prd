@@ -14,7 +14,7 @@
 | Folio PRD | `PJ1357` |
 | Fecha de generación | 2026-07-23 |
 | Estado | Borrador |
-| ID plan (BD) | *(pm_plan_desarrollo.id — lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | 18 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -241,10 +241,10 @@ No hay API REST nueva en `gp_3.0_siga_api`.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Diagnóstico (P1)** | Fuente del dato, inventario SP/exports | T-01 a T-02 | 0.5 – 1 día | |
-| **Fase 1 — SP + scripts (P1)** | COALESCE/JOIN, scripts MX/CL/CO, deploy QA | T-03 a T-06 | 1 – 2 días | |
-| **Fase 2 — Verificación (P1)** | Check C#, export Excel 3 países, no regresión | T-07 a T-09 | 0.5 – 1 día | |
-| **Fase 3 — Cierre** | Runbook deploy/rollback, cierre AVANCE | T-10 a T-11 | 0.5 día | |
+| **Fase 0 — Diagnóstico (P1)** | Fuente del dato, inventario SP/exports | T-01 a T-02 | 0.5 – 1 día | 17 |
+| **Fase 1 — SP + scripts (P1)** | COALESCE/JOIN, scripts MX/CL/CO, deploy QA | T-03 a T-06 | 1 – 2 días | 18 |
+| **Fase 2 — Verificación (P1)** | Check C#, export Excel 3 países, no regresión | T-07 a T-09 | 0.5 – 1 día | 19 |
+| **Fase 3 — Cierre** | Runbook deploy/rollback, cierre AVANCE | T-10 a T-11 | 0.5 día | 20 |
 | **Total proyecto** | | 11 tareas | **~2.5 – 4.5 días hábiles (≈ 0.5 – 1 semana)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 | T-01 a T-09 | **~2 – 4 días hábiles** | — |
 

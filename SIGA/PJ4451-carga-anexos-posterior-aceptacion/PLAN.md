@@ -14,7 +14,7 @@
 | Folio PRD | `PJ4451` |
 | Fecha de generación | 2026-07-24 |
 | Estado | Borrador |
-| ID plan (BD) | *(pendiente de registro)* |
+| ID plan (BD) | 26 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -254,9 +254,9 @@ Secrets: ninguno nuevo. S3 y correo usan configuración vigente.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Alineación y rama (P1)** | Rama feature + reglas con operación | T-01 a T-02 | 0.5 – 1.5 días | |
-| **Fase 1 — UI + validación + BD (P1)** | Vista, `AddFiles`, columna `usuario`, Dropzone | T-03 a T-06 | 2.5 – 4 días | |
-| **Fase 2 — Notificación, eventos y QA (P1/P2)** | Correo, bitácora, pruebas, commit | T-07 a T-10 | 1.5 – 2.5 días | |
+| **Fase 0 — Alineación y rama (P1)** | Rama feature + reglas con operación | T-01 a T-02 | 0.5 – 1.5 días | 46 |
+| **Fase 1 — UI + validación + BD (P1)** | Vista, `AddFiles`, columna `usuario`, Dropzone | T-03 a T-06 | 2.5 – 4 días | 47 |
+| **Fase 2 — Notificación, eventos y QA (P1/P2)** | Correo, bitácora, pruebas, commit | T-07 a T-10 | 1.5 – 2.5 días | 48 |
 | **Total proyecto (P1+P2)** | | 10 tareas | **~4.5 – 8 días hábiles (≈ 1 – 1.5 semanas)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + notificación mínima (T-07) | T-01 a T-07 | **~3.5 – 6.5 días hábiles (≈ 1 semana)** | — |
 

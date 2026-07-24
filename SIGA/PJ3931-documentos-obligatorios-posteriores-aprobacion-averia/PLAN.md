@@ -14,7 +14,7 @@
 | Folio PRD | `PJ3931` |
 | Fecha de generación | 2026-07-24 |
 | Estado | Borrador |
-| ID plan (BD) | *(se asigna al registrar tras autorización)* |
+| ID plan (BD) | 25 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -247,9 +247,9 @@ Secrets: ninguno nuevo. Correo sigue el provider ya configurado por país (`Emai
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Alineación y rama (P1)** | Rama feature, validación con operación, mapa estatus↔documentos, decisión Aceptada | T-01 a T-02 | 0.5 – 1.5 días | |
-| **Fase 1 — Catálogo + notificación (P1)** | Options/appsettings, método de correo al taller, enganches post-aprobación, convivencia con `NotificaDatosParaPagoTaller` | T-03 a T-06 | 2 – 3.5 días | |
-| **Fase 2 — Multi-país y verificación (P2)** | Variantes país, pruebas manuales, commit/push rama | T-07 a T-09 | 1 – 2 días | |
+| **Fase 0 — Alineación y rama (P1)** | Rama feature, validación con operación, mapa estatus↔documentos, decisión Aceptada | T-01 a T-02 | 0.5 – 1.5 días | 43 |
+| **Fase 1 — Catálogo + notificación (P1)** | Options/appsettings, método de correo al taller, enganches post-aprobación, convivencia con `NotificaDatosParaPagoTaller` | T-03 a T-06 | 2 – 3.5 días | 44 |
+| **Fase 2 — Multi-país y verificación (P2)** | Variantes país, pruebas manuales, commit/push rama | T-07 a T-09 | 1 – 2 días | 45 |
 | **Total proyecto (P1+P2)** | | 9 tareas | **~3.5 – 7 días hábiles (≈ 1 – 1.5 semanas)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-06 | **~2.5 – 5 días hábiles (≈ 0.5 – 1 semana)** | — |
 

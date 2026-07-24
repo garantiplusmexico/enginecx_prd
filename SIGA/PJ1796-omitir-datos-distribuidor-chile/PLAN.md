@@ -14,7 +14,7 @@
 | Folio PRD | `PJ1796` |
 | Fecha de generación | 2026-07-23 |
 | Estado | Borrador |
-| ID plan (BD) | *(pendiente de registro tras autorización)* |
+| ID plan (BD) | 19 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -209,9 +209,9 @@ Solo se requiere ambiente/proyecto con país Chile para validar UI.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Verificación y rama (P1)** | Branch + baseline CHL | T-01 a T-02 | 0.25 – 0.5 días | |
-| **Fase 1 — UI + validación JS (P1)** | Quitar campos CHL + rules Create/Edit (+ server opcional) | T-03 a T-05 | 0.25 – 0.5 días | |
-| **Fase 2 — Pruebas y cierre (P1)** | Create/Edit CHL, RF-05, smoke MEX, commit | T-06 a T-09 | 0.25 – 0.5 días | |
+| **Fase 0 — Verificación y rama (P1)** | Branch + baseline CHL | T-01 a T-02 | 0.25 – 0.5 días | 21 |
+| **Fase 1 — UI + validación JS (P1)** | Quitar campos CHL + rules Create/Edit (+ server opcional) | T-03 a T-05 | 0.25 – 0.5 días | 22 |
+| **Fase 2 — Pruebas y cierre (P1)** | Create/Edit CHL, RF-05, smoke MEX, commit | T-06 a T-09 | 0.25 – 0.5 días | 23 |
 | **Total proyecto (P1)** | | 9 tareas (1 condicional) | **~0.75 – 1.5 días hábiles (≈ &lt; 1 semana)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 | T-01 a T-09 | **~0.75 – 1.5 días hábiles** | — |
 

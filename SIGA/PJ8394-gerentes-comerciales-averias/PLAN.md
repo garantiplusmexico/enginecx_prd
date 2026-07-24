@@ -13,8 +13,8 @@
 | Folio PRD | `PJ8394` |
 | Fecha de generación | 2026-07-24 |
 | Rama base | `develop` (actualizada con `git pull`) |
-| Estado | Borrador |
-| ID plan (BD) | *(pm_plan_desarrollo.id — lo escribe el flujo al registrar el plan)* |
+| Estado | Validado |
+| ID plan (BD) | `31` |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — esfuerzo: normal |
 
 ---
@@ -211,9 +211,9 @@ Ninguna. Despliegue = release habitual de SIGA Web en EC2. Sin ECS/RDS/S3/Cloudf
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Auditoría y menú (P1)** | Matriz de permisos + verificación de navegación | T-01 a T-02 | 0.5 – 1 día | |
-| **Fase 1 — Lectura segura + bloqueos (P1)** | Export off, deny escritura, UI read-only, filtro descarga, confirmar filtro listado/detalle | T-03 a T-07 | 1.5 – 2.5 días | |
-| **Fase 2 — Validación (P1)** | Checklist aceptación + smoke otros roles | T-08 | 0.5 – 1 día | |
+| **Fase 0 — Auditoría y menú (P1)** | Matriz de permisos + verificación de navegación | T-01 a T-02 | 0.5 – 1 día | `66` |
+| **Fase 1 — Lectura segura + bloqueos (P1)** | Export off, deny escritura, UI read-only, filtro descarga, confirmar filtro listado/detalle | T-03 a T-07 | 1.5 – 2.5 días | `67` |
+| **Fase 2 — Validación (P1)** | Checklist aceptación + smoke otros roles | T-08 | 0.5 – 1 día | `68` |
 | **Total proyecto (P1)** | | 8 tareas | ~2.5 – 4.5 días hábiles (≈ 0.5 – 1 semana) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 | T-01 a T-08 | ~2.5 – 4.5 días hábiles (≈ 0.5 – 1 semana) | — |
 

@@ -14,7 +14,7 @@
 | Folio PRD | `PJ4856` |
 | Fecha de generación | 2026-07-24 |
 | Estado | Borrador |
-| ID plan (BD) | *(se asigna al autorizar commit)* |
+| ID plan (BD) | 27 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -210,9 +210,9 @@ No se agregan endpoints JSON/API. Si en el futuro se necesitara AJAX paginado, s
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Verificación y rama (P1)** | Rama + verificación de includes `GetDealerDetails` | T-01 a T-02 | 0.25 – 0.5 días | |
-| **Fase 1 — UI y permisos (P1)** | Card usuarios relacionados + gate por rol + prueba manual | T-03 a T-05 | 0.5 – 1 día | |
-| **Fase 2 — Cierre** | AVANCE / evidencias | T-06 | 0.25 días | |
+| **Fase 0 — Verificación y rama (P1)** | Rama + verificación de includes `GetDealerDetails` | T-01 a T-02 | 0.25 – 0.5 días | 49 |
+| **Fase 1 — UI y permisos (P1)** | Card usuarios relacionados + gate por rol + prueba manual | T-03 a T-05 | 0.5 – 1 día | 50 |
+| **Fase 2 — Cierre** | AVANCE / evidencias | T-06 | 0.25 días | 51 |
 | **Total proyecto** | | 6 tareas | ~1 – 1.75 días hábiles (≈ &lt; 1 semana) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-05 | ~0.75 – 1.5 días hábiles | — |
 

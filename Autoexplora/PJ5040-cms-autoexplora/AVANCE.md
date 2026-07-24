@@ -8,7 +8,7 @@
 | Repositorio | `autoexplora-cms` — `git@github.com:Sitios-Web-Go-Virtual/autoexplora-cms.git` (CMS) y `autoexplora-alfa` — `git@github.com:Sitios-Web-Go-Virtual/autoexplora-alfa.git` (sitio, desde T-11) |
 | Rama | `feature/PJ5040-cms-autoexplora-mvp` en ambos repos (en `autoexplora-alfa`, creada desde `dev`) |
 | Responsable actual | Sharon Mendoza |
-| Última actualización | 2026-07-20 |
+| Última actualización | 2026-07-24 |
 | Modelo de ejecución | claude-sonnet-5 — esfuerzo: máximo |
 | Estado general | 🟡 En progreso |
 
@@ -16,7 +16,7 @@
 
 ## Resumen de estado
 
-**Fase 0 completada. Fase 1 (P1) completa: T-06 a T-12.** CMS (`autoexplora-cms`) con Postgres local, S3 con lectura/escritura/CORS/CSP verificados, rol Editor acotado a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de archivos, reordenamiento automático por vigencia, publicación en dos etapas con webhook, y registro de auditoría (create/update/publish/unpublish, verificado en vivo con usuario real). El sitio (`autoexplora-alfa`) ya consume banners reales del CMS desde T-11. Despliegue del CMS: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada (solicitada a Alexis, 2026-07-20). **Guardarraíl del PRD:** con P1 completo, el compromiso mínimo del 31 jul ya está cubierto; P2 (blog) y P3 (textos) son las siguientes si el tiempo lo permite. Siguiente paso: T-13 (content type Article, P2) o cerrar Fase 1 aquí según tiempo disponible.
+**Fase 0 completada. Fase 1 (P1) completa: T-06 a T-12.** CMS (`autoexplora-cms`) con Postgres local, S3 con lectura/escritura/CORS/CSP verificados, rol Editor acotado a Banner, content type Banner (Dynamic Zone imagen/video, desktop+mobile), validación de archivos, reordenamiento automático por vigencia, publicación en dos etapas con webhook, y registro de auditoría (create/update/publish/unpublish, verificado en vivo con usuario real). El sitio (`autoexplora-alfa`) ya consume banners reales del CMS desde T-11. Despliegue del CMS: EC2 + Nginx + systemd (sin Docker), instancia aún no aprovisionada (solicitada a Alexis, 2026-07-20). **Fase 2 (P2 — blog) iniciada: T-13 (content type Article) completa**, con desviaciones de diseño confirmadas por el programador (sin categorías/tags, hero como campo manual independiente, editor de bloques nativo). **Guardarraíl del PRD:** con P1 completo, el compromiso mínimo del 31 jul ya está cubierto; P2 y P3 son las siguientes si el tiempo lo permite. Siguiente paso: T-14 (editor de bloques + bloque de embed personalizado).
 
 ---
 
@@ -37,6 +37,7 @@
 | T-11 | Integración mínima en el sitio `autoexplora-alfa` | Claude Code | 2026-07-20 | Primer cambio de código en `autoexplora-alfa` (rama `feature/PJ5040-cms-autoexplora-mvp` creada desde `dev`). Fetch server-only (`lib/server/strapiApi.ts`) invocado directo desde `app/page.tsx` (Server Component) — sin ruta `/api/*` intermedia, decisión deliberada para no construir el endpoint de revalidación instantánea todavía (ISR de 2 min es suficiente por ahora). `HomeCarousel.tsx` pasó de array hardcodeado a prop `slides`; de paso se corrigió el LCP (estaba fijo al índice 2, debe ser el 0). Token de solo lectura para el sitio, verificado con `POST → 403`. Verificado en navegador: borrador visible, vacío sin error, publicado visible |
 | T-12 | Registro de auditoría | Claude Code | 2026-07-20 | Content type `AuditLog` sin Draft & Publish. Implementado con `strapi.documents.use()` (no un hook de BD genérico) para distinguir sin ambigüedad create/update/publish/unpublish — internamente publicar es un delete+create que un hook de BD no puede diferenciar de forma confiable de una edición. Usuario obtenido de `strapi.requestContext.get().state.user`. Escritura del log en try/catch, nunca bloquea la acción real. **Verificado en vivo: las 4 acciones sobre un banner real quedaron registradas con el usuario correcto. Completa el alcance P1 del MVP (T-06 a T-12).** |
 | *(fuera de plan)* | Mejora **parcial** de UI del admin (RNF-08) | Claude Code | 2026-07-23 → 24 | No es una tarea T-XX del plan — pedido directo del programador. Logo de marca (login + menú), color `#02132D` reemplazando el azul default de Strapi (se probó también `#FFB000`, se descartó), etiquetas/descripciones en español para Banner/componentes/AuditLog vía `src/bootstrap/ensureSpanishLabels.ts` (mismo patrón idempotente que roles/webhooks). **Deliberadamente incompleta** — se retoma para pulir más adelante (más descripciones, revisión de otros textos), priorizando ahora Fase 2. |
+| T-13 | Content type Article (inicia P2) | Claude Code | 2026-07-24 | Diseñado a partir de la estructura **real** del blog en `autoexplora-alfa` (revisada por instrucción explícita del programador), no solo del PRD abstracto. Desviaciones confirmadas: sin `Category`/`Tag` (fuera de alcance, posts no categorizados); `hero` es campo de **imagen manual e independiente** (no video, no derivado del cuerpo) — fondo del hero banner del post + miniatura en el listado `/blog` (el más reciente primero), para que quien redacte no configure nada aparte de subir la imagen; editor de cuerpo con **Bloques nativos de Strapi** (decisión T-14, adelantada); autor de una quote se escribe como texto dentro de la cita, sin campo propio. Extiende permisos de Editor, auditoría (`strapi.documents.use()`) y etiquetas en español (`ensureSpanishLabels.ts`) al nuevo content type. **Verificado en vivo:** creación de un artículo real por el programador — auditoría (`create`) y relación `hero`→archivo confirmadas en BD. **Hallazgo de UX (no es bug):** el auto-relleno del slug (campo `uid`, `targetField: title`) a veces no reacciona en vivo al título y muestra el nombre singular del content type (`article`) hasta dar clic en "Regenerar" — es comportamiento del propio editor de Strapi, no de nuestro schema; se ajustó el texto de ayuda del campo para advertirlo. |
 
 ---
 
@@ -52,7 +53,6 @@
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-13 | Content type Article (P2) | |
 | T-14 | Editor de texto enriquecido con embeds (P2) | |
 | T-15 | Consumo de blog en el sitio (P2) | |
 | T-16 | Content type StaticText (P3) | |
@@ -93,6 +93,11 @@
 | **T-08: validación como hook global, no por content type** | RF-11 describe la validación de formato/peso como aplicable a "cada subida", no específica de Banner. Se implementó vía `strapi.db.lifecycles.subscribe` sobre `plugin::upload.file` en vez de un lifecycle propio de Banner. | Cubre automáticamente Article (T-13) y StaticText (T-16) sin duplicar lógica cuando se construyan esos content types. |
 | ✅ **CORS resuelto en ambos buckets S3 (Alexis Herrera, 2026-07-20)** | Al probar T-08 no se veían las miniaturas en la Media Library aunque las URLs eran públicas. Se diagnosticó falta de configuración CORS y se compartió el JSON a Alexis. Aplicado y verificado el mismo día: `GET` con header `Origin` devuelve `Access-Control-Allow-Origin: *` en `govirtual-autoexplora-cms-qa` y `-prod`. | Necesario pero **no suficiente** — ver siguiente hallazgo. Nota técnica: verificar CORS con `curl -I` (HEAD) da falso negativo — S3 solo devuelve el header en `GET`/`OPTIONS` reales, no en `HEAD`. |
 | ✅ **Causa real de las miniaturas rotas: Content Security Policy de Strapi, no CORS** | Tras el fix de CORS, las miniaturas seguían rotas. La consola del navegador mostró el error real: `img-src`/`media-src 'self' data: blob:` bloqueaba cualquier carga desde el bucket S3 — es el CSP por default de Strapi (middleware `strapi::security`), no un problema de AWS. Se corrigió en `config/middlewares.ts`, agregando ambos hosts S3 (qa y prod) a `img-src`/`media-src`. | T-03 (miniaturas) queda 100% cerrado — verificado visualmente por el programador tras el fix. CORS y CSP eran ajustes **complementarios**, ambos necesarios; no hay que revertir el de CORS. |
+| **T-13: Article diseñado a partir del blog real de `autoexplora-alfa`, no solo del PRD** | El programador pidió explícitamente revisar cómo está construido un post de blog hoy en el sitio antes de diseñar el schema, para preservar el diseño/estructura actual en vez de reinventarlo. | El schema de Article (título, slug, autor, hero, contenido, descripción, resumen) refleja lo que el sitio realmente necesita renderizar, no una interpretación genérica de RF-08. |
+| **T-13: sin `Category`/`Tag`** | El programador confirmó que los posts de blog no están categorizados por ahora. | Se elimina esa parte del alcance original de T-13 sin afectar el criterio de aceptación (CRUD + Draft & Publish); se puede agregar después como campo adicional si se necesita. |
+| **T-13: `hero` como campo de imagen manual e independiente (no automático, no video)** | Discusión iterativa con el programador: primero se consideró derivar el hero automáticamente de la primera imagen del cuerpo del post; el programador decidió que fuera un campo separado que el editor sube a mano, para que el hero banner del post y la miniatura de la card en `/blog` no dependan de si el post lleva o no imágenes en el cuerpo. | Simplifica la carga de trabajo de quien redacta (solo sube una imagen) y desacopla el hero de la validación/estructura del cuerpo (bloques). |
+| **T-13/T-14: editor de bloques nativo de Strapi en vez de CKEditor** | El programador confirmó ir con la opción recomendada: bloques nativos (JSON estructurado) en vez del plugin CKEditor (HTML crudo), por seguridad y para no depender de un plugin de terceros. | Adelanta parte de la decisión de T-14 desde T-13, ya que el campo `content` del schema de Article ya usa `type: "blocks"`. Queda pendiente el bloque personalizado de Embed (YouTube/redes) para T-14. |
+| **T-13/T-14: autor de una quote como texto, sin campo dedicado** | El programador confirmó que basta con que quien redacta escriba el nombre del autor como parte del texto de la cita — no se necesita un bloque de Strapi personalizado para eso. | Evita construir un Custom Block solo para este caso; el bloque de cita nativo de Strapi cubre el 100% del requerimiento. |
 
 ---
 
@@ -133,6 +138,10 @@
 | `src/lifecycles/auditLog.ts` | Creado | T-12 |
 | `src/admin/app.tsx` (activado desde `.example.tsx`), `src/admin/extensions/brick-logo.png`, `src/admin/assets.d.ts` | Creado | UI (fuera de plan) |
 | `src/bootstrap/ensureSpanishLabels.ts` | Creado | UI (fuera de plan) |
+| `src/api/article/` (schema, controller, service, routes) | Creado | T-13 |
+| `src/bootstrap/ensureEditorPermissions.ts` | Modificado (agrega Article a `EDITOR_MANAGED_CONTENT_TYPES`) | T-13 |
+| `src/lifecycles/auditLog.ts` | Modificado (agrega `api::article.article` a `TRACKED_UIDS`) | T-13 |
+| `src/bootstrap/ensureSpanishLabels.ts` | Modificado (agrega `ARTICLE_FIELDS`, incluida nota de ayuda sobre el botón "Regenerar" del slug) | T-13 |
 
 ---
 
@@ -162,6 +171,7 @@
 | `f2da662` | [cms-autoexplora] Fase 1 - T-12: registro de auditoría (completa P1) | 2026-07-20 |
 | `e2daa1c` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-12 completada, P1 completo | 2026-07-20 |
 | `33ef5ea` | [cms-autoexplora] Mejora parcial de UI del admin (logo, color de marca, etiquetas en español) | 2026-07-24 |
+| `d9c95a5` | [cms-autoexplora] Fase 2 - T-13: content type Article para el blog | 2026-07-24 |
 
 ---
 
@@ -171,8 +181,9 @@
 - Rama activa: `feature/PJ5040-cms-autoexplora-mvp`.
 - Postgres local: Postgres.app instalado en `/Applications/Postgres.app`; servidor se arranca manualmente con `pg_ctl -D ~/Library/Application\ Support/Postgres/var-16 -l logfile start` (no es un servicio automático del sistema).
 - Base de datos local: `autoexplora_cms_dev`, usuario `strapi_cms` — credenciales en `.env` local (no versionado).
-- ✅ **P1 completo (T-06 a T-12).** Siguiente paso: decidir con el programador si se continúa a P2 (T-13, Article) o se cierra Fase 1 aquí según tiempo disponible antes del 31 jul.
-- Auditoría (T-12): content type `AuditLog` (sin Draft & Publish), poblado vía `strapi.documents.use()` — extender `TRACKED_UIDS` en `src/lifecycles/auditLog.ts` al agregar Article (T-13)/StaticText (T-16), igual que con `EDITOR_MANAGED_CONTENT_TYPES`.
+- ✅ **P1 completo (T-06 a T-12). T-13 (Article) completa, inicia P2.** Siguiente paso: T-14 (bloque de embed personalizado para YouTube/redes en el editor de bloques; decidir cómo cubrir el hueco de "nota al pie") y luego T-15 (consumo del blog en el sitio).
+- Auditoría (T-12): content type `AuditLog` (sin Draft & Publish), poblado vía `strapi.documents.use()` — `TRACKED_UIDS` en `src/lifecycles/auditLog.ts` ya incluye `api::article.article`; extender también al agregar StaticText (T-16), igual que con `EDITOR_MANAGED_CONTENT_TYPES`.
+- **T-13 (Article):** schema en `src/api/article/content-types/article/schema.json` — `title`, `slug` (uid sobre `title`), `author`, `hero` (media, solo imagen, requerido, **independiente** del cuerpo), `content` (bloques nativos), `description`/`excerpt` (opcionales, para SEO/listado). **Para T-15:** el listado `/blog` debe ordenar por más reciente primero y usar `hero` (no derivar de `content`) tanto para el hero banner del post como para la miniatura de la card; la URL del post se genera con `slug`; el botón "ver más" de la card usa esa URL.
 - ⚠️ **Contrato de API corregido:** usar `status=draft`/`status=published`, **no** `publicationState` (eso era Strapi v4; en v5 da error). `status=draft` muestra el borrador de TODO, incluso lo ya publicado — es lo que usa el preview del sitio.
 - ✅ Modelo de publicación confirmado (2026-07-17): Draft & Publish + webhook (PLAN.md §3).
 - ✅ Rama base del sitio confirmada (2026-07-17): `dev`. Desde T-11, `autoexplora-alfa` también vive en `feature/PJ5040-cms-autoexplora-mvp` (creada desde `dev`), en `~/Documents/BRICK-sites/autoexplora-alfa`.

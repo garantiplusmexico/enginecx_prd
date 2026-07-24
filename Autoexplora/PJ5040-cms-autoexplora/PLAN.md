@@ -182,13 +182,15 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
 
 ### Fase 2 — P2: Gestión de blog *(recortable si se excede el deadline)*
 
-- [ ] **T-13** — Content type **Article** (título, slug, autor, hero imagen/video, cuerpo enriquecido, categoría/etiquetas, estado, fecha).
-  - Archivos: `src/api/article/**`, content types de `Category`/`Tag` si aplica.
-  - Criterio (RF-08): CRUD completo de artículos con Draft & Publish y validación de hero (reusa T-08).
+- [x] **T-13** — Content type **Article** (título, slug, autor, hero, cuerpo enriquecido, estado, fecha). *(completada 2026-07-24, con desviaciones — ver AVANCE.md)*
+  - Archivos: `src/api/article/**`.
+  - Criterio (RF-08): CRUD completo de artículos con Draft & Publish y validación de hero (reusa T-08). ✅
+  - **Desviaciones confirmadas por el programador:** sin `Category`/`Tag` (fuera de alcance por ahora, los posts no están categorizados); `hero` es un campo de **imagen manual e independiente** (no video, no derivado del cuerpo) — es el fondo del hero banner del post y la miniatura en el listado `/blog`, para que quien redacte no tenga que configurar nada aparte de subir una imagen.
 
 - [ ] **T-14** — Editor de texto enriquecido con soporte de imágenes, videos y embeds (YouTube/redes).
   - Archivos: config del campo rich text (bloques nativos de Strapi o plugin CKEditor), sanitización de embeds.
   - Criterio (RF-09): barra de formato (itálica, quote, nota al pie…) e inserción de media/embeds funcionando; salida sanitizada.
+  - **Decisión confirmada (2026-07-24):** editor de **Bloques nativo de Strapi** (`content` en el schema de Article, campo `type: "blocks"`) en vez de CKEditor — JSON estructurado en vez de HTML crudo, sin dependencia de terceros. El "autor" de una cita (quote) no lleva campo propio: quien redacta lo escribe como parte del texto de la cita. Pendiente por decidir/implementar: bloque personalizado de Embed (YouTube/redes) y cómo se cubre el hueco de "nota al pie" (aproximado o descartado).
 
 - [ ] **T-15** — Consumo de blog en el sitio (listado + detalle) desde Strapi *(alcance según tiempo)*.
   - Criterio: artículos publicados renderizan en el sitio; embeds se muestran correctamente.

@@ -7,7 +7,7 @@
 |---|---|
 | PRD de origen | `enginecx_prd/Gplus-Seguros/omega-endpoint-cotizaciones-error/PRD.md` |
 | Repositorio | `github.com/garantiplusmexico/gp_seguros` (Omega — backend) |
-| Rama | `feature/omega-endpoint-cotizaciones-error` |
+| Rama | `feature/omega-endpoint-cotizaciones-error-plan` |
 | Tipo | Feature (solo lectura, sobre proyecto existente) |
 | Responsable | Alexis Salvador Herrera Garcia |
 | Folio PRD | `56445` |
@@ -193,6 +193,7 @@ Ninguna. No se crean servicios AWS, ni cambios en ECS/RDS/S3, ni en Cloudflare/R
 4. **Alcance de "error".** Se recomienda incluir todas las `cotizacion_aseguradora` con `error_aseguradora` (cubre las excepciones excluidas de NATS y los demás errores, ya que todas escriben en esa columna). Si el negocio quiere solo las excepciones por aseguradora, se requiere un discriminador adicional (hoy no existe un campo que distinga el tipo de error de forma persistida; habría que agregarlo — quedaría fuera del alcance actual).
 5. **Campo `fecha_error`.** Fuera del mínimo del PRD (3 campos). Incluir solo si aporta valor y el responsable lo aprueba.
 6. **No refactorizar** el resto del `CotizacionesController` ni el patrón de acceso a datos; solo agregar el método nuevo.
+7. **Rama funcional renombrada.** Ya existía en el remoto una rama `feature/omega-endpoint-cotizaciones-error` con una implementación previa de la feature (controller `CotizacionesErrorController` + DTO `CotizacionErrorDTO` + vista `vr_cotizaciones_aseguradora`, commit `0d3548a0`). Por decisión del responsable se reimplementa según este plan en una rama nueva `feature/omega-endpoint-cotizaciones-error-plan` (basada en `develop` actual, que ya incluye el PR #221) **sin sobrescribir** la rama existente. Nota: esto implica que coexisten dos implementaciones de la misma feature; al integrar habrá que elegir cuál conservar.
 
 ---
 

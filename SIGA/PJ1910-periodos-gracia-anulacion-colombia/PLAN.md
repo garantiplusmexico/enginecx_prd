@@ -14,7 +14,7 @@
 | Folio PRD | `PJ1910` |
 | Fecha de generación | 2026-07-23 |
 | Estado | Borrador |
-| ID plan (BD) | |
+| ID plan (BD) | 21 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -293,10 +293,10 @@ No hay secrets nuevos. Días de gracia: **sin tope** (validar solo `> 0` y tipo 
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Verificación y diseño (P1)** | Branch, baseline factura/ODP/Reactivar, DDL gracia | T-01 a T-03 | 0.5 – 1 días | |
-| **Fase 1 — Anulación COL (P1)** | Endpoint + UI Details + bloqueo Reactivar + flags | T-04 a T-07 | 1.5 – 2.5 días | |
-| **Fase 2 — Gracia Operaciones + Averías (P1)** | Tabla/EF, endpoint, UI, reconocimiento en ClaimValidator | T-08 a T-11 | 2 – 3.5 días | |
-| **Fase 3 — Traza, pruebas y cierre (P1)** | Eventos/bitácora, matriz pruebas COL+smoke MX, commit | T-12 a T-14 | 1 – 1.5 días | |
+| **Fase 0 — Verificación y diseño (P1)** | Branch, baseline factura/ODP/Reactivar, DDL gracia | T-01 a T-03 | 0.5 – 1 días | 27 |
+| **Fase 1 — Anulación COL (P1)** | Endpoint + UI Details + bloqueo Reactivar + flags | T-04 a T-07 | 1.5 – 2.5 días | 28 |
+| **Fase 2 — Gracia Operaciones + Averías (P1)** | Tabla/EF, endpoint, UI, reconocimiento en ClaimValidator | T-08 a T-11 | 2 – 3.5 días | 29 |
+| **Fase 3 — Traza, pruebas y cierre (P1)** | Eventos/bitácora, matriz pruebas COL+smoke MX, commit | T-12 a T-14 | 1 – 1.5 días | 30 |
 | **Total proyecto (P1 = MVP PRD)** | | 14 tareas | **~5 – 8.5 días hábiles (≈ 1 – 2 semanas)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 + Fase 3 | T-01 a T-14 | **~5 – 8.5 días hábiles** | — |
 

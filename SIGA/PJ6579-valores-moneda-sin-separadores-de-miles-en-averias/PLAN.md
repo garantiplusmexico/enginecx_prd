@@ -14,7 +14,7 @@
 | Folio PRD | `PJ6579` |
 | Fecha de generación | 2026-07-24 |
 | Estado | Borrador |
-| ID plan (BD) | *(pendiente de registro)* |
+| ID plan (BD) | 28 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -225,10 +225,10 @@ Sin endpoints nuevos ni cambio de contrato público hacia APIs externas.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Verificación y rama (P1)** | Branch + matriz de campos/endpoints | T-01 a T-02 | 0.5 – 1 día | |
-| **Fase 1 — Instrucción + normalización cliente (P1)** | Alert UI + helper locale + wiring taller | T-03 a T-05 | 1 – 2 días | |
-| **Fase 2 — Validación servidor e impuestos (P1)** | Parse defensivo + integridad `impuestos_*` | T-06 a T-07 | 1 – 1.5 días | |
-| **Fase 3 — Admin + QA multi-país (P2)** | Aceptación admin + pruebas MX/CO/CL + commit | T-08 a T-10 | 1 – 1.5 días | |
+| **Fase 0 — Verificación y rama (P1)** | Branch + matriz de campos/endpoints | T-01 a T-02 | 0.5 – 1 día | 52 |
+| **Fase 1 — Instrucción + normalización cliente (P1)** | Alert UI + helper locale + wiring taller | T-03 a T-05 | 1 – 2 días | 53 |
+| **Fase 2 — Validación servidor e impuestos (P1)** | Parse defensivo + integridad `impuestos_*` | T-06 a T-07 | 1 – 1.5 días | 54 |
+| **Fase 3 — Admin + QA multi-país (P2)** | Aceptación admin + pruebas MX/CO/CL + commit | T-08 a T-10 | 1 – 1.5 días | 55 |
 | **Total proyecto (P1+P2)** | | 10 tareas | ~3.5 – 6 días hábiles (≈ 1 – 1.5 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 | T-01 a T-07 | ~2.5 – 4.5 días hábiles (≈ 0.5 – 1 semana) | — |
 

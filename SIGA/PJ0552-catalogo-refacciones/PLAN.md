@@ -14,7 +14,7 @@
 | Folio PRD | `PJ0552` |
 | Fecha de generación | 2026-07-23 |
 | Estado | Borrador |
-| ID plan (BD) | *(pm_plan_desarrollo.id — lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | 16 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -263,10 +263,10 @@ Secrets: no aplica. Connection string sigue en configuración existente (nunca h
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Alineación (P1)** | Cierre de rol, plantilla Excel, alcance RF-06 | T-01 a T-02 | 1 – 2 días | |
-| **Fase 1 — Permisos + CRUD individual (P1)** | Roles lectura/escritura, validaciones, relación producto | T-03 a T-05 | 2 – 3 días | |
-| **Fase 2 — Carga masiva Excel (P1)** | Plantilla, parseo, carga parcial, reporte, validación producto | T-06 a T-09 | 3 – 5 días | |
-| **Fase 3 — UI y cierre** | Botones, restricción delete, pruebas aceptación | T-10 a T-12 | 1 – 2 días | |
+| **Fase 0 — Alineación (P1)** | Cierre de rol, plantilla Excel, alcance RF-06 | T-01 a T-02 | 1 – 2 días | 9 |
+| **Fase 1 — Permisos + CRUD individual (P1)** | Roles lectura/escritura, validaciones, relación producto | T-03 a T-05 | 2 – 3 días | 10 |
+| **Fase 2 — Carga masiva Excel (P1)** | Plantilla, parseo, carga parcial, reporte, validación producto | T-06 a T-09 | 3 – 5 días | 11 |
+| **Fase 3 — UI y cierre** | Botones, restricción delete, pruebas aceptación | T-10 a T-12 | 1 – 2 días | 12 |
 | **Total proyecto (P1 completo)** | Entrega única del MVP | 12 tareas | **~7 – 12 días hábiles (≈ 1.5 – 2.5 semanas)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 (núcleo MVP); Fase 3 es cierre del mismo P1 | T-01 a T-09 (+ T-10–12 recomendadas) | **~7 – 12 días hábiles** | — |
 

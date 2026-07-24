@@ -13,8 +13,8 @@
 | Responsable | Alejandro Govea Hernandez |
 | Folio PRD | `PJ2872` |
 | Fecha de generación | 2026-07-23 |
-| Estado | Borrador |
-| ID plan (BD) | *(pendiente de registro tras autorización)* |
+| Estado | Validado |
+| ID plan (BD) | 23 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -262,10 +262,10 @@ Solo se requiere `HubBaseCountryCode` / conexión del país bajo prueba.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Verificación y decisión (P1)** | Branch, decisión Explotación, baseline datos | T-01 a T-03 | 0.25 – 0.5 días | |
-| **Fase 1 — Producción + Details (P1)** | Modelo, SQL, grid, Excel+UI, Details | T-04 a T-08 | 0.75 – 1.5 días | |
-| **Fase 2 — Explotación (P2 condicional)** | Opción A doc N/A, o opción B listado+export | T-09 a T-11 | 0.1 días (A) / 2 – 4 días (B) | |
-| **Fase 3 — Pruebas y cierre (P1)** | Pruebas Producción/Details, smoke países, commit (+ T-15 opcional) | T-12 a T-16 | 0.5 – 1 día | |
+| **Fase 0 — Verificación y decisión (P1)** | Branch, decisión Explotación, baseline datos | T-01 a T-03 | 0.25 – 0.5 días | 34 |
+| **Fase 1 — Producción + Details (P1)** | Modelo, SQL, grid, Excel+UI, Details | T-04 a T-08 | 0.75 – 1.5 días | 35 |
+| **Fase 2 — Explotación (P2 condicional)** | Opción A doc N/A, o opción B listado+export | T-09 a T-11 | 0.1 días (A) / 2 – 4 días (B) | 36 |
+| **Fase 3 — Pruebas y cierre (P1)** | Pruebas Producción/Details, smoke países, commit (+ T-15 opcional) | T-12 a T-16 | 0.5 – 1 día | 37 |
 | **Total proyecto (opción A — recomendada)** | | 14 tareas activas (+2 N/A) | **~1.5 – 3 días hábiles (≈ &lt; 1 semana)** | — |
 | **Total proyecto (opción B)** | | 16 tareas | **~3.5 – 7 días hábiles (≈ 1–1.5 semanas)** | — |
 | **Solo P1 (guardarraíl)** | Fase 0 + Fase 1 + Fase 3 (+ T-11 si A) | T-01 a T-08, T-11–T-14, T-16 | **~1.5 – 3 días hábiles** | — |

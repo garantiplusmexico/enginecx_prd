@@ -14,7 +14,7 @@
 | Folio PRD | `PJ3746` |
 | Fecha de generación | 2026-07-24 |
 | Estado | Borrador |
-| ID plan (BD) | *(pendiente de registro)* |
+| ID plan (BD) | 24 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -305,11 +305,11 @@ Secrets: seguir usando configuración/Secrets Manager; **no** commitear claves.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Alineación y modelo (P1)** | Preguntas abiertas, rama, script BD + EF COL | T-01 a T-03 | 2 – 3 días | |
-| **Fase 1 — Persistencia y reglas (P1)** | Entidad docs, S3, validador de obligatoriedad | T-04 a T-06 | 3 – 4 días | |
-| **Fase 2 — Canales de captura (P1)** | Registro público + solicitud interna (+ API condicional) | T-07 a T-09 | 3 – 5 días | |
-| **Fase 3 — Aprobación y updates (P1)** | Aprobar/rechazar docs, análisis bancario, update sensible, auditoría | T-10 a T-12 | 3 – 4 días | |
-| **Fase 4 — Pruebas y cierre (P1)** | E2E COL, UX, regresión multi-país | T-13 a T-14 | 2 – 3 días | |
+| **Fase 0 — Alineación y modelo (P1)** | Preguntas abiertas, rama, script BD + EF COL | T-01 a T-03 | 2 – 3 días | 38 |
+| **Fase 1 — Persistencia y reglas (P1)** | Entidad docs, S3, validador de obligatoriedad | T-04 a T-06 | 3 – 4 días | 39 |
+| **Fase 2 — Canales de captura (P1)** | Registro público + solicitud interna (+ API condicional) | T-07 a T-09 | 3 – 5 días | 40 |
+| **Fase 3 — Aprobación y updates (P1)** | Aprobar/rechazar docs, análisis bancario, update sensible, auditoría | T-10 a T-12 | 3 – 4 días | 41 |
+| **Fase 4 — Pruebas y cierre (P1)** | E2E COL, UX, regresión multi-país | T-13 a T-14 | 2 – 3 días | 42 |
 | **Total proyecto (alcance único = P1)** | | 14 tareas | **~13 – 19 días hábiles (≈ 3 – 4 semanas)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + … (MVP completo; el PRD no separa P2) | T-01 a T-14 | **~13 – 19 días hábiles** | — |
 

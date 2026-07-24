@@ -10,10 +10,10 @@
 | Rama | `feature/omega-endpoint-cotizaciones-error` |
 | Tipo | Feature (solo lectura, sobre proyecto existente) |
 | Responsable | Alexis Salvador Herrera Garcia |
-| Folio PRD | *(pendiente — `PJ####`)* |
+| Folio PRD | `56445` |
 | Fecha de generación | 2026-07-24 |
 | Estado | Borrador |
-| ID plan (BD) | *(lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | 33 |
 | Modelo / esfuerzo | Opus 4.8 — esfuerzo alto |
 | Rama base | `develop` |
 
@@ -200,9 +200,9 @@ Ninguna. No se crean servicios AWS, ni cambios en ECS/RDS/S3, ni en Cloudflare/R
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Preparación y rama base** | Rama funcional desde `develop`, build de `cotizador_omega` verificado | T-01 a T-02 | 0.5 día | |
-| **Fase 1 — Endpoint de cotizaciones con error (P1)** | DTO de respuesta, consulta top-10, endpoint HTTP + auth, XML docs, prueba manual | T-03 a T-07 | 1.5 – 2 días | |
-| **Fase 2 — Endurecimiento y validación (P2, opcional)** | Revisión de plan de consulta/índice, commit y push final | T-08 a T-09 | 0.5 – 1 día | |
+| **Fase 0 — Preparación y rama base** | Rama funcional desde `develop`, build de `cotizador_omega` verificado | T-01 a T-02 | 0.5 día | 73 |
+| **Fase 1 — Endpoint de cotizaciones con error (P1)** | DTO de respuesta, consulta top-10, endpoint HTTP + auth, XML docs, prueba manual | T-03 a T-07 | 1.5 – 2 días | 74 |
+| **Fase 2 — Endurecimiento y validación (P2, opcional)** | Revisión de plan de consulta/índice, commit y push final | T-08 a T-09 | 0.5 – 1 día | 75 |
 | **Total proyecto (P1+P2)** | | 9 tareas | ~2.5 – 3.5 días hábiles (≈ 0.5 – 0.75 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-07 | ~2 – 2.5 días hábiles (≈ 0.5 semanas) | — |
 

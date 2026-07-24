@@ -13,9 +13,9 @@
 | Responsable | Alejandro Govea Hernandez |
 | Folio PRD | `PJ7588` |
 | Fecha de generación | 2026-07-24 |
-| Estado | Borrador |
+| Estado | Validado |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — esfuerzo: normal |
-| ID plan (BD) | *(pm_plan_desarrollo.id — lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | 30 |
 
 ---
 
@@ -257,12 +257,12 @@ No se exponen secrets al cliente. No se requieren recursos AWS nuevos para el MV
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Discovery y diseño (P1 prep)** | Inventario formatos, decisión Office, contrato componente/endpoint | T-01 a T-03 | 1 – 2 días | |
-| **Fase 1 — Backend preview (P1)** | Resolver unificado, alineación S3/paths, endpoint inline+rangos, permisos | T-04 a T-07 | 2 – 3.5 días | |
-| **Fase 2 — Frontend visor Averías (P1)** | Modal reutilizable, PDF/img/video, integración vistas, UX errores | T-08 a T-11 | 2.5 – 4 días | |
-| **Fase 3 — Office + hardening (P2)** | Preview Office según T-02, streaming/límites | T-12 a T-13 | 2 – 5 días | |
-| **Fase 4 — BI y cierre MVP (P1)** | Eventos preview/fallo, matriz aceptación | T-14 a T-15 | 1 – 2 días | |
-| **Fase 5 — Prep. reutilización (P3)** | Doc de integración / desacoplar residual | T-16 | 0.5 – 1 día | |
+| **Fase 0 — Discovery y diseño (P1 prep)** | Inventario formatos, decisión Office, contrato componente/endpoint | T-01 a T-03 | 1 – 2 días | 60 |
+| **Fase 1 — Backend preview (P1)** | Resolver unificado, alineación S3/paths, endpoint inline+rangos, permisos | T-04 a T-07 | 2 – 3.5 días | 61 |
+| **Fase 2 — Frontend visor Averías (P1)** | Modal reutilizable, PDF/img/video, integración vistas, UX errores | T-08 a T-11 | 2.5 – 4 días | 62 |
+| **Fase 3 — Office + hardening (P2)** | Preview Office según T-02, streaming/límites | T-12 a T-13 | 2 – 5 días | 63 |
+| **Fase 4 — BI y cierre MVP (P1)** | Eventos preview/fallo, matriz aceptación | T-14 a T-15 | 1 – 2 días | 64 |
+| **Fase 5 — Prep. reutilización (P3)** | Doc de integración / desacoplar residual | T-16 | 0.5 – 1 día | 65 |
 | **Total proyecto (P1+P2+P3)** | | 16 tareas | ~9 – 17.5 días hábiles (≈ 2 – 3.5 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 + Fase 4 | T-01 a T-11, T-14, T-15 | ~6.5 – 11.5 días hábiles (≈ 1.5 – 2.5 semanas) | — |
 

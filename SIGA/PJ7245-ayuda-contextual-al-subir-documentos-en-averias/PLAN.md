@@ -14,7 +14,7 @@
 | Folio PRD | `PJ7245` |
 | Fecha de generación | 2026-07-24 |
 | Estado | Borrador |
-| ID plan (BD) | *(se asigna al autorizar el commit)* |
+| ID plan (BD) | 29 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 
 ---
@@ -267,10 +267,10 @@ Textos de ayuda contextual: constantes/mapa en vista o partial (español). Si cr
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Verificación y rama (P1)** | Rama desde develop + acuerdo de criterio requerido | T-01 a T-02 | 0.5 – 1 días | |
-| **Fase 1 — Fuente de verdad y backend (P1)** | Modelo completitud, BR unificado, AskForClaimReview, log, endpoint JSON | T-03 a T-07 | 1.5 – 2.5 días | |
-| **Fase 2 — UI sticky / checklist / ayudas (P1)** | Tooltips, sticky, JS en vivo, mensajes error | T-08 a T-11 | 1.5 – 2.5 días | |
-| **Fase 3 — Verificación (P1)** | Pruebas manuales taller + no-regresión + commit | T-12 a T-14 | 0.5 – 1 días | |
+| **Fase 0 — Verificación y rama (P1)** | Rama desde develop + acuerdo de criterio requerido | T-01 a T-02 | 0.5 – 1 días | 56 |
+| **Fase 1 — Fuente de verdad y backend (P1)** | Modelo completitud, BR unificado, AskForClaimReview, log, endpoint JSON | T-03 a T-07 | 1.5 – 2.5 días | 57 |
+| **Fase 2 — UI sticky / checklist / ayudas (P1)** | Tooltips, sticky, JS en vivo, mensajes error | T-08 a T-11 | 1.5 – 2.5 días | 58 |
+| **Fase 3 — Verificación (P1)** | Pruebas manuales taller + no-regresión + commit | T-12 a T-14 | 0.5 – 1 días | 59 |
 | **Total proyecto (alcance único MVP)** | | 14 tareas | ~4 – 7 días hábiles (≈ 1 – 1.5 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 + Fase 3 (MVP completo; el PRD no define P2/P3) | T-01 a T-14 | ~4 – 7 días hábiles (≈ 1 – 1.5 semanas) | — |
 

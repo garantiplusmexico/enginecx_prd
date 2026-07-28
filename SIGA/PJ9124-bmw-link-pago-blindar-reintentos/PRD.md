@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | BMW — Link de pago y blindaje de reintentos |
 | **Área / empresa** | Garantiplus México |
-| **Versión** | v0.1 |
+| **Versión** | v0.2 |
 | **Fecha** | 27 de julio de 2026 |
 | **Autores** | Carlos Castellanos |
 | **Revisión / liderazgo** | Por definir (ver sección 14) |
@@ -30,7 +30,9 @@ Resultado esperado: ninguna venta de contado detenida por un link muerto, ningú
 
 **El dolor concreto.** Un cargo de OpenPay es de un solo uso. Si el cliente intenta pagar y la tarjeta se rechaza, el cargo queda muerto: reabrir su URL responde siempre "Transacción denegada". La landing no lo sabe y sigue ofreciendo el mismo link. El asesor no tiene botón para generar otro, así que la venta se detiene frente al cliente. Ocurrió en una demo real en producción (contrato 796211).
 
-**El dolor equivalente en SIGA.** Cuando pasa lo mismo en un contrato gestionado desde SIGA, la salida es que un asesor de Garantiplus entre al dashboard de OpenPay y cree el link manualmente. SIGA tiene el código de regeneración escrito pero **deshabilitado a propósito**: `ViewBag.regeneracionLinkPago = false`, con el comentario de que no se permite "hasta que se defina el tema de comisiones ya que esto implicaría cambiar el precio del contrato".
+**El dolor equivalente en SIGA.** Cuando pasa lo mismo en un contrato gestionado desde SIGA, la salida es que un asesor de Garantiplus entre al dashboard de OpenPay y cree el link manualmente. SIGA tiene el código de regeneración escrito pero **deshabilitado**: `ViewBag.regeneracionLinkPago = false`, con el comentario de que no se permite "hasta que se defina el tema de comisiones ya que esto implicaría cambiar el precio del contrato".
+
+**Precisión sobre ese bloqueo.** La única evidencia de esa decisión es **el propio comentario en el código**: no se ha localizado ticket, acuerdo ni documento que lo respalde. El `git blame` no ayuda a rastrearlo porque la línea entró en el commit de importación masiva al monorepo (`1641709`, 13-may-2026), de modo que su autor y fecha originales se perdieron. Debe tratarse como una restricción **heredada y no verificada**: antes de darla por vigente en la Fase 3, hay que confirmarla con Comercial o Finanzas.
 
 **Por qué ahora.** El disparador es el incidente en producción. No es un problema de volumen sino de riesgo: reputacional frente al cliente y de doble cobro si se resuelve mal, como demostró el intento revertido.
 
@@ -52,7 +54,7 @@ El objetivo secundario, y explícito, es que las reglas de negocio queden escrit
 | **Fase** | **Nombre** | **Descripción** |
 | --- | --- | --- |
 | Fase 1 | Link confiable en la landing BMW (**MVP de este PRD**) | Link persistente con estado visible, copiar, abrir y regenerar condicionado a que el cargo no sea pagable. Con bitácora. Sin cambios en `gp_4.0_siga`, OpenpayGP ni base de datos. |
-| Fase 2 | Cancelación del cargo en OpenPay | Cancelar explícitamente el cargo anterior antes de crear el nuevo, para cubrir el reemplazo de cargos **vivos**. Toca OpenpayGP (credenciales de OpenPay) y su despliegue. Condicionada a los disparadores de la sección 13. Si se ejecuta, debe construirse consumible también por GarantiplusWeb. |
+| Fase 2 | Cancelación del cargo en OpenPay | Cancelar explícitamente el cargo anterior antes de crear el nuevo, para cubrir el reemplazo de cargos **vivos**. **La capacidad ya existe**: OpenpayGP expone `CancellationController`, que invoca `CancelByMerchant` del SDK de OpenPay y marca el pago como Cancelado; además `op_charge_id` se guarda al crear el cargo, no lo aporta el webhook, así que la cancelación funciona aunque el webhook nunca haya llegado. El trabajo es cablearla desde el flujo de regeneración y desplegar OpenpayGP, no construirla. Condicionada a los disparadores de la sección 13. Si se ejecuta, debe quedar consumible también por GarantiplusWeb. |
 | Fase 3 | Adopción en SIGA (GarantiplusWeb) | Llevar el mismo comportamiento al detalle de contrato de SIGA, para que los asesores de Garantiplus dejen de usar el dashboard de OpenPay. Requiere encender `renovacion_link_pago`, agregar el candado por estatus y resolver el tema de comisiones. |
 
 **El MVP de este PRD es la Fase 1.** Las fases 2 y 3 se documentan para dejar el camino trazado; no se implementan aquí.
@@ -107,6 +109,7 @@ flowchart TD
     F -- Pagado --> G[Mostrar Pagado. Sin acciones de cobro]
     F -- Pendiente y vigente --> H[Modal: link + Copiar + Abrir. Regenerar deshabilitado con motivo]
     F -- Rechazado o vencido --> I[Modal: aviso de link no valido. Regenerar habilitado]
+    F -- Pendiente pero con fecha de vencimiento cumplida --> I
     F -- Desconocido o sin respuesta --> J[Modal solo lectura. Regenerar deshabilitado por precaucion]
     I --> K[Asesor confirma regeneracion]
     K --> L[Nuevo cargo OpenPay conservando tarjeta como medio]
@@ -120,6 +123,8 @@ flowchart TD
 El flujo se articula alrededor de una sola decisión: **el estado del cargo**. Todo lo que el asesor puede hacer se deriva de ahí, y por eso la consulta de estatus ocurre al abrir el modal y no antes. Esto invierte el comportamiento actual, donde la landing ofrece "Ir a pagar" sin saber si el link sirve.
 
 La rama de estado desconocido es deliberadamente conservadora: si el estatus no se puede determinar —la consulta falla, o el webhook de OpenPay no llegó y el cargo aparece como pendiente sin serlo— el sistema **no** habilita la regeneración. Es preferible un bloqueo temporal, que el asesor puede escalar, a la posibilidad de dejar dos cargos pagables. Esta decisión tiene un costo conocido, registrado como riesgo en la sección 13.
+
+La rama de vencimiento cumplido es la válvula de escape de esa postura conservadora: la fecha de vencimiento del cargo es un dato **local**, que no depende de que el webhook llegue. Si ya pasó, el cargo está muerto por definición y la regeneración se habilita aunque el estatus almacenado siga diciendo "pendiente". Esto acota el bloqueo falso a la ventana anterior al vencimiento.
 
 ## 8. Requerimientos funcionales
 
@@ -139,6 +144,7 @@ La rama de estado desconocido es deliberadamente conservadora: si el estatus no 
 | RF-12 | Eliminar la reapertura ciega | Se retira el comportamiento que abre `link_pago_pasarela` sin verificar su estado. |
 | RF-13 | No ofrecer cobro sobre contratos pagados | Si el contrato ya está pagado, no se muestran acciones de cobro. |
 | RF-14 | Evitar generaciones duplicadas por doble clic | La acción de generar o regenerar se bloquea mientras haya una solicitud en curso. |
+| RF-15 | Desbloquear por vencimiento cumplido | Si la fecha de vencimiento del cargo ya pasó, la regeneración se habilita aunque el estatus almacenado siga indicando pendiente, por ser un dato local independiente del webhook. |
 
 ## 9. Requerimientos no funcionales
 
@@ -187,12 +193,21 @@ La rama de estado desconocido es deliberadamente conservadora: si el estatus no 
 | **Riesgo** | **Impacto potencial** |
 | --- | --- |
 | Que un cargo rechazado sí pueda volver a pagarse | Derrumba la premisa del MVP: podrían coexistir dos cargos pagables y ocurrir un doble cobro. **Disparador de la Fase 2.** |
-| Webhook de OpenPay no recibido | El cargo aparece como pendiente sin serlo, el sistema bloquea la regeneración y el asesor vuelve a quedar atorado — el fallo opuesto al actual. Ya ocurrió en producción. |
+| Webhook de OpenPay no recibido | El cargo aparece como pendiente sin serlo, el sistema bloquea la regeneración y el asesor vuelve a quedar atorado — el fallo opuesto al actual. Ocurrió en producción por un **certificado SSL vencido** en el proxy que recibe el webhook (ya resuelto). Mitigado parcialmente por RF-15; procedimiento de respuesta descrito abajo. |
 | Correos antiguos con links muertos en el buzón del cliente | El cliente paga o intenta pagar desde el correo equivocado, genera confusión y llamadas a soporte, aunque la landing muestre el link correcto. |
 | Regresión en zona de pagos | Un error en este flujo impide cobrar contratos de contado y detiene ventas. Mitigación: validación en QA con Carlos presente antes de producción. |
 | Cambio de comportamiento de OpenPay | Si la pasarela modifica la semántica de sus estados o el envío de correos, las reglas del blindaje pierden validez. |
 | Vigencia de 31 días percibida como excesiva | Un link vivo un mes amplía la ventana en que un cargo puede pagarse tarde; ajustarlo toca un valor compartido con facturación. |
-| Bloqueo por comisiones en la Fase 3 | Si la hipótesis sobre el cambio de medio de pago no se sostiene, SIGA seguirá sin poder regenerar y sus asesores continuarán usando el dashboard de OpenPay. |
+| Bloqueo por comisiones en la Fase 3 | Si la hipótesis sobre el cambio de medio de pago no se sostiene, SIGA seguirá sin poder regenerar y sus asesores continuarán usando el dashboard de OpenPay. Agravante: la restricción solo consta en un comentario de código heredado, sin dueño identificable a quién consultarla. |
+
+### Procedimiento ante un webhook que deja de llegar
+
+Aplica a cualquier interrupción en la recepción de webhooks de OpenPay, no solo a este proyecto.
+
+1. **Detección.** El síntoma es que `pago_pasarela.op_fecha_actualizacion_estatus` deja de moverse: cargos que permanecen en "Registrado" pese a haberse pagado. Una consulta de cargos sin actualización en las últimas horas lo evidencia; el dashboard de OpenPay muestra además los intentos de entrega fallidos.
+2. **Diagnóstico.** Verificar primero el certificado del endpoint que recibe el webhook (`openssl s_client` con revisión de fechas), que fue la causa del incidente de producción. Descartado eso, revisar cambios de URL, reglas de firewall y disponibilidad del proxy.
+3. **Recuperación.** OpenPay reintenta la entrega durante un periodo limitado; los eventos perdidos fuera de esa ventana **no se recuperan solos** y hoy deben reconciliarse manualmente contra el dashboard. La solución que lo automatizaría es agregar en OpenpayGP un método de **consulta de cargo** (hermano del de cancelación, mismo SDK ya instanciado), que permita sincronizar por lote los cargos pendientes contra OpenPay y dejar de depender de la entrega del webhook. No forma parte de este MVP.
+4. **Prevención.** Renovación automática del certificado con alerta previa al vencimiento, y alerta por ausencia de webhooks durante un periodo definido.
 
 ### Supuestos
 
@@ -211,10 +226,10 @@ La rama de estado desconocido es deliberadamente conservadora: si el estatus no 
 | --- | --- |
 | Gobierno del PRD | ¿Quién firma la revisión y liderazgo de este documento? |
 | Supuesto crítico | ¿Confirma la prueba en QA que un cargo rechazado no puede volver a pagarse? De no ser así, la Fase 2 pasa de opcional a obligatoria. |
-| Webhook no recibido | ¿Qué salida se le da al asesor cuando el estatus queda indeterminado y la regeneración se bloquea? ¿Escalamiento a Garantiplus, consulta directa a OpenPay, o desbloqueo por antigüedad del cargo? |
+| Webhook no recibido | Resuelto en v0.2: el desbloqueo por vencimiento cumplido (RF-15) acota el bloqueo falso, y el procedimiento de respuesta queda en la sección 13. Pendiente menor: ¿se prioriza en algún momento el método de consulta de cargo en OpenpayGP que automatizaría la reconciliación? |
 | Configuración de producción | ¿`Facturas:Dias_Vencimiento` en producción es 31, igual que en local? |
 | Vigencia del link | ¿Un mes es la vigencia deseada para un link de pago de BMW, o conviene acortarla en un análisis aparte? |
-| Fase 3 — comisiones | ¿Se confirma que el problema de comisiones en SIGA proviene de alternar el medio de pago al regenerar? ¿Quién de Comercial o Finanzas lo resuelve? |
+| Fase 3 — comisiones | La restricción solo consta en un comentario de código heredado del monorepo, sin autor rastreable ni documento que la respalde. ¿Sigue vigente? ¿Se confirma que proviene de alternar el medio de pago al regenerar? ¿Quién de Comercial o Finanzas la resuelve? |
 | Fase 3 — prioridad | ¿Cuándo se aborda la adopción en GarantiplusWeb y quién la patrocina? |
 | Métricas | ¿Puede BI u operación aportar línea base de volumen de contado y de links que mueren? |
 | Correos previos | ¿Se necesita alguna comunicación al cliente cuando sus links anteriores dejan de servir, más allá del aviso al asesor? |

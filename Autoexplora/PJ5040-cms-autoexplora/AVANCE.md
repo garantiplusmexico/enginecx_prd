@@ -6,7 +6,7 @@
 |---|---|
 | Plan de origen | `PLAN.md` |
 | Repositorio | `autoexplora-cms` — `git@github.com:Sitios-Web-Go-Virtual/autoexplora-cms.git` (CMS) y `autoexplora-alfa` — `git@github.com:Sitios-Web-Go-Virtual/autoexplora-alfa.git` (sitio, desde T-11) |
-| Rama | `feature/PJ5040-cms-autoexplora-mvp` en ambos repos (en `autoexplora-alfa`, creada desde `dev`) |
+| Rama | `feature/PJ5040-cms-autoexplora-mvp` en ambos repos (en `autoexplora-alfa`, creada desde `dev`, actualizada con un merge de `dev` el 2026-07-28 para T-15) |
 | Responsable actual | Sharon Mendoza |
 | Última actualización | 2026-07-28 |
 | Modelo de ejecución | claude-sonnet-5 — esfuerzo: máximo |
@@ -196,6 +196,12 @@
 | `e2daa1c` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-12 completada, P1 completo | 2026-07-20 |
 | `33ef5ea` | [cms-autoexplora] Mejora parcial de UI del admin (logo, color de marca, etiquetas en español) | 2026-07-24 |
 | `d9c95a5` | [cms-autoexplora] Fase 2 - T-13: content type Article para el blog | 2026-07-24 |
+| `1f569d3` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-13 completada, inicia P2 | 2026-07-24 |
+| `4a47d75` | [cms-autoexplora] Fase 2 - T-14: editor de bloques del cuerpo del artículo (embeds) | 2026-07-27 |
+| `77688c6` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-14 completada, pivote a Dynamic Zone | 2026-07-27 |
+| `2cbd460` (autoexplora-alfa) | [cms-autoexplora] Fase 2 - T-15: consumir el blog del CMS en el sitio | 2026-07-28 |
+| `f05fbe0` | [cms-autoexplora] Fase 2 - T-15: permisos del token de solo lectura del sitio | 2026-07-28 |
+| `05f9c42` (enginecx_prd) | cms-autoexplora Actualizar plan y avance - T-15 completada, cierra Fase 2 | 2026-07-28 |
 
 ---
 

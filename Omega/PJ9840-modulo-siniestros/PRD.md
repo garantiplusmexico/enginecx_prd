@@ -4,8 +4,8 @@
 | --- | --- |
 | **Proyecto** | Módulo de Siniestros |
 | **Área / empresa** | Gplus Seguros |
-| **Versión** | v0.1 |
-| **Fecha** | 2026-07-27 |
+| **Versión** | v0.2 |
+| **Fecha** | 2026-07-28 |
 | **Autores** | Daniela Carbajal Vega (TI, arma el PRD). Solicitan: Norma Zacarias y José Juan Mendoza Díaz (negocio/operación de siniestros) |
 | **Revisión / liderazgo** | Aldo Álvarez (Director de TI) |
 | **Tipo de proyecto** | Feature web/API (con automatización de captura de avisos como funcionalidad crítica del MVP) |
@@ -16,7 +16,7 @@ El Módulo de Siniestros busca reemplazar el proceso manual que hoy usa el equip
 
 El problema concreto es doble: (1) la captura es 100% manual y depende de que José Juan copie y pegue la información de cada aviso, sin poder automatizarla con fórmulas porque los avisos llegan en PDF o imagen; y (2) el reporte oficial de siniestralidad que da la aseguradora llega "mes vencido", lo cual no permite atender al cliente con la oportunidad que el negocio requiere (1-3 días después del siniestro). Ya se había intentado antes resolver esto con un robot externo aislado (solicitado a Aldo) que no se concretó; ahora se busca una solución integral, no otro parche puntual.
 
-El MVP de este PRD (Fase 1) cubre la captura automatizada de avisos de siniestro multi-formato, el registro del siniestro, la bitácora de seguimiento (comentarios y estatus) y la gestión documental por caso — con almacenamiento propio del sistema, reemplazando el uso de Google Drive para expedientes. Fases posteriores (no comprometidas en este PRD) contemplan vincular los siniestros con las pólizas emitidas en Omega, mostrar el histórico de siniestros al consultar una póliza, y — a más largo plazo — un portal de solicitudes ("tickets") para distribuidores y una eventual integración con el sistema de siniestros de un socio externo ("la financiera").
+El MVP de este PRD (Fase 1) cubre la captura automatizada de avisos de siniestro multi-formato — extrayendo la totalidad de los campos que envía cada aseguradora, no solo los esenciales que hoy se transcriben a mano —, el registro del siniestro, la bitácora de seguimiento (comentarios y estatus), la gestión documental por caso con almacenamiento propio del sistema (reemplazando Google Drive) y la migración del acervo histórico de expedientes que hoy vive en Drive, dada la obligación legal de conservarlos un mínimo de 10 años. Fases posteriores (no comprometidas en este PRD) contemplan vincular los siniestros con las pólizas emitidas en Omega, mostrar el histórico de siniestros al consultar una póliza, y — a más largo plazo — un portal de solicitudes ("tickets") para distribuidores y una eventual integración con el sistema de siniestros de un socio externo ("la financiera").
 
 El resultado esperado es que José Juan deje de depender de la transcripción manual, pueda atender los siniestros con la oportunidad que exige el negocio, y que la información quede centralizada, trazable y disponible para los mismos reportes que hoy produce a mano — sin generar trabajo adicional.
 
@@ -24,7 +24,9 @@ El resultado esperado es que José Juan deje de depender de la transcripción ma
 
 ## 2. Contexto y problema
 
-Hoy el proceso es completamente manual: cada aseguradora envía un correo de aviso de siniestro (a veces con varios avisos agrupados en el mismo hilo/CC) directamente al correo personal de José Juan Mendoza Díaz. Él abre cada aviso — que puede venir como texto, PDF o imagen, con nomenclatura distinta según la aseguradora (por ejemplo, "Potosí" vs. "Chubb" pueden nombrar de forma distinta al mismo campo) — y copia/pega manualmente los datos relevantes a un Excel único que funciona como bitácora, con hojas separadas para avisos, pérdidas totales y devoluciones de primas.
+Hoy el proceso es completamente manual: cada aseguradora envía un correo de aviso de siniestro (a veces con varios avisos agrupados en el mismo hilo/CC) directamente al correo personal de José Juan Mendoza Díaz. Él abre cada aviso — que puede venir como texto, PDF o imagen, con nomenclatura distinta según la aseguradora (por ejemplo, "Potosí" vs. "Chubb" pueden nombrar de forma distinta al mismo campo) — y copia/pega manualmente los datos relevantes a un Excel único que funciona como bitácora, con hojas separadas para avisos, pérdidas totales y devoluciones de primas. El volumen real de esta operación es de 1 a 10 avisos por día, alrededor de 70 por semana y entre 200 y 250 por mes.
+
+Con ejemplos reales de aviso compartidos por Norma y José Juan se confirmó qué tan heterogéneos son los formatos: GNP, Qualitas y HDI envían correos HTML con campos claramente etiquetados; La Latino envía una tabla dentro del cuerpo del correo, también etiquetada; El Potosí envía un PDF estructurado con secciones y etiquetas; y **Chubb envía una tabla de texto plano sin ningún nombre de campo — solo valores en un orden fijo**, lo que la vuelve la fuente más difícil de interpretar automáticamente. Además, cada aviso trae muchos más datos de los que José Juan alcanza a capturar hoy a mano: ubicación detallada del siniestro, cabinero y ajustador asignado, coberturas afectadas y montos, y los datos completos del vehículo (marca, tipo, año, color, placas, valor comercial), entre otros.
 
 El dolor concreto tiene dos caras. Primero, la carga operativa: como los avisos llegan en PDF o imagen, no es posible automatizar la captura con fórmulas de Excel ("no puedo decirle a Excel que ponga el nombre aquí, tengo que copiar y pegar"), lo que hace el proceso lento y propenso a error. Segundo, y más crítico para el negocio: la aseguradora sí entrega un reporte oficial de siniestralidad, pero llega con un mes de retraso ("mes vencido"), lo cual es inaceptable porque el equipo necesita atender al cliente en los primeros 1-3 días después de ocurrido el siniestro, no un mes después.
 
@@ -60,10 +62,11 @@ Este PRD cubre el **MVP de la Fase 1**. Las Fases 2 y 3 se documentan como visi�
 
 | **Funcionalidad** | **Descripción** |
 | --- | --- |
-| Captura automatizada de avisos de siniestro | El sistema lee los correos de aviso de las aseguradoras (texto, PDF o imagen según la aseguradora, incluyendo correos con varios avisos agrupados en CC) y extrae los datos clave sin captura manual. Debe soportar múltiples formatos de entrada, ya que cada aseguradora usa su propio formato y nomenclatura. |
-| Registro del siniestro | Alta con los campos esenciales que hoy captura José Juan: número de siniestro, número de póliza, serie, teléfono de contacto, tipo de siniestro, nombre del asegurado/contacto, causa, y estatus. Debe permitir también captura manual cuando un aviso no se pueda leer automáticamente. |
+| Captura automatizada de avisos de siniestro | El sistema lee los correos de aviso de las aseguradoras (texto, PDF o imagen según la aseguradora, incluyendo correos con varios avisos agrupados en CC) y extrae y estructura **todos** los campos que envía cada aviso (no solo los esenciales), incluyendo el caso de Chubb, que no etiqueta sus campos y requiere un mapeo posicional propio. Debe soportar múltiples formatos de entrada, ya que cada aseguradora usa su propio formato y nomenclatura. |
+| Registro del siniestro | Alta con los campos que hoy captura José Juan (número de siniestro, número de póliza, serie, teléfono de contacto, tipo de siniestro, nombre del asegurado/contacto, causa, estatus) más el resto de los campos estructurados del aviso (ubicación, cabinero/ajustador, coberturas afectadas y montos, datos completos del vehículo). Debe permitir también captura manual cuando un aviso no se pueda leer automáticamente. |
 | Bitácora / seguimiento | Campo abierto de comentarios/notas por siniestro, más un campo de estatus (ej. abierto/en proceso/cerrado, con resultado "procedió"/"no procedió"). |
 | Gestión documental | Carga masiva de documentos por caso (sin desglosar campo por campo según tipo de documento, ya que varía por aseguradora), con almacenamiento propio del sistema y registro de quién y cuándo cargó cada archivo. |
+| Migración de expedientes históricos | Migrar al almacenamiento propio del sistema el acervo documental de siniestros que hoy vive en Google Drive, preservando su asociación por caso/cliente/aseguradora, para cumplir la obligación legal de conservación de 10 años. |
 | Reemplazo funcional del Excel actual | Los datos capturados permiten generar los mismos reportes que hoy salen del Excel (hacia "CAF" y reportes internos), sin que José Juan tenga que producir reportes adicionales por fuera del sistema. |
 
 El principio rector del MVP es que **el sistema solo captura y organiza información — no decide sobre el siniestro**: no determina procedencia, no autoriza pagos ni montos, y no cierra un siniestro por sí mismo. Esas decisiones siguen siendo humanas, a cargo de José Juan y Norma.
@@ -104,8 +107,8 @@ Este flujo refleja que la automatización actúa como una primera capa de captur
 
 | **ID** | **Requerimiento** | **Descripción** |
 | --- | --- | --- |
-| RF-01 | Monitoreo del correo de avisos | El sistema debe monitorear el correo de José Juan (Google Workspace/Gmail) para detectar avisos de siniestro entrantes de las aseguradoras. |
-| RF-02 | Extracción automática de datos | El sistema debe extraer automáticamente los campos clave del aviso (número de siniestro, número de póliza, serie, teléfono de contacto, tipo de siniestro, nombre, causa) cuando el formato lo permita (texto, PDF o imagen). |
+| RF-01 | Monitoreo del correo de avisos | El sistema debe monitorear el nuevo buzón compartido de siniestros (a crear en Google Workspace, ej. `siniestros@...`) para detectar avisos de siniestro entrantes de las aseguradoras. |
+| RF-02 | Extracción automática de datos | El sistema debe extraer y estructurar automáticamente todos los campos del aviso (identificación del siniestro y la póliza, contacto, tipo y causa, ubicación, cabinero/ajustador, coberturas afectadas y montos, datos del vehículo) cuando el formato lo permita (texto, PDF o imagen), incluyendo formatos sin etiquetas de campo mediante un mapeo posicional específico por aseguradora (caso Chubb). |
 | RF-03 | Separación de avisos agrupados | Cuando un correo contenga múltiples avisos agrupados (CC), el sistema debe separarlos en registros individuales. |
 | RF-04 | Degradación a revisión manual | Cuando la extracción automática falle o resulte incompleta, el sistema debe marcar el aviso como "pendiente de revisión manual" y notificar al usuario responsable. |
 | RF-05 | Registro manual de siniestro | El usuario debe poder registrar manualmente un siniestro cuando no se haya capturado automáticamente. |
@@ -114,6 +117,7 @@ Este flujo refleja que la automatización actúa como una primera capa de captur
 | RF-08 | Carga masiva de documentos | El sistema debe permitir cargar documentos de forma masiva asociados a un siniestro, registrando quién y cuándo los cargó. |
 | RF-09 | Exportación de reportes | El sistema debe permitir exportar/filtrar los siniestros registrados a Excel, replicando la información que hoy se reporta manualmente (interno y hacia "CAF"). |
 | RF-10 | Número de siniestro de la aseguradora | El sistema debe registrar el número de siniestro asignado por la aseguradora, distinto del identificador interno, para trazabilidad. |
+| RF-11 | Migración de expedientes históricos | El sistema debe permitir migrar el acervo documental histórico de siniestros que hoy vive en Google Drive hacia el almacenamiento propio, conservando su asociación por siniestro/cliente/aseguradora. |
 
 ## 9. Requerimientos no funcionales
 
@@ -130,11 +134,12 @@ Este flujo refleja que la automatización actúa como una primera capa de captur
 
 | **Integración / Fuente** | **Uso esperado** |
 | --- | --- |
-| Google Workspace / Gmail (correo de José Juan) | Lectura de correos entrantes para detectar y extraer avisos de siniestro (solo lectura sobre el buzón) |
-| Aseguradoras (Potosí, HDI, Chubb, Qualitas, Latino, GNP, entre otras) | Fuente externa de los avisos de siniestro; no hay API/webservice formal, la única vía de entrada hoy es el correo |
-| Almacenamiento documental propio del sistema | Escritura: carga y resguardo de los documentos/expedientes de cada siniestro, reemplazando el uso actual de Google Drive |
+| Google Workspace / Gmail (nuevo buzón compartido de siniestros) | Lectura de correos entrantes para detectar y extraer avisos de siniestro (solo lectura sobre el buzón) |
+| Aseguradoras (Potosí, HDI, Chubb, Qualitas, Latino, GNP, entre otras) | Fuente externa de los avisos de siniestro; no hay API/webservice formal, la única vía de entrada hoy es el correo. Formatos observados: GNP, Qualitas y HDI en HTML etiquetado; La Latino con tabla etiquetada en el cuerpo del correo; El Potosí en PDF estructurado; Chubb en texto plano sin etiquetas (mapeo posicional) |
+| Google Drive (acervo histórico) | Lectura, para la migración única del histórico de expedientes hacia el almacenamiento propio del sistema (RF-11) |
+| Almacenamiento documental propio del sistema | Escritura: carga y resguardo de los documentos/expedientes de cada siniestro (nuevos e históricos migrados), reemplazando el uso actual de Google Drive |
 
-Datos mínimos requeridos para operar el MVP: número de siniestro (interno y de la aseguradora), número de póliza, serie, nombre del asegurado/contacto, teléfono de contacto, tipo de siniestro, causa, fecha del aviso, estatus, comentarios de seguimiento, y los documentos asociados al caso.
+Datos mínimos requeridos para operar el MVP: número de siniestro (interno y de la aseguradora), número de póliza/inciso/certificado, nombre del asegurado/conductor/quien reporta, teléfono(s), tipo y causa del siniestro, fecha/hora de ocurrencia y de reporte, ubicación del siniestro (estado, ciudad, municipio, calle, colonia), datos del vehículo (marca, tipo, modelo, año, color, serie, placas, valor comercial), coberturas afectadas y montos, cabinero/ajustador asignado, estatus, comentarios de seguimiento, y los documentos asociados al caso.
 
 Esquema de permisos: José Juan y Norma pueden leer, crear, modificar y cerrar siniestros. El resto de los roles (equipo comercial, otros perfiles de TI) queda, por ahora, sin acceso de escritura; cualquier ampliación de permisos deberá validarse explícitamente con negocio antes de habilitarse.
 
@@ -160,7 +165,7 @@ Cada evento debe incluir como mínimo: fecha/hora, usuario responsable (o "siste
 | Horas/semana de captura manual ahorradas | Mide la reducción del trabajo manual de transcripción de José Juan |
 | Reportes generados directamente desde el sistema | Sustituyen los reportes manuales que hoy se producen desde el Excel (hacia "CAF" y reportes internos) |
 
-La línea base y meta numérica de estas métricas quedan pendientes de validar con negocio/BI, ya que el volumen actual de siniestros no se cuantificó durante la sesión de levantamiento (ver sección 14).
+El volumen base ya se conoce (1-10 avisos/día, ~70/semana, 200-250/mes); la línea base y meta numérica del resto de las métricas (tiempos de captura, % de automatización actual) quedan pendientes de validar con negocio/BI una vez arranque el sistema (ver sección 14).
 
 ## 13. Riesgos y supuestos
 
@@ -169,9 +174,10 @@ La línea base y meta numérica de estas métricas quedan pendientes de validar 
 | **Riesgo** | **Impacto potencial** |
 | --- | --- |
 | Formatos heterogéneos y calidad variable de los avisos (PDF/imagen) | Puede limitar la precisión de la extracción automática, generando más revisión manual de la esperada |
+| Chubb no etiqueta los campos de su aviso (solo valores en un orden fijo) | Si la aseguradora cambia el orden o estructura de su plantilla, la extracción se rompe sin previo aviso; es la fuente de mayor fragilidad técnica |
 | Intento previo similar (robot solicitado a Aldo) no se concretó | El alcance técnico real podría ser más complejo o costoso de lo anticipado |
-| Único canal de entrada es el correo personal de José Juan (sin buzón compartido) | Riesgo de continuidad operativa si él no está disponible o cambia de correo |
-| Migración de expedientes históricos de Google Drive al sistema | Puede implicar un esfuerzo de migración no trivial si se decide traer el histórico completo (obligación legal de 10 años), no solo los casos nuevos |
+| El nuevo buzón compartido de siniestros no se ha aprovisionado todavía | Si no está listo a tiempo, el desarrollo/pruebas de la captura automatizada podría retrasarse |
+| Tamaño real del acervo histórico en Google Drive aún no dimensionado | Puede afectar el tiempo de migración dentro de la Fase 1 si el volumen histórico es mayor al esperado |
 | Indefinición de si el desarrollo es interno o con proveedor externo | Puede impactar tiempos y costo una vez el proyecto pase a análisis técnico |
 
 ### Supuestos
@@ -181,17 +187,16 @@ La línea base y meta numérica de estas métricas quedan pendientes de validar 
 | Las aseguradoras mantendrán sus canales y formatos actuales de envío de avisos durante el desarrollo | Si cambian, la lógica de extracción tendría que ajustarse |
 | José Juan sigue siendo el punto de captura/validación durante el MVP | No se contempla personal adicional en esta fase |
 | El vínculo con pólizas de Omega no es necesario para el MVP | Se difiere a Fase 2, según lo confirmado en la sección 3.1 |
-| El volumen de siniestros permite que la revisión manual siga siendo viable como respaldo | Como el volumen exacto quedó pendiente de validar, se asume que no es tan alto que vuelva inviable el respaldo manual |
+| Se creará un nuevo buzón de correo compartido de siniestros antes del arranque del desarrollo | Reemplaza la dependencia del correo personal de José Juan como único canal de entrada |
+| El volumen mensual de siniestros (200-250) permite que la revisión manual siga siendo viable como respaldo | Confirmado por negocio; no se considera un volumen que vuelva inviable el respaldo manual |
 
 ## 14. Preguntas abiertas
 
 | **Tema** | **Pregunta abierta** |
 | --- | --- |
-| Volumen | ¿Cuántos avisos/siniestros manejan por día, semana o mes? No se mencionó en la sesión de levantamiento. |
-| Formatos de aviso | José Juan debe reenviar un correo de ejemplo por cada aseguradora (Potosí, HDI, Chubb, Qualitas, Latino, GNP) para mapear los formatos reales de entrada antes del diseño técnico. |
 | Acceso a bitácora actual | Dar acceso de solo lectura a Daniela Carbajal Vega a la bitácora Excel vigente (hojas: avisos, pérdidas totales, devoluciones de primas). |
 | Desarrollo interno vs. externo | Definir con Alexis y Aldo Álvarez si el desarrollo se realiza internamente o requiere proveedor externo — impacta directamente las fechas del proyecto. |
 | Fechas | Sin fecha de inicio comprometida aún; el proyecto se encuentra en fase de discovery. |
-| Migración de histórico documental | ¿Se migran al nuevo sistema los expedientes históricos que hoy viven en Google Drive (obligación legal de 10 años), o el módulo aplica solo a casos nuevos desde su arranque? |
-| Canal de entrada | ¿Conviene migrar a un buzón compartido de siniestros en vez de depender del correo personal de José Juan, dado el riesgo de continuidad operativa identificado en la sección 13? |
-| Línea base de métricas | Validar con BI/operación las cifras base necesarias para las métricas de éxito de la sección 12, hoy sin números de referencia. |
+| Tamaño del acervo histórico a migrar | Dimensionar cuántos años/expedientes existen realmente en Google Drive, para estimar el esfuerzo de la migración (RF-11) dentro de la Fase 1. |
+| Provisión del nuevo buzón compartido | Definir quién y cuándo aprovisiona el nuevo correo de siniestros, y si el histórico de correos ya recibidos en el correo personal de José Juan debe migrarse a ese buzón o si el cambio aplica solo hacia adelante. |
+| Línea base de tiempos y automatización | Validar con BI/operación los tiempos actuales de captura y el % de avisos que hoy requieren corrección manual, para tener una línea base de las métricas de la sección 12 (el volumen ya se conoce: 200-250 siniestros/mes). |

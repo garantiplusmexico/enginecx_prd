@@ -1,0 +1,676 @@
+Omega | Requerimiento | Módulo de Siniestros
+Asistentes
+Daniela Carbajal Vega, José Juan Mendoza Díaz, Norma Zacarias
+Transcripción
+Daniela Carbajal Vega: por así decirlo, eh, pero sí necesito que ustedes me ayuden a decirme pues cuál es la necesidad, que eh qué necesitan para la redundancia, este, cuál es la expectativa e y pues cómo se utilizaría este este módulo, ¿no?
+Daniela Carbajal Vega: que desconocemos esa área, entonces sí ocupamos mucho de su ayuda.
+Norma Zacarias: nada más aquí.
+Norma Zacarias: Este, Dani es en Omega, ¿cierto?
+Norma Zacarias: Para que Juan tenga Es que Juan no utiliza Omega,
+José Juan Mendoza Díaz: Yo nunca utilizado ese
+Daniela Carbajal Vega: Sí.
+Norma Zacarias: por eso por eso él como que no trae así,
+José Juan Mendoza Díaz: sistema.
+Norma Zacarias: él no utiliza Omega.
+Norma Zacarias: Este h
+Daniela Carbajal Vega: Entonces, ¿cómo le haríamos?
+Norma Zacarias: este,
+Daniela Carbajal Vega: o o qué es lo que ocupan del módulo de
+Norma Zacarias: o sea, sí, él sí tiene usuario, o sea, sí podría entrar,
+Daniela Carbajal Vega: siniestros.
+Norma Zacarias: nada más que digamos que él como que no conoce Omega, pero yo aquí ya que conozco el el sistema un poquito más, Dani, yo te voy a decir la necesidad de él realmente.
+Norma Zacarias: La necesidad de él realmente es tener un sistema y me parece que eso no sé si nos lo puede dar
+Daniela Carbajal Vega: Mhm.
+Norma Zacarias: Omega o no, eso tú nos lo dirás, pero él necesita un sistema que registre este, pero que él no esté registrando manual, sino que capte los avisos de siniestro.
+Norma Zacarias: Eso es algo que le habíamos como pedido a Aldo y creo que pues va a ser un poquito tardado porque hoy él la siniestralidad la lleva copiando y pegando.
+Norma Zacarias: O sea, llega un correo, copia y pega en un Excel.
+Norma Zacarias: Copia y pega un Excel.
+Daniela Carbajal Vega: Okay.
+Daniela Carbajal Vega: ¿Y de a dónde le llega?
+Daniela Carbajal Vega: O sea,
+Norma Zacarias: Entonces lo que al correo al correo de él,
+Daniela Carbajal Vega: le llega a su correo.
+José Juan Mendoza Díaz: correr.
+Norma Zacarias: al correo mío o al correo de siniestros, o sea, llega al correo.
+Norma Zacarias: Entonces lo que hoy hace es de que de las diferentes aseguradoras estar copiando y pegando esos
+Daniela Carbajal Vega: M.
+Norma Zacarias: avisos para poder de él tener una siniestralidad al día, porque la aseguradora sí brinda sí brinda una siniestralidad, pero la brinda mes vencido.
+Norma Zacarias: Entonces, a nosotros no nos funciona mes vencido porque estaríamos atendiendo a los clientes a mes vencido.
+Norma Zacarias: Ajá.
+Norma Zacarias: Entonces, para que él pueda estar atendiendo, si no al día, por lo menos el siguiente o un tercer día después del siniestro,
+Daniela Carbajal Vega: Oh.
+Norma Zacarias: tiene que estar cachando esos avisos que mandan las aseguradoras o esos reportes de siniestralidad para
+Daniela Carbajal Vega: Ok.
+Norma Zacarias: que él pueda brindarle atención a los clientes y para que pues él pueda dar la atención en en la operación.
+Norma Zacarias: Eso es como que lo primero que necesitamos porque si existe un módulo, pero si de todas maneras él tiene que seguir en ese módulo ir registrando, pues mejor lo registra en un Excel porque así le el reporteo y le es
+Norma Zacarias: más fácil porque ese mismo Excel lo utiliza para reportar a CAF, este y para hacer sus reportes este con nosotros sin tener que estar como manipulando mucho la información.
+Norma Zacarias: Se trata de que el Excel le dé la funcionalidad para que no tenga que hacer reportes extras, sino sino que ese le sirva para hacer todos los reportes.
+Norma Zacarias: Entonces, eso sería como lo primero que a él funcionalmente lo qué es lo que él necesitaría funcionalmente para ahorrarle trabajo.
+Norma Zacarias: Eso es lo que él necesitaría
+Daniela Carbajal Vega: Okay.
+José Juan Mendoza Díaz: Sí, capturar, pues, ¿no?
+Daniela Carbajal Vega: Pero
+José Juan Mendoza Díaz: Capturar los datos de siniestro,
+Norma Zacarias: porque
+José Juan Mendoza Díaz: nombre, los generales en un sistema.
+Daniela Carbajal Vega: Ajá.
+Daniela Carbajal Vega: Eh, por ejemplo, ahí sí necesitaría, no sé si tengan como ese Excel que me pudieran dar una copia o mostrármelo ahorita
+Norma Zacarias: sí.
+Daniela Carbajal Vega: también.
+Daniela Carbajal Vega: ¿Por qué les digo?
+Daniela Carbajal Vega: Porque, por ejemplo, ahorita la sesión se está grabando.
+Daniela Carbajal Vega: Entonces, eh, de aquí voy a tomar todo lo que ustedes me digan que necesitan para armar el requerimiento y ya determinaremos entonces si puede o no estar en Omega.
+José Juan Mendoza Díaz: Se los mando.
+Daniela Carbajal Vega: Eh, pero sí ocuparía como todos los campos que llena Juanjo para ir mapeando ya el desarrollo con lo que ustedes necesiten.
+Norma Zacarias: Juanjo.
+Norma Zacarias: Ah, sí, perdón.
+Norma Zacarias: Juanjo, envíale el Excel donde registras los avisos,
+Daniela Carbajal Vega: Entonces,
+Norma Zacarias: envíale donde registras las pérdidas totales y envíale donde registras las devoluciones
+José Juan Mendoza Díaz: En uno solo,
+Norma Zacarias: de primas.
+Norma Zacarias: Ajá.
+José Juan Mendoza Díaz: uno solo.
+Norma Zacarias: Ajá.
+José Juan Mendoza Díaz: Es una sola bitácora donde vive todo por
+Norma Zacarias: Ajá.
+Norma Zacarias: Nada más ahí va por
+Daniela Carbajal Vega: okay.
+Norma Zacarias: hojas.
+Daniela Carbajal Vega: Y aparte de eso,
+José Juan Mendoza Díaz: hoja.
+Daniela Carbajal Vega: si aquí en la sesión me ayudaran a a explicar como cómo llega, o sea, yo sé ya me dijo Normita que llega por un correo, pero este cómo se cómo llega y cómo ustedes eh lo llenan o tienen que estarle preguntando.
+Daniela Carbajal Vega: como todas esas cositas que que necesiten, o sea, llega un correo y ustedes responden el correo,
+José Juan Mendoza Díaz: Es
+Daniela Carbajal Vega: ¿en falta información o siempre viene como toda la información?
+José Juan Mendoza Díaz: manual,
+Daniela Carbajal Vega: Eh, el usuario siempre manda todo o si les toca como estarles
+José Juan Mendoza Díaz: ¿no?
+José Juan Mendoza Díaz: Aquí viene todo.
+Daniela Carbajal Vega: preguntando.
+José Juan Mendoza Díaz: Es que haz de cuenta el el este correo viene de la aseguradora directamente.
+00:05:00
+Daniela Carbajal Vega: Ah,
+Norma Zacarias: Muy mue.
+Daniela Carbajal Vega: okay.
+Norma Zacarias: Vale.
+Norma Zacarias: Ok.
+José Juan Mendoza Díaz: Espérame, déjame mand un correo nada más que me de acá de
+Daniela Carbajal Vega: Sí, sí, sí, sí.
+Daniela Carbajal Vega: No te
+José Juan Mendoza Díaz: la Ah, listo.
+José Juan Mendoza Díaz: De hecho,
+Daniela Carbajal Vega: preocupes.
+José Juan Mendoza Díaz: tengo justamente estoy registrando porque precisamente es para sacar reportes, pero igual déjame ya ahorita les muestro la pantalla.
+José Juan Mendoza Díaz: Mira, aquí está.
+José Juan Mendoza Díaz: Ya dices que se graba, ¿verdad?
+Daniela Carbajal Vega: Sí, sí, todo se está grabando.
+José Juan Mendoza Díaz: Para que veas el proceso que yo hago.
+Daniela Carbajal Vega: nos ayuda.
+José Juan Mendoza Díaz: Haz de cuenta y ahí se ve, ¿verdad?
+Daniela Carbajal Vega: Sí,
+José Juan Mendoza Díaz: Es esta.
+José Juan Mendoza Díaz: Yo ahorita yo tengo este puros correos de siniestros.
+Daniela Carbajal Vega: vi
+José Juan Mendoza Díaz: Obviamente cada aseguradora te manda su su propia
+Daniela Carbajal Vega: nomenclatura.
+José Juan Mendoza Díaz: formato.
+Daniela Carbajal Vega: Ajá.
+José Juan Mendoza Díaz: Por ejemplo, el potosí lo mandas así.
+José Juan Mendoza Díaz: M. Y aquí este, yo abro esta hoja aquí, si te fijas vienen los datos de el número de siniestro, número de póliza, el nombre, teléfono, series, causas de siniestro,
+José Juan Mendoza Díaz: lo general.
+José Juan Mendoza Díaz: En vidas pasadas registrábamos mucha información.
+José Juan Mendoza Díaz: Ahorita como es manual solamente registro esto.
+José Juan Mendoza Díaz: De hecho, te digo, aquí está la hoja pitácora de auto.
+José Juan Mendoza Díaz: Cada aviso que que ves aquí en esta en esta eh celda es uno de
+Daniela Carbajal Vega: Mhm.
+José Juan Mendoza Díaz: estos.
+José Juan Mendoza Díaz: Entonces, por ejemplo, este del Potosí corresponde a a uno de estos,
+Daniela Carbajal Vega: Okay.
+José Juan Mendoza Díaz: pues obviamente pues aquí yo voy registrando el el cada aseguradora de qué tipo de daños, todo eso.
+José Juan Mendoza Díaz: Esto lo voy sacando de esta hoja,
+Daniela Carbajal Vega: del archivo.
+José Juan Mendoza Díaz: que quisiera que lo hicieran robotizado.
+José Juan Mendoza Díaz: Pues,
+Daniela Carbajal Vega: Ajá.
+José Juan Mendoza Díaz: ¿por qué?
+José Juan Mendoza Díaz: Porque no hay forma que yo formule esto, porque no esto viene en un PDF o viene en imagen, pues no.
+Daniela Carbajal Vega: Sí, sí,
+José Juan Mendoza Díaz: No puedo yo decirle,
+Daniela Carbajal Vega: sí,
+José Juan Mendoza Díaz: "Ponme César López en donde va aquí el nombre del asegurado. Tengo que copiar y pegar.
+José Juan Mendoza Díaz: No puedo decirle a Excel,
+Daniela Carbajal Vega: sí.
+José Juan Mendoza Díaz: ponme la serie de aquí porque viene en un PDF." O sea,
+José Juan Mendoza Díaz: tendría que ser otro proceso de cambiarlo más más avanzado, pues, ¿no?
+Daniela Carbajal Vega: Mhm.
+José Juan Mendoza Díaz: Entonces, aquí lo acabo, pues voy registrando, copiando, pegando de acuerdo a los datos.
+José Juan Mendoza Díaz: Estos son los datos general.
+José Juan Mendoza Díaz: Antes teníamos más, pero yo para rápido solamente son 1 2 3 4 5 6 ocho.
+José Juan Mendoza Díaz: Ocho datos que son los más importantes, que si te fijas es siniestro, póliza, serie, teléfono de contacto, este tipo de siniestro, todo lo que yo ocupo para sacar los reportes que presentamos.
+José Juan Mendoza Díaz: ¿De dónde lo saco?
+José Juan Mendoza Díaz: Pues de aquí cada uno en este estoyando nada más el del potosí.
+José Juan Mendoza Díaz: Okay.
+José Juan Mendoza Díaz: Este, entonces, pues ya eh yo ya después de ahí yo sigo ya mi proceso con el asegurado de marcarle, de buscar a la aseguradora y eso no ahí no requeriría robot, la verdad.
+Daniela Carbajal Vega: Ajá.
+Daniela Carbajal Vega: Pero ocuparías como registrar algo,
+José Juan Mendoza Díaz: Sistema el
+Daniela Carbajal Vega: o sea, por ejemplo, aunque ahorita no lo hagan,
+José Juan Mendoza Díaz: teléfono.
+Norma Zacarias: Sí,
+Daniela Carbajal Vega: como el Ajá.
+Norma Zacarias: un seguimiento, un seguimiento.
+José Juan Mendoza Díaz: Ah, sí, un espacio en seguimiento de estos dos.
+José Juan Mendoza Díaz: Sí, sí, sí.
+Norma Zacarias: Mm.
+José Juan Mendoza Díaz: Como un espacio en blanco en seguimiento en donde yo haría notas.
+Daniela Carbajal Vega: Okay.
+Daniela Carbajal Vega: Este, ¿qué más ocuparían?
+Daniela Carbajal Vega: O sea, aunque ahorita no lo tengan como el
+José Juan Mendoza Díaz: No sé, ahí si quieras dividirlo por Yo digo que un cuadro genérico donde yo vaya a poner el seguimiento o lo ponemos como nada más
+Daniela Carbajal Vega: el
+José Juan Mendoza Díaz: abierto o cerrado o donde pueda yo dar comentarios.
+Daniela Carbajal Vega: por ejemplo, puede estar ambos, puedes tener el campo donde tú pongas eh los comentarios y luego un,
+José Juan Mendoza Díaz: Ah, perfecto.
+Daniela Carbajal Vega: no sé,
+José Juan Mendoza Díaz: Y ándale.
+Daniela Carbajal Vega: concluido satisfactoriamente.
+José Juan Mendoza Díaz: Lo tengo aquí de hecho.
+Daniela Carbajal Vega: Procedió o no procedió.
+José Juan Mendoza Díaz: Mira, comentarios estatus.
+Daniela Carbajal Vega: M.
+Norma Zacarias: Non.
+Norma Zacarias: M.
+José Juan Mendoza Díaz: Yeah.
+Norma Zacarias: Voy a pedir un algo muy avanzado que no creo que se pueda,
+José Juan Mendoza Díaz: Ándale.
+Daniela Carbajal Vega: Mhm.
+Norma Zacarias: pero ¿qué sería el proceso
+José Juan Mendoza Díaz: Mira, aquí está, por ejemplo, lo ahorita para que para que vean en comentarios,
+Norma Zacarias: ideal?
+José Juan Mendoza Díaz: por ejemplo, nada más le pongo así porque obviamente pues no va a estar registrando ya con el robot pues sí se me falcilita más.
+José Juan Mendoza Díaz: Y en estatus le podemos poner nada más.
+José Juan Mendoza Díaz: Yo lo pongo como cerrado, abierto y ya.
+José Juan Mendoza Díaz: Pero sí estaría bien los dos.
+José Juan Mendoza Díaz: Ya noita, perdón.
+Norma Zacarias: Sí, no te preocupes, Juan.
+Norma Zacarias: Pues Dani, lo ideal sería que aparte de, o sea, teniendo eso, eso, ese espacio que dice Juanjo que él como su histórico ahí, es que hoy cuando nos da nos piden avisos o dar seguimiento a siniestros, hoy nos los mandan por un formulario.
+Norma Zacarias: La realidad es que como ese formulario lo mandan los distribuidores que tienen usuario,
+Daniela Carbajal Vega: Hallo
+Norma Zacarias: lo ideal sería que al mismo Omega llegara la petición de seguimiento de un siniestro y que a Juan le llegara esa alerta y sobre ese él diera un seguimiento, no como hoy mediante un formulario o mediante un correo mediante un WhatsApp o mediante una
+00:10:00
+José Juan Mendoza Díaz: el
+Norma Zacarias: llamada este le estén le estén pidiendo seguimientos.
+José Juan Mendoza Díaz: formulario
+Norma Zacarias: Entonces, lo ideal sería que aparte se tuviera esa pues como ese sistema de no sé si sería como tickets o cómo sería donde si alguna
+José Juan Mendoza Díaz: de entrada.
+Norma Zacarias: agencia, algún cliente quiere el seguimiento, pues el distribuidor lo enviará ahí mismo, este eh pidiéndoselo a Juanjo, a Juanjo le llegara la alerta y Juanjo le diera el seguimiento por ese mismo medio.
+Norma Zacarias: Eso sería lo ideal.
+José Juan Mendoza Díaz: M. Es que más bien hay que mostrarle uno.
+José Juan Mendoza Díaz: ¿Cómo?
+José Juan Mendoza Díaz: Norma, déjame ver uno de los que manda flick.
+Daniela Carbajal Vega: Okay.
+José Juan Mendoza Díaz: Flick.
+José Juan Mendoza Díaz: ¿Cómo es?
+José Juan Mendoza Díaz: ¿Cómo te No te acuerdas cómo inicia?
+Norma Zacarias: No.
+José Juan Mendoza Díaz: Ya, déjame te digo cómo los mandan.
+José Juan Mendoza Díaz: Ay, es que dice Flit, no sé qué los que le piden a Pablo, a Carlos, perdón, a ver si hay uno por
+Daniela Carbajal Vega: Sí,
+José Juan Mendoza Díaz: aquí.
+Daniela Carbajal Vega: porque todo eso nos ayuda como a ir rebusteciendo el Ajá.
+Norma Zacarias: el
+José Juan Mendoza Díaz: Cada rato.
+Norma Zacarias: sistema.
+Daniela Carbajal Vega: y ya determinar, digo, lo último va a ser determinar si sirve en Omega o
+José Juan Mendoza Díaz: Ah, este, mira, algo así, ¿no?
+José Juan Mendoza Díaz: Normita.
+Daniela Carbajal Vega: no.
+Norma Zacarias: Mm.
+José Juan Mendoza Díaz: Mira, haz de cuenta la financiera te lo pide así.
+Norma Zacarias: Ándale.
+José Juan Mendoza Díaz: Y ya pues ya hay que ir le dando el seguimiento.
+José Juan Mendoza Díaz: Ahí va.
+José Juan Mendoza Díaz: Pero el el que pide no me imagino que es algo
+Norma Zacarias: Ajá.
+Norma Zacarias: Digo,
+José Juan Mendoza Díaz: así.
+Norma Zacarias: a mí me gustaría todavía que el mismo seguimiento se fuera dando en el sistema, porque hoy quien nos lo pide no es el cliente final,
+José Juan Mendoza Díaz: Este es un ticket.
+José Juan Mendoza Díaz: Haz de cuenta.
+José Juan Mendoza Díaz: Este es un ticket.
+Norma Zacarias: es un distribuidor que es un un cliente que cuenta con usuario,
+Daniela Carbajal Vega: Aha.
+Norma Zacarias: entonces que en el mismo usuario puede hacer sus solicitudes y si no, pues ya por lo menos que mande algo como eso que enseña muestra Juanjo y que ya Juanjo ahí pueda continuar con el seguimiento en el en el correo.
+José Juan Mendoza Díaz: O sea,
+Daniela Carbajal Vega: Okay.
+Daniela Carbajal Vega: Eh,
+José Juan Mendoza Díaz: en vez
+Daniela Carbajal Vega: ¿me puedes mandar esa?
+Daniela Carbajal Vega: ¿Me puedes tomar una captura de pantalla y mandármela?
+Daniela Carbajal Vega: La por qué
+José Juan Mendoza Díaz: Pues sí quieres, ¿no?
+Daniela Carbajal Vega: hiciste.
+José Juan Mendoza Díaz: Pues sea es lo mismo, ¿no?
+José Juan Mendoza Díaz: O sea, este este es de ellos, pues, ¿no?
+José Juan Mendoza Díaz: Este no es nuestros.
+Daniela Carbajal Vega: Ajá.
+José Juan Mendoza Díaz: Se la toman
+Norma Zacarias: Y fíjate, Dani,
+Daniela Carbajal Vega: O a ver,
+Norma Zacarias: que ellos tienen un módulo de Y fíjate,
+Daniela Carbajal Vega: deja yo la tomo no más.
+José Juan Mendoza Díaz: orbita.
+Daniela Carbajal Vega: Espérame ahí.
+Norma Zacarias: Dani, que ellos tienen un módulo de siniestros,
+Daniela Carbajal Vega: ¿Quién?
+Norma Zacarias: los de la financiera.
+José Juan Mendoza Díaz: Este es de Financial.
+José Juan Mendoza Díaz: Este es de la financiera.
+José Juan Mendoza Díaz: Es como nos hacen las peticiones ellos.
+Norma Zacarias: Mhm.
+José Juan Mendoza Díaz: quisiera norma que los usuarios no la hicieran así los clientes.
+José Juan Mendoza Díaz: Pues hola, buen día equipo de siniestro.
+Norma Zacarias: Mhm.
+José Juan Mendoza Díaz: Solicitamos esto.
+Daniela Carbajal Vega: Y y tú, Normita, te decías que tienen usuario.
+José Juan Mendoza Díaz: Agradezco
+Daniela Carbajal Vega: Usuario a qué, a Omega o a
+Norma Zacarias: Mm.
+Norma Zacarias: Sí,
+Daniela Carbajal Vega: dónde?
+Norma Zacarias: a Omega, porque pues los de la fila tienen usuarios de Omega,
+José Juan Mendoza Díaz: y mira cómo te pone aquí que
+Norma Zacarias: que no los usen es otra cosa porque lo usen desde
+José Juan Mendoza Díaz: no y te ponen
+Norma Zacarias: anfexi,
+Daniela Carbajal Vega: Mhm.
+José Juan Mendoza Díaz: aquí que no este no respuesta,
+Norma Zacarias: pero ellos tienen usuario.
+José Juan Mendoza Díaz: pues.
+José Juan Mendoza Díaz: Pues es nada más de entrada,
+Norma Zacarias: Y la otra cosa que ya sería muy avanzado,
+Daniela Carbajal Vega: Mhm.
+Norma Zacarias: pero ahí solamente aplicaría con la financiera,
+José Juan Mendoza Díaz: pues.
+Norma Zacarias: es que ellos que nosotros o ellos pudieran mandar las alertas también desde su sistema o nosotros desde nuestro sistema a ellos, porque ellos en Anfexi, no, no en Anfexi, pero ellos en su portal tienen módulo de siniestros.
+José Juan Mendoza Díaz: Y mira la diferencia de nuestro formulario, así.
+Daniela Carbajal Vega: Ahí sí está un poquito más difícil porque pues es un desarrollo en conjunto,
+Norma Zacarias: Entonces,
+Daniela Carbajal Vega: pero digo, no no digo que sea imposible.
+Norma Zacarias: sí, eso ya sería como algo todavía mucho pues mucho muy muy guow porque ellos tienen un módulo de siniestro y ya sería como vincularlo con nosotros, pero eso solo sería para ellos, que no sería prioridad porque pues nuestra prioridad es todo el negocio completamente este pero pues sí,
+José Juan Mendoza Díaz: Pero
+Norma Zacarias: ya viéndolo a un largo a un a un este a un plazo más largo, pues sí estaría genial,
+José Juan Mendoza Díaz: más normita lo que yo entiendo.
+José Juan Mendoza Díaz: Entonces que esto se convertiría en esto,
+Norma Zacarias: ¿no?
+José Juan Mendoza Díaz: ¿no?
+Norma Zacarias: Eh,
+Daniela Carbajal Vega: Aha.
+Norma Zacarias: pues eso es lo que queremos.
+José Juan Mendoza Díaz: Las peticiones que me hagan y me pidan no me van a a llenar aquí de que qué tipo de negocio.
+Norma Zacarias: Ajá.
+Daniela Carbajal Vega: Aha.
+Norma Zacarias: Ajá.
+José Juan Mendoza Díaz: Una descripción esto,
+Norma Zacarias: Eso es lo que requería.
+José Juan Mendoza Díaz: todo esto, todo esto, todo esto.
+José Juan Mendoza Díaz: Son puras preguntas, pues que obviamente así
+Norma Zacarias: Hoy sí trabajamos, Dani.
+Norma Zacarias: De hecho,
+José Juan Mendoza Díaz: trabajamos.
+Norma Zacarias: de hecho, hoy ya también tiene Omar la petición de Mesa, porque Mesa así está trabajando con un formulario muy manual.
+Daniela Carbajal Vega: Hm.
+Norma Zacarias: Entonces este pues también ya estamos viendo seutomatice esa parte.
+José Juan Mendoza Díaz: Y mira el modulito ese puede ser así como de observaciones o comentarios y aquí los
+Norma Zacarias: Yeah.
+José Juan Mendoza Díaz: hago.
+José Juan Mendoza Díaz: Mira, se confirma solución de golpe trasero para golpe delantero.
+José Juan Mendoza Díaz: Es necesario que comprobante el pago de del peaje.
+José Juan Mendoza Díaz: Entonces, y ya aquí yo los voy cerrando y y al final pues también de aquí ya sacamos para hacer los reportes,
+Daniela Carbajal Vega: Y en cuestión de reportes,
+José Juan Mendoza Díaz: pero estaría mejor que esto se convierta
+Daniela Carbajal Vega: ¿qué ocupan?
+Daniela Carbajal Vega: Ok.
+José Juan Mendoza Díaz: en Aquí pues ya me mandan todo en un
+Daniela Carbajal Vega: Okay.
+00:15:00
+José Juan Mendoza Díaz: solo y con fecha y todo y vamos nosotros dando el seguimiento.
+José Juan Mendoza Díaz: Déjame te muestro ahorita si quieres de lo que me preguntaste te muestro de otros este
+Daniela Carbajal Vega: Okay.
+José Juan Mendoza Díaz: de otro seguro para que veas que sí varían de de aseguradora aseguradora.
+José Juan Mendoza Díaz: El que sigue es de este es de latino, mira.
+José Juan Mendoza Díaz: Y Latino te lo manda así.
+José Juan Mendoza Díaz: Entonces tampoco
+Daniela Carbajal Vega: Por ejemplo, Juanjo,
+José Juan Mendoza Díaz: no.
+Daniela Carbajal Vega: no sé si puedas de las n aseguradoras con las que trabajamos reenviarme un siniestro de los que tengas para yo tener el cómo llega y y
+José Juan Mendoza Díaz: Ajá.
+José Juan Mendoza Díaz: Ajá.
+José Juan Mendoza Díaz: Y ya viste acá cómo
+Daniela Carbajal Vega: que lo que se desarrolle pueda ser que tome,
+José Juan Mendoza Díaz: lo igual
+Daniela Carbajal Vega: ¿no?, las diferentes formas en las que a ti te
+José Juan Mendoza Díaz: si es este bueno,
+Daniela Carbajal Vega: llega,
+José Juan Mendoza Díaz: no sé, Normita, pero creo que son los lo básico, pues no no hay no hay manera de no quitar estos pues estos
+Daniela Carbajal Vega: ¿no?
+Daniela Carbajal Vega: Pero si tú me mandas,
+José Juan Mendoza Díaz: datos.
+Daniela Carbajal Vega: es que aquí es el cómo tú lo capturas, pero yo quiero que me mandes el cómo te llega a ti por las aseguradoras,
+José Juan Mendoza Díaz: Ya.
+José Juan Mendoza Díaz: Ah,
+Daniela Carbajal Vega: porque para yo determinar,
+José Juan Mendoza Díaz: okay.
+Daniela Carbajal Vega: bueno, más bien no determinar algo cerrado, como solo que lea PDFs porque no todas te mandan PDFs o que solo lea correos porque
+José Juan Mendoza Díaz: Es correo
+Daniela Carbajal Vega: no todas te mandan correos,
+Norma Zacarias: No,
+Daniela Carbajal Vega: o que pura imagen,
+José Juan Mendoza Díaz: imagen.
+Daniela Carbajal Vega: sino tener como todos los criterios que te llegan y entonces yo poder abrir
+Norma Zacarias: sí,
+Daniela Carbajal Vega: eh la solicitud a que acepte múltiples formas de entrada de
+José Juan Mendoza Díaz: Okay.
+Norma Zacarias: sí.
+Daniela Carbajal Vega: información, pero si ver si ver los títulos, o sea, a mí me sirve muchísimo ver el título de cómo te lo manda,
+José Juan Mendoza Díaz: Sí.
+Daniela Carbajal Vega: por ejemplo, HDI versus cómo lo manda Qualitas, porque tal vez al nombre no te le ponen nombre, uno es nombre del beneficiario, otro es nombre del accidentado o no sé,
+José Juan Mendoza Díaz: Ajá.
+Daniela Carbajal Vega: ¿no?
+Daniela Carbajal Vega: O sea, ponen diferentes cosas.
+José Juan Mendoza Díaz: ¿Quién reportó?
+Daniela Carbajal Vega: Entonces, si tú me ayudas así a reenviármelos, yo con eso empiezo a armar el requerimiento.
+Norma Zacarias: Sí, revíale de todas.
+Daniela Carbajal Vega: Ajá.
+Norma Zacarias: Uno de todas.
+Daniela Carbajal Vega: Sí, con uno, con uno
+José Juan Mendoza Díaz: de mira de Chum a veces manda varios también porque aquí sí tomar en cuenta porque tendrías que jalar no nada
+Daniela Carbajal Vega: porque
+José Juan Mendoza Díaz: más el del principal sino manda como correos encima mira aquí vienen por ejemplo son
+Norma Zacarias: Ah, sí, sí, Dani.
+José Juan Mendoza Díaz: es un correo nada más pero trae un dos 3 cu cco avisos
+Daniela Carbajal Vega: Ah,
+Norma Zacarias: Sí.
+Daniela Carbajal Vega: sí, no importa.
+Norma Zacarias: M.
+Daniela Carbajal Vega: Es que eh,
+José Juan Mendoza Díaz: seis.
+Daniela Carbajal Vega: o sea, está quedando grabado que, por ejemplo, Chop manda desde un mismo correo o todo se agrupa en el mismo correo,
+José Juan Mendoza Díaz: No siempre a veces.
+Daniela Carbajal Vega: pero
+José Juan Mendoza Díaz: ¿Cuál más?
+José Juan Mendoza Díaz: ¿Cuál más?
+José Juan Mendoza Díaz: Creo que ya te mostré todos, pero igual te reenvió uno de cada uno e a tu correo.
+Daniela Carbajal Vega: sí
+José Juan Mendoza Díaz: Igual si quieres sobre el mismo, ¿no?
+José Juan Mendoza Díaz: Sí te tendría que ser independiente porque no, o sea, bien no te puede enviar, pues, ¿cómo te digo?
+José Juan Mendoza Díaz: todos los avisos de uno,
+Daniela Carbajal Vega: es que Sí.
+José Juan Mendoza Díaz: sino te enviarías seis correos con cada uno son seis,
+Daniela Carbajal Vega: Ajá.
+Daniela Carbajal Vega: Sí, sí, sí.
+José Juan Mendoza Díaz: no llegan todavía.
+Norma Zacarias: Eh, no, porque no tenemos hoy revisamos y todavía no hay siniestralidad.
+José Juan Mendoza Díaz: Los que me lleguen pues de Latino Latino Potosí,
+Daniela Carbajal Vega: Ok.
+José Juan Mendoza Díaz: HDI, Chup,
+Norma Zacarias: Ajá.
+José Juan Mendoza Díaz: Qualitas y este y ¿cuál más?
+José Juan Mendoza Díaz: TNP tampoco, ya tampoco llegan.
+José Juan Mendoza Díaz: No sé si vayan a llegar,
+Norma Zacarias: Sí,
+José Juan Mendoza Díaz: pero ya no llegan.
+Norma Zacarias: hay que pedir si
+José Juan Mendoza Díaz: O sí llegan, creo,
+Norma Zacarias: tienes
+José Juan Mendoza Díaz: pero es muy poco.
+José Juan Mendoza Díaz: Te mando uno de de GNP.
+Norma Zacarias: GDP.
+José Juan Mendoza Díaz: ¿Y qué más, Norma?
+José Juan Mendoza Díaz: Ocupamos
+Norma Zacarias: Este, bueno, esto es como para la atención inicial.
+Norma Zacarias: Hm, también necesitamos porque mira,
+Daniela Carbajal Vega: Halo
+José Juan Mendoza Díaz: decía
+Norma Zacarias: Dani, hoy se documenta, hay siniestros que se documentan porque son pérdidas totales, entonces se tiene que cargar información.
+Norma Zacarias: Nosotros como broker, el deber ser es que tenemos que guardar documentos, documentos de emisión.
+Norma Zacarias: Digo, eso no es tema de aquí, pero te lo hago mención.
+Norma Zacarias: Y documentos de siniestros.
+Norma Zacarias: La ley marca que nosotros debemos de guardar esos expedientes mínimo 10 años.
+Norma Zacarias: Entonces, hoy Juanjo los guarda en una carpeta de un drive.
+Norma Zacarias: Hoy ya está en un drive, en una carpeta, en carpetas por año, por cliente, por aseguradora, pero pues al final de cuentas pues son carpetas.
+Norma Zacarias: Entonces tú sabes que si pasa algo pues pum, ¿no?
+Norma Zacarias: O sea, by.
+Norma Zacarias: Entonces, pero además pues es como muy pues lo hace también así como que se los mandan y los descarga y entonces también lo ideal sería que e esto que hoy se tiene aquí se tuviera en el sistema, ¿no?
+Norma Zacarias: Que él pudiera guardar todos esos expedientes en el sistema y entonces sí quien quisiera verlo pudiera ver, o sea, de nosotros no estamos hablando operativamente.
+Norma Zacarias: Quien quiera verlo lo pueda ver hoy.
+Norma Zacarias: No es que no se pueda ver, o sea, sí lo podemos ver, pero este en un sistema tú sabes que está como más abierta la información para visualizarla, ¿no?
+Norma Zacarias: Eh, hoy pues prácticamente nada más entramos Juanju y yo porque pues somos los únicos interesados, digámoslo así.
+Norma Zacarias: Este,
+Daniela Carbajal Vega: Mm.
+00:20:00
+Norma Zacarias: pero sí sería lo ideal también que todo esa documental se guardara en el
+José Juan Mendoza Díaz: Mhm.
+Norma Zacarias: sistema.
+Daniela Carbajal Vega: Okay.
+Daniela Carbajal Vega: Y esa documentación ustedes le, ¿cómo les sería más funcional?
+Daniela Carbajal Vega: como que al momento de un siniestro o de una emisión, eh, por ejemplo, ¿no?
+Daniela Carbajal Vega: Tienes la de José Juan Mendoza, tienes una carpeta y ahí arrastras todos los documentos de José Juan Mendoza o tienes eh José Juan Mendoza y te pide acta de nacimiento y tengas que subir el acta de nacimiento.
+Norma Zacarias: No, que se suba todo en masivo.
+Daniela Carbajal Vega: y tengas que subir el mande.
+Norma Zacarias: No, que se suba en masivo.
+Norma Zacarias: Que se suba en masivo.
+Daniela Carbajal Vega: Okay,
+José Juan Mendoza Díaz: Sí,
+Norma Zacarias: masivamente.
+José Juan Mendoza Díaz: sin especificar cada documento en cada cuadro,
+Norma Zacarias: Yeah.
+José Juan Mendoza Díaz: ¿no?
+Daniela Carbajal Vega: okay,
+José Juan Mendoza Díaz: Porque en general es por nombre.
+José Juan Mendoza Díaz: Por ejemplo, mira, David Ibarra, aquí están todos los documentos de él.
+Daniela Carbajal Vega: okay.
+Daniela Carbajal Vega: Ajá.
+Daniela Carbajal Vega: Sí, solo quería como Sí, especificar si sería así como como general o muy específico
+José Juan Mendoza Díaz: No, bueno, como digan Normita.
+Norma Zacarias: No, no, porque la final del día pues eso te implica,
+José Juan Mendoza Díaz: Ah, va a ser más, ¿no?
+Daniela Carbajal Vega: requeren.
+Norma Zacarias: te implica trabajo y hoy si hoy lo puedes subir todo,
+José Juan Mendoza Díaz: O sea,
+Norma Zacarias: lo descargas todo y lo subes a una carpeta,
+José Juan Mendoza Díaz: me vas a abrir un un campo,
+Norma Zacarias: pues más
+José Juan Mendoza Díaz: me vas a abrir un campo por cada uno de estos documentos.
+Norma Zacarias: fácil.
+José Juan Mendoza Díaz: Entonces, como cada aseguradora también varían requerimientos, yo digo que mejor no.
+José Juan Mendoza Díaz: Cada uno en su por puro nombre de masivo,
+Daniela Carbajal Vega: Sí,
+José Juan Mendoza Díaz: dice.
+Norma Zacarias: Y ahí lo ideal, Dani,
+José Juan Mendoza Díaz: M.
+Daniela Carbajal Vega: no.
+Norma Zacarias: que sería que se vinculara con las emisiones de las pólizas.
+Norma Zacarias: Hoy sabemos que pues todavía es un pues hoy seguimos teniendo micrositios, ¿no?
+Norma Zacarias: Entonces sé que al 100% los siniestros no se pueden vincular a la cartera.
+Daniela Carbajal Vega: Aha.
+Norma Zacarias: ¿Por qué?
+Norma Zacarias: porque pues hay mucha cartera de microscitos o por fuera, ¿no?
+Daniela Carbajal Vega: Aha.
+Norma Zacarias: Este, pero sí me gustaría que, por ejemplo, si la póliza se emitió desde Omega, sí se pudiera vincular a esa póliza y ahí marcara,
+Daniela Carbajal Vega: Ok.
+Norma Zacarias: buscaras la póliza y así, ¿no?
+Norma Zacarias: He visto como en las aseguradoras dice siniestros.
+Norma Zacarias: Este ha tenido un siniestro.
+Norma Zacarias: Ah, déjame te enseño cómo está la cómo se observa en otros en otras digo.
+José Juan Mendoza Díaz: Te dejo la pantalla.
+Norma Zacarias: Sí. Ah, sí, sí, sí.
+Norma Zacarias: Ahorita voy a entrar a esperar.
+Norma Zacarias: Me gustaría como se visualizara como algo así en un futuro.
+José Juan Mendoza Díaz: Listo.
+Norma Zacarias: 789. Voy a entrar a una a un portal.
+Norma Zacarias: No, déjame buscar una póliza.
+Daniela Carbajal Vega: Mhm.
+José Juan Mendoza Díaz: Vamos.
+José Juan Mendoza Díaz: Ok.
+Norma Zacarias: Buscar una póliza.
+Norma Zacarias: Espérame.
+Norma Zacarias: Así, Dani.
+Norma Zacarias: No, pues ustedes quieren
+Daniela Carbajal Vega: Ustedes pueden pedir.
+Norma Zacarias: todo.
+Daniela Carbajal Vega: Yo al rato nada más les voy a dar otro Excel.
+José Juan Mendoza Díaz: Ah,
+Daniela Carbajal Vega: No,
+Norma Zacarias: Salud, salud.
+Norma Zacarias: A ver, ahorita les muestro, eh,
+José Juan Mendoza Díaz: este no,
+Daniela Carbajal Vega: no.
+Norma Zacarias: digo, no, algo similar.
+Norma Zacarias: Salud, salud,
+José Juan Mendoza Díaz: mira,
+Norma Zacarias: salud.
+José Juan Mendoza Díaz: a mí lo que más me apoya es eso de los registro de avisos.
+Norma Zacarias: Mira.
+José Juan Mendoza Díaz: La verdad es como que lo primordial, lo demás ya podemos ir trabajando la
+Norma Zacarias: poco a poco.
+Norma Zacarias: Ajá.
+José Juan Mendoza Díaz: mitad.
+Norma Zacarias: Pero mira, por ejemplo, aquí este es un portal.
+Daniela Carbajal Vega: Aha.
+Norma Zacarias: Buscamos una póliza,
+Daniela Carbajal Vega: Aha.
+Norma Zacarias: está su PDF, por ejemplo, si lo quieres descargar, están sus recibos por si los quieres descargar y luego pues aquí vienen como muchas cosas que no tendrían que ver con nosotros, pero luego, por ejemplo, aquí está el estatus.
+Norma Zacarias: Ya va, lo puede, no sé, hoy Omega no lo da este, pero por ejemplo aquí está siniestros para ver si ha tenido o no.
+Norma Zacarias: Y por ejemplo, aquí dice no, pues no, no ha tenido.
+Norma Zacarias: Y entonces aquí si alguien en un momento busca esa póliza, pudiera aparecer el histórico.
+Norma Zacarias: Ah, sí, tuvo una asistencia vial, ah, tuvo un choque, ah, pidió una grúa y todo eso se vincula con los avisos de la aseguradora,
+Daniela Carbajal Vega: Ok.
+Norma Zacarias: con los que llegan.
+Norma Zacarias: Y luego pues abajo me imagino que así allá va el módulo de cobranza de Ah, sí, pues esa es de tal negocio y se le pagó tanto porcentaje y luego, ah, Carlos tuvo que haber cobrado a las aseguradoras en el de cobranza tanto dinero de esa póliza,
+Norma Zacarias: como que algo me imagino que hacia allá tendríamos que ir, ¿no?
+Norma Zacarias: ¿Cuándo?
+Norma Zacarias: No lo sé, pero hacia allá tendríamos que ir,
+Daniela Carbajal Vega: Okay.
+Norma Zacarias: ¿no?
+Norma Zacarias: Sí, eso era como una muestra, o sea, no más como diciendo, "Ah, pues aquí vemos la póliza, vemos sus recibos y ya luego vemos si si ha tenido siniestros y más abajo cuánto se cobró y cuánto cobramos y así.
+Norma Zacarias: Algo así me imagino
+José Juan Mendoza Díaz: Ok.
+Norma Zacarias: yo.
+Daniela Carbajal Vega: Va, no sé si ustedes tengan algo más.
+Norma Zacarias: Listo.
+José Juan Mendoza Díaz: de reportes decías algo, pero no sé normas y reportes también porque manuales
+00:25:00
+Norma Zacarias: Sí. O sea, es que es que ahí tendríamos que ver si si va a ser posible como jalar el vínculo de los avisos, porque al momento al de jalar el vínculo y que el robot este describiera los avisos,
+Norma Zacarias: eso te eso permitiría que bajara, o sea, tendríamos que solicitar que permitiera bajar un Excel para que tú nada más descargaras y ya filtraras sobre cartera, porque hoy no toda la cartera está ahí.
+Norma Zacarias: Entonces, lo que yo me imagino, lo que yo estaría pensando es de una póliza que no se emitió en Omega, tú tú, o sea, sí subir la siniestralidad ahí y ponerle este el número de póliza nada más y continuar con el registro y cuando tú bajes tus reportes ahí mismo va a decir,
+Norma Zacarias: "Ah, esta no se emitió en Omega, la subió Juan Manual, esta sí se vinculó con una de Omega, por lo tanto se emitió en Omega y eso a la a la vez también ayudaría a los chicos de a los comerciales
+Norma Zacarias: para A ver qué tanta usabilidad tiene Omega.
+Daniela Carbajal Vega: Okay.
+José Juan Mendoza Díaz: Bueno, ahora viene lo más importante, la fecha, ¿no?
+Daniela Carbajal Vega: No, no, no.
+Daniela Carbajal Vega: Estamos en la fase de discovery.
+Daniela Carbajal Vega: Les platico,
+José Juan Mendoza Díaz: ¿Para
+Daniela Carbajal Vega: la fase la fase de Discovery es pues donde nos estamos reuniendo con ustedes para armar el
+José Juan Mendoza Díaz: cuándo?
+Daniela Carbajal Vega: requerimiento y posterior a eso ya eh el equipo entre Aldo y Alexis definirán si es un desarrollo eh que podemos hacer nosotros, o sea, se internamente o si buscaremos ayuda.
+Daniela Carbajal Vega: Si buscamos ayuda, pues ya entran otras validaciones a realizar en conjunto con más personas y a partir de que tengamos una respuesta Yeah.
+Daniela Carbajal Vega: de si es con ayuda o interno.
+Daniela Carbajal Vega: Entonces,
+Norma Zacarias: del presupuesto.
+Daniela Carbajal Vega: nosotros ya les podemos decir, ¿saben qué?
+Daniela Carbajal Vega: Empezaríamos a trabajarlo tal fecha, tiene una duración de 3 meses, por ejemplo, y eh pues estaríamos concluyendo la fase de desarrollo,
+José Juan Mendoza Díaz: Ok.
+Daniela Carbajal Vega: suponiendo, ¿no?, eh en diciembre y eh la fase de pruebas en enero para que ustedes puedan probar eh a mediados de enero y entonces ya tener un visto bueno para salir a febrero, más o menos.
+Daniela Carbajal Vega: Así se dan los desarrollos.
+Daniela Carbajal Vega: Eh, esta primer sesión es de entendimiento de la necesidad.
+Norma Zacarias: Sí.
+Daniela Carbajal Vega: Yo ahorita voy a armar un requerimiento con lo que ustedes me compartieron.
+Daniela Carbajal Vega: Se los voy a reenviar.
+Daniela Carbajal Vega: Ahí sí pido que ustedes eh me den como una respuesta ágil para también acelerar el proceso de de análisis.
+Daniela Carbajal Vega: Si ustedes me dicen, "Sí, esto es lo que cubre mis necesidades, entonces ese requerimiento ya yo lo paso a la al análisis técnico que en ese pues ya me apoya Alexis conjunto con los desarrolladores.
+Daniela Carbajal Vega: Revisan todo lo que se tiene que realizar a a nivel técnico, o sea, nosotros estamos plasmando la necesidad a nivel usuario, ¿no?
+Daniela Carbajal Vega: A que ustedes entiendan qué cuál es su necesidad.
+Daniela Carbajal Vega: y cuál sería la solución.
+Daniela Carbajal Vega: Una vez que se tiene eso, se hace esa solución en vocabulario técnico, por así decirlo, y ya ellos me dirán, "A mí, ¿sabes qué? Si podemos con el paquete o no podemos con el paquete.
+Daniela Carbajal Vega: Si ellos me dicen que no pueden con el paquete o más bien si dirección dice,
+Norma Zacarias: Mhm.
+Daniela Carbajal Vega: ¿sabes qué?
+Daniela Carbajal Vega: Se hace interno.
+Daniela Carbajal Vega: Ah, pues entonces yo ya les digo, salimos el año 2029. Ah, no, no se crean.
+Daniela Carbajal Vega: Este, pero ya les digo yo,
+Norma Zacarias: Juan.
+Norma Zacarias: La cara de
+Daniela Carbajal Vega: ¿no?
+Norma Zacarias: Juan.
+Daniela Carbajal Vega: ¿Cuál es la prioridad de ese proyecto y cuándo estaríamos iniciando?
+Daniela Carbajal Vega: O si me dice dirección, no sabes qué, puedes ir y realizarlo por fuera.
+Daniela Carbajal Vega: Entonces, ya yo busco proveedores y igualmente les aviso cuando comenzaríamos, pero ahorita estamos en la fase de inicio.
+Daniela Carbajal Vega: No tengo fechas, ¿no?
+Daniela Carbajal Vega: Este eh más bien los voy a seguir busando para alinear el requerimiento y que sí
+José Juan Mendoza Díaz: Paciencia.
+Daniela Carbajal Vega: cobra su necesidad.
+Daniela Carbajal Vega: Sale.
+José Juan Mendoza Díaz: Vamos a tener paciencia.
+Daniela Carbajal Vega: Sí, poquito más.
+Norma Zacarias: Juan Jos, ya has tenido unos años que no puedes esperar.
+José Juan Mendoza Díaz: 5 años y de paciencia,
+Daniela Carbajal Vega: No, pero estamos acelerando para que Esto
+José Juan Mendoza Díaz: ¿no?
+José Juan Mendoza Díaz: Pero esto lo habíamos pedido anteriormente, ¿no?
+José Juan Mendoza Díaz: Norma con alguien cuenta que les mandé también los avisos y
+Norma Zacarias: Ronaldo,
+Daniela Carbajal Vega: es
+José Juan Mendoza Díaz: no quedó.
+Norma Zacarias: es que es que antes de que empezaran con esto tema de de ya en Omega, Dani,
+José Juan Mendoza Díaz: Ya teníamos
+Norma Zacarias: habíamos hablado con Aldo para que nos ayudara con un robot,
+José Juan Mendoza Díaz: otro.
+Norma Zacarias: aunque fuera externo, digámoslo así, para agilizar solamente los avisos.
+Norma Zacarias: Ya lo demás pues ya no, ¿verdad?
+Norma Zacarias: Pero los
+Daniela Carbajal Vega: Sí,
+Norma Zacarias: aviso.
+Daniela Carbajal Vega: ahorita vamos a tratar de que sea una solución global,
+00:30:00
+Norma Zacarias: Ajá.
+Daniela Carbajal Vega: porque si no vamos haciendo pequeños parchecitos que al final no se pueden unir, pero este ténganme poquita paciencia para yo decirles cuándo lo estaríamos atacando.
+Daniela Carbajal Vega: Sale.
+Daniela Carbajal Vega: ahorita ya entró a nosotros, entonces ese ya es una gran ventaja porque ya se va a desarrollar algo más que sea más funcional para ustedes.
+José Juan Mendoza Díaz: Ya es nuevo.
+José Juan Mendoza Díaz: Sí, ya te estoy preparando lo el reenvío de los correos de cada uno, no más que estoy buscando uno de chup que traiga varios.
+José Juan Mendoza Díaz: Este van uno por uno y dice avisos de cada uno.
+José Juan Mendoza Díaz: No sé si te tenga que enviar algo más.
+Norma Zacarias: La
+José Juan Mendoza Díaz: Ah, sí, la copia de la bitácora de auto viene por hojas.
+Norma Zacarias: bitácora
+José Juan Mendoza Díaz: Ah, pues ya la viste.
+Daniela Carbajal Vega: Sí,
+José Juan Mendoza Díaz: Tal cual.
+Daniela Carbajal Vega: y el
+José Juan Mendoza Díaz: La burra que que ocupamos es la uno.
+Daniela Carbajal Vega: formulario.
+José Juan Mendoza Díaz: El formulario hay que darle acceso más bien,
+Norma Zacarias: te lo te damos acceso.
+Norma Zacarias: No da ni mejor en lugar de enviártelo.
+José Juan Mendoza Díaz: ¿no?
+Daniela Carbajal Vega: Sí, sin problema.
+Daniela Carbajal Vega: Si quieren nada más de vista, no voy a hacer ninguna edición este y ahí vemos cómo les podemos ir ayudando.
+Daniela Carbajal Vega: Sale.
+Norma Zacarias: Está
+Daniela Carbajal Vega: Va.
+Daniela Carbajal Vega: Y pues de mi lado sería todo.
+José Juan Mendoza Díaz: O,
+Daniela Carbajal Vega: Este yo estaría buscándolos a inicios de la semana que viene con el reporte este si no es que mañana.
+Daniela Carbajal Vega: Espero poder mañana, pero eh con el requerimiento armado de lo que vimos esta sesión.
+Norma Zacarias: Sí, Dani, pasando a otros temas, este,
+Daniela Carbajal Vega: Aha.
+Norma Zacarias: que ya no tiene nada que ver con Sí,
+José Juan Mendoza Díaz: yo no puedo.
+Norma Zacarias: sí, Juanjo, ya es otros temas.
+José Juan Mendoza Díaz: porque la están marcando acá.
+José Juan Mendoza Díaz: Gracias.
+Norma Zacarias: C'est
+La reunión finalizó después de 00:31:33 👋

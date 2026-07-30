@@ -10,7 +10,7 @@
 | Rama base | `develop` |
 | Rama | `feature/PJ2703-ocultar-cp-en-chile` |
 | Tipo | Feature |
-| Responsable | Alejandro Govea Hernandez |
+| Responsable | Javier Oropeza |
 | Folio PRD | `PJ2703` |
 | Fecha de generación | 2026-07-23 |
 | Estado | Borrador |

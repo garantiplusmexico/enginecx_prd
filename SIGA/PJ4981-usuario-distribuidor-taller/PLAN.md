@@ -151,6 +151,7 @@ No hay cambio arquitectónico. Todo ocurre dentro de GarantiplusWeb y su capa de
   - Añadir `"Usuario Distribuidor-Taller"` a los `[Authorize(Roles="...")]` de las acciones donde hoy figura `"Usuario Distribuidor"` o `"Taller"` (p. ej. `ContratosController.cs`, `CotizadorController.cs`, `AsesoresController.cs`, `Areas/Averias/Controllers/AveriasController.cs`, `DistribuidoresController.cs`).
   - Enfoque recomendado: hacer un barrido (grep) de `Usuario Distribuidor` y de `"Taller"` en atributos `[Authorize]` y añadir el rol combinado en cada coincidencia pertinente.
   - Criterio de completitud: el usuario combinado accede a toda acción a la que accede Distribuidor o Taller, y a ninguna fuera de esa unión (RNF-01).
+  - **Decisión 2026-07-30 (precedencia Averías):** en conflicto Distribuidor (solo lectura → `Details`) vs Taller (edición → `Edit`), el combinado **permanece en `Edit`** vía `ActsAsTaller()` / `canEditClaim`. Refuerzo explícito en menús Averías, `TallerExterno` y vistas `_Edit`/`Edit`/`Details`/`Aprobacion`. Detalle en `AVANCE.md`.
 
 
 

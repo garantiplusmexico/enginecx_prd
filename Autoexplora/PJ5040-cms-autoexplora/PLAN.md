@@ -216,8 +216,9 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
 
 - [ ] **T-18** — Manejo de errores y mensajes claros (formato/peso/subida/publicación) + observabilidad (logs).
   - Criterio (RNF-06/RNF-09/RNF-10): mensajes de error claros para usuarios no técnicos; logs de publicaciones y fallos.
-- [ ] **T-19** — Despliegue a la instancia EC2 (Nginx + systemd), verificación 24/7 (health checks, `systemctl enable` para arranque automático) y monitoreo de facturación AWS.
-  - Criterio (RNF-04): CMS disponible; servicio se reinicia solo ante fallo/reinicio de la instancia; alertas de billing configuradas.
+- [x] **T-19 (parcial: QA)** — Despliegue a la instancia EC2 (Nginx + systemd), verificación 24/7 (health checks, `systemctl enable` para arranque automático) y monitoreo de facturación AWS. *(QA completo 2026-07-31, ver AVANCE.md; producción y alertas de facturación siguen pendientes)*
+  - Criterio (RNF-04): CMS disponible; servicio se reinicia solo ante fallo/reinicio de la instancia; alertas de billing configuradas. ✅ (QA) / ⏳ (producción, alertas de facturación)
+  - **Adelantado fuera de orden:** se ejecutó antes que T-16/T-17 (Fase 3) porque el programador priorizó tener un ambiente de QA real para validar todo lo construido en P1/P2, en vez de seguir el orden estricto de fases.
 
 ---
 

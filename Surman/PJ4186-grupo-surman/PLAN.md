@@ -48,13 +48,12 @@ Se construye la **capa Surman** de Surman Drive: una aplicación web **multi-sit
 | BFF | Route Handlers de Next.js (TypeScript) | Es parte de la capa Surman transferible según §3.2 del PRD. **Desviación de `rules/stack.md` (backend nuevo → .NET Core 8) que requiere validación explícita — ver §12 y R-01.** |
 | Base de datos | PostgreSQL (RDS) | `rules/stack.md`: default obligatorio. |
 | Contenido | Payload CMS 3 embebido en la app Next.js, persistiendo en el mismo PostgreSQL | Cubre RF-10 en días en lugar de semanas dentro de la ventana de 3 meses, sin introducir otro motor de base de datos. **Decisión a validar — ver §12.** |
-| Contenerización | Docker (Next.js standalone) | `rules/stack.md`. |
-| Despliegue | ECS + Fargate detrás de ALB, con CloudFront como CDN | `rules/infraestructura.md`: todo servicio nuevo → contenedor en ECS + Fargate. CloudFront cubre RNF-02/RNF-03. |
-| Medios | S3 + CloudFront | `rules/infraestructura.md`. |
-| DNS | Cloudflare (dominios) + Route 53 (servicios AWS) | `rules/infraestructura.md`. |
-| Secrets | AWS Secrets Manager + variables de entorno | `rules/coding-guidelines.md` §11. Nunca en código. |
+| Despliegue | Vercel (build nativo de Next.js, sin contenedores) | **Desviación explícita de `rules/infraestructura.md`** (todo servicio nuevo → contenedor en ECS + Fargate) y de `rules/stack.md` (contenerización con Docker) — decisión del responsable para no operar cómputo en AWS. Vercel cubre build, Edge Network/CDN, preview deployments y rollback de forma nativa; cubre RNF-02/RNF-03. RDS, S3, CloudFront (medios) y Secrets Manager **se mantienen en AWS**; solo el cómputo de la app sale de AWS. Ver R-15 y §12. |
+| Medios | S3 + CloudFront | `rules/infraestructura.md`. Sin cambio: el cómputo de la app se mueve a Vercel, pero medios sigue en AWS. |
+| DNS | Cloudflare (dominios) + Route 53 (servicios AWS restantes: RDS, S3/CloudFront) | `rules/infraestructura.md`. El dominio del sitio apunta por Cloudflare a Vercel (CNAME/ALIAS); Route 53 queda solo para lo que sigue en AWS. |
+| Secrets | AWS Secrets Manager (vía credencial IAM dedicada, ya no hay rol de tarea de ECS) + variables de entorno de Vercel | `rules/coding-guidelines.md` §11. Nunca en código. Ver R-15: el acceso a Secrets Manager desde fuera de la VPC exige una credencial IAM de mínimo privilegio en vez del rol de tarea. |
 
-**Arquitectura aplicable (`rules/arquitectura.md`):** *Frontend + Backend separados (Componentes)* del lado de la capa Surman — un contenedor de aplicación con su BFF y su PostgreSQL propio — consumiendo por REST los microservicios existentes de la plataforma base. No se justifica dividir la capa Surman en microservicios: sus dominios (catálogo, inventario, leads, contenido) comparten el mismo ciclo de despliegue y la mayor parte de la lógica de dominio vive en BRICK.
+**Arquitectura aplicable (`rules/arquitectura.md`):** *Frontend + Backend separados (Componentes)* del lado de la capa Surman — una aplicación Next.js desplegada en Vercel (sin contenedor) con su BFF integrado y su PostgreSQL propio en RDS — consumiendo por REST los microservicios existentes de la plataforma base. No se justifica dividir la capa Surman en microservicios: sus dominios (catálogo, inventario, leads, contenido) comparten el mismo ciclo de despliegue y la mayor parte de la lógica de dominio vive en BRICK.
 
 ---
 
@@ -63,8 +62,9 @@ Se construye la **capa Surman** de Surman Drive: una aplicación web **multi-sit
 **Bloqueantes antes de iniciar la Fase 0:**
 - [ ] PRD validado por el responsable y por Aldo Álvarez (revisión técnica, §13 del PRD).
 - [ ] Definición del BFF resuelta: Route Handlers de Next.js vs. servicio .NET Core 8 separado (ver §12 y R-01).
-- [ ] Consola AWS destino confirmada (Go Virtual) y región definida — `rules/infraestructura.md` no la documenta todavía.
-- [ ] Permisos para crear repositorio en la organización de GitHub de Engine/Go Virtual.
+- [ ] Consola AWS destino confirmada (Go Virtual) y región definida — `rules/infraestructura.md` no la documenta todavía. Sigue aplicando: RDS, S3/CloudFront y Secrets Manager viven en AWS aunque el cómputo se mueva a Vercel.
+- [ ] Cuenta/equipo de Vercel de la organización confirmado (plan que soporte los ambientes dev/QA/producción y el tráfico de picos de campaña).
+- [ ] Permisos para crear repositorio en la organización de GitHub de Engine/Go Virtual, con integración Git habilitada hacia Vercel.
 
 **Bloqueantes antes de iniciar la Fase 1 (desarrollo de UI):**
 - [ ] **Gate de diseño del PRD §3.3 aprobado**: diseño UX/UI en Figma + prototipo con visto bueno formal de Surman (marca/marketing y TI). Sin este visto bueno no arranca T-13 en adelante.
@@ -87,11 +87,9 @@ Se construye la **capa Surman** de Surman Drive: una aplicación web **multi-sit
 ```
                             Cloudflare (DNS)
                                    │
-                            CloudFront (CDN global)
+                    Vercel (Edge Network / CDN global)
                                    │
-                                  ALB
-                                   │
-        ┌──────────────── ECS + Fargate ────────────────┐
+        ┌──────────────── Vercel (sin contenedores) ────┐
         │      Aplicación Next.js (capa Surman)         │
         │  ┌─────────────────────────────────────────┐  │
         │  │ Frontend RSC/ISR  ·  Payload CMS admin  │  │
@@ -99,7 +97,7 @@ Se construye la **capa Surman** de Surman Drive: una aplicación web **multi-sit
         │  │      BFF (Route Handlers) ── FRONTERA   │  │
         │  └─────────────────────────────────────────┘  │
         └───────┬──────────────────┬────────────────────┘
-                │                  │
+                │                  │           (fuera de la VPC de AWS — ver R-15)
        RDS PostgreSQL          S3 + CloudFront
     (contenido, agencias,        (medios)
      storefronts, bitácora
@@ -144,21 +142,21 @@ Prioridades: **P1** = indispensable para el go-live del MVP · **P2** = importan
   - Archivos a crear/modificar: `CLAUDE.md`, `docs/CONVENTIONS.md`
   - Criterio de completitud: `/init` ejecutado; `CLAUDE.md` describe stack, estructura, comandos y la frontera del BFF; convenciones alineadas con `rules/coding-guidelines.md` (código e identificadores en inglés).
 
-- [ ] **T-04** — Dockerizar la aplicación y levantar el entorno local
-  - Archivos a crear/modificar: `Dockerfile`, `.dockerignore`, `docker-compose.yml`, `.env.example`
-  - Criterio de completitud: build multi-stage con salida `standalone`; `docker compose up` levanta app + PostgreSQL y responde en local.
+- [ ] **T-04** — Levantar el entorno local sin contenedores
+  - Archivos a crear/modificar: `.env.example`, `docs/LOCAL-SETUP.md`
+  - Criterio de completitud: **sin Docker en ningún ambiente** (decisión explícita, desviación de `rules/stack.md`); `npm run dev` corre la app localmente contra una instancia de PostgreSQL de desarrollo (instalación local o instancia de dev en RDS) documentada paso a paso en `docs/LOCAL-SETUP.md`.
 
-- [ ] **T-05** — Provisionar la infraestructura AWS del ambiente de desarrollo
-  - Archivos a crear/modificar: `infra/` (IaC), `docs/INFRA.md`
-  - Criterio de completitud: ECR, cluster ECS + servicio Fargate, ALB, RDS PostgreSQL, bucket S3 de medios, distribución CloudFront y registro DNS operativos en dev; **alarma de facturación configurada** (`rules/infraestructura.md` §5).
+- [ ] **T-05** — Provisionar la infraestructura AWS de datos/medios y el proyecto Vercel del ambiente de desarrollo
+  - Archivos a crear/modificar: `infra/` (IaC para RDS, S3, CloudFront, Secrets Manager), `docs/INFRA.md`, `vercel.json`
+  - Criterio de completitud: RDS PostgreSQL, bucket S3 de medios, distribución CloudFront y Secrets Manager operativos en dev (sin ECR/ECS/Fargate/ALB, eliminados del alcance); proyecto Vercel creado y vinculado al repositorio; **RDS accesible desde Vercel con TLS obligatorio y security group restringido** (ver R-15); **alarma de facturación AWS configurada** (`rules/infraestructura.md` §5) y **límites de gasto/uso configurados en Vercel** para picos de campaña.
 
-- [ ] **T-06** — Pipeline CI/CD hacia ECS
-  - Archivos a crear/modificar: `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`
-  - Criterio de completitud: en cada PR corre lint + type-check + pruebas; merge a `develop` despliega a dev y a `qa` despliega a QA, con imagen etiquetada por commit y rollback documentado.
+- [ ] **T-06** — Pipeline CI/CD hacia Vercel
+  - Archivos a crear/modificar: `.github/workflows/ci.yml`, `vercel.json`
+  - Criterio de completitud: en cada PR corre lint + type-check + pruebas y Vercel genera un preview deployment; merge a `develop` promueve a dev y a `qa` despliega el ambiente QA de Vercel; rollback vía promoción de un deployment anterior documentado (sin build de imagen ni ECR).
 
 - [ ] **T-07** — Configuración y gestión de secretos por ambiente
   - Archivos a crear/modificar: `src/lib/env.ts`, `infra/secrets/`, `.env.example`
-  - Criterio de completitud: esquema de variables validado en el arranque (falla rápido si falta una); secretos leídos de AWS Secrets Manager; **cero secretos en el repositorio** verificado con escaneo.
+  - Criterio de completitud: esquema de variables validado en el arranque (falla rápido si falta una); secretos de infraestructura leídos de AWS Secrets Manager mediante una **credencial IAM dedicada de mínimo privilegio** (ya no hay rol de tarea de ECS que la otorgue implícitamente) y expuestos a Vercel como variables de entorno cifradas por ambiente; **cero secretos en el repositorio** verificado con escaneo.
 
 - [ ] **T-08** — Formalizar y tipar los contratos con la plataforma base GV
   - Archivos a crear/modificar: `src/types/platform/*.ts`, `docs/API-CONTRACTS.md`, `src/mocks/platform/*`
@@ -170,7 +168,7 @@ Prioridades: **P1** = indispensable para el go-live del MVP · **P2** = importan
 
 - [ ] **T-10** — Observabilidad base
   - Archivos a crear/modificar: `src/lib/logger.ts`, `src/app/healthz/route.ts`, `src/app/readyz/route.ts`, `infra/monitoring/`
-  - Criterio de completitud: logs estructurados sin datos personales ni tokens (`rules/coding-guidelines.md` §9); `/healthz` y `/readyz` consumidos por el target group del ALB; dashboard CloudWatch y alarmas de error rate, latencia y fallo de integraciones (RNF-10).
+  - Criterio de completitud: logs estructurados sin datos personales ni tokens (`rules/coding-guidelines.md` §9); `/healthz` y `/readyz` consumidos por un monitor de uptime externo (ya no hay target group de ALB); logs y métricas de la app en el observability nativo de Vercel, más dashboard CloudWatch y alarmas para RDS/S3 (error rate, latencia y fallo de integraciones) (RNF-10).
 
 ### Fase 1 — Núcleo multi-sitio, marcas y fichas MRP (P1)
 
@@ -327,8 +325,8 @@ Prioridades: **P1** = indispensable para el go-live del MVP · **P2** = importan
   - Criterio de completitud: unitarias sobre BFF, calculadora, atribución y mapeo de leads; pruebas de contrato contra los mocks de la plataforma base; E2E de los flujos críticos (explorar → ficha → lead enviado; buscar inventario → calculadora → lead; localizar agencia → WhatsApp); suite verde en CI.
 
 - [ ] **T-46** — Hardening de seguridad — **RNF-04, RNF-05**
-  - Archivos a crear/modificar: `src/middleware.ts`, `next.config.ts`, `infra/waf.tf`
-  - Criterio de completitud: HTTPS/TLS end-to-end, HSTS, CSP, `X-Content-Type-Options` y `Referrer-Policy`; CORS restrictivo; rate limiting en endpoints de escritura; WAF y protección DDoS activos; revisión de aislamiento multi-tenant sin fugas; escaneo de dependencias sin vulnerabilidades altas.
+  - Archivos a crear/modificar: `src/middleware.ts`, `next.config.ts`, `infra/waf.tf` (WAF solo para el bucket/CloudFront de medios; la app ya no está detrás de ALB/CloudFront propio)
+  - Criterio de completitud: HTTPS/TLS end-to-end, HSTS, CSP, `X-Content-Type-Options` y `Referrer-Policy`; CORS restrictivo; rate limiting en endpoints de escritura; **Vercel Firewall / protección DDoS nativa** activa para la app, WAF de AWS delante de CloudFront solo para medios; revisión de aislamiento multi-tenant sin fugas; escaneo de dependencias sin vulnerabilidades altas.
 
 - [ ] **T-47** — Accesibilidad y compatibilidad
   - Archivos a crear/modificar: `tests/a11y/**`, `src/components/**`
@@ -340,7 +338,7 @@ Prioridades: **P1** = indispensable para el go-live del MVP · **P2** = importan
 
 - [ ] **T-49** — Pruebas de carga de picos de campaña — **RNF-03** (P2)
   - Archivos a crear/modificar: `tests/load/campaign-spike.js`, `docs/CAPACITY.md`
-  - Criterio de completitud: escenario de pico de campaña ejecutado sin degradar latencia ni disparar errores; política de autoscaling de ECS ajustada; costo por escenario documentado y dentro de lo previsto.
+  - Criterio de completitud: escenario de pico de campaña ejecutado sin degradar latencia ni disparar errores; límites de concurrencia/escalamiento de las funciones de Vercel verificados (el autoscaling es automático, pero el **límite de conexiones concurrentes a RDS es el cuello de botella real** — ver R-15); costo por escenario documentado en AWS y en Vercel (uso/bandwidth) y dentro de lo previsto.
 
 - [ ] **T-50** — Privacidad y cumplimiento LFPDPPP — **RNF-08**
   - Archivos a crear/modificar: `src/app/(site)/privacidad/page.tsx`, `src/app/(site)/cookies/page.tsx`, `src/components/leads/LeadForm.tsx`
@@ -348,7 +346,7 @@ Prioridades: **P1** = indispensable para el go-live del MVP · **P2** = importan
 
 - [ ] **T-51** — Go-live
   - Archivos a crear/modificar: `docs/GO-LIVE-RUNBOOK.md`, `infra/dns/`
-  - Criterio de completitud: despliegue a producción con imagen versionada y etiqueta semántica en `main`; cutover de DNS ejecutado con plan de rollback probado; redirecciones 301 activas; monitoreo y alertas verificados en producción; sitio sirviendo las 49 marcas y ~160 agencias.
+  - Criterio de completitud: deployment de `main` promovido a producción en Vercel (sin imagen ni etiqueta de contenedor); cutover de DNS en Cloudflare (CNAME/ALIAS hacia Vercel) ejecutado con TTL reducido previamente y plan de rollback probado (promoción de un deployment anterior); redirecciones 301 activas; monitoreo y alertas verificados en producción (Vercel + CloudWatch para RDS/S3); sitio sirviendo las 49 marcas y ~160 agencias.
 
 - [ ] **T-52** — Estabilización post go-live y traspaso operativo
   - Archivos a crear/modificar: `docs/POST-LAUNCH-LOG.md`
@@ -398,7 +396,7 @@ Todos son endpoints del **BFF de la capa Surman**. Convención de rutas según `
 | GET | `/api/v1/search` | Buscador global con sugerencias. | Nuevo |
 | POST | `/api/v1/biky/webhook` | Recepción de eventos de continuidad conversacional de Biky.Ai. | Nuevo |
 | POST | `/api/v1/revalidate` | Revalidación on-demand disparada por la plataforma base o el CMS. | Nuevo |
-| GET | `/healthz` · `/readyz` | Health y readiness para el target group del ALB. | Nuevo |
+| GET | `/healthz` · `/readyz` | Health y readiness consumidos por un monitor de uptime externo (ya no hay target group de ALB). | Nuevo |
 
 Códigos de estado según `rules/coding-guidelines.md` §5: `200` consulta, `201` alta de lead, `400` validación, `401`/`403` acceso, `404` recurso inexistente, `409` lead duplicado por idempotencia, `429` rate limit, `502` fallo de la plataforma base o del CRM.
 
@@ -431,13 +429,13 @@ Códigos de estado según `rules/coding-guidelines.md` §5: `200` consulta, `201
 | `CREDIT_CALCULATOR_CONFIG` | Tasas, plazos y enganche mínimo parametrizados. | Desarrollo / QA / Producción |
 | `LOG_LEVEL` | Nivel de log estructurado. | Desarrollo / QA / Producción |
 
-Ningún valor sensible se versiona: `.env.example` documenta las llaves sin valores y el arranque falla rápido si falta alguna requerida.
+Ningún valor sensible se versiona: `.env.example` documenta las llaves sin valores y el arranque falla rápido si falta alguna requerida. Las variables se configuran por ambiente en el dashboard/CLI de Vercel (no en una definición de tarea de ECS); las que vienen de Secrets Manager se sincronizan manualmente o vía script, no automáticamente por un rol de tarea.
 
 ---
 
 ## 8. Consideraciones de seguridad
 
-- **IAM con mínimo privilegio:** el rol de tarea de ECS solo accede al secreto de su ambiente, a su bucket de medios y a su instancia RDS. Sin permisos de administrador (`rules/infraestructura.md` §5).
+- **IAM con mínimo privilegio:** sin cómputo en AWS ya no existe rol de tarea de ECS; en su lugar, una **credencial IAM dedicada** (usuario o rol asumible) usada desde Vercel solo accede al secreto de su ambiente, a su bucket de medios y a su instancia RDS, sin permisos de administrador (`rules/infraestructura.md` §5). Esta credencial vive únicamente como variable de entorno cifrada en Vercel.
 - **El navegador nunca habla con la plataforma base** (RNF-04): todo pasa por el BFF, que es el único poseedor de credenciales de BRICK y de Biky.Ai. Autenticación servicio-a-servicio con JWT.
 - **Secretos fuera del código** (`rules/coding-guidelines.md` §11): AWS Secrets Manager en todos los ambientes; escaneo de secretos en CI.
 - **Aislamiento multi-tenant** (RNF-05): el contexto de tenant se resuelve en servidor y se aplica en cada consulta; los datos de Surman quedan aislados de otros clientes de la plataforma.
@@ -445,18 +443,22 @@ Ningún valor sensible se versiona: `.env.example` documenta las llaves sin valo
 - **Superficie de escritura:** solo `/api/v1/leads`, `/api/v1/credit-quotes`, `/api/v1/biky/webhook` y `/api/v1/revalidate`. Todas con rate limiting; las dos primeras con anti-spam; el webhook con firma verificada; la revalidación con token.
 - **Entrada validada y consultas parametrizadas** siempre (`rules/coding-guidelines.md` §11). CORS restrictivo en producción.
 - **Autorización granular** (RF-26, RNF-07): roles por marca y plaza sobre el panel de contenido; toda acción privilegiada queda en `audit_log`.
-- **WAF y protección DDoS** delante de CloudFront/ALB, con reglas para bots de scraping de inventario.
+- **Vercel Firewall / protección DDoS** delante de la app; **WAF de AWS** se conserva solo delante de CloudFront para medios; ambos con reglas para bots de scraping de inventario.
 
 ---
 
 ## 9. Consideraciones de infraestructura
 
-- **Consola AWS:** Go Virtual. `rules/infraestructura.md` no documenta todavía la región de esta consola — **debe definirse antes de T-05**; la recomendación es `us-east-1` por proximidad al tráfico mexicano y paridad con GarantiPlus México.
-- **Servicios nuevos requeridos:** ECR (1 repositorio), ECS + Fargate (servicio por ambiente: dev, QA, producción), ALB, RDS PostgreSQL, S3 (medios + artefactos), CloudFront (sitio y medios), Secrets Manager, CloudWatch (logs, dashboards, alarmas), WAF.
-- **Costo:** AWS no tiene tope automático de gasto (`rules/infraestructura.md`). Se configura alarma de facturación desde T-05 y se dimensiona Fargate al alza solo bajo autoscaling. Los picos de campaña se absorben con CDN + ISR para no multiplicar el cómputo (RNF-03).
-- **DNS:** dominios administrados en Cloudflare; registros de servicios AWS en Route 53. El cutover de T-51 se hace con TTL reducido previamente y plan de rollback.
-- **Ambientes:** dev, QA y producción con base de datos independiente. `pre-qa` se consolida localmente antes del PR a `qa` (`rules/version-control.md` §2).
-- **Estrategia de caché:** CloudFront para estáticos y medios; ISR de Next.js para páginas de catálogo, inventario y contenido, con revalidación on-demand por webhook. La caché de ISR debe ser compartida entre tareas de Fargate para no servir versiones distintas según la tarea que atienda — **punto a resolver en T-05/T-19**.
+- **Cómputo de la app fuera de AWS:** decisión explícita del responsable — la aplicación (frontend + BFF) se despliega en **Vercel**, no en ECS/Fargate. **Desviación de `rules/infraestructura.md`** (todo servicio nuevo → contenedor en ECS + Fargate) que queda documentada aquí en vez de como prerequisito a validar, por ser instrucción directa del responsable del proyecto.
+- **Consola AWS:** Go Virtual, ahora solo para RDS, S3, CloudFront (medios) y Secrets Manager. `rules/infraestructura.md` no documenta todavía la región de esta consola — **debe definirse antes de T-05**; la recomendación es `us-east-1` por proximidad al tráfico mexicano, paridad con GarantiPlus México y para minimizar la latencia con la región de Vercel que se elija.
+- **Servicios en AWS:** RDS PostgreSQL, S3 (medios + artefactos), CloudFront (medios), Secrets Manager, CloudWatch (logs, dashboards y alarmas de RDS/S3), WAF (solo delante de CloudFront de medios). **Ya no se provisionan** ECR, ECS, Fargate ni ALB.
+- **Servicios en Vercel:** proyecto vinculado al repositorio con ambientes de Preview (dev, por PR/rama) y Production (`main`); un ambiente adicional o branch deployment dedicado para QA.
+- **Costo:** doble frente de facturación. AWS no tiene tope automático de gasto (`rules/infraestructura.md`); se mantiene la alarma de facturación desde T-05 para RDS/S3. Vercel factura por uso (invocaciones de función, ancho de banda, ISR) sin el mismo mecanismo de alarma de AWS — **definir límites de gasto/uso en la configuración de Vercel antes del go-live**, especialmente de cara a los picos de campaña (RNF-03).
+- **DNS:** dominios administrados en Cloudflare, apuntando por CNAME/ALIAS a Vercel; Route 53 se conserva solo para lo que sigue en AWS (RDS, S3/CloudFront de medios). El cutover de T-51 se hace con TTL reducido previamente y plan de rollback (promoción de un deployment anterior en Vercel).
+- **Ambientes:** dev, QA y producción con base de datos independiente en RDS. `pre-qa` se consolida localmente antes del PR a `qa` (`rules/version-control.md` §2).
+- **Conectividad Vercel → AWS (fuera de la VPC):** al no correr el cómputo dentro de la VPC de AWS, RDS debe exponerse con endpoint accesible desde internet, TLS obligatorio y security group restringido; el acceso a Secrets Manager usa una credencial IAM dedicada en vez del rol de tarea de ECS. Esto amplía la superficie respecto al esquema anterior (todo dentro de la VPC) — ver **R-15**.
+- **Pool de conexiones a PostgreSQL:** las funciones serverless de Vercel pueden abrir muchas conexiones concurrentes y agotar el límite de RDS bajo tráfico de picos de campaña — **debe resolverse con un pooler/proxy compatible con serverless (p. ej. RDS Proxy o PgBouncer) antes de T-19**; no se resuelve solo con el autoscaling de Vercel.
+- **Estrategia de caché:** CloudFront para medios; ISR de Next.js para páginas de catálogo, inventario y contenido, con revalidación on-demand por webhook. Vercel administra la caché de ISR de forma nativa y compartida entre todas las invocaciones — **esto elimina el problema de caché de ISR no compartida entre tareas que existía con ECS/Fargate** (antes riesgo R-07, ver §11).
 
 ---
 
@@ -495,14 +497,15 @@ Ningún valor sensible se versiona: `.env.example` documenta las llaves sin valo
 | **R-04** — Heterogeneidad de los feeds de ~160 agencias produce datos incompletos en el sitio | Alta | Medio | La normalización es responsabilidad del motor existente. Del lado Surman: validación de esquema en el BFF, ocultar campos faltantes en lugar de mostrar vacíos, tablero de calidad de feed por agencia y alertas (T-24). |
 | **R-05** — El gate de diseño (§3.3 del PRD) se retrasa y arrastra toda la Fase 1 | Alta | Alto | Paralelizar: Fase 0, contratos, integración de leads y medición no dependen del diseño. Acordar fecha límite de visto bueno y número de iteraciones incluidas antes de arrancar. |
 | **R-06** — Volumen del sitio (49 marcas × ~160 plazas × inventario) genera explosión de páginas y tiempos de build o costo de ISR inmanejables | Media | Alto | Generación bajo demanda con ISR en lugar de build estático completo; sitemaps segmentados; limitar combinaciones marca × plaza a las que tienen agencia real; presupuesto de rendimiento en CI (T-44). |
-| **R-07** — Caché de ISR no compartida entre tareas de Fargate produce contenido inconsistente entre usuarios | Media | Medio | Definir caché compartida (almacén externo o una sola tarea de revalidación) en T-05/T-19 y verificarlo con varias tareas activas. |
+| ~~R-07~~ — Caché de ISR no compartida entre tareas de Fargate | — | — | **Resuelto por el cambio a Vercel**: la caché de ISR es nativa y compartida entre todas las invocaciones, no aplica el problema que existía con ECS/Fargate. |
+| **R-15** — RDS y Secrets Manager quedan fuera de la VPC de AWS al mover el cómputo a Vercel: mayor superficie de ataque y riesgo de agotar el límite de conexiones de PostgreSQL con funciones serverless concurrentes | Alta | Alto | Endpoint de RDS con TLS obligatorio y security group restringido; credencial IAM dedicada de mínimo privilegio (sin rol de tarea de ECS); pooler/proxy de conexiones compatible con serverless (RDS Proxy o PgBouncer) resuelto **antes de T-19**; probado explícitamente en la prueba de carga de T-49. |
 | **R-08** — El objetivo de FCP ~0.8 s no se alcanza con el peso de galerías, mapas y GTM | Media | Medio | Presupuesto de rendimiento desde T-44; carga diferida de mapa y GTM; imágenes en formato moderno vía CDN; medición continua en cada PR. |
 | **R-09** — Alcance de la bidireccionalidad con Vicky sin definir (pregunta abierta del PRD §14) | Media | Medio | Implementar primero el sentido crítico (sitio → CRM). El webhook entrante se construye contra contrato acordado; si no se cierra a tiempo, se degrada a P2 sin bloquear el go-live. |
 | **R-10** — Duplicación de leads por doble envío o reintentos | Media | Medio | Llave de idempotencia y deduplicación por prospecto + vehículo + ventana temporal (T-27). |
 | **R-11** — Payload CMS introduce una dependencia con la que el equipo de Surman no está familiarizado, complicando el handover | Baja | Medio | Validar la decisión en §12; documentar y capacitar en T-36; el modelo de contenido vive en el mismo PostgreSQL, por lo que los datos son portables si se cambia de panel. |
 | **R-12** — Mapa de redirecciones incompleto y pérdida de posicionamiento en el cutover | Media | Alto | Inventario completo de URLs actuales antes de T-41; auditoría de rastreo previa al go-live; monitoreo de 404 la primera semana (T-52). |
 | **R-13** — Región/consola AWS de Go Virtual sin definir bloquea el aprovisionamiento | Media | Medio | Resolver como prerequisito; la IaC queda parametrizada por región para no rehacer trabajo. |
-| **R-14** — Picos de campaña elevan el costo de AWS sin tope automático | Media | Medio | Alarma de facturación desde T-05, autoscaling acotado, absorción de tráfico en CDN + ISR y prueba de carga con costo documentado (T-49). |
+| **R-14** — Picos de campaña elevan el costo de AWS (RDS/S3) y de Vercel (uso/bandwidth) sin tope automático en ninguno de los dos | Media | Medio | Alarma de facturación de AWS y límites de gasto/uso de Vercel desde T-05, absorción de tráfico en CDN + ISR nativo de Vercel, y prueba de carga con costo documentado en ambas plataformas (T-49). |
 
 ---
 
@@ -510,20 +513,23 @@ Ningún valor sensible se versiona: `.env.example` documenta las llaves sin valo
 
 **Decisiones tomadas durante la generación del plan — validar antes de ejecutar:**
 
-1. **BFF en Route Handlers de Next.js (TypeScript), no en .NET Core 8.** `rules/stack.md` obliga .NET Core 8 para todo backend nuevo y admite Node.js "solo para casos muy puntuales y justificados". La justificación aquí es que el PRD (§3.2, RNF-09) define el BFF como el límite de la **capa Surman transferible**, cuyo stack fija explícitamente en Next.js/React/TypeScript para habilitar el co-desarrollo con Surman y la propiedad futura. Partir el BFF a .NET rompería esa transferibilidad y agregaría un salto de red. **Esta desviación requiere el visto bueno del Gerente de TI antes de la Fase 0** (R-01).
+1. **BFF en Route Handlers de Next.js (TypeScript), no en .NET Core 8.** `rules/stack.md` obliga .NET Core 8 para todo backend nuevo y admite Node.js "solo para casos muy puntuales y justificados". La justificación aquí es que el PRD (§3.2, RNF-09) define el BFF como el límite de la **capa Surman transferible**, cuyo stack fija explícitamente en Next.js/React/TypeScript para habilitar el co-desarrollo con Surman y la propiedad futura. Partir el BFF a .NET rompería esa transferibilidad y agregaría un salto de red. **Esta desviación requiere el visto bueno del Gerente de TI antes de la Fase 0** (R-01). El despliegue en Vercel (punto 2) refuerza esta decisión: un BFF en .NET Core 8 no correría en Vercel y obligaría a mantener un segundo destino de cómputo en AWS solo para él.
 
-2. **Payload CMS 3 embebido en la app, sobre el mismo PostgreSQL.** RF-10 (blog, promociones, banners y landing pages editables por plaza) es un módulo administrativo completo. Construirlo a mano consume varias semanas de la ventana de 3 meses. Payload corre dentro de Next.js y persiste en PostgreSQL, así que no rompe el default de base de datos ni agrega infraestructura. **Alternativa si se rechaza:** panel propio (sumar ~10–15 días hábiles) o CMS headless externo (agrega un proveedor y saca el contenido del perímetro AWS).
+2. **Sin Docker en ningún ambiente y despliegue en Vercel, no en ECS + Fargate.** Decisión explícita del responsable del proyecto para no operar infraestructura de cómputo en AWS. Es una **desviación de `rules/stack.md`** (contenerización obligatoria) y de **`rules/infraestructura.md`** (todo servicio nuevo → ECS + Fargate). RDS PostgreSQL, S3/CloudFront (medios) y Secrets Manager **se mantienen en AWS** — el cambio es solo de cómputo/hosting de la app. Consecuencia técnica a resolver antes de T-19: RDS queda fuera de la VPC del cómputo (ver R-15), lo que exige un pooler de conexiones compatible con funciones serverless.
 
-3. **No se replica el inventario ni el catálogo como sistema de registro.** La fuente de verdad es la plataforma base. `inventory_snapshots` existe solo para degradación controlada (RNF-14) y se marca explícitamente como caché, no como dato maestro.
+3. **Payload CMS 3 embebido en la app, sobre el mismo PostgreSQL.** RF-10 (blog, promociones, banners y landing pages editables por plaza) es un módulo administrativo completo. Construirlo a mano consume varias semanas de la ventana de 3 meses. Payload corre dentro de Next.js y persiste en PostgreSQL, así que no rompe el default de base de datos ni agrega infraestructura. **Alternativa si se rechaza:** panel propio (sumar ~10–15 días hábiles) o CMS headless externo (agrega un proveedor y saca el contenido del perímetro AWS).
 
-4. **`lead_enrutado` se emite del lado servidor**, con la agencia real que devuelve el motor de leads. Emitirlo desde el navegador mediría la intención, no el enrutamiento, y falsearía la métrica central del PRD (§12: "% que llega a la agencia correcta").
+4. **No se replica el inventario ni el catálogo como sistema de registro.** La fuente de verdad es la plataforma base. `inventory_snapshots` existe solo para degradación controlada (RNF-14) y se marca explícitamente como caché, no como dato maestro.
 
-5. **Idioma:** el código, los identificadores y los comentarios van en inglés (`rules/coding-guidelines.md` §1). El contenido y las rutas de cara al usuario van en español (`/inventario`, `/agencias`, `/promociones`).
+5. **`lead_enrutado` se emite del lado servidor**, con la agencia real que devuelve el motor de leads. Emitirlo desde el navegador mediría la intención, no el enrutamiento, y falsearía la métrica central del PRD (§12: "% que llega a la agencia correcta").
 
-6. **Las convenciones de `rules/coding-guidelines.md` se aplican por analogía en TypeScript**: una responsabilidad por archivo, máximo 200 líneas efectivas, API First (los contratos de §6 se definen antes de implementar), rutas REST en plural con versión `v1`, y los códigos de estado de la tabla de §6.
+6. **Idioma:** el código, los identificadores y los comentarios van en inglés (`rules/coding-guidelines.md` §1). El contenido y las rutas de cara al usuario van en español (`/inventario`, `/agencias`, `/promociones`).
+
+7. **Las convenciones de `rules/coding-guidelines.md` se aplican por analogía en TypeScript**: una responsabilidad por archivo, máximo 200 líneas efectivas, API First (los contratos de §6 se definen antes de implementar), rutas REST en plural con versión `v1`, y los códigos de estado de la tabla de §6.
 
 **Puntos que el programador debe cerrar con el negocio antes de ejecutar:**
-- Los cuatro prerequisitos bloqueantes de §2 (validación del PRD, decisión del BFF, consola/región AWS, permisos de GitHub).
+- Los prerequisitos bloqueantes de §2 (validación del PRD, decisión del BFF, consola/región AWS, cuenta/equipo de Vercel, permisos de GitHub).
+- El pooler de conexiones a RDS desde funciones serverless de Vercel (RDS Proxy o PgBouncer), resuelto antes de T-19 (R-15).
 - La **decisión de recursos** derivada del análisis de deadline en §13: tres desarrolladores en paralelo o recorte a P1. Este plan está estimado para un desarrollador y **no cabe en la ventana de 3 meses en esa configuración**.
 - La fecha límite del visto bueno de diseño y el número de iteraciones incluidas (§3.3 y §14 del PRD).
 - El diccionario de eventos ASC con Data World antes de T-38, para no instrumentar dos veces.
@@ -539,7 +545,7 @@ Estimación en **días hábiles para un (1) desarrollador**, sin incluir el tiem
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Cimentación, contratos y entorno (P1)** | Repositorio y ramas, scaffolding Next.js, `CLAUDE.md`, Docker, infraestructura AWS, CI/CD, secretos, contratos tipados con BRICK, cliente resiliente, observabilidad | T-01 a T-10 | 8 – 12 días | |
+| **Fase 0 — Cimentación, contratos y entorno (P1)** | Repositorio y ramas, scaffolding Next.js, `CLAUDE.md`, entorno local sin contenedores, infraestructura de datos/medios en AWS + proyecto Vercel, CI/CD hacia Vercel, secretos, contratos tipados con BRICK, cliente resiliente, observabilidad | T-01 a T-10 | 8 – 12 días | |
 | **Fase 1 — Núcleo multi-sitio, marcas y fichas MRP (P1)** | Tenancy de 49 marcas y ~160 storefronts, esquema PostgreSQL, design system, layout, home y páginas de marca, fichas MRP, páginas marca/ciudad, localizador de agencias | T-11 a T-18 | 15 – 20 días | |
 | **Fase 2 — Inventario, buscador y calculadora (P1)** | Consumo de inventario normalizado, listado con filtros, ficha de unidad, buscador global, calculadora de crédito, degradación controlada | T-19 a T-24 | 12 – 16 días | |
 | **Fase 3 — Leads e integraciones (P1)** | Formularios prellenados, capa de campaña, endpoint de lead, bitácora y reintentos, Biky.Ai/Vicky, confirmación y trazabilidad | T-25 a T-30 | 10 – 14 días | |

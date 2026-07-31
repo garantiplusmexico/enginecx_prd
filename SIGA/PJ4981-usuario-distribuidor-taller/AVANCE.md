@@ -8,18 +8,18 @@
 | Rama | `feature/PJ4981-usuario-distribuidor-taller` |
 | Rama base | `develop` |
 | Responsable actual | Alejandro Govea Hernández |
-| Última actualización | 2026-07-16 |
-| Estado general | 🟡 Core implementado y compilando — pendiente QA funcional con BD |
+| Última actualización | 2026-07-30 |
+| Estado general | 🟡 Core + paridad Averías/Taller implementados — pendiente QA formal T-15/T-16 |
 
 ---
 
 ## Resumen de estado
 
-Se implementó el rol combinado **Usuario Distribuidor-Taller** de punta a punta a nivel de código: alta del rol (seed SQL), alta/edición en el catálogo de usuarios con validación, **unión de permisos** (menús + `[Authorize]`) y **aislamiento de datos** (unión distribuidor + taller en averías y resolución de proyectos). **El proyecto compila (0 errores).**
+Se implementó el rol combinado **Usuario Distribuidor-Taller** de punta a punta a nivel de código: alta del rol (seed SQL), alta/edición en el catálogo de usuarios con validación, **unión de permisos** (claims + refuerzo explícito en Averías/menús) y **aislamiento de datos** (unión distribuidor + taller). **El proyecto compila (0 errores).**
 
-**Decisión de arquitectura clave (ver sección de decisiones):** la unión de permisos NO se hizo editando 40 archivos uno por uno (enfoque quirúrgico del plan T-09/T-10). En su lugar se añadió una **transformación de claims** (`IClaimsTransformation`) que, **solo** para el rol combinado, le otorga en runtime los roles base "Usuario Distribuidor" y "Taller". Así, todos los `[Authorize]`, `profiles=` de menú y flags `IsInRole(...)` de scoping ya lo tratan como ambos roles. Esto es **más seguro** (cero regresión para roles existentes; sin riesgo de fuga por un check olvidado) y **más mantenible** (RNF-04).
+**Decisión de arquitectura clave (ver sección de decisiones):** la unión de permisos se resolvió con una **transformación de claims** (`IClaimsTransformation`) que, **solo** para el rol combinado, otorga en runtime los roles base "Usuario Distribuidor" y "Taller". Complemento (2026-07-29/30): paridad explícita en Averías con `ActsAsTaller()` / `ActsAsDistribuidor()`, menús y `[Authorize]`, y **precedencia de edición = taller** (el combinado permanece en `Edit`, no en `Details`).
 
-Falta: **QA funcional contra BD** (T-15/T-16, no ejecutable aquí) y decidir/afinar puntos marcados abajo (precedencia de edición de averías; unión en reportes; países CO/CL).
+Falta: **QA formal T-15/T-16**, unión en reportes (revisar), seed en ambientes, y liberación CO/CL si aplica.
 
 ---
 
@@ -34,10 +34,10 @@ Falta: **QA funcional contra BD** (T-15/T-16, no ejecutable aquí) y decidir/afi
 | T-05 | Validación obligatoria (RF-07) | 2026-07-16 | Server-side en Create/Edit POST (la validación cliente `#frmUsuarios` está muerta en la vista TagHelper) |
 | T-06/T-07 | Persistencia de ligas | 2026-07-16 | **Sin cambios de código:** el flujo existente ya inserta `usuario_distribuidor` (else-if) + `usuario_taller` (if independiente). Verificado por lectura |
 | T-08 | Ligas en lectura | 2026-07-16 | `Details` incluye `taller,taller.taller` y muestra el taller en la ficha |
-| T-09/T-10 | Unión de permisos | 2026-07-16 | Resuelto vía transformación de claims (cubre menús MEX/COL/CHL y todos los `[Authorize]`) |
-| T-11 | Helper de grupos de rol | 2026-07-16 | `RoleGroupExtensions` (ActsAsDistribuidor / ActsAsTaller / IsDistribuidorTaller) |
-| T-12 | Resolución de proyectos combinada | 2026-07-16 | `GeneralController.ChangeProject`/`GetProjects` ahora ADITIVAS (unión). **Crítico:** sin esto el combinado no podía loguearse (NullRef) |
-| T-13 | Filtrado en Averías | 2026-07-16 | Listados: `else if(Taller)`→`if`; Details/Edit: rama combinada OR; `GetAllAverias` (BR) aplica OR cuando llegan ambos scopes |
+| T-09/T-10 | Unión de permisos | 2026-07-16 / 2026-07-30 | Claims transform + refuerzo: menús Averías MEX/COL/CHL, navegación legacy, `[Authorize]` Averías/`TallerExterno`/`Contratos`, vistas Averías con `ActsAsTaller()` |
+| T-11 | Helper de grupos de rol | 2026-07-16 | `RoleGroupExtensions` (`ActsAsDistribuidor` / `ActsAsTaller` / `IsDistribuidorTaller`) |
+| T-12 | Resolución de proyectos combinada | 2026-07-16 / 2026-07-30 | `GeneralController` aditiva; `JsonStringLocalizer` también une proyectos distribuidor ∪ taller |
+| T-13 | Filtrado en Averías | 2026-07-16 / 2026-07-30 | Listados/Details/Edit con unión; GET/POST `Edit` usa `canEditClaim` vía `ActsAsTaller()` (paridad UI con Taller) |
 
 ---
 
@@ -45,9 +45,9 @@ Falta: **QA funcional contra BD** (T-15/T-16, no ejecutable aquí) y decidir/afi
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-14 | Flags a otros consumidores | Parcial — cubierto por claims para la dimensión distribuidor (Contratos/OrdenesPago quedan correctamente scopeados, sin fuga). Ver "bloqueos/pendientes" para la dimensión taller en reportes |
-| T-15 | Matriz de pruebas manual | 🔴 Pendiente — requiere app corriendo + BD (no ejecutable en esta sesión) |
-| T-16 | Regresión de roles base | 🔴 Pendiente QA — el diseño (claims solo para el rol nuevo) hace improbable la regresión, pero debe verificarse |
+| T-14 | Flags a otros consumidores | Parcial — claims + helpers cubren Averías/proyectos; reportes con SQL por `usuario_distribuidor` pendientes de revisar dimensión taller |
+| T-15 | Matriz de pruebas manual | 🟡 En curso informal (registro/Edit con usuario combinado) — falta checklist formal |
+| T-16 | Regresión de roles base | 🔴 Pendiente QA — el diseño (claims solo para el rol nuevo + `ActsAs*`) hace improbable la regresión, pero debe verificarse |
 
 ---
 
@@ -55,10 +55,11 @@ Falta: **QA funcional contra BD** (T-15/T-16, no ejecutable aquí) y decidir/afi
 
 | Tema | Detalle | Quién resuelve |
 |---|---|---|
-| Precedencia edición de averías | En `Averias/Edit` (AveriasController ~1597), un "Usuario Distribuidor" es redirigido a `Details`. Como el combinado también es distribuidor (vía claims), se redirige a Details en vez de usar la edición del taller. Es la "prioridad de opciones en conflicto" que el PRD §14 dejó abierta | Producto / Alexis |
+| ~~Precedencia edición de averías~~ | **Resuelto 2026-07-30.** El combinado se queda en `Averias/Edit` (misma UX que Taller) cuando `ActsAsTaller()`. Ya no se redirige a `Details` por ser también distribuidor vía claims. | — |
 | Unión en reportes | `Areas/Reportes/.../ExplotacionController` y otros reportes filtran por `usuario_distribuidor` con SQL crudo. Con claims el combinado se scopea por distribuidor (sin fuga), pero podría no incluir la dimensión taller. Revisar si los reportes deben unir taller | Dev + QA |
-| Países CO/CL | Este trabajo se hizo para México. Para liberar CO/CL: ejecutar el seed en esas BD (`DataAccessColombia`). Los menús `_COL`/`_CHL` y `[Authorize]` ya quedan cubiertos por la transformación de claims (usan los mismos nombres de rol) | Dev |
-| Seed en ambientes | Ejecutar `rol_usuario_distribuidor_taller.sql` en dev/QA/prod con el **GUID fijo** (necesario para que el `is-visible` por GUID del formulario funcione) | Dev/DBA |
+| Países CO/CL | Seed del rol en BD CO/CL si se liberan. Menús `_COL`/`_CHL` ya incluyen el rol en Averías (refuerzo 2026-07-30) además de claims | Dev |
+| Seed en ambientes | Ejecutar `rol_usuario_distribuidor_taller.sql` en dev/QA/prod con el **GUID fijo** (necesario para `is-visible` por GUID) | Dev/DBA |
+| Datos de prueba Averías | Para `TallerExterno/Registro`, el usuario combinado debe tener `usuario_taller` + `proyecto_taller` del proyecto actual; sin eso `ClaimValidator` responde "Usuario no válido para el proyecto seleccionado" | QA / datos |
 
 ---
 
@@ -66,14 +67,18 @@ Falta: **QA funcional contra BD** (T-15/T-16, no ejecutable aquí) y decidir/afi
 
 | Decisión | Justificación | Impacto |
 |---|---|---|
-| **Unión de permisos vía `IClaimsTransformation`** en lugar de editar cada menú/`[Authorize]`/flag (plan T-09/T-10) | (1) Seguridad: sólo se activa para el rol nuevo → cero regresión para roles existentes y sin riesgo de fuga por un check olvidado. (2) Mantenibilidad (RNF-04): un solo punto en vez de ~40 archivos. (3) Cubre también CO/CL sin tocar sus menús | Cambio central en `Program.cs` + clase nueva. El combinado hereda en runtime los roles "Usuario Distribuidor" y "Taller" |
-| Unión de averías en el BR **sin cambiar la firma** de `GetAllAverias` | Cuando llegan a la vez `distribuidores` (no vacío) y `usuariotaller`, se aplica OR. Los roles base nunca envían ambos, así que no se afectan | Evita tocar todos los call-sites del BR |
-| Validación RF-07 **en servidor** | La validación jQuery de `Create.cshtml` apunta a `#frmUsuarios`, que ya no existe en la vista TagHelper `data-form` (está en el bloque legacy comentado) | Garantía real de RF-07 aunque el cliente no valide |
-| `ViewBag.Talleres` poblado en `SetupViewBags` | En la vista TagHelper el combo dependía de un AJAX que vivía en el JS legacy comentado → quedaba vacío | El combo de taller ahora funciona server-side |
+| **Unión de permisos vía `IClaimsTransformation`** (plan T-09/T-10) | (1) Seguridad: sólo se activa para el rol nuevo. (2) Mantenibilidad (RNF-04). (3) Cubre CO/CL vía mismos nombres de rol | `Program.cs` + `CombinedRoleClaimsTransformation` |
+| **Precedencia Edit Averías = Taller** (2026-07-30) | Con claims, el combinado también era "Usuario Distribuidor" y el GET/POST `Edit` lo mandaba a `Details` (solo lectura). Producto requiere **mismas funcionalidades de taller** al ver/operar una avería | `canEditClaim = ActsAsTaller() \|\| Tecnico \|\| Coordinador \|\| Agencia`; el combinado permanece en `Edit` |
+| **Refuerzo explícito Averías/menús** (además de claims) | Garantiza menú "Registrar avería", paneles de `_Edit.cshtml` y `[Authorize]` de `TallerExterno` aunque falle o se quite la transformación | Menús Remake + vistas Averías + controllers |
+| Unión de averías en el BR **sin cambiar la firma** de `GetAllAverias` | Cuando llegan `distribuidores` y `usuariotaller`, se aplica OR | Evita tocar todos los call-sites del BR |
+| Validación RF-07 **en servidor** | La validación jQuery legacy apunta a `#frmUsuarios` inexistente en TagHelper | Garantía real de RF-07 |
+| `ViewBag.Talleres` poblado en `SetupViewBags` | El AJAX del combo vivía en JS legacy comentado | Combo de taller server-side |
 
 ---
 
 ## Archivos creados o modificados
+
+### Núcleo (2026-07-15 / 16)
 
 | Archivo | Tipo | Tarea |
 |---|---|---|
@@ -81,12 +86,30 @@ Falta: **QA funcional contra BD** (T-15/T-16, no ejecutable aquí) y decidir/afi
 | `GarantiplusWeb/Helpers/RoleGroupExtensions.cs` | Creado | T-11 |
 | `GarantiplusWeb/Helpers/CombinedRoleClaimsTransformation.cs` | Creado | T-09/T-10 |
 | `GarantiplusWeb/Program.cs` | Modificado | Registro de la transformación de claims |
-| `GarantiplusWeb/Controllers/GeneralController.cs` | Modificado | T-12 (resolución de proyectos aditiva) |
-| `GarantiplusWeb/Areas/Averias/Controllers/AveriasController.cs` | Modificado | T-13 (listados + Details/Edit unión) |
-| `ArmadorasBusinessRules/ArmadorasGeneralBusinessRules.cs` | Modificado | T-13 (OR en `GetAllAverias`) |
+| `GarantiplusWeb/Controllers/GeneralController.cs` | Modificado | T-12 |
+| `GarantiplusWeb/Areas/Averias/Controllers/AveriasController.cs` | Modificado | T-13 |
+| `ArmadorasBusinessRules/ArmadorasGeneralBusinessRules.cs` | Modificado | T-13 |
 | `GarantiplusWeb/Areas/Catalogos/Controllers/UsuariosController.cs` | Modificado | T-03/T-05/T-08 |
 | `GarantiplusWeb/Areas/Catalogos/Views/Usuarios/_Edit.cshtml` | Modificado | T-04 |
 | `GarantiplusWeb/Areas/Catalogos/Views/Usuarios/Details.cshtml` | Modificado | T-08 |
+
+### Paridad Averías / Taller (2026-07-29 / 30)
+
+| Archivo | Tipo | Tarea |
+|---|---|---|
+| `GarantiplusWeb/Areas/Averias/Controllers/AveriasController.cs` | Modificado | T-10/T-13 — `ActsAsTaller`/`ActsAsDistribuidor`, Authorize, `canEditClaim`, filtro unión en Edit |
+| `GarantiplusWeb/Areas/Averias/Controllers/TallerExternoController.cs` | Modificado | T-10 — Authorize incluye `Usuario Distribuidor-Taller` |
+| `GarantiplusWeb/Areas/Averias/Views/Averias/_Edit.cshtml` | Modificado | T-10 — paneles de taller vía `ActsAsTaller()` |
+| `GarantiplusWeb/Areas/Averias/Views/Averias/Edit.cshtml` | Modificado | T-10 |
+| `GarantiplusWeb/Areas/Averias/Views/Averias/Details.cshtml` | Modificado | T-10 |
+| `GarantiplusWeb/Areas/Averias/Views/Averias/Aprobacion.cshtml` | Modificado | T-10 |
+| `GarantiplusWeb/Views/Shared/Remake/_LeftMenuBar_MEX.cshtml` | Modificado | T-09 — Averías + Registrar avería |
+| `GarantiplusWeb/Views/Shared/Remake/_LeftMenuBar_COL.cshtml` | Modificado | T-09 |
+| `GarantiplusWeb/Views/Shared/Remake/_LeftMenuBar_CHL.cshtml` | Modificado | T-09 |
+| `GarantiplusWeb/Views/Shared/_NavigationGPMX*.cshtml` / `_NavigationMitsu` / `_NavigationAstara` / `_TopNavbarMitsu` | Modificado | T-09 — legacy `ActsAsTaller()` |
+| `GarantiplusWeb/Views/Shared/_SeguimientoAveria.cshtml` | Modificado | T-10 |
+| `GarantiplusWeb/JsonStringLocalizer.cs` | Modificado | T-12 — proyectos unión |
+| `GarantiplusWeb/Areas/Contratos/Controllers/ContratosController.cs` | Modificado | T-10 — Authorize con rol combinado donde había Taller |
 
 Nota: no se commitean los `appsettings.json` modificados localmente (config de entorno).
 
@@ -97,16 +120,18 @@ Nota: no se commitean los `appsettings.json` modificados localmente (config de e
 | Hash | Mensaje | Fecha |
 |---|---|---|
 | (ver git log) | `[PJ4981] Rol Usuario Distribuidor-Taller: seed, permisos, aislamiento y catálogo` | 2026-07-16 |
+| (pendiente) | Cambios Averías paridad Taller + documentación avance | 2026-07-30 |
 
 ---
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** QA funcional con BD (crear un usuario combinado, ligar N distribuidores + 1 taller, loguearse, verificar menú/acciones = unión y datos = solo lo ligado). Ejecutar primero el **seed** con el GUID fijo.
-- **Contexto clave:** el rol hereda la unión de permisos mediante la transformación de claims (`CombinedRoleClaimsTransformation`). Para la unión de **datos** (ver averías de distribuidores + taller) se tocó explícitamente `GeneralController`, `AveriasController` y el BR `GetAllAverias`. El helper `RoleGroupExtensions` centraliza la semántica.
-- **Decisiones pendientes (input de negocio):** precedencia de edición de averías (distribuidor vs taller) y si los reportes deben unir la dimensión taller. Ver PRD §14.
-- **Build:** `dotnet build GarantiplusWeb/GarantiplusWeb.csproj` → 0 errores (2026-07-16).
+- **Por dónde continuar:** completar checklist T-15/T-16; revisar reportes (unión taller); seed en ambientes.
+- **Contexto clave:** permisos = claims transform + refuerzo explícito en Averías. Datos = unión en `GeneralController`, `AveriasController`, `JsonStringLocalizer` y BR `GetAllAverias`. Semántica = `RoleGroupExtensions`.
+- **Precedencia Edit:** resuelta — combinado edita como Taller (`Edit`), no solo lectura (`Details`).
+- **Registro externo:** requiere liga `usuario_taller` + `proyecto_taller` del proyecto en sesión.
+- **Build:** `dotnet build GarantiplusWeb/GarantiplusWeb.csproj` → 0 errores (verificado 2026-07-29).
 
 ---
 
-*Actualizado por Claude Code — Engine CX*
+*Actualizado por Claude Code — Engine CX · 2026-07-30*

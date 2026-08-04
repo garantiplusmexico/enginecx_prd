@@ -15,7 +15,7 @@
 | Folio PRD | **PJ4668** |
 | Fecha de generación | 2026-08-04 |
 | Estado | Borrador |
-| ID plan (BD) | *(lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | **34** (`pm_plan_desarrollo.id`) |
 
 ---
 
@@ -1290,11 +1290,11 @@ Adicionales de este plan:
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Andamiaje y contrato de datos** | Heredar el repo en Engine + ramas, extender `fuentes.json`, fixtures sintéticos, logging y exit codes | T-01 a T-04 | 1 – 2 días | |
-| **Fase 1 — Normalización e ingesta** | `normalizacion`, `ingesta_excel`, `ingesta_xml`, `ingesta_pdf`, `drive_io` local | T-05 a T-09 | 4 – 6 días | |
-| **Fase 2 — Conciliación y clasificación** | Agrupación por folio, comparación de montos, 3 estados, invariante de conservación | T-10 a T-13 | 3 – 4 días | |
-| **Fase 3 — Entregables y ejecución headless** | `feed_rpa.csv`, `lista_ti.csv`, `reporte_validacion.xlsx`, `main.py` | T-14 a T-17 | 4 – 6 días | |
-| **Fase 4 — Drive, datos reales y cierre** | Backend Drive, publicación, corrida real + doble-cheque, README | T-18 a T-21 | 4 – 6 días | |
+| **Fase 0 — Andamiaje y contrato de datos** | Heredar el repo en Engine + ramas, extender `fuentes.json`, fixtures sintéticos, logging y exit codes | T-01 a T-04 | 1 – 2 días | 76 |
+| **Fase 1 — Normalización e ingesta** | `normalizacion`, `ingesta_excel`, `ingesta_xml`, `ingesta_pdf`, `drive_io` local | T-05 a T-09 | 4 – 6 días | 77 |
+| **Fase 2 — Conciliación y clasificación** | Agrupación por folio, comparación de montos, 3 estados, invariante de conservación | T-10 a T-13 | 3 – 4 días | 78 |
+| **Fase 3 — Entregables y ejecución headless** | `feed_rpa.csv`, `lista_ti.csv`, `reporte_validacion.xlsx`, `main.py` | T-14 a T-17 | 4 – 6 días | 79 |
+| **Fase 4 — Drive, datos reales y cierre** | Backend Drive, publicación, corrida real + doble-cheque, README | T-18 a T-21 | 4 – 6 días | 80 |
 | **Total proyecto (v1 completo)** | | **21 tareas** | **~16 – 24 días hábiles (≈ 3 – 5 semanas)** | — |
 | **Guardarraíl — motor funcional en local** | Fase 0 + Fase 1 + Fase 2 + Fase 3 | T-01 a T-17 | **~12 – 18 días hábiles (≈ 2.5 – 3.5 semanas)** | — |
 

@@ -51,6 +51,7 @@ Se construye desde cero un **motor de datos headless en Python** que consolida l
 - [ ] Python 3.11+ instalado en la máquina de desarrollo
 - [ ] **Muestra de insumos reales** copiada a `data/` local: al menos un `FACTURACION AÑO 2025.xlsx`, un `FACTURACION 2026.xlsx`, y ~20 pares XML/PDF. Necesaria desde la Fase 1 para validar el mapeo de columnas real.
 - [ ] Credenciales de Google Drive — **solo bloquean la Fase 4**, no las anteriores (por eso `drive_io.py` se construye con backend local primero)
+- [ ] **Credencial de solo lectura a Atenea Chile** (`uftluedxeshafcxqobkx`, org Engine-CX), acotada a la tabla `ventas` — **bloquea T-13A**, no las tareas anteriores. El motor nunca escribe en esa base.
 
 ### 2.1 Trabajo previo heredado
 
@@ -978,6 +979,122 @@ def test_conservacion_falla_ruidoso_si_falta_una_fila():
 
 ---
 
+#### T-13A — Cruce contra el estado de activación en SIGA
+
+> **Sobre la numeración:** esta tarea se incorporó después de publicada la v1 del plan, al confirmarse que `ventas.estatus` en Atenea Chile distingue contratos activos de no activos. Se numera `T-13A` en lugar de renumerar T-14 a T-21, para que las referencias existentes —en la §13, en los criterios de aceptación y en el registro de base de datos— sigan siendo válidas.
+
+**Archivos:**
+- Crear: `src/siga_ventas.py`
+- Modificar: `src/validacion.py`, `config/fuentes.json`, `config/config.example.ini`
+- Test: `tests/test_siga_ventas.py`
+
+**Interfaces producidas:**
+- `consultar_estado_activacion(ids: list[str], config: Configuracion) -> dict[str, str]` — mapea identificador de contrato → estado crudo de la vista de ventas.
+- `clasificar_activacion(estado_crudo: str | None, estados_activos: list[str]) -> str` — devuelve `"ACTIVO"`, `"NO_ACTIVO"` o `"INDETERMINADO"`.
+- `TasaCorrespondencia` — dataclass con `total_excel: int`, `encontrados: int`, `pct: float`.
+
+**Por qué existe.** Sin este cruce, alimentar al RPA con el histórico genera órdenes de pago duplicadas sobre los contratos que ya activó la carga masiva de ~2023. El cruce hace dos cosas de una: filtra esos contratos **y** mide la correspondencia entre el `ID` del Excel y el `id_contrato` de la vista de ventas, que es el supuesto abierto del PRD sobre identificadores.
+
+**Reglas que no se negocian:**
+1. **No excluir ante la duda.** Un contrato cuyo estado no se pudo determinar —porque no apareció en la vista, o porque la consulta falló— entra al feed marcado como `INDETERMINADO`. Excluir por defecto dejaría contratos sin activar en silencio, que es el problema original del proyecto.
+2. **Los valores de `estatus` que cuentan como "activo" son configuración, no código.** Van en `fuentes.json`.
+3. **Solo lectura.** El motor nunca escribe en Atenea Chile.
+
+**Pasos:**
+
+- [ ] **1.** Agregar a `fuentes.json` la sección del cruce:
+
+```json
+"activacion_siga": {
+  "activo": true,
+  "_nota": "Cruce contra la vista de ventas de Chile para excluir del feed los contratos ya activos.",
+  "tabla": "ventas",
+  "columna_id": "id_contrato",
+  "columna_estatus": "estatus",
+  "valores_activo": ["ACTIVO"],
+  "_nota_valores": "Valores de ventas.estatus que cuentan como activo. Confirmar contra la base antes de operar (PRD 14).",
+  "pct_correspondencia_minimo": 90,
+  "_nota_pct": "Si la tasa de correspondencia Excel<->ventas baja de este umbral, la corrida avisa: el supuesto de que ID es el identificador de SIGA estaria fallando."
+}
+```
+
+- [ ] **2.** Agregar a `config.example.ini` la sección de credenciales, con valores vacíos:
+
+```ini
+[atenea_chile]
+; Acceso de SOLO LECTURA a la vista de ventas. Nunca escritura.
+url =
+service_key =
+```
+
+- [ ] **3.** Escribir el test que falla. La consulta a la base va **mockeada**: la suite no toca la red ni datos reales.
+
+```python
+# tests/test_siga_ventas.py
+import pytest
+from src.siga_ventas import clasificar_activacion, calcular_correspondencia
+
+
+@pytest.mark.parametrize("crudo,esperado", [
+    ("ACTIVO", "ACTIVO"),
+    ("activo", "ACTIVO"),          # comparacion insensible a mayusculas
+    ("REGISTRADO", "NO_ACTIVO"),
+    ("CANCELADO", "NO_ACTIVO"),
+    (None, "INDETERMINADO"),        # el contrato no aparece en la vista
+    ("", "INDETERMINADO"),
+])
+def test_clasificar_activacion(crudo, esperado):
+    assert clasificar_activacion(crudo, estados_activos=["ACTIVO"]) == esperado
+
+
+def test_indeterminado_no_se_excluye_del_feed():
+    """Ante la duda, el contrato avanza marcado. Nunca se descarta en silencio."""
+    from src.validacion import debe_entrar_al_feed
+
+    assert debe_entrar_al_feed("NO_ACTIVO") is True
+    assert debe_entrar_al_feed("INDETERMINADO") is True
+    assert debe_entrar_al_feed("ACTIVO") is False
+
+
+def test_calcula_tasa_de_correspondencia():
+    ids_excel = ["1001", "1002", "1003", "1004"]
+    encontrados = {"1001": "ACTIVO", "1003": "REGISTRADO"}
+
+    tasa = calcular_correspondencia(ids_excel, encontrados)
+
+    assert tasa.total_excel == 4
+    assert tasa.encontrados == 2
+    assert tasa.pct == 50.0
+
+
+def test_consulta_por_lotes(monkeypatch):
+    """60 mil IDs no caben en un solo IN (...). Debe lotear."""
+    from src.siga_ventas import consultar_estado_activacion
+
+    lotes_vistos = []
+
+    def _falso_consultar(lote, config):
+        lotes_vistos.append(len(lote))
+        return {}
+
+    monkeypatch.setattr("src.siga_ventas._consultar_lote", _falso_consultar)
+    consultar_estado_activacion([str(i) for i in range(2500)], config=None)
+
+    assert len(lotes_vistos) > 1
+    assert max(lotes_vistos) <= 1000
+```
+
+- [ ] **4.** Correr: `pytest tests/test_siga_ventas.py -v` → **FAIL**.
+- [ ] **5.** Implementar `src/siga_ventas.py`. **Lotear las consultas** (máximo ~1000 identificadores por lote): el histórico son ~60 mil contratos y no caben en una sola cláusula `IN`. Si la conexión falla, **no abortar la corrida**: registrar `WARNING`, devolver todos los estados como `INDETERMINADO` y dejar que el reporte lo evidencie — el motor sigue siendo útil sin el cruce, solo pierde el filtro.
+- [ ] **6.** Integrar en `validacion.py`: agregar `estatus_siga` a cada contrato y `debe_entrar_al_feed()` como la única función que decide la exclusión.
+- [ ] **7.** Correr: `pytest tests/ -v` → **PASS**.
+- [ ] **8.** **Verificar contra la base real** con una muestra pequeña de identificadores: confirmar qué valores toma `estatus` y cuáles corresponden a activo. Ajustar `valores_activo` en `fuentes.json` con lo que aparezca. *Este paso cierra la pregunta abierta del PRD sobre los valores de `estatus`.*
+- [ ] **9.** Commit: `[activacion-contratos-chile] Agregar cruce contra estado de activacion en SIGA`
+
+**Criterio de completitud:** los cuatro tests pasan; un contrato `ACTIVO` no aparece en el feed; uno `INDETERMINADO` sí aparece, marcado; la tasa de correspondencia se calcula y se reporta; una falla de conexión degrada a `INDETERMINADO` sin abortar la corrida.
+
+---
+
 ### Fase 3 — Entregables y ejecución headless
 
 #### T-14 — `feed_rpa.csv`
@@ -989,7 +1106,7 @@ def test_conservacion_falla_ruidoso_si_falta_una_fila():
 **Interfaces producidas:**
 - `generar_feed_rpa(facturas: list[FacturaValidada], destino: Path) -> Path`
 
-**Columnas exactas (PRD §6.1):** `id_contrato`, `factura_n`, `monto`, `beneficiario`, `rut`, `vin`, `patente`, `distribuidor`, `f_alta`, `estado_validacion`.
+**Columnas exactas:** `id_contrato`, `factura_n`, `monto`, `beneficiario`, `rut`, `vin`, `patente`, `distribuidor`, `f_alta`, `estado_validacion`, **`estatus_siga`** (`NO_ACTIVO` | `INDETERMINADO` — los `ACTIVO` no aparecen en este archivo, van a la hoja "Ya activos" del reporte).
 
 **Pasos:**
 
@@ -1035,15 +1152,16 @@ def test_conservacion_falla_ruidoso_si_falta_una_fila():
 **Interfaces producidas:**
 - `generar_reporte_validacion(facturas, sin_factura_df, excluidas_df, huerfanos, destino: Path) -> Path`
 
-**Hojas exactas (PRD §6.3):**
+**Hojas exactas (seis):**
 
 | Hoja | Contenido |
 |---|---|
-| `Resumen` | Conteos por estado, montos totales, cobertura por año/mes |
+| `Resumen` | Conteos por estado, montos totales, cobertura por año/mes y **tasa de correspondencia del cruce con la vista de ventas** |
 | `No cuadra` | Facturas con diferencia Excel↔XML, **con ambos deltas** (neto y total) |
 | `No verificable` | Folios del Excel sin XML/PDF, y XML/PDF sin correspondencia en el Excel |
 | `Sin factura` | Contratos con `FACTURA N°` vacío o `NO FACTURADO` |
-| `Excluidos` | Líneas descartadas por reglas (vacío mientras `exclusiones.activa` sea `false`) |
+| `Excluidos` | Líneas descartadas por reglas de producto (reparaciones, cotizaciones) |
+| **`Ya activos`** | Contratos excluidos del feed por figurar como activos en SIGA, con `id_contrato`, folio y distribuidor |
 
 **Pasos:**
 
@@ -1155,7 +1273,7 @@ def test_config_inexistente_devuelve_exit_error_config(tmp_path):
 - [ ] **6.** **Inventariar notas de crédito** (PRD §10.4): contar los XML con `TipoDTE = 61` y proponer tratamiento.
 - [ ] **7.** Escribir `docs/validacion-datos-reales.md` con los hallazgos — **sin cifras reales ni datos personales**, solo conteos, porcentajes y conclusiones (PRD §13).
 - [ ] **8.** Aplicar en `fuentes.json` los ajustes confirmados.
-- [ ] **9.** **Cerrar la pregunta de contratos ya activos** (PRD §14, primera fila) con Omar y TI: ¿existe un export o una vista de SIGA con el estado de activación que el motor pueda consumir, o el RPA valida antes de generar cada orden? Documentar la respuesta. Si la validación queda del lado del motor, es una tarea nueva de Fase 2 con su propio insumo — **no se agrega al alcance de v1 sin volver a estimar**.
+- [ ] **9.** **Validar el cruce contra la vista de ventas sobre el universo completo:** revisar la tasa de correspondencia que reporta T-13A y la hoja "Ya activos". Una tasa por debajo del umbral configurado significa que el `ID` del Excel no es el `id_contrato` de SIGA, y hay que resolverlo con Omar antes de operar. Contrastar el conteo de "ya activos" contra lo que Andrés recuerda de la activación masiva de ~2023 — si difiere mucho, investigar antes de correr el RPA.
 - [ ] **10.** Correr de nuevo y verificar que el 100% de las facturas queda clasificado y que la conservación de filas se cumple.
 - [ ] **11.** Commit: `[activacion-contratos-chile] Ajustar configuracion con hallazgos de datos reales`
 
@@ -1251,6 +1369,10 @@ Adicionales de este plan:
 - [ ] La suite completa pasa: `pytest tests/ -v`
 - [ ] Cambiar `base_comparacion` en `fuentes.json` altera la validación sin tocar código
 - [ ] Cambiar `backend` a `drive` funciona sin ninguna otra modificación
+- [ ] **Ningún contrato con `estatus_siga = ACTIVO` aparece en `feed_rpa.csv`** → test de T-13A
+- [ ] **Un contrato con estado indeterminado sí aparece en el feed, marcado** → test de T-13A
+- [ ] **Una falla de conexión a Atenea Chile no aborta la corrida**: degrada a `INDETERMINADO` y lo evidencia en el reporte → T-13A paso 5
+- [ ] La tasa de correspondencia `ID` ↔ `id_contrato` se calcula y se reporta en la hoja Resumen
 
 ---
 
@@ -1258,7 +1380,9 @@ Adicionales de este plan:
 
 | Riesgo | Prob. | Impacto | Mitigación |
 |---|---|---|---|
-| **Parte del histórico ya está activo** — hubo una activación masiva hasta ~mediados de 2023 y posiblemente algunos contratos de 2024. Si el feed incluye contratos ya activos, el RPA genera **órdenes de pago duplicadas** sobre ~60 mil contratos | Alta | **Muy alto** | El motor **no puede detectarlo**: el estado de activación vive en SIGA, que no es insumo del MVP. Registrado como primera pregunta abierta del PRD §14. **Debe resolverse antes de correr el RPA sobre el histórico**, no antes de terminar el motor — no bloquea el desarrollo, sí bloquea la operación. Ver T-20 paso 11. |
+| ~~**Parte del histórico ya está activo**~~ → **MITIGADO** en T-13A. Se confirmó que `ventas.estatus` en Atenea Chile distingue activos de no activos; el motor cruza y los excluye del feed | — | — | Riesgo cerrado. Quedan los dos residuales de abajo, ambos de menor impacto. |
+| **La réplica `ventas` está desfasada o inaccesible** al momento de la corrida | Media | Medio | Un contrato activado recientemente podría no figurar como activo. La regla es **no excluir ante la duda**: estado `INDETERMINADO` entra al feed marcado. Si la conexión falla, el motor degrada a `INDETERMINADO` en bloque y sigue corriendo (T-13A paso 5) — se pierde el filtro, no la corrida. |
+| **Baja correspondencia entre el `ID` del Excel y `ventas.id_contrato`** | Media | Alto | Sin correspondencia no hay filtro ni validación del supuesto de identificadores. **El propio cruce lo mide**: `pct_correspondencia_minimo` en `fuentes.json` dispara un aviso si la tasa cae del umbral. Se detecta en la primera corrida, no operando. |
 | **Los montos del Excel son netos y se comparan contra `MntTotal`** → ~100% de facturas marcadas `NO_CUADRA` por el IVA (19%) | Alta | Alto | `base_comparacion` configurable con default `neto`; el reporte expone **ambos deltas** siempre, lo que hace el diagnóstico inmediato (T-11). Se cierra con datos en T-20. |
 | **Namespace del DTE SII** ignorado al parsear → todo sale `NO_VERIFICABLE` sin error visible | Media | Alto | Namespace declarado explícitamente y test con XML que lo incluye (T-07); validación contra XML real en T-07 paso 5. |
 | **El mapa de columnas del Excel no coincide con los archivos reales** — se construyó desde el PRD, no desde los archivos | Media | Alto | T-06 paso 5 obliga a validar contra archivo real antes de cerrar la tarea; mapeo por nombre con alias múltiples y aborto ruidoso si faltan las tres columnas esenciales. |
@@ -1292,11 +1416,11 @@ Adicionales de este plan:
 |---|---|---|---|---|
 | **Fase 0 — Andamiaje y contrato de datos** | Heredar el repo en Engine + ramas, extender `fuentes.json`, fixtures sintéticos, logging y exit codes | T-01 a T-04 | 1 – 2 días | 76 |
 | **Fase 1 — Normalización e ingesta** | `normalizacion`, `ingesta_excel`, `ingesta_xml`, `ingesta_pdf`, `drive_io` local | T-05 a T-09 | 4 – 6 días | 77 |
-| **Fase 2 — Conciliación y clasificación** | Agrupación por folio, comparación de montos, 3 estados, invariante de conservación | T-10 a T-13 | 3 – 4 días | 78 |
+| **Fase 2 — Conciliación y clasificación** | Agrupación por folio, comparación de montos, 3 estados, invariante de conservación, **cruce contra el estado de activación en SIGA** | T-10 a **T-13A** | 5 – 6 días | 78 |
 | **Fase 3 — Entregables y ejecución headless** | `feed_rpa.csv`, `lista_ti.csv`, `reporte_validacion.xlsx`, `main.py` | T-14 a T-17 | 4 – 6 días | 79 |
 | **Fase 4 — Drive, datos reales y cierre** | Backend Drive, publicación, corrida real + doble-cheque, README | T-18 a T-21 | 4 – 6 días | 80 |
-| **Total proyecto (v1 completo)** | | **21 tareas** | **~16 – 24 días hábiles (≈ 3 – 5 semanas)** | — |
-| **Guardarraíl — motor funcional en local** | Fase 0 + Fase 1 + Fase 2 + Fase 3 | T-01 a T-17 | **~12 – 18 días hábiles (≈ 2.5 – 3.5 semanas)** | — |
+| **Total proyecto (v1 completo)** | | **22 tareas** | **~18 – 26 días hábiles (≈ 3.5 – 5 semanas)** | — |
+| **Guardarraíl — motor funcional en local** | Fase 0 + Fase 1 + Fase 2 + Fase 3 | T-01 a T-17 | **~14 – 20 días hábiles (≈ 3 – 4 semanas)** | — |
 
 > **Notas sobre la tabla:**
 > - El PRD **no define prioridades P1/P2/P3**; define versiones (v1/v2/v3). Todo este plan es **v1**. El guardarraíl equivalente es el motor funcional corriendo en local (Fases 0–3): produce los tres entregables y es verificable de punta a punta sin credenciales de Drive. La Fase 4 es lo que lo lleva a operación real.

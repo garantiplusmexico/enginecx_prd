@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Activación de Contratos Chile — motor de datos `contratos_chile` |
 | **Área / empresa** | Garantiplus Chile |
-| **Versión** | v1.1 |
+| **Versión** | v1.2 |
 | **Fecha** | 2026-08-04 |
 | **Autores** | Gustavo Iván Carreto Abascal (datos / automatización) |
 | **Revisión / liderazgo** | Aldo Álvarez |
@@ -76,9 +76,10 @@ El mismo motor debe servir para los dos modos de uso: la **regularización hist�
 | Normalización | Estandariza montos (formato chileno `$1.234.567` → entero), folios, fechas e identificadores de contrato. Marca las filas vacías y las marcadas como `NO FACTURADO`. |
 | Conciliación Excel↔XML por factura | Compara la suma de los montos de los contratos que el Excel asigna a un folio contra el monto de ese folio en el XML, con una tolerancia de redondeo configurable. |
 | Clasificación en tres estados | Cada factura queda en `CUADRA` (folio existe y montos coinciden), `NO_CUADRA` (folio existe, montos no) o `NO_VERIFICABLE` (no hay XML/PDF, o el folio no está en el Excel). |
+| Cruce contra el estado de activación en SIGA | Consulta la vista de ventas de Chile (`ventas` en Atenea Chile) para determinar el estado de activación de cada contrato, y **excluye del feed del RPA los que ya están activos**. Evita generar órdenes de pago duplicadas sobre el acervo histórico. El cruce se hace por `id_contrato`, que además **valida empíricamente** que el `ID` del Excel es el identificador de SIGA. |
 | Generación de `feed_rpa.csv` | Un renglón por contrato con factura emitida, con los datos que el RPA necesita para buscarlo en SIGA más los de trazabilidad, y su estado de validación. |
 | Generación de `lista_ti.csv` | Un renglón por factura, agrupando sus contratos, con los datos del XML y las referencias a los archivos XML y PDF. |
-| Generación de `reporte_validacion.xlsx` | Libro de control con cinco hojas: Resumen, No cuadra, No verificable, Sin factura y Excluidos. |
+| Generación de `reporte_validacion.xlsx` | Libro de control con seis hojas: Resumen, No cuadra, No verificable, Sin factura, Excluidos y **Ya activos**. |
 | Publicación de resultados | Sube los tres entregables a una subcarpeta `Resultados_Motor/` en Drive, con fecha en el nombre. Nunca escribe sobre las carpetas de insumos. |
 | Ejecución headless | Corre sin sesión interactiva, con logging estructurado y código de salida distinto de cero ante fallo, para que n8n pueda detectarlo. |
 
@@ -117,9 +118,13 @@ flowchart TD
     G -->|Sí| I{¿Suma del Excel = monto del XML,<br/>dentro de la tolerancia?}
     I -->|Sí| J[CUADRA]
     I -->|No| K[NO_CUADRA + delta]
-    H --> L[Entregables]
-    J --> L
-    K --> L
+    H --> Q{¿Ya está activo en SIGA?}
+    J --> Q
+    K --> Q
+    S[(Atenea Chile: ventas.estatus)] -.cruce por id_contrato.-> Q
+    Q -->|Sí| R[Hoja 'Ya activos'<br/>fuera del feed RPA]
+    Q -->|No o indeterminado| L[Entregables]
+    R --> L
     E --> L
     L --> M[feed_rpa.csv → RPA de Omar]
     L --> N[lista_ti.csv → inyección de TI]
@@ -132,6 +137,8 @@ flowchart TD
 El flujo tiene una asimetría deliberada: **todo lo que no se puede verificar sigue avanzando hacia los entregables, marcado**. No hay ninguna rama que termine en un descarte silencioso. Esto es consecuencia directa del volumen: sobre 60 mil contratos, un filtro automático mal calibrado produce un error masivo e invisible, mientras que un caso marcado de más solo cuesta una revisión.
 
 La conciliación ocurre en el nodo de agrupación por folio, no antes. Es el punto donde el diseño reconoce que el Excel y el XML viven en granularidades distintas —el Excel es por contrato, el XML es por factura— y que la única granularidad común es la factura.
+
+El cruce contra el estado de activación es la **única exclusión real** del flujo, y aun así respeta el principio: un contrato ya activo no entra al feed del RPA, pero **sí aparece en el reporte**, en su propia hoja y con su conteo. La rama de indeterminación es deliberada — si el cruce no puede resolver el estado de un contrato, este **avanza al feed marcado** en lugar de excluirse. Excluir por defecto ante la duda dejaría contratos sin activar de forma silenciosa, que es precisamente el problema que el proyecto vino a resolver.
 
 ### 7.2 Flujo del proceso completo de activación (contexto)
 
@@ -163,10 +170,14 @@ Este segundo diagrama existe para ubicar el alcance: **el motor toca dos de los 
 | RF-09 | Reporte de documentos huérfanos | Reportar los XML o PDF cuyo folio no tiene correspondencia en ningún Excel, como posible factura no registrada en la relación. |
 | RF-10 | Generación de `feed_rpa.csv` | Emitir un renglón por contrato con factura emitida, con: identificador de contrato, folio, monto, beneficiario, RUT, VIN, patente, distribuidor, fecha de alta y estado de validación. |
 | RF-11 | Generación de `lista_ti.csv` | Emitir un renglón por factura con: folio, tipo de DTE, fecha de emisión, RUT del receptor, monto del XML, monto del Excel, cantidad de contratos, lista de contratos, referencia al XML, referencia al PDF y estado de validación. |
-| RF-12 | Generación del reporte de validación | Emitir un libro Excel con cinco hojas: Resumen (conteos por estado, montos y cobertura por año), No cuadra (con el delta), No verificable, Sin factura y Excluidos. |
+| RF-12 | Generación del reporte de validación | Emitir un libro Excel con seis hojas: Resumen (conteos por estado, montos, cobertura por año y **tasa de correspondencia del cruce con la vista de ventas**), No cuadra (con el delta), No verificable, Sin factura, Excluidos y **Ya activos** (contratos excluidos del feed por figurar ya activos en SIGA). |
 | RF-13 | Conservación de filas | Garantizar que `contratos con factura + contratos sin factura + excluidos = total de filas del Excel`, y abortar la ejecución si la igualdad no se cumple. |
 | RF-14 | Publicación de resultados | Subir los tres entregables a la subcarpeta `Resultados_Motor/` de Drive, con la fecha en el nombre del archivo, sin sobrescribir corridas anteriores. |
 | RF-15 | Configurabilidad sin código | Permitir cambiar años a procesar, IDs de carpetas de Drive, tolerancias, tipos de DTE válidos y reglas de exclusión editando **únicamente** el archivo de configuración. |
+| RF-16 | Consulta del estado de activación | Obtener, para cada contrato del Excel, su estado de activación desde la vista de ventas de Chile, cruzando por identificador de contrato. |
+| RF-17 | Exclusión de contratos ya activos | Excluir del `feed_rpa.csv` los contratos que ya figuran como activos, y reportarlos en su propia hoja del reporte de validación con el conteo correspondiente. Un contrato cuyo estado no se pudo determinar **no se excluye**: se marca y se reporta, consistente con el principio de marcar y no borrar. |
+
+> **Nota sobre RF-16 y RF-17.** Se numeran al final para no alterar el significado de los RF ya publicados en la v1.1, que pueden estar referenciados en pruebas o revisiones. Su lugar en el flujo de ejecución es **después de la clasificación (RF-08) y antes de generar los entregables (RF-10 en adelante)**.
 
 ## 9. Requerimientos no funcionales
 
@@ -196,13 +207,14 @@ Este segundo diagrama existe para ubicar el alcance: **el motor toca dos de los 
 | Google Drive — `Resultados_Motor/` | **Escritura.** Único destino de salida del motor. |
 | RPA de órdenes de pago (Omar) | **Consumo.** Recibe `feed_rpa.csv`. El motor no lo invoca ni conoce su estado. |
 | Equipo de TI | **Consumo.** Recibe `lista_ti.csv` junto con los XML y PDF referenciados. |
-| SIGA | **Sin integración directa en el MVP.** El motor no lee ni escribe en SIGA; los identificadores de contrato que produce son los que el RPA usa para buscar allí. |
+| **Atenea Chile** (Supabase, org Engine-CX) — tabla `ventas` | **Lectura.** Vista de ventas de Chile replicada desde SIGA. Aporta el **estado de activación** por contrato (`estatus`), con `id_contrato` como clave de cruce contra el `ID` del Excel. Es la única fuente que permite saber qué contratos ya están activos. |
+| SIGA | **Sin integración directa.** El motor no lee ni escribe en SIGA; accede a su información de ventas a través de la réplica en Atenea Chile. Los identificadores de contrato que produce son los que el RPA usa para buscar allí. |
 
 **Datos mínimos requeridos para operar.** Del Excel: `FACTURA N°` (folio), `ID` (contrato), `Producto`, `Importe` y `Monto a Facturar`, las fechas (`F. Alta`, `F. Pago`, `F. Cancelación`, `F. Inicio`, `F. Fin`), los datos del beneficiario y vehículo (`Beneficiario`, `R.U.T.`, `VIN`, `Patente`), los del canal (`Id Distr.`, `Distribuidor`, `Canal`, `Punto Venta`, `Grupo`) y `Estatus`. Del XML: tipo de DTE, folio, fecha de emisión, RUT del emisor, RUT y razón social del receptor, y los montos neto, IVA y total. De los archivos: la convención de nombre `F{folio}T{tipo}.{ext}`, que es lo que permite asociar documento y folio.
 
 **Hallazgo estructural que condiciona todo el diseño.** El bloque `Detalle` del XML **no contiene los números de contrato**: una línea consolidada declara la cantidad (`8 UNID`) sin desglosar cuáles son los ocho contratos. Por eso el XML sirve para validar a nivel factura pero **nunca** para recuperar contratos individuales, y la relación contrato↔factura existe únicamente en el Excel. Cualquier diseño que asuma lo contrario es inviable.
 
-**Esquema de permisos.** El motor **lee** las cuatro carpetas de insumos y **escribe únicamente** en `Resultados_Motor/`. No tiene permiso de modificación sobre los insumos ni acceso alguno a SIGA. Toda acción que altere el estado de un contrato —cargar una orden de pago, inyectar una factura, activar— queda fuera del motor y requiere la intervención de Omar o de TI.
+**Esquema de permisos.** El motor **lee** las cuatro carpetas de insumos de Drive y la tabla `ventas` de Atenea Chile, y **escribe únicamente** en `Resultados_Motor/`. No tiene permiso de modificación sobre los insumos, ni escritura sobre Atenea Chile, ni acceso alguno a SIGA. Toda acción que altere el estado de un contrato —cargar una orden de pago, inyectar una factura, activar— queda fuera del motor y requiere la intervención de Omar o de TI. El acceso a Atenea Chile debe otorgarse con una credencial **de solo lectura y limitada a la tabla `ventas`**: el motor no necesita nada más, y esa base contiene la información comercial completa de la operación chilena.
 
 ## 11. Eventos para BI
 
@@ -228,13 +240,15 @@ Estos eventos alimentan los tableros de cartera vencida y de averías sobre cont
 
 | **Métrica** | **Descripción** |
 | --- | --- |
-| **Cobertura de activación** | Porcentaje de contratos con factura emitida que quedan efectivamente activados en SIGA. Es la métrica principal del proyecto y la razón por la que existe. **Requiere validación con BI y operación** para fijar línea base (cuántos contratos activos hay hoy, considerando la activación masiva histórica) y meta por período. |
+| **Cobertura de activación** | Porcentaje de contratos con factura emitida que quedan efectivamente activados en SIGA. Es la métrica principal del proyecto y la razón por la que existe. **Se instrumenta sobre `ventas.estatus` en Atenea Chile**: la línea base es el conteo de contratos activos antes de la regularización, y el avance se mide como el incremento de ese conteo tras cada corrida del RPA. **Requiere validación con BI y operación** para fijar la meta por período. |
 | Clasificación completa | Porcentaje de facturas clasificadas en alguno de los tres estados. La meta es 100%: una factura sin estado es un caso invisible. Se mide dentro del propio reporte de validación. |
 | Conservación de filas | La suma de contratos con factura, sin factura y excluidos debe igualar el total de filas del Excel en cada corrida. Es binaria: se cumple o la corrida es inválida. |
 | Tasa de correspondencia documental | Porcentaje de folios del Excel que tienen su XML y PDF. Mide la completitud de lo que entrega el despacho contable y sirve para gestionar con Andrés lo que falte. |
 | Facturas que cuadran | Porcentaje de facturas en estado `CUADRA` sobre el total verificable. Mide la calidad de los datos del despacho; una caída señala un problema de origen, no del motor. |
 
-Las cuatro métricas posteriores a la principal se derivan de los criterios de calidad del diseño original y son observables en el propio reporte de validación, sin instrumentación adicional. **La métrica principal no la mide el motor** —depende del estado en SIGA— y requiere que BI la instrumente contra el resultado de las corridas del RPA.
+Las cuatro métricas posteriores a la principal se derivan de los criterios de calidad del diseño original y son observables en el propio reporte de validación, sin instrumentación adicional.
+
+**La métrica principal no la produce el motor, pero ya se sabe dónde leerla.** `ventas.estatus` en Atenea Chile distingue contratos activos de no activos, así que la cobertura es un conteo directo sobre esa columna, comparado entre corridas. Adicionalmente, **`ventas.fecha_pago` se poblará al completarse la carga de activación**, lo que la convierte en una señal de verificación de segundo orden: un contrato activado sin fecha de pago es una anomalía que vale la pena revisar.
 
 ## 13. Riesgos y supuestos
 
@@ -242,7 +256,9 @@ Las cuatro métricas posteriores a la principal se derivan de los criterios de c
 
 | **Riesgo** | **Impacto potencial** |
 | --- | --- |
-| **Parte del histórico ya está activo.** Hubo una activación masiva hasta aproximadamente mediados de 2023, y posiblemente algunos contratos de 2024. | Si el motor alimenta al RPA con contratos que ya tienen orden de pago, se generan órdenes duplicadas sobre un volumen de ~60 mil contratos. El motor no puede detectarlo hoy: el estado de activación vive en SIGA, que no es insumo del MVP. **Es el riesgo más alto del proyecto** y está abierto en §14. |
+| **Parte del histórico ya está activo.** Hubo una activación masiva hasta aproximadamente mediados de 2023, y posiblemente algunos contratos de 2024. | Alimentar al RPA con contratos ya activos generaría órdenes de pago duplicadas sobre ~60 mil contratos. **Mitigado:** el motor cruza contra `ventas.estatus` en Atenea Chile y los excluye del feed (RF-16, RF-17). El riesgo residual es que el cruce falle por desalineación de identificadores, cubierto por el riesgo siguiente. |
+| **Desfase o indisponibilidad de la réplica de Atenea Chile.** El cruce depende de que `ventas` esté actualizada y accesible. | Si la réplica está desfasada, un contrato activado recientemente podría no figurar como activo y colarse al feed. Si está inaccesible, el motor no puede determinar el estado. En ambos casos la regla es **no excluir por defecto**: un contrato de estado indeterminado se marca y se reporta, nunca se descarta ni se asume activo. Conviene registrar la fecha de última actualización de la réplica en el reporte. |
+| **Baja correspondencia entre el `ID` del Excel y el `id_contrato` de la vista de ventas.** | Si el cruce tiene baja tasa de coincidencia, ni el filtro de activos ni la validación del supuesto de identificadores funcionan. Es un riesgo con lado bueno: el cruce **mide** esa correspondencia, así que una tasa baja se detecta de inmediato y en la misma corrida, en vez de descubrirse operando. |
 | **Ambigüedad en la base de comparación de montos.** El monto total del DTE incluye IVA, mientras que los montos del Excel podrían ser netos. | Si se compara la suma del Excel contra el monto total del XML y los montos del Excel son netos, prácticamente todas las facturas se marcarían como `NO_CUADRA` por la diferencia del 19%, haciendo el reporte inservible y ocultando las discrepancias reales. |
 | **El supuesto de correspondencia folio ↔ `FACTURA N°` no está verificado.** En Chile no existe un consecutivo de SIGA, y en Colombia el número de factura coincide en dígitos con el folio pero no en las letras. | Si la correspondencia no es 1:1, la asociación entre documentos y contratos es incorrecta y todo el reporte pierde validez. Debe medirse antes de operar. |
 | **Los insumos del despacho pueden estar incompletos o desactualizados.** La entrega llegó hasta marzo o abril. | La regularización quedaría parcial y habría que repetir el ciclo, con el costo de coordinación que implica. |
@@ -267,10 +283,13 @@ Las cuatro métricas posteriores a la principal se derivan de los criterios de c
 
 | **Tema** | **Pregunta abierta** |
 | --- | --- |
-| **Contratos ya activos** | ¿Cómo se identifican los contratos que ya fueron activados en la carga masiva histórica, para excluirlos del feed del RPA? ¿Existe un export o una vista de SIGA con el estado de activación que el motor pueda consumir, o la validación la hace el RPA antes de generar cada orden? **Debe resolverse antes de correr el RPA sobre el histórico.** |
+| **Contratos ya activos** | ~~¿Cómo se identifican los contratos ya activados para excluirlos del feed?~~ **RESUELTO (v1.2):** `ventas.estatus` en Atenea Chile distingue contratos activos de no activos. El motor lo consume y los excluye (RF-16, RF-17). |
+| **Accesos** | ¿Con qué credencial accede el motor a Atenea Chile? Debe ser **de solo lectura y acotada a la tabla `ventas`**. ¿Quién la gestiona? |
+| **Datos** | ¿Con qué frecuencia se actualiza la réplica `ventas` desde SIGA? El desfase determina cuán confiable es el filtro de contratos ya activos para activaciones recientes. |
+| **Datos** | ¿Qué valores concretos toma `ventas.estatus` y cuál o cuáles corresponden a "activo"? Debe fijarse como parámetro de configuración, no hardcodearse. |
 | **Montos** | ¿Los montos del Excel (`Importe`, `Monto a Facturar`) son netos o incluyen IVA? De ello depende contra qué campo del XML se concilian. |
 | **Montos** | ¿Cuál es la tolerancia de redondeo aceptable en la conciliación? |
-| **Identificadores** | ¿La columna `ID` del Excel es efectivamente el identificador con el que el RPA busca el contrato en SIGA? |
+| **Identificadores** | ¿La columna `ID` del Excel es efectivamente el identificador con el que el RPA busca el contrato en SIGA? **Ahora es medible:** el cruce contra `ventas.id_contrato` (clave primaria de la vista de ventas) produce una tasa de correspondencia que confirma o refuta el supuesto con datos. Queda pendiente definir qué tasa se considera aceptable para operar. |
 | **Identificadores** | ¿El folio del nombre de archivo (`F…T33`) corresponde 1:1 con el `FACTURA N°` del Excel? Considerando que en Chile no existe consecutivo de SIGA, ¿hay algún caso de desalineación conocido? |
 | **Reglas de negocio** | ¿Qué líneas deben excluirse del feed por no ser garantías (reparaciones, cotizaciones, órdenes de compra)? ¿Los patrones identificados hasta ahora son suficientes? |
 | **Reglas de negocio** | ¿Cómo se tratan las notas de crédito (DTE 61) y los contratos cancelados en la conciliación? |

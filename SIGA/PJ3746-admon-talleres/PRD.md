@@ -3,16 +3,16 @@
 | **Campo** | **Detalle** |
 | --- | --- |
 | **Proyecto** | Administración de talleres y documentación obligatoria (SIGA) |
-| **Área / empresa** | Garantiplus (Colombia / México — país MVP a confirmar) |
-| **Versión** | v0.2 |
-| **Fecha** | 2026-07-21 (v0.1) · Actualizado 2026-08-06 (v0.2) |
+| **Área / empresa** | Garantiplus (México, Colombia y Chile) |
+| **Versión** | v0.2.1 |
+| **Fecha** | 2026-07-21 (v0.1) · Actualizado 2026-08-06 (v0.2 / v0.2.1) |
 | **Autores** | Javier Oropeza · Addendum de alcance: Alejandro Govea Hernandez |
 | **Revisión / liderazgo** | Alexis Herrera (Jefe de Desarrollo) |
 | **Tipo de proyecto** | Feature web/API |
 
 ## 1. Resumen ejecutivo
 
-Este proyecto agrega a **SIGA** un **módulo de administración del taller** y la exigencia de **documentación** (catálogo configurable, requerido u opcional) tanto en el **alta** como en la **actualización** de datos del taller. Está dirigido a la **administración operativa** que gestiona la red de talleres, a los **talleres (proveedores)** que se incorporan o ya operan en ella, y a **validadores internos** que revisan la veracidad de la información y documentos.
+Este proyecto agrega a **SIGA** un **módulo de administración del taller** y la exigencia de **documentación** (catálogo configurable, requerido u opcional) tanto en el **alta** como en la **actualización** de datos del taller. El alcance aplica a **todos los países** donde opera Garantiplus en SIGA (**México, Colombia y Chile**). Está dirigido a la **administración operativa** que gestiona la red de talleres, a los **talleres (proveedores)** que se incorporan o ya operan en ella, y a **validadores internos** que revisan la veracidad de la información y documentos.
 
 Hoy un taller puede quedar registrado con información mínima y **sin documentación de soporte**. Tras la aprobación se crea el taller y un usuario con rol `Taller`, que puede operar averías, pero **no existe un área administrativa** donde el taller gestione su expediente (datos fiscales/bancarios y documentos) ni un flujo de validación posterior.
 
@@ -42,7 +42,7 @@ El resultado esperado es **reducir el riesgo de proveedores no confiables**, mej
 
 ## 3. Objetivo del producto
 
-Garantizar que los talleres de la red de **Garantiplus** cuenten con **información administrativa y documentación cargada y validada** —tanto al registrarse como al actualizar su expediente— mediante un **módulo de administración**, un **catálogo de documentos**, un **flujo de validación auditado** y, de forma configurable, una **compuerta al subir factura de avería**, con el fin de **reducir el riesgo de proveedores no confiables** y elevar la calidad de la red de servicio.
+Garantizar que los talleres de la red de **Garantiplus en México, Colombia y Chile** cuenten con **información administrativa y documentación cargada y validada** —tanto al registrarse como al actualizar su expediente— mediante un **módulo de administración**, un **catálogo de documentos** (seed/tipos por país cuando aplique), un **flujo de validación auditado** y, de forma configurable, una **compuerta al subir factura de avería**, con el fin de **reducir el riesgo de proveedores no confiables** y elevar la calidad de la red de servicio.
 
 ## 4. Usuarios y actores
 
@@ -72,7 +72,7 @@ Garantizar que los talleres de la red de **Garantiplus** cuenten con **informaci
 | Descarga de documentos | Desde servidor o bucket; si no está en ninguno, mensaje de que el documento no se encuentra. |
 | Roles `Taller-Administracion` y `Taller-Averias` | Permisos diferenciados como se describe en §4; usuarios vinculados a un solo taller. |
 | Compuerta en factura de avería | Si el taller no tiene información/documentos validados al subir factura para pago, se le solicita completar y validar su administración. **Configurable en settings** (habilitar/deshabilitar). |
-| Guardarraíl de aprobación de alta | Ningún taller nuevo queda aprobado/activo sin la documentación **requerida** del catálogo completa y validada (país objetivo). |
+| Guardarraíl de aprobación de alta | Ningún taller nuevo queda aprobado/activo sin la documentación **requerida** del catálogo completa y validada (en MX, COL y CHL). |
 
 **Principio rector del MVP:** *un taller no puede quedar aprobado/activo sin la documentación requerida validada; y, si la compuerta de factura está activa, no puede cobrar vía factura de avería con expediente incompleto o no validado.*
 
@@ -157,7 +157,7 @@ flowchart TD
 
 **Datos mínimos:**
 
-- Catálogo: `tipo_documento`, `requerido`, `activo`, (opcional) país.
+- Catálogo: `tipo_documento`, `requerido`, `activo`, `pais` (tipos pueden variar por país: p. ej. RUT/Cámara en COL vs RFC/Constancia en MX).
 - Documento: `taller_id` / `solicitud_id`, `tipo_documento`, `uri`, ruta local, `fecha_carga`, `cargado_por`, `estatus_validacion`, `validado_por`, `fecha_validacion`, `motivo_rechazo`.
 - Administrativos: `nombre_taller`, `rfc`, `cp`, `municipio`, `colonia`, `direccion`, `telefonos`, `observaciones`, CLABE/`iban`, `banco`, `sucursal`, número de cuenta.
 - Settings: lista de validadores, ruta base, prefijo S3, flag `EnforceValidatedProfileOnInvoice`.
@@ -172,7 +172,7 @@ Por decisión del solicitante en v0.1, **no se definen métricas cuantitativas**
 
 | **Riesgo** | **Impacto potencial** |
 | --- | --- |
-| País MVP no cerrado (COL vs MX vs ambos) | Puede cambiar el seed del catálogo y las validaciones de campos. |
+| Catálogo/documentos distintos por país (MX / COL / CHL) | Seed incompleto o etiquetas incorrectas por país pueden bloquear altas legítimas. |
 | Convivencia del rol `Taller` con roles nuevos | Riesgo de menús/autorizaciones rotas si no se define la matriz de permisos. |
 | Análisis de cuenta bancaria aún no resuelto | Puede cambiar el comportamiento de esa parte. |
 | Compuerta de factura activada de forma prematura | Puede bloquear operación real de talleres sin expediente validado. |
@@ -193,7 +193,7 @@ Por decisión del solicitante en v0.1, **no se definen métricas cuantitativas**
 
 | **Tema** | **Pregunta abierta** |
 | --- | --- |
-| País MVP | ¿El alcance v0.2 aplica a Colombia, México o ambos? ¿El catálogo es por país? |
+| Catálogo por país | ¿Cuáles son los documentos exactos (requerido/opcional) para México, Colombia y Chile? |
 | Cuenta bancaria | ¿En qué consiste exactamente el "análisis" pendiente? ¿Qué valida el sistema vs. el validador? |
 | Descuentos pactados (v0.1) | ¿Siguen en el MVP como dato estructurado o se modelan como tipo de documento/dato del catálogo? |
 | Rol `Taller` legacy | ¿Convive con acceso completo (admin+averías), se migra a los roles nuevos, o se depreca? |
@@ -214,3 +214,4 @@ Por decisión del solicitante en v0.1, **no se definen métricas cuantitativas**
 | --- | --- | --- |
 | v0.1 | 2026-07-21 | Alcance inicial: documentación obligatoria en alta (RUT, Cámara, brochure, descuentos, cuenta bancaria) — Colombia. |
 | v0.2 | 2026-08-06 | Addendum: módulo admin, catálogo requerido/opcional, validadores + correo, auditoría, roles nuevos, storage dual, compuerta factura configurable. |
+| v0.2.1 | 2026-08-06 | Alcance multi-país explícito: México, Colombia y Chile (no solo Colombia). |

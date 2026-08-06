@@ -7,6 +7,9 @@
 > (`actualizacion_plan_PJ3746-admon-talleres.txt`): módulo de administración post-alta, catálogo de documentos
 > requeridos/opcionales, flujo de validación con correo a validadores, roles `taller-administracion` /
 > `taller-averias`, almacenamiento dual (servidor + S3) y compuerta configurable al subir factura de avería.
+>
+> **Actualización 2026-08-06 (v0.2.1):** el alcance aplica a **todos los países** (México, Colombia y Chile),
+> no solo a Colombia. El catálogo de documentos se seedéa / filtra por país.
 
 | Campo | Detalle |
 |---|---|
@@ -31,7 +34,7 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 
 - **Arquitectura:** modificación sobre monolito existente SIGA Web (EC2 + .NET 8 + Razor/MVC Areas). No se crea microservicio nuevo. Almacenamiento **dual** (disco servidor + bucket S3), mismo patrón que contratos/documentos de averías (`FileStorage` + `DocumentosGenerados` / `IStorage`).
 - **Stack:** .NET 8 / C#, Razor Views + jQuery, PostgreSQL, Amazon S3 + filesystem local.
-- **País:** el PRD original apunta a **Garantiplus Colombia**; los campos del addendum (`rfc`, `clabe`, etc.) ya existen en el modelo `taller` multi-país. **Cerrar en Fase 0** si el MVP aplica solo a COL, solo a MX, o a ambos (catálogo de documentos por país).
+- **País:** **México, Colombia y Chile** (alcance multi-país confirmado). Feature activo en los tres hubs; el **catálogo de documentos** (tipos requeridos/opcionales y etiquetas) varía por `HubBaseCountryCode` / país. Entidades EF nuevas con **paridad** en `DataAccess` (MX) y `DataAccessColombia` (COL); Chile según el DataAccess que use el build.
 - **Base existente a extender:**
   - Auto-registro público: `HomeController.RegistroTalleres` + `Views/Home/RegistroTalleres.cshtml`
   - Aprobación → crea `taller` + Identity user rol `Taller` + `usuario_taller`: `Areas/Averias/Controllers/TalleresController.cs` (`Autorizar`)
@@ -72,9 +75,9 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 - [ ] Acceso a `gp_4.0_siga` (y a `gp_3.0_siga_api` si se incluye el canal API)
 - [ ] Rama `develop` actualizada
 - [ ] `CLAUDE.md` presente ✅
-- [ ] Ambiente local con país de prueba acordado (`CountryBase` / `HubBaseCountryCode`)
-- [ ] Bucket S3 + rutas locales `FileStorage` / `DocumentosGenerados` operativos
-- [ ] **Cerrar preguntas abiertas** (Fase 0 / §12) antes de implementar reglas de negocio
+- [ ] Ambiente local: probar al menos un país; planificar smoke en MX, COL y CHL antes del cierre
+- [ ] Bucket S3 + rutas locales `FileStorage` / `DocumentosGenerados` operativos **por ambiente/país**
+- [ ] **Cerrar preguntas abiertas** (Fase 0 / §12), en especial **seed del catálogo por país**
 - [ ] Confirmar si el canal API Claims/Workshops entra en MVP
 
 ---
@@ -113,20 +116,21 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 
 **Decisiones de diseño (propuestas; validar en Fase 0):**
 
-1. **`tipo_documento_taller`** (catálogo): `codigo`, `nombre`, `requerido` (bool), `activo`, `orden`, opcional `pais` / `HubBaseCountryCode` para variar COL vs MX. Seed inicial: RUT / Cámara / Brochure (COL) o equivalentes MX según acuerdo.
+1. **`tipo_documento_taller`** (catálogo): `codigo`, `nombre`, `requerido` (bool), `activo`, `orden`, **`pais`** (`MEX` / `COL` / `CHL` o equivalente). Seed por país (p. ej. RUT/Cámara/Brochure en COL; RFC/Constancia/equivalentes en MX; RUT/equivalentes en CHL — cerrar lista en T-01).
 2. **`documento_taller`** (instancias): FK `id_taller` y/o `id_solicitud`, FK `id_tipo_documento`, `uri`, `ruta_local` (opcional), `nombre_original`, `mime_type`, `fecha_carga`, `cargado_por`, `estatus_validacion`, `validado_por`, `fecha_validacion`, `motivo_rechazo`.
 3. **Estatus del taller administrativo:** campo(s) en `taller` (p.ej. `estatus_administrativo`: `CompletoValidado` / `PendienteValidacion` / `Incompleto`) o cálculo derivado de docs requeridos + datos obligatorios.
 4. **Auditoría de datos (no solo archivos):** al cambiar campos administrativos sensibles, registrar historial (quién, qué campo/bloque, cuándo) para que el validador vea el cambio; mínimo viable: bitácora por “envío a validación” + snapshot o diff de campos bancarios/fiscales.
-5. **Validadores:** lista en `appsettings` (emails y/o userIds), p.ej. `WorkshopAdmin:ValidatorEmails` / `WorkshopAdmin:ValidatorUserIds` (1..N).
-6. **Compuerta factura:** `WorkshopAdmin:EnforceValidatedProfileOnInvoice` (bool, default `false` en primer deploy).
+5. **Validadores:** lista en `appsettings` (emails y/o userIds), p.ej. `WorkshopAdmin:ValidatorEmails` / `WorkshopAdmin:ValidatorUserIds` (1..N); puede diferir por ambiente/país.
+6. **Compuerta factura:** `WorkshopAdmin:EnforceValidatedProfileOnInvoice` (bool, default `false` en primer deploy); configurable por ambiente/país.
 7. **Roles Identity nuevos:**
    - `Taller-Administracion`: módulo admin (datos+docs); listado y detalle de averías **solo lectura** (sin crear/editar/acciones).
    - `Taller-Averias`: crear y dar seguimiento a averías; **sin** acceso al módulo admin.
    - Rol histórico `Taller`: definir en Fase 0 si sigue con acceso completo (admin+averías) o se migra.
 8. **Vinculación 1 taller:** usuarios de estos roles siguen ligados vía `usuario_taller` (un solo taller).
 9. **Storage:** nuevas claves `FileStorage:Documentos_Talleres` (prefijo S3) y ruta local espejo (p.ej. bajo `DocumentosGenerados` o `FileStorage:DocumentosTalleresLocal`); cada upload escribe ambos y persiste `uri` (key S3) + ruta relativa local.
-10. **Sin OCR / sin verificación externa** (fuera de alcance PRD).
-11. **Sin regularización masiva retroactiva** de talleres ya activos (PRD); el módulo admin sí les permite completar docs de forma voluntaria; la compuerta de factura puede forzarlos si el flag está ON.
+10. **Feature activo en MX, COL y CHL** — no condicionar el módulo a un solo `CountryBase`; solo el contenido del catálogo y etiquetas de campos varían por país.
+11. **Sin OCR / sin verificación externa** (fuera de alcance PRD).
+12. **Sin regularización masiva retroactiva** de talleres ya activos (PRD); el módulo admin sí les permite completar docs de forma voluntaria; la compuerta de factura puede forzarlos si el flag está ON.
 
 ---
 
@@ -135,8 +139,8 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 ### Fase 0 — Alineación funcional y modelo (P1)
 
 - [ ] **T-01** — Cerrar preguntas abiertas (PRD §14 + addendum) con operación / solicitante
-  - País(es) del MVP (COL / MX / ambos) y seed del catálogo de documentos.
-  - Campos exactos editables en administración vs. solo lectura post-alta.
+  - **Confirmado:** alcance MX + COL + CHL. Cerrar **seed del catálogo de documentos por país**.
+  - Campos exactos editables en administración vs. solo lectura post-alta (homologar labels por país: RFC vs RUT, CLABE vs cuenta, etc.).
   - ¿Descuentos pactados del PRD siguen en MVP o se modelan como tipo de documento/dato del catálogo?
   - Reglas del análisis de cuenta bancaria (sistema vs. checklist manual del validador).
   - Comportamiento del rol histórico `Taller` vs. los dos roles nuevos (¿conviven? ¿migración?).
@@ -144,7 +148,7 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
   - Límite de tamaño por archivo (default técnico propuesto: 5 MB).
   - ¿Canal API Claims/Workshops en MVP?
   - ¿`RegistraTallerYAsigna` exige docs o queda exceptuado?
-  - Default del flag `EnforceValidatedProfileOnInvoice` en QA/Prod.
+  - Default del flag `EnforceValidatedProfileOnInvoice` en QA/Prod (por país si aplica).
   - Archivos: actualizar §12 de este plan / `AVANCE.md`
   - Criterio de completitud: respuestas documentadas; sin bloqueos abiertos para Fase 1
 
@@ -155,10 +159,11 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 - [ ] **T-03** — Diseñar esquema BD + script SQL
   - Tablas: `tipo_documento_taller`, `documento_taller`, bitácora de validación / cambios administrativos (nombre final en T-01)
   - Campos de estatus administrativo en `taller` si aplica
-  - Completar mapeo EF de `datos_fiscales_bancarios_taller` en DataAccessColombia si el país lo requiere
-  - Espejo de entidades en `DataAccess` / `DataAccessColombia` según paridad
+  - Completar mapeo EF de `datos_fiscales_bancarios_taller` en DataAccessColombia (y MX) si se usa
+  - **Paridad obligatoria** de entidades nuevas en `DataAccess` y `DataAccessColombia` (Chile según DataAccess del build)
+  - Seed SQL del catálogo para MEX, COL y CHL
   - Archivos: script `GarantiplusWeb/BD/…`, modelos EF, `garantiplus_dbContext`
-  - Criterio de completitud: script ejecutable en BD de desarrollo; entidades compilables
+  - Criterio de completitud: script ejecutable en BD de desarrollo de cada país; entidades compilables en ambos DataAccess
 
 ### Fase 1 — Persistencia, storage, catálogo y reglas (P1)
 
@@ -189,11 +194,11 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 ### Fase 2 — Alta con documentación y bandeja de solicitud (P1)
 
 - [ ] **T-08** — Extender auto-registro público `RegistroTalleres`
-  - UI según catálogo (requeridos/opcionales) + datos bancarios/fiscales reales (dejar de hardcodear `"SIN INFORMACION"` donde aplique)
+  - UI según catálogo del país del hub (requeridos/opcionales) + datos bancarios/fiscales reales (dejar de hardcodear `"SIN INFORMACION"` donde aplique)
   - POST multipart → storage dual + metadatos; validar obligatoriedad
-  - Condicionar por país si la vista es multi-país
+  - Activo en MX, COL y CHL (catálogo/labels según país)
   - Archivos: `HomeController.cs`, `Views/Home/RegistroTalleres.cshtml`, BR
-  - Criterio de completitud: no se crea solicitud del país objetivo sin docs requeridos
+  - Criterio de completitud: no se crea solicitud sin docs requeridos del catálogo del país
 
 - [ ] **T-09** — Extender bandeja / detalle de solicitud interna
   - Listar documentos, estatus, permitir carga/reemplazo; ver autor y fecha
@@ -203,11 +208,11 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 - [ ] **T-10** — Guardarraíl de `Autorizar` + creación de usuario/roles
   - No autorizar si docs requeridos incompletos o no validados
   - Mantener creación de `taller` + usuario; asignar rol(es) acordados en T-01 (`Taller` y/o nuevos)
-  - Criterio de completitud: no existe taller activo sin documentación requerida validada (país objetivo)
+  - Criterio de completitud: no existe taller activo sin documentación requerida validada (MX / COL / CHL)
 
 - [ ] **T-11** — (Condicional) API Claims `Workshops` multipart
   - Solo si T-01 incluye API en MVP; si no, cancelar y anotar en §12
-  - Criterio de completitud: misma regla de obligatoriedad o rechazo explícito COL/MX incompleto
+  - Criterio de completitud: misma regla de obligatoriedad o rechazo explícito en altas incompletas (todos los países)
 
 ### Fase 3 — Módulo de administración del taller (P1)
 
@@ -248,12 +253,12 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 
 - [ ] **T-17** — Pruebas end-to-end
   - Alta incompleta/completa; autorización bloqueada/OK; módulo admin; validación; descarga local/S3/missing; roles; factura con flag ON/OFF; formatos inválidos; archivo > límite
-  - Criterio de completitud: checklist §10 pasado en ambiente del país objetivo
+  - Criterio de completitud: checklist §10 pasado a fondo en al menos un país; catálogo correcto verificado para MX, COL y CHL
 
 - [ ] **T-18** — UX/mensajes y regresión multi-país / multi-rol
-  - Mensajes en español claros (faltantes, rechazo, documento no encontrado, compuerta factura)
-  - Verificar que países/roles fuera de alcance no se rompen
-  - Criterio de completitud: smoke sin regresiones obvias; país objetivo cumple RF
+  - Mensajes en español claros (faltantes, rechazo, documento no encontrado, compuerta factura); labels según país
+  - Smoke en MX, COL y CHL (registro/admin/roles) sin regresiones obvias
+  - Criterio de completitud: los tres países cumplen RF del feature; roles OK
 
 ---
 
@@ -261,10 +266,10 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 
 | Tabla | Tipo de cambio | Descripción |
 |---|---|---|
-| `tipo_documento_taller` | **Nueva** | Catálogo: nombre/código, requerido/opcional, activo, orden, (opcional) país |
+| `tipo_documento_taller` | **Nueva** | Catálogo: nombre/código, requerido/opcional, activo, orden, **`pais`** (MEX/COL/CHL) |
 | `documento_taller` | **Nueva** | Instancias: uri S3, ruta local, mime, fechas, `cargado_por`, estatus, `validado_por`, `fecha_validacion`, motivo rechazo; FK taller y/o solicitud + tipo |
 | `bitacora_validacion_taller` *(o equivalente)* | **Nueva / a confirmar** | Quién validó qué (documento o bloque de datos), cuándo, resultado |
-| `taller` / `registro_taller` | Posible extensión | `estatus_administrativo` u homologable; dejar de aceptar vacíos bancarios en alta del país objetivo |
+| `taller` / `registro_taller` | Posible extensión | `estatus_administrativo` u homologable; dejar de aceptar vacíos bancarios en alta (todos los países) |
 | `aspnetroles` / asignaciones | **Datos** | Roles `Taller-Administracion`, `Taller-Averias` |
 | `datos_fiscales_bancarios_taller` | Mapeo EF COL si aplica | Completar DbSet si el país lo usa |
 | `descuento_taller` | **Condicional** | Solo si T-01 mantiene descuentos pactados del PRD como dato estructurado |
@@ -346,7 +351,7 @@ Secrets: seguir Secrets Manager / config existente; **no** commitear claves.
 - [ ] Rol `Taller-Administracion`: admin + ver averías sin actuar sobre ellas
 - [ ] Rol `Taller-Averias`: crear/seguimiento de averías; sin acceso a administración
 - [ ] Con `EnforceValidatedProfileOnInvoice=true`, no se puede subir factura de pago si el taller no tiene información/documentos validados; con `false`, no bloquea
-- [ ] En el país objetivo, no se aprueba/activa taller nuevo sin documentación requerida validada (principio del PRD)
+- [ ] En **MX, COL y CHL**, no se aprueba/activa taller nuevo sin documentación requerida validada (principio del PRD)
 - [ ] Formatos PDF/JPG/PNG; rechazo claro si inválido o excede tamaño
 - [ ] Talleres históricos no se obligan a regularizar en masa; la compuerta de factura puede forzarlos si el flag está activo
 - [ ] Preguntas abiertas de Fase 0 cerradas y reflejadas en código/config
@@ -357,7 +362,7 @@ Secrets: seguir Secrets Manager / config existente; **no** commitear claves.
 
 | Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| Alcance PRD (COL/docs fijos) vs addendum (admin/roles/catálogo/MX-ish) divergente | Alta | Alto | Cerrar país + catálogo + roles en T-01; actualizar PRD |
+| Seed de catálogo incompleto o incorrecto por país (MX/COL/CHL) | Alta | Alto | Cerrar lista exacta de docs por país en T-01; smoke de alta en los tres hubs |
 | Rol `Taller` legacy vs roles nuevos rompe menús/autorizaciones | Alta | Alto | Matriz de permisos en T-14; smoke de portal taller |
 | Reglas de análisis bancario indefinidas | Alta | Medio | Checklist manual del validador + archivo soporte si no hay reglas de sistema |
 | Dual storage inconsistente (local vs S3) | Media | Alto | Escribir ambos en la misma operación; descarga con fallback; no validar si falta archivo |
@@ -371,15 +376,15 @@ Secrets: seguir Secrets Manager / config existente; **no** commitear claves.
 
 ## 12. Notas para el programador
 
-1. **Fuente de verdad del alcance ampliado:** `actualizacion_plan_PJ3746-admon-talleres.txt`. El `PRD.md` v0.1 **no** describe aún el módulo admin, roles nuevos, catálogo dinámico ni la compuerta de factura — conviene actualizar el PRD en paralelo o anexar un addendum versionado en la misma carpeta.
-2. **País base:** confirmar antes de codificar. Usar skill `siga-cambio-pais-base` si el entorno local no coincide.
+1. **Fuente de verdad del alcance ampliado:** PRD v0.2.1 + addendum. Alcance **multi-país** (MX, COL, CHL).
+2. **País base al desarrollar:** el feature debe funcionar en los tres; usar skill `siga-cambio-pais-base` para rotar el ambiente local y validar catálogo/labels por país.
 3. **No refactorizar** Identity / menús / `AveriasController` más allá de lo necesario para roles y la compuerta.
 4. **Create interno** de taller sigue comentado: priorizar bandeja `registro_taller` + registro público + módulo admin post-alta.
-5. **Paridad DataAccess MX/COL:** replicar entidades nuevas en ambos contextos si el equipo mantiene espejo; reglas/UI según país acordado.
+5. **Paridad DataAccess MX/COL (obligatoria):** replicar entidades nuevas en ambos contextos; Chile según el DataAccess del build. Scripts SQL en las tres BDs.
 6. **Fuera de alcance confirmado (PRD):** OCR, verificación contra fuentes oficiales, vencimiento/renovación automática, validación bancaria externa, regularización masiva.
 7. Pendiente de T-01 (dejar respuestas aquí al cerrar Fase 0):
-   - País(es) MVP =
-   - Seed catálogo documentos =
+   - Países MVP = **MX + COL + CHL** (confirmado)
+   - Seed catálogo documentos (por país) =
    - Descuentos pactados en MVP = sí/no / cómo
    - Análisis cuenta bancaria =
    - Rol `Taller` legacy =

@@ -11,20 +11,22 @@
 > **Actualización 2026-08-06 (v0.2.1):** el alcance aplica a **todos los países** (México, Colombia y Chile),
 > no solo a Colombia. El catálogo de documentos se seedéa / filtra por país.
 
-| Campo | Detalle |
-|---|---|
-| PRD de origen | `enginecx_prd/SIGA/PJ3746-admon-talleres/PRD.md` (+ addendum de alcance 2026-08-06) |
-| Repositorio | `gp_4.0_siga` (SIGA Web — GarantiplusWeb); impacto secundario opcional en `gp_3.0_siga_api` (Claims / Workshops) |
-| Rama base | `develop` |
-| Rama | `feature/PJ3746-admon-talleres` |
-| Tipo | Feature |
-| Responsable | Alejandro Govea Hernandez |
-| Folio PRD | `PJ3746` |
-| Fecha de generación | 2026-07-24 |
-| Fecha de actualización | 2026-08-06 |
-| Estado | Aprobado (replanificado) |
-| ID plan (BD) | 24 |
-| Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal (plan original); actualización por Cursor Grok |
+
+| Campo                  | Detalle                                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| PRD de origen          | `enginecx_prd/SIGA/PJ3746-admon-talleres/PRD.md` (+ addendum de alcance 2026-08-06)                              |
+| Repositorio            | `gp_4.0_siga` (SIGA Web — GarantiplusWeb); impacto secundario opcional en `gp_3.0_siga_api` (Claims / Workshops) |
+| Rama base              | `develop`                                                                                                        |
+| Rama                   | `feature/PJ3746-admon-talleres`                                                                                  |
+| Tipo                   | Feature                                                                                                          |
+| Responsable            | Alejandro Govea Hernandez                                                                                        |
+| Folio PRD              | `PJ3746`                                                                                                         |
+| Fecha de generación    | 2026-07-24                                                                                                       |
+| Fecha de actualización | 2026-08-06                                                                                                       |
+| Estado                 | Aprobado (replanificado)                                                                                         |
+| ID plan (BD)           | 24                                                                                                               |
+| Modelo / esfuerzo      | Claude Opus 4.8 (`claude-opus-4-8`) — normal (plan original); actualización por Cursor Grok                      |
+
 
 ---
 
@@ -45,26 +47,30 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 
 **Alcance unificado (PRD + addendum):**
 
-| Bloque | Qué cubre |
-|---|---|
-| A. Alta con docs | Exigir documentación (catálogo) en auto-registro / solicitud; no aprobar taller sin docs validados (PRD original) |
-| B. Módulo administración | Pantalla post-alta para editar datos del taller + subir/reemplazar documentos; UI de estatus y faltantes |
-| C. Catálogo documentos | Tabla que define qué documentos se piden (requerido/opcional); no hardcodear solo RUT/Cámara/brochure |
-| D. Validación | Al subir/actualizar → estatus validación + email a validadores (settings, 1..N); auditoría de quién validó qué y cuándo; validador ve autor y fecha de carga |
-| E. Roles | `Taller-Administracion` (admin + ver averías sin mutar) y `Taller-Averias` (crear/seguimiento averías, sin admin); el rol `Taller` actual mantiene/admin+averías según decisión Fase 0 |
-| F. Compuerta factura | Si taller sin info/docs validados al subir factura de pago → bloquear y pedir completar administración; **flag en settings** |
-| G. Storage dual | Guardar en servidor + bucket; `uri` en metadato; descarga con fallback servidor↔bucket y mensaje si no existe |
+
+| Bloque                   | Qué cubre                                                                                                                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A. Alta con docs         | Exigir documentación (catálogo) en auto-registro / solicitud; no aprobar taller sin docs validados (PRD original)                                                                      |
+| B. Módulo administración | Pantalla post-alta para editar datos del taller + subir/reemplazar documentos; UI de estatus y faltantes                                                                               |
+| C. Catálogo documentos   | Tabla que define qué documentos se piden (requerido/opcional); no hardcodear solo RUT/Cámara/brochure                                                                                  |
+| D. Validación            | Al subir/actualizar → estatus validación + email a validadores (settings, 1..N); auditoría de quién validó qué y cuándo; validador ve autor y fecha de carga                           |
+| E. Roles                 | `Taller-Administracion` (admin + ver averías sin mutar) y `Taller-Averias` (crear/seguimiento averías, sin admin); el rol `Taller` actual mantiene/admin+averías según decisión Fase 0 |
+| F. Compuerta factura     | Si taller sin info/docs validados al subir factura de pago → bloquear y pedir completar administración; **flag en settings**                                                           |
+| G. Storage dual          | Guardar en servidor + bucket; `uri` en metadato; descarga con fallback servidor↔bucket y mensaje si no existe                                                                          |
+
 
 **Hallazgos de código que acotan el diseño:**
 
-| Tema | Hallazgo |
-|---|---|
-| Alta aprobada | `TalleresController.Autorizar` ya crea `taller` + usuario Identity rol `"Taller"` + `usuario_taller` |
-| ¿Carga documental hoy? | **No** en registro ni solicitud |
-| Catálogo docs taller | **No existe** — crear `tipo_documento_taller` (catálogo) + `documento_taller` (instancias) |
-| Descuentos pactados (PRD) | **No existen** como modelo; decidir si siguen en MVP o se modelan como tipo de documento/dato del catálogo |
-| Storage contratos | Prefijo S3 (`FileStorage:Contratos`) + ruta local (`DocumentosGenerados:Contratos`) — replicar patrón para talleres |
-| Roles taller | Hoy `"Taller"` y `"Usuario Distribuidor-Taller"`; nuevos roles Identity a crear y cablear en `[Authorize]` / menús |
+
+| Tema                      | Hallazgo                                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Alta aprobada             | `TalleresController.Autorizar` ya crea `taller` + usuario Identity rol `"Taller"` + `usuario_taller`                |
+| ¿Carga documental hoy?    | **No** en registro ni solicitud                                                                                     |
+| Catálogo docs taller      | Tabla **`documento_solicitado_taller`** (por país, requerido/activo); datos asumidos pre-cargados; UI CRUD diferida |
+| Descuentos pactados (PRD) | **No existen** como modelo; decidir si siguen en MVP o se modelan como tipo de documento/dato del catálogo          |
+| Storage contratos         | Prefijo S3 (`FileStorage:Contratos`) + ruta local (`DocumentosGenerados:Contratos`) — replicar patrón para talleres |
+| Roles taller              | Hoy `"Taller"` y `"Usuario Distribuidor-Taller"`; nuevos roles Identity a crear y cablear en `[Authorize]` / menús  |
+
 
 ---
 
@@ -78,7 +84,7 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 - [ ] Ambiente local: probar al menos un país; planificar smoke en MX, COL y CHL antes del cierre
 - [ ] Bucket S3 + rutas locales `FileStorage` / `DocumentosGenerados` operativos **por ambiente/país**
 - [ ] **Cerrar preguntas abiertas** (Fase 0 / §12), en especial **seed del catálogo por país**
-- [ ] Confirmar si el canal API Claims/Workshops entra en MVP
+- [x] Canal API Claims/Workshops **fuera de alcance** MVP (confirmado T-01)
 
 ---
 
@@ -116,18 +122,18 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 
 **Decisiones de diseño (propuestas; validar en Fase 0):**
 
-1. **`tipo_documento_taller`** (catálogo): `codigo`, `nombre`, `requerido` (bool), `activo`, `orden`, **`pais`** (`MEX` / `COL` / `CHL` o equivalente). Seed por país (p. ej. RUT/Cámara/Brochure en COL; RFC/Constancia/equivalentes en MX; RUT/equivalentes en CHL — cerrar lista en T-01).
-2. **`documento_taller`** (instancias): FK `id_taller` y/o `id_solicitud`, FK `id_tipo_documento`, `uri`, `ruta_local` (opcional), `nombre_original`, `mime_type`, `fecha_carga`, `cargado_por`, `estatus_validacion`, `validado_por`, `fecha_validacion`, `motivo_rechazo`.
+1. **`documento_solicitado_taller`** (catálogo): `id_documento` UUID, `documento`, `codigo_pais` FK→`pais`, `requerido`, `activo`. **Datos preexistentes en BD**; sin UI CRUD en MVP (evolución: Administrador General). El código solo consulta activos por país.
+2. **`documento_taller`** (instancias): FK `id_taller` y/o `id_solicitud`, FK `id_documento` → `documento_solicitado_taller`, `uri`, `ruta_local` (opcional), `nombre_original`, `mime_type`, `fecha_carga`, `cargado_por`, `estatus_validacion`, `validado_por`, `fecha_validacion`, `motivo_rechazo`.
 3. **Estatus del taller administrativo:** campo(s) en `taller` (p.ej. `estatus_administrativo`: `CompletoValidado` / `PendienteValidacion` / `Incompleto`) o cálculo derivado de docs requeridos + datos obligatorios.
-4. **Auditoría de datos (no solo archivos):** al cambiar campos administrativos sensibles, registrar historial (quién, qué campo/bloque, cuándo) para que el validador vea el cambio; mínimo viable: bitácora por “envío a validación” + snapshot o diff de campos bancarios/fiscales.
-5. **Validadores:** lista en `appsettings` (emails y/o userIds), p.ej. `WorkshopAdmin:ValidatorEmails` / `WorkshopAdmin:ValidatorUserIds` (1..N); puede diferir por ambiente/país.
-6. **Compuerta factura:** `WorkshopAdmin:EnforceValidatedProfileOnInvoice` (bool, default `false` en primer deploy); configurable por ambiente/país.
+4. **Auditoría de datos con diff:** al cambiar campos administrativos, persistir **campo, valor anterior, valor nuevo, quién, cuándo** para que el validador vea el cambio concreto (además del documento pendiente). Mínimo viable: bitácora por campo modificado en cada “envío a validación”.
+5. **Validadores y notificaciones:** lista en `WorkshopAdmin:ValidatorEmails` / `ValidatorUserIds`. Correo a validadores y al taller gobernado por flags en la **misma sección `WorkshopAdmin`** (p. ej. `NotifyValidatorsOnChange`, `NotifyWorkshopOnValidation`) para poder apagar correos en ambientes de prueba.
+6. **Compuerta factura:** `WorkshopAdmin:EnforceValidatedProfileOnInvoice` (bool, **default `true`** en QA/Prod); `false` = brincar validación. Configurable por ambiente/país.
 7. **Roles Identity nuevos:**
-   - `Taller-Administracion`: módulo admin (datos+docs); listado y detalle de averías **solo lectura** (sin crear/editar/acciones).
-   - `Taller-Averias`: crear y dar seguimiento a averías; **sin** acceso al módulo admin.
-   - Rol histórico `Taller`: definir en Fase 0 si sigue con acceso completo (admin+averías) o se migra.
+  - `Taller-Administracion`: módulo admin (datos+docs); listado y detalle de averías **solo lectura** (sin crear/editar/acciones).
+  - `Taller-Averias`: crear y dar seguimiento a averías; **sin** acceso al módulo admin.
+  - Rol histórico `Taller`: definir en Fase 0 si sigue con acceso completo (admin+averías) o se migra.
 8. **Vinculación 1 taller:** usuarios de estos roles siguen ligados vía `usuario_taller` (un solo taller).
-9. **Storage:** nuevas claves `FileStorage:Documentos_Talleres` (prefijo S3) y ruta local espejo (p.ej. bajo `DocumentosGenerados` o `FileStorage:DocumentosTalleresLocal`); cada upload escribe ambos y persiste `uri` (key S3) + ruta relativa local.
+9. **Storage (patrón contratos):** ruta/base en settings (igual que contratos); al subir, persistir en tabla el documento con campo **`uri`** = complemento de ruta + nombre del archivo físico (servidor y/o bucket S3). Descarga resuelve por `uri` como contratos.
 10. **Feature activo en MX, COL y CHL** — no condicionar el módulo a un solo `CountryBase`; solo el contenido del catálogo y etiquetas de campos varían por país.
 11. **Sin OCR / sin verificación externa** (fuera de alcance PRD).
 12. **Sin regularización masiva retroactiva** de talleres ya activos (PRD); el módulo admin sí les permite completar docs de forma voluntaria; la compuerta de factura puede forzarlos si el flag está ON.
@@ -138,32 +144,32 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 
 ### Fase 0 — Alineación funcional y modelo (P1)
 
-- [ ] **T-01** — Cerrar preguntas abiertas (PRD §14 + addendum) con operación / solicitante
-  - **Confirmado:** alcance MX + COL + CHL. Cerrar **seed del catálogo de documentos por país**.
-  - Campos exactos editables en administración vs. solo lectura post-alta (homologar labels por país: RFC vs RUT, CLABE vs cuenta, etc.).
-  - ¿Descuentos pactados del PRD siguen en MVP o se modelan como tipo de documento/dato del catálogo?
-  - Reglas del análisis de cuenta bancaria (sistema vs. checklist manual del validador).
-  - Comportamiento del rol histórico `Taller` vs. los dos roles nuevos (¿conviven? ¿migración?).
-  - Nombres exactos de roles Identity (casing) y menús visibles.
-  - Límite de tamaño por archivo (default técnico propuesto: 5 MB).
-  - ¿Canal API Claims/Workshops en MVP?
-  - ¿`RegistraTallerYAsigna` exige docs o queda exceptuado?
-  - Default del flag `EnforceValidatedProfileOnInvoice` en QA/Prod (por país si aplica).
-  - Archivos: actualizar §12 de este plan / `AVANCE.md`
-  - Criterio de completitud: respuestas documentadas; sin bloqueos abiertos para Fase 1
+- [x] **T-01** — Cerrar preguntas abiertas (PRD §14 + addendum) con operación / solicitante
+  - **Confirmado:** alcance MX + COL + CHL. Catálogo = tabla **`documento_solicitado_taller`** (datos ya en BD; sin UI CRUD en MVP).
+  - **Confirmado:** campos admin **todos editables** por el taller y deben pasar por validación al cambiarse; validador ve **anterior vs. nuevo**.
+  - **Confirmado:** descuentos pactados = fuera de alcance (mejora posterior).
+  - **Confirmado:** análisis = checklist manual + histórico al aprobar; duda → contacto externo.
+  - **Confirmado:** rol `Taller` convive; roles nuevos `Taller-Administracion` / `Taller-Averias`.
+  - **Confirmado:** max archivo 5 MB visible en UI; API Workshops fuera de alcance (T-11 cancelada).
+  - **Confirmado:** `RegistraTallerYAsigna` sin docs; compuerta en factura (`EnforceValidatedProfileOnInvoice` default `true`).
+  - **Confirmado:** notificaciones al taller por settings; sección única `WorkshopAdmin`; correos apagables en pruebas.
+  - **Confirmado:** disponibilidad hereda SIGA; storage patrón contratos + `uri`; retención como contratos.
+  - **Confirmado:** sin campaña masiva; regularización gradual al pedir pago de avería.
+  - Archivos: §12 de este plan; PRD §13 cerrado
+  - Criterio de completitud: respuestas documentadas ✅
 
 - [ ] **T-02** — Crear / alinear rama funcional desde `develop`
   - `feature/PJ3746-admon-talleres` (renombrar/recrear si la rama anterior era solo “documentacion-obligatoria”)
   - Criterio de completitud: rama publicada en origin
 
 - [ ] **T-03** — Diseñar esquema BD + script SQL
-  - Tablas: `tipo_documento_taller`, `documento_taller`, bitácora de validación / cambios administrativos (nombre final en T-01)
+  - Tablas: `documento_solicitado_taller`, `documento_taller`, bitácora de validación / cambios administrativos (nombre final en T-01)
+  - Seed de catálogo: **no requerido en este plan** (datos ya en BD); script CREATE TABLE + GRANT sí
   - Campos de estatus administrativo en `taller` si aplica
   - Completar mapeo EF de `datos_fiscales_bancarios_taller` en DataAccessColombia (y MX) si se usa
   - **Paridad obligatoria** de entidades nuevas en `DataAccess` y `DataAccessColombia` (Chile según DataAccess del build)
-  - Seed SQL del catálogo para MEX, COL y CHL
   - Archivos: script `GarantiplusWeb/BD/…`, modelos EF, `garantiplus_dbContext`
-  - Criterio de completitud: script ejecutable en BD de desarrollo de cada país; entidades compilables en ambos DataAccess
+  - Criterio de completitud: script CREATE ejecutable; lectura del catálogo por `codigo_pais` OK; entidades compilables en ambos DataAccess
 
 ### Fase 1 — Persistencia, storage, catálogo y reglas (P1)
 
@@ -210,9 +216,7 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
   - Mantener creación de `taller` + usuario; asignar rol(es) acordados en T-01 (`Taller` y/o nuevos)
   - Criterio de completitud: no existe taller activo sin documentación requerida validada (MX / COL / CHL)
 
-- [ ] **T-11** — (Condicional) API Claims `Workshops` multipart
-  - Solo si T-01 incluye API en MVP; si no, cancelar y anotar en §12
-  - Criterio de completitud: misma regla de obligatoriedad o rechazo explícito en altas incompletas (todos los países)
+- [x] **T-11** — ~~API Claims `Workshops` multipart~~ — **CANCELADA** (fuera de alcance MVP; solo SIGA Web)
 
 ### Fase 3 — Módulo de administración del taller (P1)
 
@@ -264,15 +268,17 @@ Extender **SIGA Web** para que, tras el alta/aprobación de un taller (que ya cr
 
 ## 5. Cambios en base de datos
 
-| Tabla | Tipo de cambio | Descripción |
-|---|---|---|
-| `tipo_documento_taller` | **Nueva** | Catálogo: nombre/código, requerido/opcional, activo, orden, **`pais`** (MEX/COL/CHL) |
-| `documento_taller` | **Nueva** | Instancias: uri S3, ruta local, mime, fechas, `cargado_por`, estatus, `validado_por`, `fecha_validacion`, motivo rechazo; FK taller y/o solicitud + tipo |
-| `bitacora_validacion_taller` *(o equivalente)* | **Nueva / a confirmar** | Quién validó qué (documento o bloque de datos), cuándo, resultado |
-| `taller` / `registro_taller` | Posible extensión | `estatus_administrativo` u homologable; dejar de aceptar vacíos bancarios en alta (todos los países) |
-| `aspnetroles` / asignaciones | **Datos** | Roles `Taller-Administracion`, `Taller-Averias` |
-| `datos_fiscales_bancarios_taller` | Mapeo EF COL si aplica | Completar DbSet si el país lo usa |
-| `descuento_taller` | **Condicional** | Solo si T-01 mantiene descuentos pactados del PRD como dato estructurado |
+
+| Tabla                                          | Tipo de cambio          | Descripción                                                                                                                                              |
+| ---------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `documento_solicitado_taller`                  | **Nueva**               | Catálogo por país (`documento`, `codigo_pais` FK→`pais`, `requerido`, `activo`). Datos pre-cargados; sin UI CRUD en MVP |
+| `documento_taller`                             | **Nueva**               | Instancias subidas: uri S3, ruta local, mime, fechas, `cargado_por`, estatus, `validado_por`, `fecha_validacion`, motivo; FK taller/solicitud + `id_documento` → `documento_solicitado_taller` |
+| `bitacora_cambio_taller` *(o equivalente)*     | **Nueva**               | Diff por campo: campo, valor_anterior, valor_nuevo, usuario, fecha; qué está pendiente de validar                                                         |
+| `taller` / `registro_taller`                   | Posible extensión       | `estatus_administrativo` u homologable; dejar de aceptar vacíos bancarios en alta (todos los países)                                                     |
+| `aspnetroles` / asignaciones                   | **Datos**               | Roles `Taller-Administracion`, `Taller-Averias`                                                                                                          |
+| `datos_fiscales_bancarios_taller`              | Mapeo EF COL si aplica  | Completar DbSet si el país lo usa                                                                                                                        |
+| `descuento_taller`                             | **Fuera de alcance**    | Descuentos pactados diferidos a mejora posterior                                                                                                         |
+
 
 Script SQL versionado bajo `GarantiplusWeb/BD/` con fecha. Sin regularización masiva de históricos.
 
@@ -282,34 +288,41 @@ Script SQL versionado bajo `GarantiplusWeb/BD/` con fecha. Sin regularización m
 
 SIGA Web es MVC (no API REST primaria). Acciones relevantes:
 
-| Método | Ruta / acción | Descripción | Estado |
-|---|---|---|---|
-| GET/POST | `~/Home/RegistroTalleres` | Alta pública + multipart docs (catálogo) | Modificado |
-| GET/POST | `~/Averias/Talleres/Solicitud/{id}` | Revisión/carga/validación docs de solicitud | Modificado |
-| POST | `~/Averias/Talleres/Autorizar` | Guardarraíl docs + roles al crear usuario | Modificado |
-| GET/POST | `~/Averias/TallerAdmin/…` *(nombre final T-01)* | Módulo administración del taller | **Nuevo** |
-| POST | `~/Averias/TallerAdmin/UploadDocumento` | Upload dual + metadato | **Nuevo** |
-| GET | `~/Averias/TallerAdmin/DownloadDocumento/{id}` | Descarga local→S3→error | **Nuevo** |
-| POST | `~/Averias/TallerAdmin/Validar…` | Aprobar/rechazar doc o bloque (validador) | **Nuevo** |
-| POST | `~/Averias/Averias/GuardarDatosFiscalesBancariosTaller` | Update bancario + soporte + validación | Modificado |
-| POST | Carga factura avería (cerrar/editar) | Compuerta si perfil no validado | Modificado |
-| POST *(condicional)* | `Claims` `api/Workshops/...` | Multipart docs si entra en MVP | Condicional |
+
+| Método               | Ruta / acción                                           | Descripción                                 | Estado      |
+| -------------------- | ------------------------------------------------------- | ------------------------------------------- | ----------- |
+| GET/POST             | `~/Home/RegistroTalleres`                               | Alta pública + multipart docs (catálogo)    | Modificado  |
+| GET/POST             | `~/Averias/Talleres/Solicitud/{id}`                     | Revisión/carga/validación docs de solicitud | Modificado  |
+| POST                 | `~/Averias/Talleres/Autorizar`                          | Guardarraíl docs + roles al crear usuario   | Modificado  |
+| GET/POST             | `~/Averias/TallerAdmin/…` *(nombre final T-01)*         | Módulo administración del taller            | **Nuevo**   |
+| POST                 | `~/Averias/TallerAdmin/UploadDocumento`                 | Upload dual + metadato                      | **Nuevo**   |
+| GET                  | `~/Averias/TallerAdmin/DownloadDocumento/{id}`          | Descarga local→S3→error                     | **Nuevo**   |
+| POST                 | `~/Averias/TallerAdmin/Validar…`                        | Aprobar/rechazar doc o bloque (validador)   | **Nuevo**   |
+| POST                 | `~/Averias/Averias/GuardarDatosFiscalesBancariosTaller` | Update bancario + soporte + validación      | Modificado  |
+| POST                 | Carga factura avería (cerrar/editar)                    | Compuerta si perfil no validado             | Modificado  |
+| POST *(condicional)* | `Claims` `api/Workshops/...`                            | Multipart docs si entra en MVP              | Condicional |
+
 
 ---
 
 ## 7. Variables de entorno y configuración
 
-| Variable / clave | Descripción | Ambiente |
-|---|---|---|
-| `FileStorage:BucketName` / `Key` / `Secret` / `Region` | Ya existentes — no hardcodear secrets | Dev / QA / Prod |
-| `FileStorage:Documentos_Talleres` *(nueva)* | Prefijo S3 p.ej. `talleres/documentos/` | Dev / QA / Prod |
-| `FileStorage:DocumentosTalleresLocal` o `DocumentosGenerados:DocumentosTalleres` *(nueva)* | Ruta base en servidor | Dev / QA / Prod |
-| `WorkshopAdmin:ValidatorEmails` *(nueva)* | Lista 1..N de correos a notificar | Dev / QA / Prod |
-| `WorkshopAdmin:ValidatorUserIds` *(opcional)* | Ids de usuarios validadores | Dev / QA / Prod |
-| `WorkshopAdmin:EnforceValidatedProfileOnInvoice` *(nueva)* | Compuerta al subir factura (`true`/`false`) | Dev / QA / Prod |
-| `WorkshopDocuments:MaxFileSizeMb` *(opcional)* | Tope de tamaño (default 5) | Dev / QA / Prod |
-| `WorkshopDocuments:AllowedContentTypes` *(opcional)* | pdf / jpeg / png | Dev / QA / Prod |
-| `Hub:HubBaseCountryCode` | País del ambiente bajo prueba | Local |
+
+| Variable / clave                                                                           | Descripción                                 | Ambiente        |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------- | --------------- |
+| `FileStorage:BucketName` / `Key` / `Secret` / `Region`                                     | Ya existentes — no hardcodear secrets       | Dev / QA / Prod |
+| `FileStorage:Documentos_Talleres` *(nueva, prefijo S3)*                                    | Prefijo en bucket (análogo a `Contratos`)   | Dev / QA / Prod |
+| **`WorkshopAdmin`** *(sección única de este plan)*                                         | Flags, notificaciones, límites y rutas del feature | Dev / QA / Prod |
+| `WorkshopAdmin:DocumentosBasePath`                                                         | Ruta/base local (análogo a `DocumentosGenerados:Contratos`); `uri` en BD = complemento + nombre archivo | Dev / QA / Prod |
+| `WorkshopAdmin:ValidatorEmails`                                                            | Lista 1..N de correos a validadores         | Dev / QA / Prod |
+| `WorkshopAdmin:ValidatorUserIds` *(opcional)*                                              | Ids de usuarios validadores                 | Dev / QA / Prod |
+| `WorkshopAdmin:EnforceValidatedProfileOnInvoice`                                           | Compuerta factura; **default `true`**       | Dev / QA / Prod |
+| `WorkshopAdmin:NotifyWorkshopOnValidation`                                                 | Correo al taller al aprobar/rechazar; apagar en pruebas | Dev / QA / Prod |
+| `WorkshopAdmin:NotifyValidatorsOnChange`                                                   | Correo a validadores al haber cambios; apagar en pruebas | Dev / QA / Prod |
+| `WorkshopAdmin:MaxFileSizeMb`                                                              | Tope **5**; mostrar valor en UI de carga    | Dev / QA / Prod |
+| `WorkshopAdmin:AllowedContentTypes`                                                        | pdf / jpeg / png                            | Dev / QA / Prod |
+| `Hub:HubBaseCountryCode`                                                                   | País del ambiente                           | Local           |
+
 
 Secrets: seguir Secrets Manager / config existente; **no** commitear claves.
 
@@ -360,17 +373,19 @@ Secrets: seguir Secrets Manager / config existente; **no** commitear claves.
 
 ## 11. Riesgos técnicos identificados
 
-| Riesgo | Probabilidad | Impacto | Mitigación |
-|---|---|---|---|
-| Seed de catálogo incompleto o incorrecto por país (MX/COL/CHL) | Alta | Alto | Cerrar lista exacta de docs por país en T-01; smoke de alta en los tres hubs |
-| Rol `Taller` legacy vs roles nuevos rompe menús/autorizaciones | Alta | Alto | Matriz de permisos en T-14; smoke de portal taller |
-| Reglas de análisis bancario indefinidas | Alta | Medio | Checklist manual del validador + archivo soporte si no hay reglas de sistema |
-| Dual storage inconsistente (local vs S3) | Media | Alto | Escribir ambos en la misma operación; descarga con fallback; no validar si falta archivo |
-| Compuerta factura bloquea operación real si flag ON prematuro | Media | Alto | Default OFF; activar por ambiente tras talleres piloto |
-| Canal API Workshops bypasea docs | Media | Medio | Decidir en T-01 incluir o bloquear |
-| `RegistraTallerYAsigna` bypasea docs | Media | Medio | Excepción documentada o exigir docs |
-| Catálogo mal seedado (requeridos incorrectos) | Media | Medio | Seed revisado por operación; UI admin de catálogo puede diferirse |
-| Secrets `FileStorage` en appsettings locales | Media | Medio | No rotar/duplicar en este plan |
+
+| Riesgo                                                         | Probabilidad | Impacto | Mitigación                                                                               |
+| -------------------------------------------------------------- | ------------ | ------- | ---------------------------------------------------------------------------------------- |
+| Contenido de `documento_solicitado_taller` incompleto por país | Alta         | Alto    | Operación carga datos en BD antes de QA; el código solo lee el catálogo                  |
+| Rol `Taller` legacy vs roles nuevos rompe menús/autorizaciones | Alta         | Alto    | Matriz de permisos en T-14; smoke de portal taller                                       |
+| Reglas de análisis bancario indefinidas                        | Baja         | Bajo    | Cerrado: checklist manual + contacto externo; auditoría al aprobar                       |
+| Dual storage inconsistente (local vs S3)                       | Media        | Alto    | Escribir ambos en la misma operación; descarga con fallback; no validar si falta archivo |
+| Compuerta factura bloquea operación real si flag ON prematuro  | Media        | Alto    | Default `true` confirmado; apagar por settings si operación lo pide                      |
+| Canal API Workshops bypasea docs                               | Baja         | Bajo    | Cerrado: API fuera de alcance de este MVP                                                |
+| `RegistraTallerYAsigna` bypasea docs                           | Baja         | Medio   | Aceptado: alta sin docs; compuerta en factura vía settings                               |
+| Catálogo mal seedado (requeridos incorrectos)                  | Media        | Medio   | Seed revisado por operación; UI admin de catálogo puede diferirse                        |
+| Secrets `FileStorage` en appsettings locales                   | Media        | Medio   | No rotar/duplicar en este plan                                                           |
+
 
 ---
 
@@ -381,56 +396,72 @@ Secrets: seguir Secrets Manager / config existente; **no** commitear claves.
 3. **No refactorizar** Identity / menús / `AveriasController` más allá de lo necesario para roles y la compuerta.
 4. **Create interno** de taller sigue comentado: priorizar bandeja `registro_taller` + registro público + módulo admin post-alta.
 5. **Paridad DataAccess MX/COL (obligatoria):** replicar entidades nuevas en ambos contextos; Chile según el DataAccess del build. Scripts SQL en las tres BDs.
-6. **Fuera de alcance confirmado (PRD):** OCR, verificación contra fuentes oficiales, vencimiento/renovación automática, validación bancaria externa, regularización masiva.
-7. Pendiente de T-01 (dejar respuestas aquí al cerrar Fase 0):
-   - Países MVP = **MX + COL + CHL** (confirmado)
-   - Seed catálogo documentos (por país) =
-   - Descuentos pactados en MVP = sí/no / cómo
-   - Análisis cuenta bancaria =
-   - Rol `Taller` legacy =
-   - Nombres exactos roles Identity =
-   - Max file size =
-   - API Workshops en MVP = sí/no
-   - `RegistraTallerYAsigna` =
-   - Default `EnforceValidatedProfileOnInvoice` =
+6. **Fuera de alcance confirmado:** OCR, verificación contra fuentes oficiales, vencimiento/renovación automática, validación bancaria externa, regularización masiva, **descuentos pactados** (mejora posterior), UI CRUD de `documento_solicitado_taller` (mejora posterior), **API Claims/Workshops** (T-11 cancelada).
+7. **Respuestas T-01 (cerrado):**
+  - Países MVP = **MX + COL + CHL** (confirmado)
+  - Catálogo de documentos =
+    - Tabla: **`documento_solicitado_taller`** (`id_documento` UUID PK, `documento`, `codigo_pais` FK→`pais(codigo)`, `requerido`, `activo`)
+    - En este plan se **asume que los registros ya existen en BD** (seed/operación fuera del desarrollo o inserts manuales).
+    - Altas/cambios de tipos de documento en MVP = **directo en BD**; UI de CRUD para Administrador General = **fuera de alcance** (evolución posterior).
+    - El código lee el catálogo activo filtrado por `codigo_pais` del hub; no hardcodear lista de documentos.
+  - Campos admin editables = **todos** los del addendum; cualquier cambio → estatus pendiente de validación (confirmado)
+  - UX validador = indicar qué dato/documento validar; en datos, mostrar **valor anterior vs. nuevo** (confirmado) — implica bitácora/diff por campo o por envío a validación
+  - Descuentos pactados en MVP = **fuera de alcance** (mejora posterior)
+  - Análisis cuenta bancaria = **checklist manual** del validador; duda → contacto externo con el taller; al aprobar queda histórico (usuario, fecha/hora, qué se aprobó). Sin análisis automático en MVP.
+  - Rol `Taller` legacy = **convive** con acceso completo (admin + averías); roles nuevos adicionales; sin migración forzada
+  - Nombres exactos roles Identity = **`Taller-Administracion`**, **`Taller-Averias`** (confirmado)
+  - Max file size = **5 MB** (settings); indicar el límite en la UI de carga (confirmado)
+  - API Workshops en MVP = **no** (fuera de alcance; solo SIGA Web)
+  - `RegistraTallerYAsigna` = **permitido sin docs**; el control es al subir factura de pago (si el flag de settings está activo)
+  - Default `EnforceValidatedProfileOnInvoice` = **`true`** en QA y Prod (confirmado; se puede apagar por ambiente/país)
+  - Notificar al taller resultado = **sí**, gobernado por settings (p. ej. `WorkshopAdmin:NotifyWorkshopOnValidation`); en pruebas se puede apagar el correo
+  - Settings del plan = **una sola sección** (p. ej. `WorkshopAdmin`: validadores, flag factura, max file size, notificaciones, rutas, etc.)
+  - Disponibilidad canal carga = **hereda SIGA** (sin requisito 24/7 ni horario especial)
+  - Storage docs = **patrón contratos**: base path en settings + `uri` en tabla (ruta relativa + nombre archivo) en servidor y/o S3
+  - Retención documentos = **sin política especial**; conservar como contratos (confirmado)
+  - Campaña regularización = **no masiva**; gradual al solicitar pago de avería vía compuerta de factura (confirmado)
 
 ---
 
 ## 13. Relación de tareas y tiempos
 
-| Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
-|---|---|---|---|---|
-| **Fase 0 — Alineación y modelo (P1)** | Preguntas abiertas, rama, script BD + EF | T-01 a T-03 | 2 – 3 días | 38 |
-| **Fase 1 — Persistencia, storage y reglas (P1)** | Catálogo, docs, dual storage, completitud, notificaciones/auditoría | T-04 a T-07 | 4 – 5 días | 39 |
-| **Fase 2 — Alta y solicitud (P1)** | Registro público, bandeja, Autorizar+roles, API condicional | T-08 a T-11 | 3 – 5 días | 40 |
-| **Fase 3 — Módulo administración (P1)** | UI taller + bandeja validador | T-12 a T-13 | 4 – 5 días | 41 |
-| **Fase 4 — Roles, factura y bancarios (P1)** | Roles nuevos, compuerta factura, update sensible | T-14 a T-16 | 3 – 4 días | 42 |
-| **Fase 5 — Pruebas y cierre (P1)** | E2E, UX, regresión | T-17 a T-18 | 2 – 3 días | 81 |
-| **Total proyecto (alcance PRD + addendum)** | | 18 tareas | **~18 – 25 días hábiles (≈ 4 – 5 semanas)** | — |
-| **Solo P1 mínimo (guardarraíl)** | Catálogo+storage+alta+Autorizar+módulo admin básico+validación (T-01…T-07, T-08…T-10, T-12…T-13) | — | **~14 – 18 días hábiles** | — |
+
+| Fase                                             | Incluye                                                                                          | Tareas      | Días hábiles (rango)                        | ID (BD) |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------- | ------- |
+| **Fase 0 — Alineación y modelo (P1)**            | Preguntas abiertas, rama, script BD + EF                                                         | T-01 a T-03 | 2 – 3 días                                  | 38      |
+| **Fase 1 — Persistencia, storage y reglas (P1)** | Catálogo, docs, dual storage, completitud, notificaciones/auditoría                              | T-04 a T-07 | 4 – 5 días                                  | 39      |
+| **Fase 2 — Alta y solicitud (P1)**               | Registro público, bandeja, Autorizar+roles, API condicional                                      | T-08 a T-11 | 3 – 5 días                                  | 40      |
+| **Fase 3 — Módulo administración (P1)**          | UI taller + bandeja validador                                                                    | T-12 a T-13 | 4 – 5 días                                  | 41      |
+| **Fase 4 — Roles, factura y bancarios (P1)**     | Roles nuevos, compuerta factura, update sensible                                                 | T-14 a T-16 | 3 – 4 días                                  | 42      |
+| **Fase 5 — Pruebas y cierre (P1)**               | E2E, UX, regresión                                                                               | T-17 a T-18 | 2 – 3 días                                  | 81      |
+| **Total proyecto (alcance PRD + addendum)**      |                                                                                                  | 18 tareas   | **~18 – 25 días hábiles (≈ 4 – 5 semanas)** | —       |
+| **Solo P1 mínimo (guardarraíl)**                 | Catálogo+storage+alta+Autorizar+módulo admin básico+validación (T-01…T-07, T-08…T-10, T-12…T-13) | —           | **~14 – 18 días hábiles**                   | —       |
+
 
 > **Notas:** el alcance dejó de ser “solo docs en el alta”. El addendum agrega ~1–1.5 semanas. T-11 puede cancelarse si el API queda fuera (~1–2 días menos). Fases re-sincronizadas en BD (plan id 24, días=25; fase nueva id 81).
 
-> **Riesgo de deadline:** el PRD **no define fecha límite**. Con un desarrollador a tiempo completo, el alcance completo encaja en ~4–5 semanas hábiles. Si hubiera presión &lt; 15 días: priorizar esquema + storage + módulo admin + validación + guardarraíl `Autorizar` (T-03…T-07, T-10, T-12…T-13); diferir API (T-11), roles granulares finos (dejar solo `Taller` + admin) y activar la compuerta de factura después. Un segundo desarrollador (UI admin vs. BR/storage/roles) comprimiría ~30–40% el calendario.
+> **Riesgo de deadline:** el PRD **no define fecha límite**. Con un desarrollador a tiempo completo, el alcance completo encaja en ~4–5 semanas hábiles. Si hubiera presión < 15 días: priorizar esquema + storage + módulo admin + validación + guardarraíl `Autorizar` (T-03…T-07, T-10, T-12…T-13); diferir API (T-11), roles granulares finos (dejar solo `Taller` + admin) y activar la compuerta de factura después. Un segundo desarrollador (UI admin vs. BR/storage/roles) comprimiría ~30–40% el calendario.
 
 ---
 
 ## 14. Mapeo addendum → tareas
 
-| # | Característica (addendum) | Tareas |
-|---|---|---|
-| 1 | Alta aprobada crea taller + usuario rol Taller | T-10 (existente; se mantiene/extiende) |
-| 2 | Usuario ve admin + averías como hoy; se habilita admin | T-12, T-14 |
-| 3 | Módulo nuevo con datos administrativos del taller | T-12 |
-| 4 | Tabla catálogo documentos requerido/opcional | T-03, T-04 |
-| 5 | Cambio → estatus validación + correo a validadores (settings) | T-07, T-12 |
-| 6 | Auditoría de validación (quién, qué, cuándo) | T-07, T-13 |
-| 7 | Validador ve autor y fecha de carga/cambio | T-07, T-13 |
-| 8 | Compuerta factura si no validado (configurable) | T-15 |
-| 9 | Guardar en servidor + bucket; uri; ruta base en settings | T-05 |
-| 10 | Descarga local/bucket o “no se encuentra” | T-05 |
-| 11 | UI: subidos, estatus, faltantes | T-12 |
-| 12 | Roles `Taller-Administracion` y `Taller-Averias` | T-14 |
+
+| #   | Característica (addendum)                                     | Tareas                                 |
+| --- | ------------------------------------------------------------- | -------------------------------------- |
+| 1   | Alta aprobada crea taller + usuario rol Taller                | T-10 (existente; se mantiene/extiende) |
+| 2   | Usuario ve admin + averías como hoy; se habilita admin        | T-12, T-14                             |
+| 3   | Módulo nuevo con datos administrativos del taller             | T-12                                   |
+| 4   | Tabla catálogo documentos requerido/opcional                  | T-03, T-04                             |
+| 5   | Cambio → estatus validación + correo a validadores (settings) | T-07, T-12                             |
+| 6   | Auditoría de validación (quién, qué, cuándo)                  | T-07, T-13                             |
+| 7   | Validador ve autor y fecha de carga/cambio                    | T-07, T-13                             |
+| 8   | Compuerta factura si no validado (configurable)               | T-15                                   |
+| 9   | Guardar en servidor + bucket; uri; ruta base en settings      | T-05                                   |
+| 10  | Descarga local/bucket o “no se encuentra”                     | T-05                                   |
+| 11  | UI: subidos, estatus, faltantes                               | T-12                                   |
+| 12  | Roles `Taller-Administracion` y `Taller-Averias`              | T-14                                   |
+
 
 ---
 

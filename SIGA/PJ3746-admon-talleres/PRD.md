@@ -191,20 +191,20 @@ Por decisión del solicitante en v0.1, **no se definen métricas cuantitativas**
 
 ## 13. Preguntas abiertas
 
-| **Tema** | **Pregunta abierta** |
+| **Tema** | **Estado** |
 | --- | --- |
-| Catálogo por país | ¿Cuáles son los documentos exactos (requerido/opcional) para México, Colombia y Chile? |
-| Cuenta bancaria | ¿En qué consiste exactamente el "análisis" pendiente? ¿Qué valida el sistema vs. el validador? |
-| Descuentos pactados (v0.1) | ¿Siguen en el MVP como dato estructurado o se modelan como tipo de documento/dato del catálogo? |
-| Rol `Taller` legacy | ¿Convive con acceso completo (admin+averías), se migra a los roles nuevos, o se depreca? |
-| Nombres de roles | Confirmar casing exacto en Identity (`Taller-Administracion`, `Taller-Averias`, etc.). |
-| Límite de archivo | ¿Tamaño máximo por archivo? |
-| Flag de factura | ¿Default en QA/Prod del flag de compuerta al subir factura? |
-| Disponibilidad | ¿Canal de carga 24/7 o solo horario operativo? |
-| Notificaciones al taller | ¿Se notifica al taller el resultado (aprobado/rechazado) además del correo a validadores? |
-| Talleres existentes | ¿Habrá campaña futura de regularización documental? |
-| Retención | ¿Requisitos de retención/eliminación de documentos almacenados? |
-| API Workshops | ¿El canal API de Claims/Workshops exige docs en el MVP? |
+| Catálogo por país | **Cerrado** — tabla `documento_solicitado_taller`; datos pre-cargados en BD; sin UI CRUD en MVP. |
+| Cuenta bancaria / análisis | **Cerrado** — checklist manual; duda → contacto externo; histórico al aprobar. |
+| Descuentos pactados | **Cerrado** — fuera de alcance; mejora posterior. |
+| Rol `Taller` legacy | **Cerrado** — convive con acceso completo; roles nuevos adicionales. |
+| Nombres de roles | **Cerrado** — `Taller-Administracion`, `Taller-Averias`. |
+| Límite de archivo | **Cerrado** — 5 MB; visible en UI; settings. |
+| Flag de factura | **Cerrado** — default `true`; apagable por settings. |
+| Disponibilidad | **Cerrado** — hereda SIGA. |
+| Notificaciones al taller | **Cerrado** — sí, gobernado por settings (apagar en pruebas). |
+| Talleres existentes | **Cerrado** — sin campaña masiva; regularización al pedir pago de avería. |
+| Retención | **Cerrado** — sin política especial; como contratos. |
+| API Workshops | **Cerrado** — fuera de alcance MVP. |
 
 ---
 
@@ -215,3 +215,4 @@ Por decisión del solicitante en v0.1, **no se definen métricas cuantitativas**
 | v0.1 | 2026-07-21 | Alcance inicial: documentación obligatoria en alta (RUT, Cámara, brochure, descuentos, cuenta bancaria) — Colombia. |
 | v0.2 | 2026-08-06 | Addendum: módulo admin, catálogo requerido/opcional, validadores + correo, auditoría, roles nuevos, storage dual, compuerta factura configurable. |
 | v0.2.1 | 2026-08-06 | Alcance multi-país explícito: México, Colombia y Chile (no solo Colombia). |
+| v0.2.2 | 2026-08-06 | Preguntas abiertas T-01 cerradas (catálogo, roles, settings, compuerta factura, etc.). |

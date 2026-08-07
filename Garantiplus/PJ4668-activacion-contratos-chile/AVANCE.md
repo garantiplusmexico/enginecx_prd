@@ -16,7 +16,7 @@
 
 ## Resumen de estado
 
-**Fases 0 y 1 completas — 9 de 22 tareas, 172 tests pasando.** El motor ya sabe leer los tres tipos de insumo: los Excel de facturación con mapeo por nombre de columna, los DTE del SII con su namespace y sus dos formas de declarar el monto, y el inventario de PDF. La normalización cubre el formato de moneda chileno, las fechas día-primero y las coerciones de tipo que introduce pandas.
+**Fases 0, 1 y 1B completas — 13 de 26 tareas, 232 tests pasando, validado contra los insumos reales.** El motor ya sabe leer los tres tipos de insumo: los Excel de facturación con mapeo por nombre de columna, los DTE del SII con su namespace y sus dos formas de declarar el monto, y el inventario de PDF. La normalización cubre el formato de moneda chileno, las fechas día-primero y las coerciones de tipo que introduce pandas.
 
 **El I/O quedó tras una interfaz con backend local**, que es lo que permite que las Fases 2 y 3 se construyan y verifiquen enteras sin credenciales de Drive.
 
@@ -32,6 +32,7 @@
 |---|---|---|---|---|---|---|---|---|
 | **Fase 0 — Andamiaje y contrato de datos** | 76 | T-01 a T-04 | 1 – 2 | 2026-08-04 | 2026-08-04 | 1 | 0 | ✅ Completada |
 | **Fase 1 — Normalización e ingesta** | 77 | T-05 a T-09 | 4 – 6 | 2026-08-04 | 2026-08-04 | 1 | 0 | ✅ Completada |
+| **Fase 1B — Corrección con insumos reales** | 83 | T-23 a T-26 | 3 – 4 | 2026-08-07 | 2026-08-07 | 1 | 0 | ✅ Completada |
 | **Fase 2 — Conciliación, clasificación y cruce con SIGA** | 78 | T-10 a T-13A | 5 – 6 | | | 0 | 6 | ⏳ Pendiente |
 | **Fase 3 — Entregables y ejecución headless** | 79 | T-14 a T-17 | 4 – 6 | | | 0 | 6 | ⏳ Pendiente |
 | **Fase 4 — Drive, datos reales y cierre** | 80 | T-18 a T-21 | 4 – 6 | | | 0 | 6 | ⏳ Pendiente |
@@ -70,6 +71,10 @@ Ninguno bloquea el desarrollo; todos tienen un comportamiento por defecto elegid
 | T-07 | Ingesta y parseo de XML (DTE SII) | 2026-08-04 | 19 | Namespace del SII; hallazgo de `MntExe` en facturas exentas |
 | T-08 | Inventario de PDF | 2026-08-04 | 11 | Alcance mínimo deliberado: solo existencia |
 | T-09 | `drive_io` con backend local | 2026-08-04 | 12 | Interfaz ajustada respecto del plan |
+| T-25 | Normalización de montos en ambos formatos | 2026-08-07 | 93 | Coma o punto como separador de miles; lo decide la posición, no el carácter |
+| T-24 | Parseo de DTE con y sin namespace | 2026-08-07 | — | Los XML reales no declaran `xmlns`: el parser devolvía **0 de 806** documentos |
+| T-23 | Ingesta multi-pestaña con esquema por hoja | 2026-08-07 | 30 | 16 hojas, 11 esquemas. Descubierto que `Importe` es neto en 2026 y con IVA en 2025 |
+| T-26 | Resolución de documento y folios con anotación | 2026-08-07 | 28 | 22.659 contratos resuelven XML+PDF; 63 facturas recuperadas de folios anotados |
 
 ---
 

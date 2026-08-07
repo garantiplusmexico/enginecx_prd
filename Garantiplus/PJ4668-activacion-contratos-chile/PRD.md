@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Activación de Contratos Chile — motor de datos `contratos_chile` |
 | **Área / empresa** | Garantiplus Chile |
-| **Versión** | v1.2 |
+| **Versión** | v1.3 |
 | **Fecha** | 2026-08-04 |
 | **Autores** | Gustavo Iván Carreto Abascal (datos / automatización) |
 | **Revisión / liderazgo** | Aldo Álvarez |
@@ -45,12 +45,21 @@ El mismo motor debe servir para los dos modos de uso: la **regularización hist�
 | **Fase** | **Nombre** | **Descripción** |
 | --- | --- | --- |
 | Fase 1 | Motor de validación **(MVP de este PRD)** | Ingesta de Excel, XML y PDF; conciliación Excel↔XML a nivel factura; generación de `feed_rpa`, `lista_ti` y `reporte_validacion`; publicación en Drive. Cubre 2025 y 2026. |
-| Fase 2 | Conciliación de pagos y activación | Ingesta de "Fechas de Pago", derivación de la fecha de pago por contrato y generación del set de contratos a activar. Primero 2024 → hoy, luego hacia atrás hasta 2022. |
+| Fase 2 | Conciliación de pagos y activación | Generación del set de contratos a activar con su fecha de pago derivada por regla (ver §3.2). Primero 2024 → hoy, luego hacia atrás hasta 2022. |
 | Fase 3 | Orquestación y tableros | Automatización mensual end-to-end en n8n; tableros de cartera vencida y de averías sobre contratos no activos. |
 
 **La Fase 1 es el MVP de este PRD.** Las Fases 2 y 3 se documentan para dar contexto de dirección, pero su alcance detallado se define en sus propios PRD.
 
 **Prioridad de regularización acordada:** activar de **2024 a la fecha** primero, porque resuelve la mayor parte del problema, y después pedir el histórico hacia atrás hasta 2022.
+
+### 3.2 Criterio de pago y fecha de activación
+
+No existe registro de fechas de pago: se verificó sobre los 23.556 contratos entregados y la columna `F. Pago` está poblada en **cero** de ellos. La operación resolvió el vacío con dos reglas:
+
+1. **El pago se acredita por presencia, no por fecha.** Un contrato que aparece en el listado de facturación con folio válido se considera pagado. No se requiere confirmación adicional de finanzas para el histórico.
+2. **La fecha de pago se deriva por regla:** `fecha de emisión de la factura + 30 días`, tomada del campo `FchEmis` del documento electrónico. Cuando el contrato no tenga factura, la base es la fecha de alta del contrato. El plazo de 30 días corresponde a la política de crédito vigente en Chile.
+
+**A partir de agosto de 2026 el despacho comienza a registrar las fechas de pago reales.** La regla de los 30 días es, por tanto, el mecanismo para regularizar el histórico; el proceso mensual usará la fecha real en cuanto esté disponible. El motor debe distinguir ambos casos: una fecha derivada por regla y una fecha confirmada no valen lo mismo, y el entregable debe decir cuál es cuál.
 
 ## 4. Usuarios y actores
 
@@ -177,7 +186,13 @@ Este segundo diagrama existe para ubicar el alcance: **el motor toca dos de los 
 | RF-16 | Consulta del estado de activación | Obtener, para cada contrato del Excel, su estado de activación desde la vista de ventas de Chile, cruzando por identificador de contrato. |
 | RF-17 | Exclusión de contratos ya activos | Excluir del `feed_rpa.csv` los contratos que ya figuran como activos, y reportarlos en su propia hoja del reporte de validación con el conteo correspondiente. Un contrato cuyo estado no se pudo determinar **no se excluye**: se marca y se reporta, consistente con el principio de marcar y no borrar. |
 
-> **Nota sobre RF-16 y RF-17.** Se numeran al final para no alterar el significado de los RF ya publicados en la v1.1, que pueden estar referenciados en pruebas o revisiones. Su lugar en el flujo de ejecución es **después de la clasificación (RF-08) y antes de generar los entregables (RF-10 en adelante)**.
+| RF-18 | Consolidación multi-pestaña | Leer **todas** las pestañas de cada libro, resolviendo el esquema de cada una por nombre de columna de forma independiente. Un libro tiene hasta 12 pestañas y hasta 11 esquemas distintos; leer solo la primera pierde el 95% de los contratos. |
+| RF-19 | Tolerancia a los alias reales de columna | Reconocer el folio bajo `FACTURA N°`, `FACTURA` y `Factura`; el monto bajo sus siete denominaciones; y el identificador fiscal bajo `R.U.T.` y `R.F.C.`. Distinguir el `Factura` que es folio del `Factura` de la zona de comisiones, que no lo es. |
+| RF-20 | Preservación de folios no numéricos | Cuando el folio traiga texto (`OBSERVADA`, `V°B° PENDIENTE`, `NO FACTURADO`) o un folio con anotación (`19272-NC 1168`), separar el folio numérico cuando exista y **conservar la anotación en un campo aparte**. Nunca descartar la fila. |
+| RF-21 | Resolución del documento por folio | Para cada contrato con folio, resolver la ruta exacta de su XML y su PDF (`F{folio}T{tipo}.{ext}`) y reportar el caso en que el documento no exista. Es lo que permite a TI saber qué archivo cargar. |
+| RF-22 | Derivación de la fecha de pago | Calcular la fecha de pago como `fecha de emisión de la factura + 30 días`, con la fecha de alta del contrato como base alterna cuando no haya factura, y **marcar el resultado como derivado por regla o confirmado** según su origen (§3.2). |
+
+> **Nota sobre RF-16 a RF-22.** Se numeran al final para no alterar el significado de los RF ya publicados en versiones anteriores, que pueden estar referenciados en pruebas o revisiones. En el flujo de ejecución, RF-18 a RF-21 pertenecen a la ingesta (antes de RF-06) y RF-22 a la generación de entregables.
 
 ## 9. Requerimientos no funcionales
 
@@ -212,7 +227,42 @@ Este segundo diagrama existe para ubicar el alcance: **el motor toca dos de los 
 
 **Datos mínimos requeridos para operar.** Del Excel: `FACTURA N°` (folio), `ID` (contrato), `Producto`, `Importe` y `Monto a Facturar`, las fechas (`F. Alta`, `F. Pago`, `F. Cancelación`, `F. Inicio`, `F. Fin`), los datos del beneficiario y vehículo (`Beneficiario`, `R.U.T.`, `VIN`, `Patente`), los del canal (`Id Distr.`, `Distribuidor`, `Canal`, `Punto Venta`, `Grupo`) y `Estatus`. Del XML: tipo de DTE, folio, fecha de emisión, RUT del emisor, RUT y razón social del receptor, y los montos neto, IVA y total. De los archivos: la convención de nombre `F{folio}T{tipo}.{ext}`, que es lo que permite asociar documento y folio.
 
-**Hallazgo estructural que condiciona todo el diseño.** El bloque `Detalle` del XML **no contiene los números de contrato**: una línea consolidada declara la cantidad (`8 UNID`) sin desglosar cuáles son los ocho contratos. Por eso el XML sirve para validar a nivel factura pero **nunca** para recuperar contratos individuales, y la relación contrato↔factura existe únicamente en el Excel. Cualquier diseño que asuma lo contrario es inviable.
+**Hallazgo estructural que condiciona todo el diseño.** El bloque `Detalle` del XML **no contiene los números de contrato**: una línea consolidada declara la cantidad (`17 UNID`) sin desglosar cuáles son los diecisiete contratos. Por eso el XML sirve para validar a nivel factura pero **nunca** para recuperar contratos individuales, y la relación contrato↔factura existe únicamente en el Excel. Cualquier diseño que asuma lo contrario es inviable.
+
+**Verificado sobre los insumos reales (2026-08-06).** Se midió el universo completo: 806 documentos (764 facturas T33, 41 notas de crédito T61, 1 boleta T39) y 23.556 contratos. Intentar recuperar contratos desde las facturas rinde **1,3%**: solo 342 de 1.851 líneas de detalle llevan un identificador (la patente embebida en el nombre del producto, p. ej. `"Excellence 365 Portillo Sur PATENTE: STDS69"`). El PDF es un render del mismo DTE y no agrega nada.
+
+### 10.1 Estructura real de los insumos
+
+Lo que los archivos entregados demostraron, y que difiere de lo que este PRD asumía en sus primeras versiones:
+
+| Hecho | Detalle |
+|---|---|
+| **Los Excel son multi-pestaña** | 16 pestañas: 12 en el archivo 2025 (una por mes) y 4 en el de 2026 (enero–abril). Leer solo la primera pierde el 95% de los datos. |
+| **Hay 11 esquemas distintos entre las 16 pestañas** | De 46, 47, 58 y 59 columnas. `FEBRERO 2026` agrega `ESTADO` y `AGOSTO 2025` agrega `Refacturado`, y ambas **corren todas las columnas siguientes**. |
+| **El folio tiene tres nombres** | `FACTURA N°`, `FACTURA` y `Factura`, según la pestaña. Cuidado: en los esquemas de 58 columnas existe además una columna `Factura` en la zona de comisiones que **no** es el folio. |
+| **El monto tiene siete nombres** | `Monto a Facturar`, `Valor Facturar`, `Valor Neto`, `Valor Neto a Facturar`, `Neto`, `Valor a Facturar`, `Importe`. |
+| **El identificador fiscal cambia de nombre** | `R.U.T.` en 2025, `R.F.C.` en 2026. |
+| **Los XML reales no declaran namespace** | Son `<DTE version="1.0">` sin `xmlns`. Un parser que exija el namespace del SII no encuentra nada y no levanta error. |
+| **Los montos del consolidado usan coma como separador de miles** | `$132,282` son 132.282 pesos — formato inverso al de los Excel de origen. Verificado contra `PrcItem` del XML. |
+
+### 10.2 Cobertura medida de la relación contrato↔factura
+
+Sobre el consolidado regenerado correctamente (mapeo por nombre de columna en cada pestaña):
+
+| Métrica | Valor |
+|---|---|
+| Contratos totales | 23.556 |
+| **Con folio de factura** | **22.659 (96,2%)** |
+| **Con folio Y documento (XML + PDF) resueltos** | **22.659 (100% de los anteriores)** |
+| Folios distintos | 600, **todos con su XML** |
+| Sin folio | 897 (3,8%) |
+| **Fechas de pago disponibles** | **0** |
+
+**La normalización folio → documento es directa y completa:** el folio del consolidado es el mismo del nombre de archivo (`19272` → `F19272T33.xml` / `F19272T33.pdf`). No hay un solo folio que apunte a un documento inexistente.
+
+Los 897 sin folio no son un problema de normalización: su factura no existe. Vienen marcados como `OBSERVADA` (321), `V°B° PENDIENTE` (86), `NO FACTURADO` (30), `AUTORIZACIÓN PENDIENTE` (11), otros estados (16), o sin marca alguna (430). Se verificó que **ninguno** se recupera buscando el mismo contrato en otra fila.
+
+**Documentos huérfanos: 206.** De ellos 41 son notas de crédito y 1 una boleta (esperado, no son facturas de venta). Las 164 facturas T33 huérfanas se cruzaron por receptor contra los contratos sin folio y dieron **cero coincidencias**: son de clientes distintos. 55 corresponden a mayo y junio de 2026, meses que el Excel todavía no cubre; las **109 restantes (~$385 millones netos)** son un hueco real de conciliación en el origen.
 
 **Esquema de permisos.** El motor **lee** las cuatro carpetas de insumos de Drive y la tabla `ventas` de Atenea Chile, y **escribe únicamente** en `Resultados_Motor/`. No tiene permiso de modificación sobre los insumos, ni escritura sobre Atenea Chile, ni acceso alguno a SIGA. Toda acción que altere el estado de un contrato —cargar una orden de pago, inyectar una factura, activar— queda fuera del motor y requiere la intervención de Omar o de TI. El acceso a Atenea Chile debe otorgarse con una credencial **de solo lectura y limitada a la tabla `ventas`**: el motor no necesita nada más, y esa base contiene la información comercial completa de la operación chilena.
 
@@ -287,13 +337,16 @@ Las cuatro métricas posteriores a la principal se derivan de los criterios de c
 | **Accesos** | ¿Con qué credencial accede el motor a Atenea Chile? Debe ser **de solo lectura y acotada a la tabla `ventas`**. ¿Quién la gestiona? |
 | **Datos** | ¿Con qué frecuencia se actualiza la réplica `ventas` desde SIGA? El desfase determina cuán confiable es el filtro de contratos ya activos para activaciones recientes. |
 | **Datos** | ¿Qué valores concretos toma `ventas.estatus` y cuál o cuáles corresponden a "activo"? Debe fijarse como parámetro de configuración, no hardcodearse. |
-| **Montos** | ¿Los montos del Excel (`Importe`, `Monto a Facturar`) son netos o incluyen IVA? De ello depende contra qué campo del XML se concilian. |
+| **Montos** | ~~¿Los montos del Excel son netos o incluyen IVA?~~ **RESUELTO (v1.3) con datos:** son **netos**. Verificado aritméticamente: la factura 18655 declara 17 unidades a `$132.282`, que es el `Monto a Facturar` del contrato, y su `MntNeto` es `2.248.794` = 17 × 132.282 exacto. La base de comparación `neto` queda confirmada. |
 | **Montos** | ¿Cuál es la tolerancia de redondeo aceptable en la conciliación? |
 | **Identificadores** | ¿La columna `ID` del Excel es efectivamente el identificador con el que el RPA busca el contrato en SIGA? **Ahora es medible:** el cruce contra `ventas.id_contrato` (clave primaria de la vista de ventas) produce una tasa de correspondencia que confirma o refuta el supuesto con datos. Queda pendiente definir qué tasa se considera aceptable para operar. |
-| **Identificadores** | ¿El folio del nombre de archivo (`F…T33`) corresponde 1:1 con el `FACTURA N°` del Excel? Considerando que en Chile no existe consecutivo de SIGA, ¿hay algún caso de desalineación conocido? |
+| **Identificadores** | ~~¿El folio del nombre de archivo corresponde 1:1 con el `FACTURA N°`?~~ **RESUELTO (v1.3) con datos:** correspondencia **100%**. Los 600 folios distintos del consolidado tienen su XML, y los 22.659 contratos con folio resuelven además su PDF. Cero folios apuntando a un documento inexistente. |
 | **Reglas de negocio** | ¿Qué líneas deben excluirse del feed por no ser garantías (reparaciones, cotizaciones, órdenes de compra)? ¿Los patrones identificados hasta ahora son suficientes? |
 | **Reglas de negocio** | ¿Cómo se tratan las notas de crédito (DTE 61) y los contratos cancelados en la conciliación? |
 | **Accesos** | ¿Qué método de autenticación se usa en producción para acceder a Drive: cuenta de servicio o credencial OAuth del orquestador? ¿Quién es el responsable de gestionarla? |
 | **Cobertura** | ¿Cuándo entrega el despacho contable los Excel de 2024 y de 2022–2023? ¿Se confirma la entrega actualizada más allá de marzo/abril? |
-| **Fase 2** | ¿Cuál es el formato, la fuente y la periodicidad del control de pagos? Está referenciado por número de factura y a la transacción, no por contrato. |
+| **Fase 2** | ~~¿Cuál es el formato y la fuente del control de pagos?~~ **RESUELTO (v1.3):** no existe control de fechas de pago (cero registros en 23.556 contratos). El pago se acredita **por presencia** y la fecha se deriva como emisión + 30 días (§3.2). Desde agosto de 2026 el despacho registra fechas reales. |
+| **Conciliación** | Hay **109 facturas T33 emitidas (~$385 millones netos) sin contratos asociados** en el listado, dentro del rango de meses que sí cubre. Se descartó que correspondan a los 897 contratos sin folio: son de receptores distintos. ¿Qué son y quién las concilia? |
+| **Reglas de negocio** | ¿Qué significan operativamente `OBSERVADA` (321 filas), `V°B° PENDIENTE` (86) y `AUTORIZACIÓN PENDIENTE` (11), y qué debe hacer el motor con ellas? Sin folio no hay documento que cargar ni activación posible. |
+| **Cobertura** | 430 filas no traen folio **ni** marca de estado. ¿Es un contrato sin facturar, un error de captura, o algo más? |
 | **Salida** | ¿Cuáles son el nombre y la ubicación definitivos de la subcarpeta de resultados y de los archivos de salida? |

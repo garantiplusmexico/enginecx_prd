@@ -16,7 +16,7 @@
 
 ## Resumen de estado
 
-**Fases 0, 1 y 1B completas — 13 de 26 tareas, 232 tests pasando, validado contra los insumos reales.** El motor ya sabe leer los tres tipos de insumo: los Excel de facturación con mapeo por nombre de columna, los DTE del SII con su namespace y sus dos formas de declarar el monto, y el inventario de PDF. La normalización cubre el formato de moneda chileno, las fechas día-primero y las coerciones de tipo que introduce pandas.
+**Fases 0, 1, 1B y 2 completas — 18 de 26 tareas, 279 tests, validado de punta a punta contra los insumos reales y contra la base de Atenea Chile.** El motor ya sabe leer los tres tipos de insumo: los Excel de facturación con mapeo por nombre de columna, los DTE del SII con su namespace y sus dos formas de declarar el monto, y el inventario de PDF. La normalización cubre el formato de moneda chileno, las fechas día-primero y las coerciones de tipo que introduce pandas.
 
 **El I/O quedó tras una interfaz con backend local**, que es lo que permite que las Fases 2 y 3 se construyan y verifiquen enteras sin credenciales de Drive.
 
@@ -33,7 +33,7 @@
 | **Fase 0 — Andamiaje y contrato de datos** | 76 | T-01 a T-04 | 1 – 2 | 2026-08-04 | 2026-08-04 | 1 | 0 | ✅ Completada |
 | **Fase 1 — Normalización e ingesta** | 77 | T-05 a T-09 | 4 – 6 | 2026-08-04 | 2026-08-04 | 1 | 0 | ✅ Completada |
 | **Fase 1B — Corrección con insumos reales** | 83 | T-23 a T-26 | 3 – 4 | 2026-08-07 | 2026-08-07 | 1 | 0 | ✅ Completada |
-| **Fase 2 — Conciliación, clasificación y cruce con SIGA** | 78 | T-10 a T-13A | 5 – 6 | | | 0 | 6 | ⏳ Pendiente |
+| **Fase 2 — Conciliación, clasificación y cruce con SIGA** | 78 | T-10 a T-13A | 5 – 6 | 2026-08-07 | 2026-08-07 | 1 | 0 | ✅ Completada |
 | **Fase 3 — Entregables y ejecución headless** | 79 | T-14 a T-17 | 4 – 6 | | | 0 | 6 | ⏳ Pendiente |
 | **Fase 4 — Drive, datos reales y cierre** | 80 | T-18 a T-21 | 4 – 6 | | | 0 | 6 | ⏳ Pendiente |
 | **Total proyecto (v1 completo)** | — | 22 tareas | ~18 – 26 | 2026-08-04 | | 2 | ~18 | 🟡 En progreso |
@@ -75,6 +75,21 @@ Ninguno bloquea el desarrollo; todos tienen un comportamiento por defecto elegid
 | T-24 | Parseo de DTE con y sin namespace | 2026-08-07 | — | Los XML reales no declaran `xmlns`: el parser devolvía **0 de 806** documentos |
 | T-23 | Ingesta multi-pestaña con esquema por hoja | 2026-08-07 | 30 | 16 hojas, 11 esquemas. Descubierto que `Importe` es neto en 2026 y con IVA en 2025 |
 | T-26 | Resolución de documento y folios con anotación | 2026-08-07 | 28 | 22.659 contratos resuelven XML+PDF; 63 facturas recuperadas de folios anotados |
+| T-10, T-11 | Agrupación por folio y comparación de montos | 2026-08-07 | 14 | **Base `neto` confirmada con datos: 569/600 cuadran vs 0/600 contra `total`** |
+| T-12, T-13 | Clasificación en tres estados y conservación | 2026-08-07 | 14 | 600 facturas al 100% clasificadas; conservación verificada sobre 23.556 filas |
+| T-13A | Cruce contra el estado de activación en SIGA | 2026-08-07 | 19 | **Correspondencia 100% (23.433/23.433)**; solo 2 contratos ya activos |
+
+---
+
+## 🔴 Hallazgo crítico sin resolver: el ID 18749
+
+El identificador `18749` aparece **760 veces**, todas en la hoja ABRIL 2025. Verificado contra la hoja cruda: **no es un defecto del motor, está en el origen.** A esos 760 contratos les capturaron el **folio en la columna del ID** en lugar de su identificador de contrato — el producto es el mismo (`EXCELLENCE SALAZAR FIJO`) y el folio también (`18749`).
+
+**Consecuencia si no se corrige:** el RPA generaría **760 órdenes de pago sobre el mismo contrato**. Es exactamente el riesgo de duplicados que el proyecto venía persiguiendo, por una vía que nadie había considerado — no un contrato ya activo, sino un identificador repetido en el origen.
+
+**Doble pendiente:**
+1. **De datos:** el despacho tiene que recuperar los 760 identificadores reales. Sin ellos esos contratos no se pueden activar.
+2. **De motor:** nada lo detecta hoy. `verificar_conservacion` cuenta filas, no unicidad. Hay que agregar una verificación de `id_contrato` duplicado antes de emitir el feed — es trabajo de la Fase 3.
 
 ---
 

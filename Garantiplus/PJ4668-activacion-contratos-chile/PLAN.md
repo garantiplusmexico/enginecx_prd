@@ -782,6 +782,82 @@ def _texto(nodo, xpath: str) -> str | None:
 
 ---
 
+### Fase 1B — Corrección con insumos reales
+
+> **Por qué existe esta fase.** Los pasos de validación contra archivos reales de T-06 y T-07 quedaron pendientes por falta de insumos. Cuando llegaron (2026-08-06), destaparon que la ingesta construida sobre el PRD **no funciona contra los archivos de producción**. No son ajustes: es rehacer partes de tres módulos. Todo lo medido está en el PRD §10.1 y §10.2.
+
+#### T-23 — Ingesta multi-pestaña con resolución de esquema por hoja
+
+**Archivos:** modificar `src/ingesta_excel.py`, `tests/test_ingesta_excel.py`, `tests/fixtures/generador.py`
+
+**El problema:** el módulo lee `libro.active` — una sola pestaña. Los archivos reales tienen **16 pestañas con 11 esquemas distintos** (46, 47, 58 y 59 columnas). Leer solo la primera toma 1.257 de 23.556 filas: el **5%**.
+
+- [ ] **1.** Extender el generador de fixtures para producir libros multi-pestaña con esquemas distintos entre hojas, incluyendo el caso de una columna insertada que corre todas las siguientes (`ESTADO` en febrero 2026, `Refacturado` en agosto 2025).
+- [ ] **2.** Escribir los tests que fallan: todas las pestañas se leen; cada una resuelve su propio esquema; el conteo total es la suma de las hojas; `HojaOrigen` y `FilaOrigen` permiten rastrear cada fila.
+- [ ] **3.** Correr → **FAIL**.
+- [ ] **4.** Implementar: iterar `libro.sheetnames`, resolver posiciones **por hoja** y no una vez por libro. Derivar `anio` y `mes` del nombre de archivo y de la hoja.
+- [ ] **5.** Ampliar `MAPA_COLUMNAS` con los alias reales: folio (`FACTURA N°`, `FACTURA`, `Factura`), monto (`Monto a Facturar`, `Valor Facturar`, `Valor Neto`, `Valor Neto a Facturar`, `Neto`, `Valor a Facturar`), identificador fiscal (`R.U.T.`, `R.F.C.`).
+- [ ] **6.** **Distinguir el `Factura` que es folio del que no lo es.** En los esquemas de 58 columnas existe una columna `Factura` en la zona de comisiones, vacía y en posición ~51. Descartar candidatos fuera de las primeras posiciones.
+- [ ] **7.** Correr → **PASS**, y verificar contra los archivos reales: 23.556 filas, 96,2% con folio.
+- [ ] **8.** Commit: `[activacion-contratos-chile] Leer todas las pestanas resolviendo esquema por hoja`
+
+**Criterio de completitud:** el conteo sobre los archivos reales da 23.556 filas y 22.659 con folio numérico.
+
+---
+
+#### T-24 — Parseo de XML con y sin namespace
+
+**Archivos:** modificar `src/ingesta_xml.py`, `tests/test_ingesta_xml.py`, `tests/fixtures/generador.py`
+
+**El problema:** los XML reales son `<DTE version="1.0">` **sin `xmlns`**. El parser exige el namespace del SII y devuelve **cero documentos** sobre los 806 archivos reales. Es exactamente el fallo silencioso que los tests vigilaban, en sentido inverso: los fixtures lo llevan y la producción no.
+
+- [ ] **1.** Extender el generador para emitir ambas variantes, con y sin namespace.
+- [ ] **2.** Escribir los tests que fallan: el mismo documento parsea igual en las dos formas.
+- [ ] **3.** Correr → **FAIL**.
+- [ ] **4.** Implementar búsqueda tolerante: intentar con namespace y, si no hay resultado, sin él. Comparar por nombre local para no depender de la declaración.
+- [ ] **5.** Correr → **PASS**, y verificar contra el universo real: 806 documentos, 764 T33, 41 T61, 1 T39.
+- [ ] **6.** Commit: `[activacion-contratos-chile] Parsear DTE con y sin namespace declarado`
+
+**Criterio de completitud:** los 806 documentos reales parsean; los conteos por tipo coinciden con los nombres de archivo.
+
+---
+
+#### T-25 — Normalización de montos en ambos formatos
+
+**Archivos:** modificar `src/normalizacion.py`, `tests/test_normalizacion.py`
+
+**El problema:** el consolidado usa **coma como separador de miles** (`$132,282` = 132.282 pesos), el formato inverso al de los Excel de origen. El normalizador actual lo leería como **132 pesos**: error de factor 1.000.
+
+- [ ] **1.** Escribir los tests que fallan, con ambos formatos y los casos ambiguos (`$1.234` y `$1,234` son ambos 1.234; `$1.234,50` y `$1,234.50` son ambos 1.234,5).
+- [ ] **2.** Correr → **FAIL**.
+- [ ] **3.** Implementar detección por posición: el separador **más a la derecha** con exactamente dos o tres dígitos después decide si es decimal o de miles. Con un solo separador y tres dígitos detrás, es de miles.
+- [ ] **4.** Correr → **PASS**. Verificar contra el dato real: `$132,282` debe dar `132282`, que es el `PrcItem` del XML de la factura 18655.
+- [ ] **5.** Commit: `[activacion-contratos-chile] Normalizar montos con separador de miles ambiguo`
+
+**Criterio de completitud:** `$132,282` y `$132.282` producen ambos `132282`.
+
+---
+
+#### T-26 — Resolución de documento y folios con anotación
+
+**Archivos:** crear `src/documentos.py`, `tests/test_documentos.py`
+
+**Interfaces producidas:**
+- `separar_folio(crudo) -> tuple[int | None, str | None]` — `"19272-NC 1168"` → `(19272, "NC 1168")`; `"OBSERVADA"` → `(None, "OBSERVADA")`
+- `resolver_documento(folio, indice_xml, indice_pdf) -> Documento | None` — ruta exacta del XML y del PDF
+
+**Por qué:** es lo que le dice a TI qué archivo cargar. Y preserva los 530 folios con anotación en vez de descartarlos: de ellos, 49 llevan un folio válido con la nota de crédito anexada.
+
+- [ ] **1.** Escribir los tests que fallan, con los estados reales: `OBSERVADA` (321), `V°B° PENDIENTE` (86), `NO FACTURADO` (30), `AUTORIZACIÓN PENDIENTE` (11), `19272-NC 1168` (49).
+- [ ] **2.** Correr → **FAIL**.
+- [ ] **3.** Implementar. Un folio numérico puro devuelve el folio sin anotación; un folio con sufijo separa ambos; un texto sin dígitos devuelve solo la anotación.
+- [ ] **4.** Correr → **PASS**, y verificar sobre los datos reales: 22.659 contratos resuelven XML **y** PDF, cero folios sin documento.
+- [ ] **5.** Commit: `[activacion-contratos-chile] Agregar resolucion de documento por folio`
+
+**Criterio de completitud:** los 22.659 contratos con folio resuelven ambos documentos; las 897 filas sin folio conservan su marca de estado.
+
+---
+
 ### Fase 2 — Conciliación y clasificación
 
 #### T-10 — Agrupación de contratos por folio
@@ -1416,11 +1492,14 @@ Adicionales de este plan:
 |---|---|---|---|---|
 | **Fase 0 — Andamiaje y contrato de datos** | Heredar el repo en Engine + ramas, extender `fuentes.json`, fixtures sintéticos, logging y exit codes | T-01 a T-04 | 1 – 2 días | 76 |
 | **Fase 1 — Normalización e ingesta** | `normalizacion`, `ingesta_excel`, `ingesta_xml`, `ingesta_pdf`, `drive_io` local | T-05 a T-09 | 4 – 6 días | 77 |
+| **Fase 1B — Corrección con insumos reales** | Ingesta multi-pestaña (11 esquemas), XML sin namespace, montos con separador ambiguo, resolución de documento por folio | T-23 a T-26 | 3 – 4 días | *(por crear)* |
 | **Fase 2 — Conciliación y clasificación** | Agrupación por folio, comparación de montos, 3 estados, invariante de conservación, **cruce contra el estado de activación en SIGA** | T-10 a **T-13A** | 5 – 6 días | 78 |
 | **Fase 3 — Entregables y ejecución headless** | `feed_rpa.csv`, `lista_ti.csv`, `reporte_validacion.xlsx`, `main.py` | T-14 a T-17 | 4 – 6 días | 79 |
 | **Fase 4 — Drive, datos reales y cierre** | Backend Drive, publicación, corrida real + doble-cheque, README | T-18 a T-21 | 4 – 6 días | 80 |
-| **Total proyecto (v1 completo)** | | **22 tareas** | **~18 – 26 días hábiles (≈ 3.5 – 5 semanas)** | — |
-| **Guardarraíl — motor funcional en local** | Fase 0 + Fase 1 + Fase 2 + Fase 3 | T-01 a T-17 | **~14 – 20 días hábiles (≈ 3 – 4 semanas)** | — |
+| **Total proyecto (v1 completo)** | | **26 tareas** | **~21 – 30 días hábiles (≈ 4 – 6 semanas)** | — |
+| **Guardarraíl — motor funcional en local** | Fases 0, 1, 1B, 2 y 3 | T-01 a T-17 + T-23 a T-26 | **~17 – 24 días hábiles (≈ 3.5 – 5 semanas)** | — |
+
+> **Sobre la Fase 1B y la estimación.** Los insumos reales llegaron el 2026-08-06, después de construida la ingesta. Destaparon que tres módulos no funcionan contra los archivos de producción (PRD §10.1). El costo de haber estimado sin datos fue de **3 a 4 días**; la lección operativa es que los pasos de validación contra archivos reales de T-06 y T-07 no eran opcionales, y que una fase de ingesta no debería declararse terminada sin ellos.
 
 > **Notas sobre la tabla:**
 > - El PRD **no define prioridades P1/P2/P3**; define versiones (v1/v2/v3). Todo este plan es **v1**. El guardarraíl equivalente es el motor funcional corriendo en local (Fases 0–3): produce los tres entregables y es verificable de punta a punta sin credenciales de Drive. La Fase 4 es lo que lo lleva a operación real.

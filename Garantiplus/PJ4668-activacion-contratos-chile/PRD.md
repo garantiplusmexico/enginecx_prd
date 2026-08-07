@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Activación de Contratos Chile — motor de datos `contratos_chile` |
 | **Área / empresa** | Garantiplus Chile |
-| **Versión** | v1.3 |
+| **Versión** | v1.4 |
 | **Fecha** | 2026-08-04 |
 | **Autores** | Gustavo Iván Carreto Abascal (datos / automatización) |
 | **Revisión / liderazgo** | Aldo Álvarez |
@@ -306,7 +306,7 @@ Las cuatro métricas posteriores a la principal se derivan de los criterios de c
 
 | **Riesgo** | **Impacto potencial** |
 | --- | --- |
-| **Parte del histórico ya está activo.** Hubo una activación masiva hasta aproximadamente mediados de 2023, y posiblemente algunos contratos de 2024. | Alimentar al RPA con contratos ya activos generaría órdenes de pago duplicadas sobre ~60 mil contratos. **Mitigado:** el motor cruza contra `ventas.estatus` en Atenea Chile y los excluye del feed (RF-16, RF-17). El riesgo residual es que el cruce falle por desalineación de identificadores, cubierto por el riesgo siguiente. |
+| ~~**Parte del histórico ya está activo**~~ → **DESCARTADO (v1.4) con datos.** La activación masiva de 2023 ocurrió, pero esos contratos hoy están `Caduco`: se pagaron y su garantía venció. **Solo 47 de 70.510 están `Activo`**, y ninguno apareció en una muestra de 117. | El riesgo de órdenes duplicadas era de orden de magnitud menor al estimado. El cruce contra `ventas` se conserva, pero su valor real es **filtrar por `Registrado`** (32.494 contratos) más que excluir activos. |
 | **Desfase o indisponibilidad de la réplica de Atenea Chile.** El cruce depende de que `ventas` esté actualizada y accesible. | Si la réplica está desfasada, un contrato activado recientemente podría no figurar como activo y colarse al feed. Si está inaccesible, el motor no puede determinar el estado. En ambos casos la regla es **no excluir por defecto**: un contrato de estado indeterminado se marca y se reporta, nunca se descarta ni se asume activo. Conviene registrar la fecha de última actualización de la réplica en el reporte. |
 | **Baja correspondencia entre el `ID` del Excel y el `id_contrato` de la vista de ventas.** | Si el cruce tiene baja tasa de coincidencia, ni el filtro de activos ni la validación del supuesto de identificadores funcionan. Es un riesgo con lado bueno: el cruce **mide** esa correspondencia, así que una tasa baja se detecta de inmediato y en la misma corrida, en vez de descubrirse operando. |
 | **Ambigüedad en la base de comparación de montos.** El monto total del DTE incluye IVA, mientras que los montos del Excel podrían ser netos. | Si se compara la suma del Excel contra el monto total del XML y los montos del Excel son netos, prácticamente todas las facturas se marcarían como `NO_CUADRA` por la diferencia del 19%, haciendo el reporte inservible y ocultando las discrepancias reales. |
@@ -336,10 +336,11 @@ Las cuatro métricas posteriores a la principal se derivan de los criterios de c
 | **Contratos ya activos** | ~~¿Cómo se identifican los contratos ya activados para excluirlos del feed?~~ **RESUELTO (v1.2):** `ventas.estatus` en Atenea Chile distingue contratos activos de no activos. El motor lo consume y los excluye (RF-16, RF-17). |
 | **Accesos** | ¿Con qué credencial accede el motor a Atenea Chile? Debe ser **de solo lectura y acotada a la tabla `ventas`**. ¿Quién la gestiona? |
 | **Datos** | ¿Con qué frecuencia se actualiza la réplica `ventas` desde SIGA? El desfase determina cuán confiable es el filtro de contratos ya activos para activaciones recientes. |
-| **Datos** | ¿Qué valores concretos toma `ventas.estatus` y cuál o cuáles corresponden a "activo"? Debe fijarse como parámetro de configuración, no hardcodearse. |
+| **Datos** | ~~¿Qué valores toma `ventas.estatus`?~~ **RESUELTO (v1.4):** cuatro, medidos sobre 70.510 contratos — `Caduco` 35.910, `Registrado` 32.494, `Cancelado` 2.059, `Activo` **47**. Solo `Registrado` entra al feed del RPA. |
+| **Conciliación** | En `ventas` hay **36.093 fechas de pago reales**, pero casi todas de contratos ya activados (`Caduco`). De los 32.494 `Registrado` solo **6** la tienen. ¿Qué son esos 6 — un contrato pagado debería estar activo, no registrado? |
 | **Montos** | ~~¿Los montos del Excel son netos o incluyen IVA?~~ **RESUELTO (v1.3) con datos:** son **netos**. Verificado aritméticamente: la factura 18655 declara 17 unidades a `$132.282`, que es el `Monto a Facturar` del contrato, y su `MntNeto` es `2.248.794` = 17 × 132.282 exacto. La base de comparación `neto` queda confirmada. |
 | **Montos** | ¿Cuál es la tolerancia de redondeo aceptable en la conciliación? |
-| **Identificadores** | ¿La columna `ID` del Excel es efectivamente el identificador con el que el RPA busca el contrato en SIGA? **Ahora es medible:** el cruce contra `ventas.id_contrato` (clave primaria de la vista de ventas) produce una tasa de correspondencia que confirma o refuta el supuesto con datos. Queda pendiente definir qué tasa se considera aceptable para operar. |
+| **Identificadores** | ~~¿La columna `ID` del Excel es el identificador de SIGA?~~ **RESUELTO (v1.4) con datos:** sí. Muestra aleatoria de 117 contratos cruzada contra `ventas.id_contrato`: **117 encontrados, 0 ausentes — correspondencia 100%**. |
 | **Identificadores** | ~~¿El folio del nombre de archivo corresponde 1:1 con el `FACTURA N°`?~~ **RESUELTO (v1.3) con datos:** correspondencia **100%**. Los 600 folios distintos del consolidado tienen su XML, y los 22.659 contratos con folio resuelven además su PDF. Cero folios apuntando a un documento inexistente. |
 | **Reglas de negocio** | ¿Qué líneas deben excluirse del feed por no ser garantías (reparaciones, cotizaciones, órdenes de compra)? ¿Los patrones identificados hasta ahora son suficientes? |
 | **Reglas de negocio** | ¿Cómo se tratan las notas de crédito (DTE 61) y los contratos cancelados en la conciliación? |

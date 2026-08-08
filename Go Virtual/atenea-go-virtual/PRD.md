@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Atenea Go Virtual |
 | **Área / empresa** | Go Virtual |
-| **Versión** | v0.1 |
+| **Versión** | v0.2 |
 | **Fecha** | 2026-08-08 |
 | **Autores** | Aldo Álvarez (solicitante) |
 | **Revisión / liderazgo** | Aldo Álvarez (Director de TI, revisión técnica) |
@@ -20,7 +20,7 @@ Hoy el seguimiento comercial de Go Virtual vive en un Google Sheet llamado **Too
 
 El producto es deliberadamente **más transparente en sus cálculos que Atenea GarantiPlus**. Aquí no existe la dualidad presupuesto/objetivo ni las métricas derivadas (venta pagada, venta recuperada, ritmo de ventas): hay **una sola meta** y tres números que reportar — **facturado MTD**, **alcance vs objetivo MTD** y **alcance vs objetivo Full Month** —, desglosados por **Centro de ingresos**, que es el eje de lectura del negocio.
 
-El MVP cubre las **Fases 0 y 1**: llevar la facturación de Athena a Supabase, establecer Supabase como maestro de objetivos, validar la correspondencia contra el Tool en meses cerrados, y publicar el Envío Diario tres veces al día por WhatsApp con routing por rol (Dirección ve la organización completa; cada Responsable ve su propio corte). La **Fase 2** añade el chat conversacional sobre esos mismos números.
+El MVP cubre las **Fases 0 y 1**: llevar la facturación de Athena a Supabase, establecer Supabase como maestro de objetivos, validar la correspondencia contra el Tool en meses cerrados, y publicar el Envío Diario tres veces al día por WhatsApp con routing por rol en tres niveles: Dirección ve la organización completa, cada Equipo ve su consolidado con el ranking interno de sus integrantes, y cada Responsable ve su propio corte. La **Fase 2** añade el chat conversacional sobre esos mismos números.
 
 El resultado esperado es operativo y de negocio: **retirar de circulación el reporte mensual manual** y sustituirlo por información diaria y confiable, de modo que el equipo comercial pueda reaccionar dentro del mes en curso y no después.
 
@@ -49,7 +49,7 @@ Este proyecto **no es un clon de Atenea GarantiPlus**. Comparte la arquitectura,
 | Unidad medida | Contrato de garantía vendido | **Peso facturado** |
 | Metas | Dos: `objetivo` y `presupuesto` (presupuesto solo a nivel Dirección) | **Una sola: objetivo** |
 | Métricas derivadas | `ritmo_ventas_mtd`, `venta_pagada_mtd`, `venta_recuperada_mtd`, `resultado_mes_mtd` | **Ninguna.** Solo facturado y alcance vs objetivo |
-| Eje de agregación | Ejecutivo (KAE) → Gerente (DRM) → Grupo → Distribuidor → Dirección | **Centro de ingresos**, y en paralelo **Responsable** |
+| Eje de agregación | Ejecutivo (KAE) → Gerente (DRM) → Grupo → Distribuidor → Dirección | **Centro de ingresos**, y en paralelo **Responsable → Equipo → Dirección** |
 | Regla de cancelación | Existe `fecha_cancelacion` en la venta | La vista de Athena ya entrega una **`bandera`** calculada por línea |
 | Curva de participación | Prorrateo por curva histórica/semanal según país | **Días naturales transcurridos**, plano |
 
@@ -58,6 +58,7 @@ Cuatro términos del dominio de Go Virtual que el equipo debe distinguir desde e
 - **Centro de ingresos** — la línea de negocio (Sitios Web, Publicidad Digital, Medios, Atención Multicanal, Inv. Multimedia, Contenidos, Consultoría, Project Manager, Herramienta de Gestión). Es el eje principal de lectura y viene de `clasificacion_gv` en la vista de Athena.
 - **Producto / subproducto** — el detalle debajo del Centro de ingresos (`subproducto_gv`): "Dealer Base", "Advanced", "Consultoría en contenido", etc.
 - **Responsable** — la persona de ventas dueña de la cuenta. Existe además un `Responsable Publicidad Digital` distinto para ese centro específico.
+- **Equipo** — agrupación de Responsables, y el nivel intermedio entre la persona y la organización. Son cinco: **Nuevos Negocios**, **Customer Success Manager**, **Brand Success Manager**, **CRM** y **Longtale**. Verificado en el Tool: la suma de objetivos de los integrantes cuadra exactamente con el objetivo del equipo, y la suma de los cinco equipos cuadra con el total de GoVirtual. Es el equivalente funcional del nivel Gerente (DRM) de GarantiPlus.
 - **Bandera** — clasificación por línea que ya calcula la vista `vw_ic_ventas_gv`: `venta`, `venta_devengar`, `cancelada`, `nota_credito`, `refactura_mes_anterior`, `refactura_origen_no_encontrado`. Es lo que permite reproducir las columnas del Tool sin reimplementar su lógica.
 
 ---
@@ -87,6 +88,7 @@ La tecnología principal es la ya probada en Atenea: **AWS Athena** como origen,
 |---|---|
 | **Dirección Go Virtual** | Recibe el Envío Diario con el consolidado de toda la organización: facturado MTD, alcance vs objetivo MTD y Full Month por Centro de ingresos, y el ranking de Responsables. Es el consumidor principal. |
 | **Responsable (equipo de ventas)** | Recibe su propio corte con los mismos indicadores acotados a sus cuentas. Identificado en el Tool por la columna `Responsable` y ligado a `rh_persona` por ID numérico. |
+| **Equipo** | Nivel intermedio entre Responsable y Dirección. Cinco equipos: Nuevos Negocios, Customer Success Manager, Brand Success Manager, CRM y Longtale. Recibe el consolidado de sus integrantes y el ranking interno del equipo. Es el tercer rol de routing del Envío Diario. |
 | **Responsable Publicidad Digital** | Dueño del Centro de ingresos Publicidad Digital. **No recibe envío en el MVP**, pero su identificador se persiste desde la Fase 0 para habilitarlo en Fase 3 sin rehacer el modelo. |
 | **Aldo Álvarez (Director de TI)** | Solicitante, revisor técnico y operador. Ejecuta manualmente los pasos de Athena/AWS, autoriza cargas a producción y define el parámetro de tolerancia de la validación. |
 | **Finanzas / quien fija objetivos** | Origen de los objetivos mensuales. Hoy los captura en el Tool; a partir de la Fase 0 la fuente de verdad es Supabase. |
@@ -109,7 +111,9 @@ La tecnología principal es la ya probada en Atenea: **AWS Athena** como origen,
 | **Desglose por Centro de ingresos** | Los tres indicadores anteriores abiertos por cada uno de los 9 centros. |
 | **Desglose por subproducto** | Un nivel de detalle adicional bajo cada Centro de ingresos, desde `subproducto_gv`. |
 | **Corte individual por Responsable** | Los mismos indicadores acotados a las cuentas de cada persona. |
+| **Corte por Equipo** | Los mismos indicadores consolidados por equipo, con el ranking interno de sus integrantes. |
 | **Ranking de Responsables** | Lista ordenada por alcance vs objetivo, para el mensaje de Dirección. |
+| **Alcance Full Month junto al MTD** | Ambas cifras se muestran en el mismo mensaje. El `Alcance` que el equipo conoce del Tool es Full Month; el MTD prorrateado es una métrica nueva y presentarla sola provocaría que se lea como discrepancia. |
 | **ETL automatizado** | Workflow n8n contra Athena, 3x/día en el horario de México, con bitácora de cada corrida. |
 | **Envío Diario por WhatsApp** | Tres envíos diarios vía Twilio, con routing por rol y catálogo de contactos con bandera de activo. |
 | **Validación retroactiva** | Reproducción de meses cerrados (julio, junio y anteriores) contra el Tool, con análisis de variación documentado. |
@@ -136,6 +140,7 @@ Decisiones críticas que el MVP **no** toma todavía: el parámetro de toleranci
 | **Reemplazo del Tool como herramienta de trabajo** | El Tool sigue existiendo para captura y análisis de Finanzas y Comercial. Lo que se retira es su rol de **canal de reporte mensual**, no el archivo. |
 | **Escritura de vuelta hacia el Tool o hacia Athena** | El flujo es de solo lectura desde el origen. Atenea nunca modifica la vista de Athena ni el Google Sheet. |
 | **Modificación de las tablas `rh_*` existentes** | El proyecto convive en `RH_Analytics` pero no toca el dominio de RH. Solo lee `rh_persona` y `rh_empresa`. |
+| **Cálculo de comisiones** | El Tool calcula comisiones (`Porcentaje de Comisión`, `cobrado este mes`, `Por cobrar`, `TOTAL`). Atenea no las reproduce: implica reglas de cobranza que no están en la vista de Athena. Entra si se define su lógica y se agrega el dato de cobranza a la sábana. |
 
 ---
 
@@ -174,18 +179,21 @@ flowchart TD
     D -->|No| E["Omitir"]
     D -->|Si| F{"Rol del contacto"}
     F -->|Direccion| G["RPC resumen organizacion"]
+    F -->|Equipo| P["RPC resumen de equipo"]
     F -->|Responsable| H["RPC resumen individual"]
     G --> I["Formatear mensaje Direccion<br/>por Centro de ingresos"]
     G --> J["RPC ranking de responsables"]
     J --> K["Formatear ranking"]
+    P --> Q["Formatear mensaje de equipo<br/>con ranking interno"]
     H --> L["Formatear mensaje individual"]
     I --> M["Enviar plantilla Twilio"]
     K --> M
+    Q --> M
     L --> M
     M --> N["Registrar envio"]
 ```
 
-El routing por rol es lo que hace que un mismo workflow sirva a dos audiencias con reglas de visibilidad distintas. Dirección recibe dos mensajes (consolidado y ranking); cada Responsable recibe uno solo con sus propias cifras.
+El routing por rol es lo que hace que un mismo workflow sirva a tres audiencias con reglas de visibilidad distintas. Dirección recibe dos mensajes (consolidado y ranking); cada líder de Equipo recibe el consolidado de su equipo con el ranking interno de sus integrantes; cada Responsable recibe uno solo con sus propias cifras.
 
 Un detalle operativo aprendido en Chile y que debe quedar explícito en el diseño: los nodos de formateo tienen que hacer **fan-out** —emitir un ítem por destinatario— y no colapsar la lista a un solo elemento. Cuando esto se hizo mal en el Envío Diario de Chile, solo el primer contacto de Dirección recibió el mensaje y el resto no, sin error visible en la ejecución.
 
@@ -224,7 +232,11 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | RF-10 | Alcance vs objetivo Full Month | Exponer facturado MTD ÷ objetivo mensual completo, sin prorrateo, en los mismos tres niveles. |
 | RF-11 | Desglose por subproducto | Permitir abrir cada Centro de ingresos por `subproducto_gv`. |
 | RF-12 | Ranking de Responsables | Producir la lista de Responsables ordenada por alcance vs objetivo, excluyendo centinelas del orden pero reportándolos aparte. |
-| RF-13 | Envío Diario | Enviar tres veces al día por WhatsApp/Twilio, con routing por rol: Dirección recibe consolidado y ranking; cada Responsable recibe su corte individual. |
+| RF-13 | Envío Diario | Enviar tres veces al día por WhatsApp/Twilio, con routing por rol: Dirección recibe consolidado y ranking; cada Equipo recibe su consolidado con ranking interno; cada Responsable recibe su corte individual. |
+| RF-19 | Catálogo de Equipos | Mantener el catálogo de los cinco equipos y la pertenencia de cada Responsable a uno solo de ellos, con llave numérica y vigencia. |
+| RF-20 | Consolidado por Equipo | Calcular los mismos indicadores agregados por equipo, y el ranking interno de sus integrantes. |
+| RF-21 | Invariante de cuadre jerárquico | La suma de los Responsables de un equipo debe igualar al equipo, y la suma de los cinco equipos debe igualar al total de la organización. La verificación se ejecuta en cada corrida y su incumplimiento se reporta como error, no como advertencia. |
+| RF-22 | Doble alcance en el mensaje | Presentar en el mismo mensaje el alcance vs objetivo MTD prorrateado y el Full Month, etiquetados de forma que se distingan sin ambigüedad. |
 | RF-14 | Catálogo de contactos | Mantener contactos con teléfono, rol, vínculo a `rh_persona.id` y bandera de activo. Solo se envía a contactos activos. |
 | RF-15 | Bitácora de ETL | Registrar cada corrida con inicio, fin, estado, filas leídas, filas insertadas o actualizadas, centinelas generados y error si lo hubo. |
 | RF-16 | Validación retroactiva | Reproducir meses cerrados (julio 2026 hacia atrás) y compararlos contra el Tool por Centro de ingresos, documentando la variación de cada columna (`Facturado`, `REFA`, `Cancelaciones`, `Devengado`, `Total`). |
@@ -274,7 +286,9 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 
 **Catálogo de Centros de ingresos:** llave numérica, nombre canónico, y los alias de texto con que aparece en las distintas fuentes.
 
-**Catálogo de Responsables:** llave numérica propia, `rh_persona.id`, nombre como aparece en el Tool, nombre como aparece en RH, tipo (`Responsable` / `Responsable Publicidad Digital`), vigencia.
+**Catálogo de Responsables:** llave numérica propia, `rh_persona.id`, nombre como aparece en el Tool, nombre como aparece en RH, tipo (`Responsable` / `Responsable Publicidad Digital`), equipo al que pertenece, vigencia.
+
+**Catálogo de Equipos:** llave numérica, nombre canónico (Nuevos Negocios, Customer Success Manager, Brand Success Manager, CRM, Longtale), y vigencia.
 
 **Objetivos:** `id_gv` de la cuenta, llave de Responsable, llave de Centro de ingresos, año, mes, monto objetivo, origen y fecha de carga.
 
@@ -324,7 +338,8 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 |---|---|
 | **Retiro del reporte manual** | El reporte mensual del Tool deja de circularse como canal oficial. Es la métrica que define el éxito del proyecto. |
 | **Cuadre contra el Tool en meses cerrados** | Desviación entre el `Total` por Centro de ingresos calculado por Atenea y el del Tool, en julio y junio 2026. El umbral tolerable **se define a partir de este ejercicio**, no antes. |
-| **Cobertura de atribución** | Porcentaje de monto facturado que resuelve a un Responsable y a un Centro de ingresos conocidos. El complemento es el monto en centinela, que debe tender a cero. |
+| **Cobertura de atribución** | Porcentaje de monto facturado que resuelve a un Responsable, un Equipo y un Centro de ingresos conocidos. El complemento es el monto en centinela, que debe tender a cero. |
+| **Cuadre jerárquico** | Corridas en que la suma de Responsables iguala a su Equipo y la suma de Equipos iguala a la organización. Debe ser 100%; cualquier incumplimiento es un error bloqueante. |
 | **Fiabilidad del ETL** | Porcentaje de corridas programadas que terminan en estado exitoso, medido semanalmente. |
 | **Entregabilidad del Envío Diario** | Mensajes entregados ÷ contactos activos por corrida. Detecta el modo de falla de fan-out. |
 | **Frescura del dato** | Diferencia entre la última corrida exitosa de ETL y la hora del envío. Un envío nunca debe apoyarse en datos de más de una ventana de atraso. |
@@ -343,6 +358,9 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | **Los dos catálogos de Centro de ingresos del Tool no coinciden** | El bloque resumen lista "Herramienta de Gestión" y "Consultoría"; el bloque por vendedor lista "CRM", "Servicio" y "Consultoría y Capacitación". Agregar por el catálogo equivocado produce cifras que no cuadran con las que el equipo ya conoce. |
 | **La correspondencia `bandera` → columnas del Tool es una hipótesis, no un hecho** | Se asume que `refactura_*` alimenta REFA, que `cancelada` y `nota_credito` alimentan Cancelaciones, y que `venta_devengar` alimenta Devengado. Si el Tool aplica algún criterio adicional no visible, las cifras no cuadrarán y habrá que reconstruir la lógica. |
 | **Los objetivos del Tool pueden no estar completos ni cuadrados** | Las filas de objetivo que se alcanzaron a leer traen ceros en 2026 y la hoja contiene `#N/A` y `#DIV/0!`. Cargar objetivos incompletos produce alcances inflados que nadie detecta hasta que un Responsable reclama. Mitigación: validar que la suma de objetivos por mes cuadre contra el total del bloque resumen antes de dar la carga por buena. |
+| **El objetivo de julio tiene dos valores distintos dentro del mismo archivo** | Verificado: el pivote por Centro de ingresos y por Responsable suma **9,219,841.71**, mientras que el rollup por equipos y la serie mensual dan **9,293,066**. Diferencia de **$73,224.56**. Se adopta 9,293,066 por decisión de Aldo, pero la causa de la diferencia sigue sin explicarse y puede repetirse en otros meses. |
+| **El Tool tiene errores de fórmula no detectados** | Verificado en el bloque de abril: la columna `Alcance` está **corrida un renglón hacia abajo** — cada porcentaje pertenece a la fila anterior, y el total del mes aparece como 100.6% cuando en realidad fue 76.5%. Implicación doble: la validación retroactiva no puede tomar los porcentajes del Tool como referencia (solo los montos), y es probable que decisiones comerciales pasadas se hayan tomado sobre cifras equivocadas. |
+| **El equipo conoce el alcance Full Month, no el MTD** | El `Alcance` del Tool es facturado ÷ objetivo mensual completo, sin prorrateo. Si el primer envío muestra solo el MTD prorrateado, el equipo lo va a comparar contra el Tool y concluir que el bot está mal. Mitigación: RF-22. |
 | **Convivencia con datos sensibles de RH** | El proyecto vive en el mismo Supabase que `rh_persona_sensible`. Un rol mal acotado expone información de nómina. Aldo aceptó explícitamente la convivencia; el riesgo se gestiona con RNF-01 a RNF-04, no eliminándolo. |
 | **Dependencia de credenciales de AWS accesibles desde n8n** | El ETL automatizado exige que n8n pueda consultar Athena. Si no hay credenciales disponibles, la Fase 1 se bloquea y hay que retroceder a carga manual, perdiendo la promesa de visibilidad diaria. |
 | **Alta de número y plantillas de Twilio** | Es un trámite externo con tiempos propios. Puede convertirse en el camino crítico aunque todo lo técnico esté listo. |
@@ -360,7 +378,9 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | **Los Responsables del Tool existen en `rh_persona` con `empresa_id = 4`** | Verificado para tres casos; se asume para el resto y se validará en la Fase 0. |
 | **El objetivo es mensual y no cambia dentro del mes** | Si Finanzas recalibra a media marcha, se maneja como carga nueva con respaldo, no como edición en vivo. |
 | **Días naturales, no hábiles** | Decisión explícita de Aldo. |
-| **Un solo envío por rol** | Dirección ve todo, Responsable ve lo suyo. No hay niveles intermedios de supervisión en el MVP. |
+| **Tres niveles de visibilidad** | Dirección ve todo; cada Equipo ve su consolidado y el ranking interno de sus integrantes; cada Responsable ve lo suyo. Verificado contra el Tool: los cinco equipos suman exactamente el total de la organización. |
+| **Cada Responsable pertenece a un solo equipo** | Se asume pertenencia única, consistente con que las sumas por equipo cuadren sin duplicar. Debe confirmarse al cargar el catálogo. |
+| **El objetivo canónico de julio 2026 es 9,293,066** | Decisión de Aldo ante la discrepancia con el pivote. Se toma como referencia para la validación retroactiva. |
 | **La infraestructura de Atenea es reutilizable** | n8n, Twilio y los patrones de ETL y Envío Diario se clonan sin rediseño de arquitectura. |
 
 ---
@@ -369,8 +389,11 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 
 | Tema | Pregunta abierta |
 |---|---|
-| **Objetivos** | Falta el export limpio de la matriz de objetivos filtrada por `Fuente = OBJETIVO`. La lectura del gsheet se truncó en 235,892 caracteres y las filas recibidas traen ceros en 2026, por lo que la carga no puede ejecutarse todavía. Criterio de aceptación del export: la suma de `Ene'26 Obj` debe dar **9,319,472**. |
-| **Tolerancia de desviación** | ¿Cuál es la variación máxima aceptable entre Atenea y el Tool para dar por buena la validación? Se define tras reproducir julio y junio 2026. |
+| **Objetivos — matriz completa** | Se extrajeron cortes sueltos de TOOL COMERCIAL (julio por Centro de ingresos, por Responsable y por equipo; junio por Responsable; abril por Centro de ingresos; y la serie de 12 objetivos mensuales de la organización), guardados en `Go Virtual/tool_comercial_jul2026.csv`. Falta la **matriz completa año × Responsable × Centro de ingresos**, que vive en la pestaña de cuentas filtrada por `Fuente = OBJETIVO`. Criterio de aceptación: la suma de `Ene'26 Obj` debe dar **9,319,472**. |
+| **Origen de la discrepancia de objetivos** | ¿Por qué el pivote de julio suma 9,219,841.71 y el rollup 9,293,066? ¿Hay Responsables o Centros de ingresos que el pivote deja fuera? Si la causa es estructural, se repetirá en todos los meses. |
+| **Pertenencia a equipos** | Falta el catálogo explícito de qué Responsable pertenece a qué equipo, y qué ocurre con Responsables que no aparecen en ningún equipo (`Mariana Rojas` y `Cesar Valverde` aparecen en unos bloques y no en otros). |
+| **Contactos de Equipo** | ¿Quién recibe el mensaje de cada equipo — un líder designado, todos sus integrantes, o ambos? |
+| **Tolerancia de desviación** | ¿Cuál es la variación máxima aceptable entre Atenea y el Tool para dar por buena la validación? Se define tras reproducir julio y junio 2026. Nota: la comparación debe hacerse contra los **montos** del Tool, no contra sus porcentajes de `Alcance`, que están corridos un renglón. |
 | **Catálogo de Centros de ingresos** | ¿Cuál de las dos listas del Tool es la canónica? ¿"Herramienta de Gestión" y "CRM"/"Servicio" son el mismo centro con distinto nombre o son centros distintos? |
 | **Responsables inactivos** | ¿Qué hacer con las cuentas de un Responsable dado de baja en RH? ¿Se reasignan, se agrupan aparte, o se mantienen atribuidas a la persona saliente hasta el cierre del mes? |
 | **Responsable Publicidad Digital** | ¿Su objetivo es un subconjunto del objetivo del `Responsable` de la cuenta, o es una meta independiente? Determina si los objetivos suman doble al consolidar. |
@@ -385,4 +408,4 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 ---
 
 *Engine CX — Departamento de Desarrollo*
-*Versión: v0.1*
+*Versión: v0.2*

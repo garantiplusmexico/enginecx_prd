@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Atenea Go Virtual |
 | **Área / empresa** | Go Virtual |
-| **Versión** | v0.4 |
+| **Versión** | v0.5 |
 | **Fecha** | 2026-08-08 |
 | **Autores** | Aldo Álvarez (solicitante) |
 | **Revisión / liderazgo** | Aldo Álvarez (Director de TI, revisión técnica) |
@@ -235,7 +235,8 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | RF-13 | Envío Diario | Enviar tres veces al día por WhatsApp/Twilio, con routing por rol: Dirección recibe consolidado y ranking; cada Equipo recibe su consolidado con ranking interno; cada Responsable recibe su corte individual. |
 | RF-19 | Catálogo de Equipos | Mantener el catálogo de los cinco equipos y la pertenencia de cada Responsable a uno solo de ellos, con llave numérica y vigencia. |
 | RF-20 | Consolidado por Equipo | Calcular los mismos indicadores agregados por equipo, y el ranking interno de sus integrantes. |
-| RF-21 | Invariante de cuadre jerárquico | La suma de los Responsables de un equipo debe igualar al equipo, y la suma de los cinco equipos debe igualar al total de la organización. La verificación se ejecuta en cada corrida y su incumplimiento se reporta como error, no como advertencia. |
+| RF-21 | Invariante de cuadre jerárquico | La suma sobre **todos** los Responsables —vigentes y dados de baja— debe igualar al total de la organización, y lo mismo por Equipo. La verificación se ejecuta en cada corrida y su incumplimiento se reporta como error, no como advertencia. **La suma de solo los vigentes es menor al total por diseño y no constituye falla** (ver RF-23). |
+| RF-23 | Cobertura de objetivo con titular vigente | Reportar, por periodo, cuánto del objetivo tiene titular vigente y cuánto no. La diferencia —el **objetivo sin titular vigente**— es una métrica de negocio que debe aparecer explícita en el mensaje de Dirección, nunca absorberse ni redistribuirse. |
 | RF-22 | Doble alcance en el mensaje | Presentar en el mismo mensaje el alcance vs objetivo MTD prorrateado y el Full Month, etiquetados de forma que se distingan sin ambigüedad. |
 | RF-14 | Catálogo de contactos | Mantener contactos con teléfono, rol, vínculo a `rh_persona.id` y bandera de activo. Solo se envía a contactos activos. |
 | RF-15 | Bitácora de ETL | Registrar cada corrida con inicio, fin, estado, filas leídas, filas insertadas o actualizadas, centinelas generados y error si lo hubo. |
@@ -339,7 +340,8 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | **Retiro del reporte manual** | El reporte mensual del Tool deja de circularse como canal oficial. Es la métrica que define el éxito del proyecto. |
 | **Cuadre contra el Tool en meses cerrados** | Desviación entre el `Total` por Centro de ingresos calculado por Atenea y el del Tool, en julio y junio 2026. El umbral tolerable **se define a partir de este ejercicio**, no antes. |
 | **Cobertura de atribución** | Porcentaje de monto facturado que resuelve a un Responsable, un Equipo y un Centro de ingresos conocidos. El complemento es el monto en centinela, que debe tender a cero. |
-| **Cuadre jerárquico** | Corridas en que la suma de Responsables iguala a su Equipo y la suma de Equipos iguala a la organización. Debe ser 100%; cualquier incumplimiento es un error bloqueante. |
+| **Cuadre jerárquico** | Corridas en que la suma sobre todos los Responsables y Equipos iguala al total de la organización. Debe ser 100%; cualquier incumplimiento es un error bloqueante. |
+| **Cobertura con titular vigente** | Porcentaje del objetivo del periodo que corresponde a personal aún en la organización. Al cierre de julio 2026 hay 5 de 11 Responsables dados de baja concentrando ~13.5M de objetivo anual; la métrica hace visible esa brecha en lugar de esconderla. |
 | **Fiabilidad del ETL** | Porcentaje de corridas programadas que terminan en estado exitoso, medido semanalmente. |
 | **Entregabilidad del Envío Diario** | Mensajes entregados ÷ contactos activos por corrida. Detecta el modo de falla de fan-out. |
 | **Frescura del dato** | Diferencia entre la última corrida exitosa de ETL y la hora del envío. Un envío nunca debe apoyarse en datos de más de una ventana de atraso. |
@@ -381,6 +383,8 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | **El objetivo es mensual y no cambia dentro del mes** | Si Finanzas recalibra a media marcha, se maneja como carga nueva con respaldo, no como edición en vivo. |
 | **Días naturales, no hábiles** | Decisión explícita de Aldo. |
 | **Tres niveles de visibilidad** | Dirección ve todo; cada Equipo ve su consolidado y el ranking interno de sus integrantes; cada Responsable ve lo suyo. Verificado contra el Tool: los cinco equipos suman exactamente el total de la organización. |
+| **Vigencia y no reasignación** | Decisión de Aldo. Las personas dadas de baja se conservan para que el histórico siga siendo atribuible; su objetivo del mes en curso no se reparte entre quienes siguen. Consecuencia aceptada: el detalle por comercial vigente **no suma** el total de la organización, y ambas métricas se siguen en paralelo. |
+| **El `cargo_codigo` de RH corrobora el reparto por equipos** | La asignación de Responsables a equipos se derivó por aritmética del Tool y se confirmó de forma independiente contra `rh_persona.cargo_codigo`: `brand_success_manager`, `business_development_manager` y `customer_success_manager` coinciden con los equipos Brand Success Manager, Nuevos Negocios y Customer Success Manager. |
 | **Cada Responsable pertenece a un solo equipo** | Se asume pertenencia única, consistente con que las sumas por equipo cuadren sin duplicar. Debe confirmarse al cargar el catálogo. |
 | **La fuente de objetivos es la hoja `TOOL_COMERCIAL` del libro, no sus pivotes** | Verificado: la matriz cuadra con las tres cifras de control (Ene'26 objetivo 9,319,472.19, Jul'26 objetivo 9,293,066.27, Jul'26 facturado 5,936,719.26). Los objetivos viven exclusivamente en filas con `Fuente = OBJETIVO`; las otras seis fuentes (`HISTÓRICO`, `FACTURADO`, `CANCELACION`, `ANDANAC`, `AMECAH`, `DEVENGADO`) tienen objetivo cero. |
 | **Objetivo total 2026 = 108,219,141.95** | Suma de los doce meses de la matriz, con 266 combinaciones de Responsable × Centro de ingresos sobre 8,756 filas. El total se preserva al centavo tras consolidar los alias del catálogo. |
@@ -399,7 +403,7 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | **Contactos de Equipo** | ¿Quién recibe el mensaje de cada equipo — un líder designado, todos sus integrantes, o ambos? |
 | **Tolerancia de desviación** | ¿Cuál es la variación máxima aceptable entre Atenea y el Tool para dar por buena la validación? Se define tras reproducir julio y junio 2026. Nota: la comparación debe hacerse contra los **montos** del Tool, no contra sus porcentajes de `Alcance`, que están corridos un renglón. |
 | **Catálogo de Centros de ingresos** | ¿Cuál de las dos listas del Tool es la canónica? ¿"Herramienta de Gestión" y "CRM"/"Servicio" son el mismo centro con distinto nombre o son centros distintos? |
-| **Responsables inactivos** | ¿Qué hacer con las cuentas de un Responsable dado de baja en RH? ¿Se reasignan, se agrupan aparte, o se mantienen atribuidas a la persona saliente hasta el cierre del mes? |
+| **Responsables de Publicidad Digital dados de baja** | **Resuelto para los comerciales, abierto para Publicidad Digital.** Regla de Aldo: las personas dadas de baja se conservan para el histórico y su objetivo del mes en curso **no se reasigna**; el seguimiento corre en dos métricas paralelas (alcance vs total y detalle por comercial vigente). Falta aplicar la misma regla a los 7 Responsables de Publicidad Digital, de los cuales 6 están dados de baja y `Sergio Hernandez` no tiene candidato en la plantilla. |
 | **Responsable Publicidad Digital** | ¿Su objetivo es un subconjunto del objetivo del `Responsable` de la cuenta, o es una meta independiente? Determina si los objetivos suman doble al consolidar. |
 | **Contactos y teléfonos** | ¿Quién exactamente recibe el Envío Diario? Falta la lista de Dirección y de Responsables con sus números. |
 | **Twilio** | ¿Se da de alta un número nuevo para Go Virtual o se reutiliza uno existente? ¿Quién gestiona la aprobación de plantillas y en qué plazo? |
@@ -412,4 +416,4 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 ---
 
 *Engine CX — Departamento de Desarrollo*
-*Versión: v0.4*
+*Versión: v0.5*

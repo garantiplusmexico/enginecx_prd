@@ -123,9 +123,9 @@ db-rpa.vw_ic_ventas_gv   →   esquema gv                          →   Envio_d
   - Archivos a crear/modificar: `Go Virtual/FASE_0_bitacora.sql`
   - Criterio de completitud: registra inicio, fin, estado, filas leídas, filas afectadas, centinelas generados y error. Se crea propia y no se reutiliza `public.sync_log`, cuyas columnas son del dominio de RH (`vacaciones`, `ausencias`, `postulaciones`)
 
-- [ ] **T-10** — Crear la función de cuadre jerárquico (RF-21)
+- [ ] **T-10** — Crear la función de cuadre jerárquico y la de cobertura vigente (RF-21, RF-23)
   - Archivos a crear/modificar: `Go Virtual/FASE_0_invariantes.sql`
-  - Criterio de completitud: devuelve error si la suma de Responsables no iguala a su Equipo, o si la suma de Equipos no iguala al total de la organización, para cualquier periodo
+  - Criterio de completitud: `gv.fn_validar_cuadre` devuelve error si la suma sobre **todos** los Responsables o Equipos no iguala al total; `gv.fn_cobertura_objetivo` separa el objetivo con titular vigente del que no lo tiene. **La suma de solo los vigentes es menor al total por diseño y no debe reportarse como falla** — tratarla como error haría que el sistema alertara todos los días
 
 ### Fase 1 — Validación contra el Tool (P1)
 
@@ -290,7 +290,8 @@ Todas viven en las credenciales de N8N o en variables de entorno. **Ninguna se e
 - [ ] `gv.objetivo` suma **108,219,141.95** en 2026, con mes 1 = 9,319,472.19 y mes 7 = 9,293,066.27
 - [ ] La sábana está respaldada al 100% y ninguna fila cae al centinela sin justificación documentada
 - [ ] La reproducción de julio 2026 cuadra contra el Tool dentro del umbral aprobado en T-14
-- [ ] La suma de Responsables iguala a su Equipo, y la de Equipos al total de la organización, en cualquier periodo
+- [ ] La suma sobre **todos** los Responsables (vigentes y bajas) iguala a su Equipo, y la de Equipos al total, en cualquier periodo
+- [ ] El mensaje de Dirección muestra explícitamente el **objetivo sin titular vigente** en lugar de absorberlo o redistribuirlo
 - [ ] El ETL corre 3x/día, registra bitácora y se detiene si el snapshot falla
 - [ ] Los tres roles reciben su mensaje, y el número de mensajes iguala al de contactos activos por rol
 - [ ] El mensaje muestra alcance MTD prorrateado **y** Full Month, distinguibles sin ambigüedad

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Atenea Go Virtual |
 | **Área / empresa** | Go Virtual |
-| **Versión** | v0.3 |
+| **Versión** | v0.4 |
 | **Fecha** | 2026-08-08 |
 | **Autores** | Aldo Álvarez (solicitante) |
 | **Revisión / liderazgo** | Aldo Álvarez (Director de TI, revisión técnica) |
@@ -55,7 +55,7 @@ Este proyecto **no es un clon de Atenea GarantiPlus**. Comparte la arquitectura,
 
 Cuatro términos del dominio de Go Virtual que el equipo debe distinguir desde el inicio:
 
-- **Centro de ingresos** — la línea de negocio (Sitios Web, Publicidad Digital, Medios, Atención Multicanal, Inv. Multimedia, Contenidos, Consultoría, Project Manager, Herramienta de Gestión). Es el eje principal de lectura y viene de `clasificacion_gv` en la vista de Athena.
+- **Centro de ingresos** — la línea de negocio, y el eje principal de lectura. Viene de `clasificacion_gv` en la vista de Athena. El catálogo canónico son **12 centros**, definidos por decisión de Aldo: `1 Sitios Web`, `2 Medios`, `3 Publicidad Digital`, `4 Atención Multicanal`, `5 Herramienta de Gestión`, `6 Inventario Multimedia`, `7 Contenidos`, `8 Project Manager`, `9 Consultoría`, `10 Otros`, `11 Intereses`, `12 CRM`. Dos de ellos absorben alias: **Atención Multicanal** consolida `At. Multicanal` y `Atencion Multicanal`; **Inventario Multimedia** consolida `Inv. Multimedia` e `Inventario Multimedia`. `Otros`, `Intereses` y `CRM` son canales propios, no residuos.
 - **Producto / subproducto** — el detalle debajo del Centro de ingresos (`subproducto_gv`): "Dealer Base", "Advanced", "Consultoría en contenido", etc.
 - **Responsable** — la persona de ventas dueña de la cuenta. Existe además un `Responsable Publicidad Digital` distinto para ese centro específico.
 - **Equipo** — agrupación de Responsables, y el nivel intermedio entre la persona y la organización. Son cinco: **Nuevos Negocios**, **Customer Success Manager**, **Brand Success Manager**, **CRM** y **Longtale**. Verificado en el Tool: la suma de objetivos de los integrantes cuadra exactamente con el objetivo del equipo, y la suma de los cinco equipos cuadra con el total de GoVirtual. Es el equivalente funcional del nivel Gerente (DRM) de GarantiPlus.
@@ -383,7 +383,8 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | **Tres niveles de visibilidad** | Dirección ve todo; cada Equipo ve su consolidado y el ranking interno de sus integrantes; cada Responsable ve lo suyo. Verificado contra el Tool: los cinco equipos suman exactamente el total de la organización. |
 | **Cada Responsable pertenece a un solo equipo** | Se asume pertenencia única, consistente con que las sumas por equipo cuadren sin duplicar. Debe confirmarse al cargar el catálogo. |
 | **La fuente de objetivos es la hoja `TOOL_COMERCIAL` del libro, no sus pivotes** | Verificado: la matriz cuadra con las tres cifras de control (Ene'26 objetivo 9,319,472.19, Jul'26 objetivo 9,293,066.27, Jul'26 facturado 5,936,719.26). Los objetivos viven exclusivamente en filas con `Fuente = OBJETIVO`; las otras seis fuentes (`HISTÓRICO`, `FACTURADO`, `CANCELACION`, `ANDANAC`, `AMECAH`, `DEVENGADO`) tienen objetivo cero. |
-| **Objetivo total 2026 = 108,219,141.95** | Suma de los doce meses de la matriz, con 266 combinaciones de Responsable × Centro de ingresos sobre 8,756 filas. |
+| **Objetivo total 2026 = 108,219,141.95** | Suma de los doce meses de la matriz, con 266 combinaciones de Responsable × Centro de ingresos sobre 8,756 filas. El total se preserva al centavo tras consolidar los alias del catálogo. |
+| **El catálogo de Centros de ingresos tiene 12 entradas y está cerrado** | Decisión de Aldo. Dos consolidaciones de alias (Atención Multicanal, Inventario Multimedia) y tres canales propios (`Otros`, `Intereses`, `CRM`). Materializado en `Go Virtual/catalogo_centro_ingresos_GV.csv`. |
 | **La infraestructura de Atenea es reutilizable** | n8n, Twilio y los patrones de ETL y Envío Diario se clonan sin rediseño de arquitectura. |
 
 ---
@@ -392,7 +393,8 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 
 | Tema | Pregunta abierta |
 |---|---|
-| **Alias de Centro de ingresos** | Falta la decisión de negocio sobre el mapeo. Verificado en la matriz: `At. Multicanal` concentra **todo el objetivo** (14,057,428.68) y **cero facturación**, mientras `Atencion Multicanal` tiene **cero objetivo** y toda la facturación (2,401,194.82); lo mismo entre `Inv. Multimedia` e `Inventario Multimedia`. ¿Son el mismo centro con etiqueta distinta según se trate de objetivo o de facturado? ¿Y qué son `Intereses`, `Otros` y `CRM`, que aparecen solo de un lado? |
+| **Clasificación de Intereses en Athena** | En el export de Athena, la única línea de intereses trae `clasificacion_gv` **vacío**; su clasificación SAT es `84101700 INTERESES NO PROVENIENTES DEL SISTEMA FINANCIERO`. El Tool sí la ubica en el centro `Intereses`. ¿La regla es mapear por código SAT cuando `clasificacion_gv` viene vacío, o se corrige la vista de Athena para que lo etiquete? Sin resolverlo, esas líneas caen al centinela. |
+| **Representatividad de la muestra de Athena** | El export disponible (`2026_08_06_facturacion_GV.csv`) contiene **100 filas reales de 2025** más 14,828 filas vacías de relleno, y solo exhibe 4 de los 12 centros y 2 de las 6 banderas. Es insuficiente para validar la cobertura del catálogo y la correspondencia `bandera` → columnas del Tool. Se requiere un export de 2026 completo antes de cerrar la Fase 0. |
 | **Pertenencia a equipos** | Falta el catálogo explícito de qué Responsable pertenece a qué equipo, y qué ocurre con Responsables que no aparecen en ningún equipo (`Mariana Rojas` y `Cesar Valverde` aparecen en unos bloques y no en otros). |
 | **Contactos de Equipo** | ¿Quién recibe el mensaje de cada equipo — un líder designado, todos sus integrantes, o ambos? |
 | **Tolerancia de desviación** | ¿Cuál es la variación máxima aceptable entre Atenea y el Tool para dar por buena la validación? Se define tras reproducir julio y junio 2026. Nota: la comparación debe hacerse contra los **montos** del Tool, no contra sus porcentajes de `Alcance`, que están corridos un renglón. |
@@ -410,4 +412,4 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 ---
 
 *Engine CX — Departamento de Desarrollo*
-*Versión: v0.3*
+*Versión: v0.4*

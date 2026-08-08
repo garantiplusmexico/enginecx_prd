@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Atenea Go Virtual |
 | **Área / empresa** | Go Virtual |
-| **Versión** | v0.2 |
+| **Versión** | v0.3 |
 | **Fecha** | 2026-08-08 |
 | **Autores** | Aldo Álvarez (solicitante) |
 | **Revisión / liderazgo** | Aldo Álvarez (Director de TI, revisión técnica) |
@@ -358,7 +358,9 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | **Los dos catálogos de Centro de ingresos del Tool no coinciden** | El bloque resumen lista "Herramienta de Gestión" y "Consultoría"; el bloque por vendedor lista "CRM", "Servicio" y "Consultoría y Capacitación". Agregar por el catálogo equivocado produce cifras que no cuadran con las que el equipo ya conoce. |
 | **La correspondencia `bandera` → columnas del Tool es una hipótesis, no un hecho** | Se asume que `refactura_*` alimenta REFA, que `cancelada` y `nota_credito` alimentan Cancelaciones, y que `venta_devengar` alimenta Devengado. Si el Tool aplica algún criterio adicional no visible, las cifras no cuadrarán y habrá que reconstruir la lógica. |
 | **Los objetivos del Tool pueden no estar completos ni cuadrados** | Las filas de objetivo que se alcanzaron a leer traen ceros en 2026 y la hoja contiene `#N/A` y `#DIV/0!`. Cargar objetivos incompletos produce alcances inflados que nadie detecta hasta que un Responsable reclama. Mitigación: validar que la suma de objetivos por mes cuadre contra el total del bloque resumen antes de dar la carga por buena. |
-| **El objetivo de julio tiene dos valores distintos dentro del mismo archivo** | Verificado: el pivote por Centro de ingresos y por Responsable suma **9,219,841.71**, mientras que el rollup por equipos y la serie mensual dan **9,293,066**. Diferencia de **$73,224.56**. Se adopta 9,293,066 por decisión de Aldo, pero la causa de la diferencia sigue sin explicarse y puede repetirse en otros meses. |
+| **Los pivotes del Tool están desactualizados respecto de su propia matriz** | **Resuelto.** La discrepancia de julio (pivote 9,219,841.71 vs rollup 9,293,066) se explicó al leer la hoja `TOOL_COMERCIAL` del libro completo: la matriz suma **9,293,066.27**, coincide con el rollup y con la serie mensual, y reproduce el facturado de julio al centavo (5,936,719.26). El pivote era una foto vieja. **Implicación permanente:** las pestañas de pivote del Tool no son fuente confiable; solo la matriz lo es. |
+| **La capitalización parte a una persona en dos** | Verificado: la matriz contiene `Montserrat González García` y `montserrat González García` como valores distintos, con **$279,990 del objetivo 2026** bajo la variante en minúscula. Un `GROUP BY` por texto la habría reportado como dos vendedoras, cada una con parte de su meta. La normalización debe colapsar mayúsculas y acentos antes de resolver identidad, y aun así el resultado final debe ser un ID numérico. |
+| **Objetivo y facturación del mismo centro viven bajo etiquetas distintas** | Verificado: `At. Multicanal` tiene 14,057,428.68 de objetivo y **cero** facturado; `Atencion Multicanal` tiene **cero** objetivo y 2,401,194.82 facturado. Sin tabla de alias, ese centro se reportaría con 0% de alcance sobre 14 millones de meta, y en otro renglón con facturación sin objetivo. Mismo patrón entre `Inv. Multimedia` e `Inventario Multimedia`. |
 | **El Tool tiene errores de fórmula no detectados** | Verificado en el bloque de abril: la columna `Alcance` está **corrida un renglón hacia abajo** — cada porcentaje pertenece a la fila anterior, y el total del mes aparece como 100.6% cuando en realidad fue 76.5%. Implicación doble: la validación retroactiva no puede tomar los porcentajes del Tool como referencia (solo los montos), y es probable que decisiones comerciales pasadas se hayan tomado sobre cifras equivocadas. |
 | **El equipo conoce el alcance Full Month, no el MTD** | El `Alcance` del Tool es facturado ÷ objetivo mensual completo, sin prorrateo. Si el primer envío muestra solo el MTD prorrateado, el equipo lo va a comparar contra el Tool y concluir que el bot está mal. Mitigación: RF-22. |
 | **Convivencia con datos sensibles de RH** | El proyecto vive en el mismo Supabase que `rh_persona_sensible`. Un rol mal acotado expone información de nómina. Aldo aceptó explícitamente la convivencia; el riesgo se gestiona con RNF-01 a RNF-04, no eliminándolo. |
@@ -380,7 +382,8 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 | **Días naturales, no hábiles** | Decisión explícita de Aldo. |
 | **Tres niveles de visibilidad** | Dirección ve todo; cada Equipo ve su consolidado y el ranking interno de sus integrantes; cada Responsable ve lo suyo. Verificado contra el Tool: los cinco equipos suman exactamente el total de la organización. |
 | **Cada Responsable pertenece a un solo equipo** | Se asume pertenencia única, consistente con que las sumas por equipo cuadren sin duplicar. Debe confirmarse al cargar el catálogo. |
-| **El objetivo canónico de julio 2026 es 9,293,066** | Decisión de Aldo ante la discrepancia con el pivote. Se toma como referencia para la validación retroactiva. |
+| **La fuente de objetivos es la hoja `TOOL_COMERCIAL` del libro, no sus pivotes** | Verificado: la matriz cuadra con las tres cifras de control (Ene'26 objetivo 9,319,472.19, Jul'26 objetivo 9,293,066.27, Jul'26 facturado 5,936,719.26). Los objetivos viven exclusivamente en filas con `Fuente = OBJETIVO`; las otras seis fuentes (`HISTÓRICO`, `FACTURADO`, `CANCELACION`, `ANDANAC`, `AMECAH`, `DEVENGADO`) tienen objetivo cero. |
+| **Objetivo total 2026 = 108,219,141.95** | Suma de los doce meses de la matriz, con 266 combinaciones de Responsable × Centro de ingresos sobre 8,756 filas. |
 | **La infraestructura de Atenea es reutilizable** | n8n, Twilio y los patrones de ETL y Envío Diario se clonan sin rediseño de arquitectura. |
 
 ---
@@ -389,8 +392,7 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 
 | Tema | Pregunta abierta |
 |---|---|
-| **Objetivos — matriz completa** | Se extrajeron cortes sueltos de TOOL COMERCIAL (julio por Centro de ingresos, por Responsable y por equipo; junio por Responsable; abril por Centro de ingresos; y la serie de 12 objetivos mensuales de la organización), guardados en `Go Virtual/tool_comercial_jul2026.csv`. Falta la **matriz completa año × Responsable × Centro de ingresos**, que vive en la pestaña de cuentas filtrada por `Fuente = OBJETIVO`. Criterio de aceptación: la suma de `Ene'26 Obj` debe dar **9,319,472**. |
-| **Origen de la discrepancia de objetivos** | ¿Por qué el pivote de julio suma 9,219,841.71 y el rollup 9,293,066? ¿Hay Responsables o Centros de ingresos que el pivote deja fuera? Si la causa es estructural, se repetirá en todos los meses. |
+| **Alias de Centro de ingresos** | Falta la decisión de negocio sobre el mapeo. Verificado en la matriz: `At. Multicanal` concentra **todo el objetivo** (14,057,428.68) y **cero facturación**, mientras `Atencion Multicanal` tiene **cero objetivo** y toda la facturación (2,401,194.82); lo mismo entre `Inv. Multimedia` e `Inventario Multimedia`. ¿Son el mismo centro con etiqueta distinta según se trate de objetivo o de facturado? ¿Y qué son `Intereses`, `Otros` y `CRM`, que aparecen solo de un lado? |
 | **Pertenencia a equipos** | Falta el catálogo explícito de qué Responsable pertenece a qué equipo, y qué ocurre con Responsables que no aparecen en ningún equipo (`Mariana Rojas` y `Cesar Valverde` aparecen en unos bloques y no en otros). |
 | **Contactos de Equipo** | ¿Quién recibe el mensaje de cada equipo — un líder designado, todos sus integrantes, o ambos? |
 | **Tolerancia de desviación** | ¿Cuál es la variación máxima aceptable entre Atenea y el Tool para dar por buena la validación? Se define tras reproducir julio y junio 2026. Nota: la comparación debe hacerse contra los **montos** del Tool, no contra sus porcentajes de `Alcance`, que están corridos un renglón. |
@@ -408,4 +410,4 @@ La regla que no puede romperse en Fase 2 es que **el alcance de la consulta lo d
 ---
 
 *Engine CX — Departamento de Desarrollo*
-*Versión: v0.2*
+*Versión: v0.3*

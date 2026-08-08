@@ -110,6 +110,11 @@ db-rpa.vw_ic_ventas_gv   →   esquema gv                          →   Envio_d
   - Archivos a crear/modificar: `Go Virtual/FASE_0_objetivos.sql`, fuente `Go Virtual/objetivos_2026_GV.csv`
   - Criterio de completitud: `SUM(objetivo_mxn)` = **108,219,141.95**; el mes 1 = **9,319,472.19** y el mes 7 = **9,293,066.27**
 
+- [ ] **T-07b** — Crear y poblar `gv.catalogo_cuenta` (puente `id_gv` → Responsable)
+  - Archivos a crear/modificar: `Go Virtual/FASE_0_cuentas_rol_facturacion.sql`
+  - Criterio de completitud: 828 cuentas cargadas, ninguna con responsable ambiguo
+  - **Tarea no prevista en el plan original.** Se descubrió al diseñar T-07: la vista de Athena no trae `Responsable`, llega hasta `id_gv`. Sin este puente toda la facturación caería al centinela y el corte por comercial sería imposible
+
 - [ ] **T-07** — Crear `gv.facturacion` (sábana) con índices y llave de negocio
   - Archivos a crear/modificar: `Go Virtual/FASE_0_facturacion.sql`
   - Criterio de completitud: la llave de negocio impide duplicados al reejecutar; existen índices por `fecha`, `id_centro_ingresos` e `id_responsable`

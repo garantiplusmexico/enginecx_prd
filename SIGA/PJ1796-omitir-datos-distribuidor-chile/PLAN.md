@@ -10,7 +10,7 @@
 | Rama base | `develop` |
 | Rama | `feature/PJ1796-omitir-datos-distribuidor-chile` |
 | Tipo | Feature |
-| Responsable | Javier Antonio Oropeza Camacho |
+| Responsable | Javier Antonio Oropeza Camacho (javier.oropeza@garantiplus.mx) |
 | Folio PRD | `PJ1796` |
 | Fecha de generación | 2026-07-23 |
 | Fecha de cierre | 2026-08-11 |

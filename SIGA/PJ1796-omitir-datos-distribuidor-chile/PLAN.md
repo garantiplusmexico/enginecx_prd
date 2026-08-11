@@ -10,10 +10,11 @@
 | Rama base | `develop` |
 | Rama | `feature/PJ1796-omitir-datos-distribuidor-chile` |
 | Tipo | Feature |
-| Responsable | Alejandro Govea Hernandez |
+| Responsable | Javier Antonio Oropeza Camacho |
 | Folio PRD | `PJ1796` |
 | Fecha de generación | 2026-07-23 |
-| Estado | Borrador |
+| Fecha de cierre | 2026-08-11 |
+| Estado | ✅ Completado |
 | ID plan (BD) | 19 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 

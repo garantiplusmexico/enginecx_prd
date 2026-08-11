@@ -10,7 +10,7 @@
 | Rama base | `develop` |
 | Rama | `feature/PJ9259-digitos-rut` |
 | Tipo | Feature |
-| Responsable | Alejandro Govea Hernandez |
+| Responsable | Javier Antonio Oropeza Camacho |
 | Folio PRD | `PJ9259` |
 | Fecha de generación | 2026-07-24 |
 | Estado | Validado |

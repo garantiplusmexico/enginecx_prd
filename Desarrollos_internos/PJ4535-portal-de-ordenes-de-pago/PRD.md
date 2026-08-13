@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Portal de Órdenes de Pago |
 | **Área / empresa** | EngineCX — transversal a todas las empresas del Grupo Engine CX |
-| **Versión** | v0.2 |
+| **Versión** | v0.3 |
 | **Fecha** | 2026-08-11 |
 | **Autores** | Aldo Álvarez (Dirección de TI) |
 | **Revisión / liderazgo** | Octavio Zetina Lara (CFO) — patrocinador; Aldo Álvarez — revisión técnica |
@@ -88,6 +88,7 @@ La mejora medible esperada es que el 100% de las solicitudes de gasto se origine
 | Validación del monto facturado | El sistema compara la factura contra el monto autorizado con una tolerancia de ±2% por redondeo de centavos; fuera de ese margen rechaza la autorización y notifica al solicitante |
 | Notificación de pago autorizado | Al validarse la factura, el portal envía correo automático al solicitante, al analista de Finanzas de esa empresa y a Tesorería |
 | Corrección y reenvío | Ante un rechazo —de la cotización o de la factura— el solicitante puede corregir y reenviar la solicitud como una versión nueva, conservando el rechazo previo en el histórico |
+| Cancelación de solicitud | El solicitante o el autorizador pueden cancelar una solicitud, incluso ya autorizada, mientras el pago no se haya solicitado; la cancelación exige motivo y queda en el histórico |
 | Histórico auditable | Cada solicitud conserva de forma inalterable quién la pidió, quién la autorizó o rechazó, cuándo, con qué monto, moneda y tipo de cambio, y con qué documentos |
 | Consulta y filtros | Bandeja de consulta con búsqueda y filtros por empresa, área, solicitante, estatus, rango de fechas y monto |
 | Administración de catálogos | Alta de usuarios con su empresa y nivel de autorización, mantenimiento del catálogo de empresas y de los montos de la matriz cuando la política cambie de versión |
@@ -135,6 +136,8 @@ flowchart TD
 
 El flujo está construido sobre una idea: el sistema nunca decide si un gasto procede, solo determina **quién** tiene la facultad de decidirlo y deja constancia. Por eso la conversión de moneda ocurre *antes* del motor de reglas —el nivel se calcula siempre sobre la moneda de la empresa que absorbe el gasto, nunca sobre la moneda en que el proveedor cotizó— y por eso el tipo de cambio se guarda en la solicitud: sin ese dato, la autorización no sería reproducible ni auditable meses después.
 
+Una solicitud puede además **cancelarse** en cualquier punto anterior a que el pago se solicite, incluso después de autorizada: un servicio que ya no se contrata, un proveedor que se cae. La cancelación exige motivo y no borra nada, de modo que el histórico distinga un gasto que se autorizó y se pagó de uno que se autorizó y se abandonó — sin esa distinción, toda solicitud autorizada sin pago parecería un pendiente eterno.
+
 El segundo punto de control es la factura. La autorización se otorga sobre una cotización, pero lo que se paga es una factura, y entre una y otra puede haber diferencia. Un margen del ±2% absorbe el redondeo de centavos; cualquier cosa por encima significa que se está pagando algo distinto de lo autorizado, y el portal lo devuelve al solicitante en lugar de dejarlo pasar. El reenvío no borra nada: la versión rechazada permanece en el histórico, de modo que un auditor vea el intento fallido y no solo el desenlace.
 
 ### 7.2 Flujo transversal — determinación del nivel y suplencia
@@ -158,8 +161,8 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 | --- | --- | --- |
 | RF-01 | Captura de solicitud de gasto | El sistema permite registrar una solicitud con empresa que absorbe el gasto, área solicitante, concepto y explicación del servicio, proveedor, monto y moneda |
 | RF-02 | Adjuntar cotización | El sistema permite adjuntar el archivo de la cotización a la solicitud y lo conserva asociado a ella de forma permanente |
-| RF-03 | Conversión de moneda | Cuando la moneda de la cotización difiere de la moneda de la empresa, el sistema obtiene el tipo de cambio de una fuente pública y calcula el monto equivalente |
-| RF-04 | Persistencia del tipo de cambio | El sistema almacena el tipo de cambio aplicado, su fuente y su fecha, junto a la solicitud, de forma inalterable |
+| RF-03 | Conversión de moneda | Cuando la moneda de la cotización difiere de la moneda de la empresa, el sistema obtiene de una fuente pública el tipo de cambio vigente **a la fecha de envío de la solicitud** y calcula el monto equivalente |
+| RF-04 | Persistencia del tipo de cambio | El sistema almacena el tipo de cambio aplicado, su fuente y su fecha, junto a la solicitud, de forma inalterable. El monto convertido queda fijo desde el envío y no se recalcula mientras la solicitud espera resolución |
 | RF-05 | Determinación del nivel autorizador | El sistema determina el nivel facultado a partir de la empresa y del monto expresado en la moneda de esa empresa, conforme a la matriz vigente |
 | RF-06 | Enrutamiento a la bandeja del autorizador | El sistema coloca la solicitud en la bandeja de pendientes del autorizador facultado y le notifica |
 | RF-07 | Autorización | Un autorizador facultado puede autorizar una solicitud; el sistema registra usuario, nivel, fecha y monto autorizado |
@@ -181,12 +184,14 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 | RF-23 | Mantenimiento de la matriz | Un administrador puede actualizar los montos de la matriz sin requerir despliegue de código, y el sistema conserva la versión anterior y la fecha del cambio |
 | RF-24 | Aplicación de la matriz vigente al momento de la solicitud | Cada solicitud se resuelve con la versión de la matriz vigente cuando fue enviada, de modo que un cambio posterior no altere autorizaciones ya registradas |
 | RF-25 | Representación del Consejo | El sistema admite que una misma persona opere con usuarios separados para el nivel CEO y para el nivel Consejo, y registra en cada autorización con cuál de los dos resolvió. Un usuario de nivel CEO no puede autorizar montos que corresponden al Consejo: debe hacerlo con el usuario de ese nivel |
+| RF-26 | Prohibición de autorizar la propia solicitud | El sistema impide que un usuario autorice una solicitud que él mismo originó, aun cuando su nivel cubra el monto, y la enruta al nivel inmediato superior |
+| RF-27 | Cancelación de solicitud | El solicitante o el autorizador pueden cancelar una solicitud mientras el pago no se haya solicitado, incluso si ya estaba autorizada; el sistema exige motivo, deja la solicitud en estado cancelado y conserva todo su historial |
 
 ## 9. Requerimientos no funcionales
 
 | **ID** | **Requerimiento** | **Descripción** |
 | --- | --- | --- |
-| RNF-01 | Autenticación por SSO | El acceso al portal se realiza mediante inicio de sesión único con la cuenta corporativa; no se administran contraseñas propias del sistema |
+| RNF-01 | Autenticación por SSO | El acceso al portal se realiza mediante inicio de sesión único con la cuenta corporativa de **Google Workspace**; no se administran contraseñas propias del sistema |
 | RNF-02 | Control de acceso por rol y empresa | Cada usuario ve y opera únicamente lo que su rol y su empresa le permiten; los niveles de autorización se derivan del catálogo administrado, no de la elección del usuario |
 | RNF-03 | Trazabilidad y auditabilidad | Toda acción relevante —creación, envío, autorización, rechazo, carga de factura, cambio de catálogo— queda registrada con usuario, fecha, hora y valores involucrados |
 | RNF-04 | Inmutabilidad del histórico | Ningún registro de autorización o rechazo puede editarse ni eliminarse; las correcciones se expresan como versiones nuevas |
@@ -207,9 +212,9 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 
 | **Integración / Fuente** | **Uso esperado** |
 | --- | --- |
-| Proveedor de identidad corporativo (SSO) | Autenticación de todos los usuarios y obtención de su identidad verificada, base del registro de auditoría |
-| Fuente pública de tipo de cambio | Consulta de solo lectura del tipo de cambio para convertir cotizaciones a la moneda de la empresa; se privilegian fuentes oficiales gratuitas —Banxico o DOF para peso mexicano, Banco Central Europeo para euro— y se registra la fuente utilizada |
-| Servicio de correo corporativo | Envío de las notificaciones a solicitantes, autorizadores, analistas de Finanzas y Tesorería |
+| Google Workspace — identidad (SSO) | Autenticación de todos los usuarios y obtención de su identidad verificada, base del registro de auditoría |
+| Google Workspace — correo | Envío de las notificaciones a solicitantes, autorizadores, analistas de Finanzas y Tesorería. Debe considerarse el límite de envío por cuenta que impone la plataforma |
+| Fuente pública de tipo de cambio | Consulta de solo lectura del tipo de cambio vigente a la fecha de envío de la solicitud, para convertir cotizaciones a la moneda de la empresa; se privilegian fuentes oficiales gratuitas —Banxico o DOF para peso mexicano, Banco Central Europeo para euro— y se registra la fuente utilizada |
 | Almacenamiento de archivos en AWS | Resguardo de cotizaciones y facturas asociadas a cada solicitud |
 | Base de datos relacional en AWS | Persistencia de solicitudes, catálogos, autorizaciones y bitácora de auditoría |
 
@@ -236,6 +241,8 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 - `solicitud_autorizada`: se registra cuando un autorizador aprueba la solicitud.
 - `solicitud_rechazada`: se registra cuando un autorizador rechaza la solicitud, con su motivo.
 - `solicitud_reenviada`: se registra cuando el solicitante corrige y reenvía una solicitud previamente rechazada, generando una versión nueva.
+- `solicitud_cancelada`: se registra cuando una solicitud se cancela antes de que se solicite el pago, con su motivo y quién la canceló.
+- `autorizacion_bloqueada_por_autoria`: se registra cuando el sistema impide que un usuario autorice su propia solicitud y la escala al nivel superior.
 - `autorizacion_por_nivel_superior`: se registra cuando quien resuelve tiene un nivel superior al facultado por el monto, para medir la frecuencia de suplencias.
 
 **Eventos de conversión y factura**
@@ -301,19 +308,14 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 
 | **Tema** | **Pregunta abierta** |
 | --- | --- |
-| Identidad | ¿Cuál es el proveedor de identidad para el SSO: Microsoft Entra ID, Google Workspace u otro? |
-| Identidad | ¿Se confirma que el portal será accesible desde internet, sin restricción a red interna o VPN, dado que los autorizadores resuelven desde su teléfono? |
-| Autorización | ¿Puede un usuario autorizar una solicitud que él mismo originó? Se recomienda impedirlo por control interno y escalar automáticamente al nivel superior, pero requiere definición de Finanzas |
-| Autorización | El Consejo autoriza mediante un usuario propio a nombre de Héctor Izquierdo. ¿Esa autorización debe respaldarse adjuntando el acta o minuta de la sesión del Consejo, o basta con el registro del sistema? Al tratarse de un órgano colegiado, el registro del portal por sí solo no evidencia el acuerdo de sus integrantes |
-| Autorización | ¿Quién es el "Funcional" de cada área y empresa? La política nombra el nivel pero no identifica a las personas; hace falta ese mapeo para dar de alta usuarios |
-| Tipo de cambio | ¿Qué fuente pública se usará para cada moneda, y qué fecha de tipo de cambio aplica: la del envío de la solicitud o la del momento de la autorización? |
+| Autorización | ¿Quién es el "Funcional" de cada área y empresa? La política nombra el nivel pero no identifica a las personas. Es el dato que falta para dar de alta usuarios y para enrutar las solicitudes de monto bajo, que son la mayoría |
+| Tipo de cambio | ¿Qué fuente pública oficial y gratuita se usará para cada moneda? Banxico o DOF resuelven el peso mexicano y el Banco Central Europeo el euro, pero falta definir la fuente para las conversiones que involucren peso colombiano y peso chileno |
 | Catálogo de empresas | ISAMAD aparece en la relación de gestión de pagos pero no tiene niveles en la matriz, por lo que queda fuera del portal. ¿Se le definirán niveles de autorización para incorporarla más adelante? |
 | Catálogo de empresas | Go Virtual España está en la matriz pero no opera aún ni tiene analista asignado. ¿Cuándo se prevé su incorporación efectiva? |
-| Datos de usuarios | Faltan nombre completo y correo corporativo de las personas identificadas como "Suly" y "Brian" en la relación de gestión de pagos |
+| Datos de usuarios | Falta el apellido de "Brian", analista de Garantiplus Colombia, para su alta como usuario |
+| Datos de usuarios | Garantiplus México, Garantiplus Colombia y Engine CX tienen registrados buzones genéricos —`administracion@`, `contabilidad@`— en lugar de cuentas personales. Sirven para recibir notificaciones, pero bajo SSO un buzón compartido no identifica a una persona. ¿Se dan de alta cuentas personales para esos analistas? |
 | Retención | El histórico de solicitudes se conservará 2 años. ¿Los archivos de factura requieren un plazo mayor por criterio fiscal? En México lo habitual son 5 años; corresponde a Finanzas definirlo |
 | Retención | ¿Qué debe ocurrir con la información una vez cumplido el plazo de retención: eliminación, archivado o exportación? |
-| Operación | ¿Qué sucede si un gasto se cancela después de haber sido autorizado pero antes de que se pague? El MVP no contempla hoy un estado de cancelación |
 | Operación | ¿Existe suplente para los analistas de Finanzas que concentran varias empresas, y debe el portal contemplarlo? |
-| Notificaciones | ¿Qué servicio se usará para el envío de correos: el correo corporativo o Amazon SES? |
 | Infraestructura | ¿Cuál es el presupuesto disponible para la infraestructura AWS de este portal y quién lo aprueba? |
 | Métricas | Falta establecer la línea base de tiempo de autorización y de esfuerzo de cierre financiero, para poder fijar metas numéricas |

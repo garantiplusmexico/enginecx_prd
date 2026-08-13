@@ -18,18 +18,18 @@ Documento fuente: relación "ENGINE — Gestión y envío a pagos" (exportada a 
 ## Alcance / requerimientos
 Mapeo empresa → analista de pagos a proveedores (MVP):
 
-| Empresa | Analista |
-|---|---|
-| Engine CX | Suly |
-| Celta Soluciones | Alejandra Cortés |
-| Gplus Seguros | Alejandra Cortés |
-| Go Virtual México | Claudia Vigueras |
-| Go Virtual España | *(sin analista — no opera aún)* |
-| TPA | Alejandra Cortés |
-| Invarat | Alejandra Cortés |
-| Garantiplus México | Ilse García |
-| Garantiplus Colombia | Brian |
-| Garantiplus Chile | Andrés Merino |
+| Empresa | Analista | Correo |
+|---|---|---|
+| Engine CX | Úrsula García | ursula.garcia@garantiplus.mx |
+| Celta Soluciones | Alejandra Cortés | janette.cortes@enginecx.com |
+| Gplus Seguros | Alejandra Cortés | janette.cortes@enginecx.com |
+| Go Virtual México | Claudia Vigueras | claudia.vigueras@govirtual.com.mx |
+| Go Virtual España | *(sin analista — no opera aún)* | — |
+| TPA | Alejandra Cortés | janette.cortes@enginecx.com |
+| Invarat | Alejandra Cortés | janette.cortes@enginecx.com |
+| Garantiplus México | Ilse García | administracion@garantiplus.mx |
+| Garantiplus Colombia | Brian | contabilidad@garantiplus.co |
+| Garantiplus Chile | Andrés Merino | andres.merino@garantiplus.cl |
 
 ## Actores
 - Analistas de pagos a proveedores: Suly, Alejandra Cortés, Claudia Vigueras, Ilse García, Brian,
@@ -38,7 +38,12 @@ Mapeo empresa → analista de pagos a proveedores (MVP):
   alcance).
 
 ## Riesgos / pendientes
-- Faltan **nombre completo y correo** de "Suly" y de "Brian" para el alta de usuarios.
+- "Suly" quedó identificada como **Úrsula García**; **Brian** sigue sin apellido registrado.
+- Garantiplus México, Garantiplus Colombia y Engine CX apuntan a **buzones genéricos**
+  (`administracion@`, `contabilidad@`) en lugar de cuentas personales. Sirven para recibir la
+  notificación, pero un buzón compartido no identifica a una persona bajo SSO.
+- Esta relación cubre a los **analistas de Finanzas**, no a los **Funcionales** (primer nivel de
+  autorización por área). Ese mapeo sigue pendiente y es requisito para el alta de usuarios.
 - La nomenclatura del CSV no coincide con la de la matriz ("GPMX Colombia" / "GPMX Chile" =
   Garantiplus Colombia / Chile; "Go Virtual" sin distinguir país). El catálogo de empresas del
   portal debe usar los nombres de la matriz como canónicos.

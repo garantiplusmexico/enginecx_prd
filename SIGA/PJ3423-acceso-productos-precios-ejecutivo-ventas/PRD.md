@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Acceso a distribuidores, productos y precios para el Rol Ejecutivo de Ventas (CA-05) |
 | **Área / empresa** | Garantiplus México |
-| **Versión** | v0.2 |
+| **Versión** | v0.3 |
 | **Fecha** | 2026-08-13 |
 | **Autores** | Alejandro Govea Hernández |
 | **Revisión / liderazgo** | Alexis Salvador Herrera Garcia (alexis.herrera@gplusseguros.mx) |
@@ -118,11 +118,10 @@ El flujo modela dos compuertas de control antes de mostrar datos: primero el **p
 
 ## 12. Métricas de éxito
 
-| **Métrica** | **Descripción** |
+| **Métrica** | **Meta** |
 | --- | --- |
-| Adopción del acceso | Nº de Ejecutivos de Ventas que consultan productos/precios respecto al total habilitado, por país (pendiente de línea base con operación/BI). |
-| Reducción de solicitudes a administración | Baja en solicitudes de consulta de productos/precios que antes se pedían a admin/soporte (pendiente de medición con operación). |
-| Cobertura de activación | Nº de países con la funcionalidad activada vs. preparados. |
+| Reducción de solicitudes a administración | Reducir **≥ 50%** las solicitudes de consulta de productos/precios que hoy llegan a admin/soporte, medido a **90 días** tras activar el país, contra la línea base previa (a establecer con operación). |
+| Cobertura de activación | **100%** de países preparados (funcionalidad construida); **México activo** en el primer release; el resto se enciende por demanda del negocio. |
 
 ## 13. Riesgos y supuestos
 
@@ -149,5 +148,5 @@ El flujo modela dos compuertas de control antes de mostrar datos: primero el **p
 
 | **Tema** | **Pregunta abierta** |
 | --- | --- |
-| Métricas | Definir línea base y meta numérica de adopción y de reducción de solicitudes con operación/BI. |
+| Métricas | Establecer con operación la línea base de solicitudes de consulta a administración antes de activar el país (base para medir el ≥50%). |
 | Confirmación técnica (dev) | Confirmar la ruta exacta de la pantalla del Administrador a reutilizar y la clave técnica del flag por país sobre el mecanismo de settings existente. |

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Portal de Órdenes de Pago |
 | **Área / empresa** | EngineCX — transversal a todas las empresas del Grupo Engine CX |
-| **Versión** | v0.3 |
+| **Versión** | v0.4 |
 | **Fecha** | 2026-08-11 |
 | **Autores** | Aldo Álvarez (Dirección de TI) |
 | **Revisión / liderazgo** | Octavio Zetina Lara (CFO) — patrocinador; Aldo Álvarez — revisión técnica |
@@ -40,6 +40,8 @@ El resultado esperado es una fuente única de verdad para el gasto del grupo: ca
 
 - **Solicitud de gasto**: la petición que un área captura con su cotización, y que puede ser rechazada o quedar sin resolver.
 - **Orden de pago**: la solicitud que ya recorrió el ciclo completo — cotización autorizada, factura recibida y validada, y pago coordinado con Finanzas. Toda orden de pago nace de una solicitud de gasto, pero no toda solicitud de gasto llega a ser orden de pago.
+
+Un tercer criterio, decisivo para el motor de reglas: **el monto que determina el nivel de autorización es el total con impuestos incluidos**, es decir la erogación efectiva que Tesorería desembolsa, no el subtotal del bien o servicio. La política habla de "gasto, costo o erogación", y sobre ese mismo total se compara después la factura.
 
 Por ahora no se identifican otros términos del dominio que requieran distinción; podrán incorporarse conforme el portal opere.
 
@@ -78,7 +80,7 @@ La mejora medible esperada es que el 100% de las solicitudes de gasto se origine
 
 | **Funcionalidad** | **Descripción** |
 | --- | --- |
-| Captura de solicitud de gasto | El solicitante registra la empresa que absorbe el gasto, su área, el concepto y explicación del servicio, el proveedor, el monto y la moneda, y adjunta la cotización |
+| Captura de solicitud de gasto | El solicitante registra la empresa que absorbe el gasto, su área, el concepto y explicación del servicio, el proveedor, el monto total con impuestos incluidos y la moneda, y adjunta la cotización |
 | Conversión de moneda | Cuando la moneda de la cotización difiere de la moneda de la empresa, el sistema la convierte usando una fuente pública gratuita y confiable, y guarda el tipo de cambio aplicado junto con su fecha en la solicitud |
 | Motor de reglas de autorización | Con la empresa y el monto ya expresado en la moneda de esa empresa, el sistema determina automáticamente qué nivel debe autorizar, conforme a la matriz de la política |
 | Bandeja de autorización | Cada autorizador ve las solicitudes que le corresponden y puede autorizarlas o rechazarlas; el rechazo exige capturar el motivo |
@@ -104,6 +106,7 @@ El principio rector del MVP es que **ningún pago se solicita a Tesorería sin a
 - **Control presupuestal por área**: el portal autoriza contra la matriz de montos, no contra un presupuesto disponible; requeriría que exista un presupuesto cargado y vigente por área.
 - **Comparación de varias cotizaciones**: el proceso actual trabaja con una cotización ya elegida por el área solicitante.
 - **Firma electrónica formal**: la autorización registrada con usuario identificado por SSO, fecha y sello de auditoría se considera suficiente para el control interno.
+- **Autorización por contrato para gastos recurrentes**: en el MVP cada erogación —cada mensualidad de un servicio, cada renovación— se autoriza como una solicitud independiente con su propia factura. Modelar contratos con saldo consumible se evaluará en una fase posterior, cuando el volumen de gastos recurrentes lo justifique.
 - **Viáticos, anticipos y reembolsos de gastos**: son un flujo distinto —el comprobante llega después de que el gasto ocurrió y no hay cotización previa— y se atenderán en un desarrollo aparte.
 - **Validación fiscal de la factura ante el SAT**: en esta iteración basta con verificar el monto y conservar el archivo; la revisión fiscal la sigue haciendo el analista de Finanzas como hoy.
 
@@ -159,11 +162,11 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 
 | **ID** | **Requerimiento** | **Descripción** |
 | --- | --- | --- |
-| RF-01 | Captura de solicitud de gasto | El sistema permite registrar una solicitud con empresa que absorbe el gasto, área solicitante, concepto y explicación del servicio, proveedor, monto y moneda |
+| RF-01 | Captura de solicitud de gasto | El sistema permite registrar una solicitud con empresa que absorbe el gasto, área solicitante, concepto y explicación del servicio, proveedor, monto total con impuestos incluidos y moneda |
 | RF-02 | Adjuntar cotización | El sistema permite adjuntar el archivo de la cotización a la solicitud y lo conserva asociado a ella de forma permanente |
 | RF-03 | Conversión de moneda | Cuando la moneda de la cotización difiere de la moneda de la empresa, el sistema obtiene de una fuente pública el tipo de cambio vigente **a la fecha de envío de la solicitud** y calcula el monto equivalente |
 | RF-04 | Persistencia del tipo de cambio | El sistema almacena el tipo de cambio aplicado, su fuente y su fecha, junto a la solicitud, de forma inalterable. El monto convertido queda fijo desde el envío y no se recalcula mientras la solicitud espera resolución |
-| RF-05 | Determinación del nivel autorizador | El sistema determina el nivel facultado a partir de la empresa y del monto expresado en la moneda de esa empresa, conforme a la matriz vigente |
+| RF-05 | Determinación del nivel autorizador | El sistema determina el nivel facultado a partir de la empresa y del monto total con impuestos, expresado en la moneda de esa empresa, conforme a la matriz vigente |
 | RF-06 | Enrutamiento a la bandeja del autorizador | El sistema coloca la solicitud en la bandeja de pendientes del autorizador facultado y le notifica |
 | RF-07 | Autorización | Un autorizador facultado puede autorizar una solicitud; el sistema registra usuario, nivel, fecha y monto autorizado |
 | RF-08 | Rechazo con motivo | Un autorizador puede rechazar una solicitud, y el sistema exige capturar el motivo del rechazo |
@@ -172,7 +175,7 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 | RF-11 | Notificación de resolución al solicitante | El sistema notifica por correo al solicitante el resultado de la autorización, incluyendo el motivo en caso de rechazo |
 | RF-12 | Instrucción de solicitar factura | Autorizada la cotización, el sistema notifica al solicitante que debe requerir al proveedor la factura por el monto autorizado |
 | RF-13 | Carga de factura | El solicitante puede adjuntar a la solicitud autorizada el archivo de la factura y capturar su monto |
-| RF-14 | Validación de monto facturado | El sistema compara el monto de la factura contra el monto autorizado y lo acepta si la diferencia no excede el ±2% |
+| RF-14 | Validación de monto facturado | El sistema compara el total con impuestos de la factura contra el monto total autorizado y lo acepta si la diferencia no excede el ±2% |
 | RF-15 | Rechazo automático por monto fuera de tolerancia | Si la diferencia excede el ±2%, el sistema rechaza la autorización y notifica al solicitante indicando la diferencia detectada |
 | RF-16 | Notificación de pago autorizado | Validada la factura, el sistema envía correo al solicitante, al analista de Finanzas asignado a la empresa y a Tesorería |
 | RF-17 | Corrección y reenvío | El solicitante puede corregir una solicitud rechazada y reenviarla como versión nueva; el sistema conserva la versión rechazada y su motivo |
@@ -186,6 +189,7 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 | RF-25 | Representación del Consejo | El sistema admite que una misma persona opere con usuarios separados para el nivel CEO y para el nivel Consejo, y registra en cada autorización con cuál de los dos resolvió. Un usuario de nivel CEO no puede autorizar montos que corresponden al Consejo: debe hacerlo con el usuario de ese nivel |
 | RF-26 | Prohibición de autorizar la propia solicitud | El sistema impide que un usuario autorice una solicitud que él mismo originó, aun cuando su nivel cubra el monto, y la enruta al nivel inmediato superior |
 | RF-27 | Cancelación de solicitud | El solicitante o el autorizador pueden cancelar una solicitud mientras el pago no se haya solicitado, incluso si ya estaba autorizada; el sistema exige motivo, deja la solicitud en estado cancelado y conserva todo su historial |
+| RF-28 | Enrutamiento cuando el nivel facultado no tiene titular | Si el nivel que la matriz determina no tiene usuario activo dado de alta, el sistema escala la solicitud al siguiente nivel que sí lo tenga y registra que se enrutó por ausencia de titular, sin detener la operación |
 
 ## 9. Requerimientos no funcionales
 
@@ -224,7 +228,7 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 - **Matriz de autorización**: empresa, nivel, monto mínimo, monto máximo, versión de la política, vigencia.
 - **Usuario**: identidad de SSO, nombre, correo, empresa, área, nivel de autorización, estatus.
 - **Analista de Finanzas por empresa**: empresa, usuario asignado.
-- **Solicitud de gasto**: folio, solicitante, empresa que absorbe el gasto, área, concepto y explicación, proveedor, monto y moneda de la cotización, monto convertido, tipo de cambio aplicado con fuente y fecha, nivel facultado calculado, estatus, versión, fechas de creación y de envío.
+- **Solicitud de gasto**: folio, solicitante, empresa que absorbe el gasto, área, concepto y explicación, proveedor, monto total con impuestos y moneda de la cotización, monto convertido, tipo de cambio aplicado con fuente y fecha, nivel facultado calculado, estatus, versión, fechas de creación y de envío.
 - **Autorización**: solicitud, usuario que resolvió, nivel con el que resolvió, resultado, motivo en caso de rechazo, fecha y hora.
 - **Factura**: solicitud, monto facturado, moneda, archivo, diferencia contra lo autorizado, resultado de la validación, fecha de carga.
 - **Documento**: solicitud, tipo —cotización o factura—, archivo, quién lo cargó, fecha.
@@ -243,6 +247,7 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 - `solicitud_reenviada`: se registra cuando el solicitante corrige y reenvía una solicitud previamente rechazada, generando una versión nueva.
 - `solicitud_cancelada`: se registra cuando una solicitud se cancela antes de que se solicite el pago, con su motivo y quién la canceló.
 - `autorizacion_bloqueada_por_autoria`: se registra cuando el sistema impide que un usuario autorice su propia solicitud y la escala al nivel superior.
+- `escalada_por_nivel_sin_titular`: se registra cuando el nivel facultado no tiene usuario activo y la solicitud se enruta al siguiente nivel; sirve para detectar huecos en el catálogo de usuarios.
 - `autorizacion_por_nivel_superior`: se registra cuando quien resuelve tiene un nivel superior al facultado por el monto, para medir la frecuencia de suplencias.
 
 **Eventos de conversión y factura**
@@ -298,6 +303,7 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 | Sustitución del canal | Finanzas dejará de recibir autorizaciones de gasto por correo electrónico una vez que el portal esté en operación; el portal será el único canal válido para autorizar un gasto |
 | Vigencia de la matriz | La matriz de niveles de autorización, versión 01 de julio 2026, con las diez empresas y sus rangos normalizados, es la regla vigente y aplicable |
 | Rangos exclusivos y contiguos | Cada nivel de la matriz opera desde el monto inmediato superior al techo del nivel anterior, sin traslapes ni huecos |
+| Montos con impuestos incluidos | Los rangos de la matriz se interpretan sobre el monto total de la erogación, con impuestos incluidos, y no sobre el subtotal del bien o servicio |
 | Identidad corporativa disponible | Todos los usuarios del portal —solicitantes, autorizadores, Finanzas y Tesorería— cuentan con cuenta corporativa habilitada para SSO |
 | El pago se ejecuta fuera del portal | Tesorería mantiene su calendario de pagos los jueves y su mecanismo actual de ejecución durante todo el MVP |
 | La factura la entrega el proveedor al solicitante | El proveedor no interactúa con el portal; el solicitante es quien recibe la factura y la carga |

@@ -12,8 +12,9 @@ Documento fuente: relación "ENGINE — Gestión y envío a pagos" (exportada a 
 - **ISAMAD queda fuera del portal por ahora** (decisión de Aldo Álvarez, 2026-08-11): aparece en
   esta relación pero no tiene fila en la matriz de niveles de autorización, así que el portal no
   podría determinar quién autoriza sus gastos.
-- **Go Virtual España no opera aún**: está en la matriz por previsión, sin gasto real ni analista
-  asignado. El portal la soporta sin analista.
+- **Go Virtual España sí opera** con normalidad (confirmado por Aldo Álvarez el 2026-08-11) y se
+  incorpora al MVP como cualquier otra empresa. Queda por confirmar si su analista de pagos es
+  Claudia Vigueras: esta relación no separa Go Virtual por país.
 
 ## Alcance / requerimientos
 Mapeo empresa → analista de pagos a proveedores (MVP):
@@ -24,7 +25,7 @@ Mapeo empresa → analista de pagos a proveedores (MVP):
 | Celta Soluciones | Alejandra Cortés | janette.cortes@enginecx.com |
 | Gplus Seguros | Alejandra Cortés | janette.cortes@enginecx.com |
 | Go Virtual México | Claudia Vigueras | claudia.vigueras@govirtual.com.mx |
-| Go Virtual España | *(sin analista — no opera aún)* | — |
+| Go Virtual España | Claudia Vigueras *(por confirmar)* | claudia.vigueras@govirtual.com.mx |
 | TPA | Alejandra Cortés | janette.cortes@enginecx.com |
 | Invarat | Alejandra Cortés | janette.cortes@enginecx.com |
 | Garantiplus México | Ilse García | administracion@garantiplus.mx |
@@ -42,8 +43,10 @@ Mapeo empresa → analista de pagos a proveedores (MVP):
 - Garantiplus México, Garantiplus Colombia y Engine CX apuntan a **buzones genéricos**
   (`administracion@`, `contabilidad@`) en lugar de cuentas personales. Sirven para recibir la
   notificación, pero un buzón compartido no identifica a una persona bajo SSO.
-- Esta relación cubre a los **analistas de Finanzas**, no a los **Funcionales** (primer nivel de
-  autorización por área). Ese mapeo sigue pendiente y es requisito para el alta de usuarios.
+- Esta relación cubre a los **analistas de Finanzas**. El catálogo de autorizadores —niveles
+  Funcional, Country Manager, CFO, CEO y Consejo— vive en `Aprobadores.csv` y su condensado.
+- Las personas de esta lista coinciden en buena medida con los **Funcionales** del nivel de
+  autorización: autorizan el primer tramo y después tramitan el pago del mismo gasto.
 - La nomenclatura del CSV no coincide con la de la matriz ("GPMX Colombia" / "GPMX Chile" =
   Garantiplus Colombia / Chile; "Go Virtual" sin distinguir país). El catálogo de empresas del
   portal debe usar los nombres de la matriz como canónicos.

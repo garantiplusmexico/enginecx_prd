@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Portal de Órdenes de Pago |
 | **Área / empresa** | EngineCX — transversal a todas las empresas del Grupo Engine CX |
-| **Versión** | v0.4 |
+| **Versión** | v0.5 |
 | **Fecha** | 2026-08-11 |
 | **Autores** | Aldo Álvarez (Dirección de TI) |
 | **Revisión / liderazgo** | Octavio Zetina Lara (CFO) — patrocinador; Aldo Álvarez — revisión técnica |
@@ -65,12 +65,12 @@ La mejora medible esperada es que el 100% de las solicitudes de gasto se origine
 
 | **Usuario / Actor** | **Rol en el proceso** |
 | --- | --- |
-| Solicitante | Colaborador de cualquier área —Infraestructura/TI, Ventas, Marketing, Operaciones— que captura la solicitud con la cotización y la explicación del servicio, y que posteriormente carga la factura que le entrega el proveedor |
-| Funcional | Responsable funcional del área (Capital Humano, Finanzas, BI, Operaciones); primer nivel de autorización según la matriz |
+| Solicitante | Colaborador de cualquier área —Infraestructura/TI, Ventas, Marketing, Operaciones— que captura la solicitud con la cotización y la explicación del servicio, y que posteriormente carga la factura que le entrega el proveedor. Las áreas operativas son clientes del proceso: solicitan, no autorizan |
+| Funcional | Aprobador del **equipo contable de cada empresa**; primer nivel de autorización según la matriz. No es el responsable del área que solicita el gasto |
 | Country Manager | Autoriza los montos de su tramo en el negocio que dirige; no aplica en Engine CX ni Celta Soluciones |
 | CFO (Octavio Zetina Lara) | Autoriza los montos de su tramo; es además el patrocinador de la política y del proyecto |
 | CEO (Héctor Izquierdo) | Autoriza los montos altos de su tramo |
-| Consejo | Autoriza los montos que exceden el tope del CEO. Está representado por Héctor Izquierdo, quien opera con un usuario distinto del de CEO para que quede registrado con qué investidura autorizó cada gasto |
+| Consejo | Autoriza los montos que exceden el tope del CEO. Está representado por Héctor Izquierdo, quien opera con su misma cuenta corporativa pero con dos investiduras: el portal le pide confirmar con cuál resuelve cuando el monto corresponde al Consejo, y lo registra en el histórico |
 | Analista de Finanzas | Asignado por empresa; recibe el aviso de pago autorizado y solicita el pago a Tesorería |
 | Tesorería | Ejecuta el pago los jueves, fuera del portal |
 | Proveedor | Actor externo; emite la factura por el monto autorizado. No es usuario del portal en el MVP |
@@ -183,13 +183,14 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 | RF-19 | Consulta con filtros | El sistema permite consultar solicitudes con filtros por empresa, área, solicitante, estatus, rango de fechas y rango de montos, y búsqueda por texto |
 | RF-20 | Catálogo de empresas | El sistema opera sobre las diez empresas de la matriz vigente, cada una con su moneda asociada |
 | RF-21 | Asignación de analista por empresa | El sistema mantiene el analista de Finanzas asignado a cada empresa, usado para dirigir la notificación de pago autorizado |
-| RF-22 | Administración de usuarios y niveles | Un administrador puede dar de alta usuarios, asociarlos a su empresa y asignarles su nivel de autorización |
+| RF-22 | Administración de usuarios y niveles | Un administrador puede dar de alta usuarios, asociarlos a su empresa y asignarles su nivel de autorización o su rol de analista |
 | RF-23 | Mantenimiento de la matriz | Un administrador puede actualizar los montos de la matriz sin requerir despliegue de código, y el sistema conserva la versión anterior y la fecha del cambio |
 | RF-24 | Aplicación de la matriz vigente al momento de la solicitud | Cada solicitud se resuelve con la versión de la matriz vigente cuando fue enviada, de modo que un cambio posterior no altere autorizaciones ya registradas |
-| RF-25 | Representación del Consejo | El sistema admite que una misma persona opere con usuarios separados para el nivel CEO y para el nivel Consejo, y registra en cada autorización con cuál de los dos resolvió. Un usuario de nivel CEO no puede autorizar montos que corresponden al Consejo: debe hacerlo con el usuario de ese nivel |
+| RF-25 | Representación del Consejo | El sistema admite que una misma cuenta tenga asignadas dos investiduras, CEO y Consejo. Cuando el monto corresponde al nivel Consejo, el portal exige que el usuario confirme explícitamente que resuelve con esa investidura, y registra en el histórico con cuál de las dos autorizó |
 | RF-26 | Prohibición de autorizar la propia solicitud | El sistema impide que un usuario autorice una solicitud que él mismo originó, aun cuando su nivel cubra el monto, y la enruta al nivel inmediato superior |
 | RF-27 | Cancelación de solicitud | El solicitante o el autorizador pueden cancelar una solicitud mientras el pago no se haya solicitado, incluso si ya estaba autorizada; el sistema exige motivo, deja la solicitud en estado cancelado y conserva todo su historial |
 | RF-28 | Enrutamiento cuando el nivel facultado no tiene titular | Si el nivel que la matriz determina no tiene usuario activo dado de alta, el sistema escala la solicitud al siguiente nivel que sí lo tenga y registra que se enrutó por ausencia de titular, sin detener la operación |
+| RF-29 | Alta automática del solicitante | Cualquier cuenta válida de Google Workspace del grupo queda dada de alta como solicitante en su primer ingreso, sin intervención de TI. Los roles de autorizador, analista y administrador solo se obtienen por asignación explícita del administrador |
 
 ## 9. Requerimientos no funcionales
 
@@ -233,6 +234,8 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 - **Factura**: solicitud, monto facturado, moneda, archivo, diferencia contra lo autorizado, resultado de la validación, fecha de carga.
 - **Documento**: solicitud, tipo —cotización o factura—, archivo, quién lo cargó, fecha.
 - **Bitácora de auditoría**: entidad afectada, acción, usuario, fecha y hora, valores relevantes.
+
+El **catálogo inicial de autorizadores** —nivel Funcional y Country Manager por empresa, más CFO, CEO y Consejo— está en `transcripts/Aprobadores.csv` de esta misma carpeta, con nombre y cuenta de cada titular. El catálogo de analistas de Finanzas por empresa está en `transcripts/Pagos.csv`. Ambos son datos de arranque administrables desde el portal, no configuración fija.
 
 **Esquema de permisos.** El solicitante puede crear solicitudes, adjuntar cotizaciones y facturas, y consultar únicamente las suyas y las de su área; no puede modificar montos ni estatus una vez enviada la solicitud. El autorizador puede leer las solicitudes que le corresponden por nivel y empresa, y escribir exclusivamente el resultado de la autorización con su motivo; nunca puede editar el contenido de la solicitud que autoriza. El analista de Finanzas y Tesorería tienen acceso de lectura a las solicitudes de las empresas que atienden y a sus documentos. El administrador —TI en la etapa inicial— puede escribir sobre los catálogos de usuarios, empresas, asignación de analistas y montos de la matriz, pero no puede autorizar solicitudes ni alterar autorizaciones ya registradas. Queda bloqueado para todos, sin excepción de rol, la edición o eliminación de una autorización otorgada, de un rechazo registrado o de un documento adjunto: el histórico solo admite adiciones. Los cambios a la matriz de montos, por ser el permiso más sensible del portal —quien la edita cambia quién autoriza qué—, quedan registrados en bitácora con su versión anterior, su autor y su fecha.
 
@@ -294,7 +297,8 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 | Manipulación del tipo de cambio o de la empresa que absorbe el gasto | Seleccionar una empresa o un tipo de cambio incorrectos, deliberadamente o por error, puede colocar el gasto en un nivel de autorización más bajo del que le corresponde |
 | Concentración de información financiera sensible | El portal reúne montos, proveedores y facturas de todo el grupo con acceso desde internet, lo que eleva el impacto de un acceso indebido |
 | Dependencia de la actualización de catálogos | Si TI no mantiene al día usuarios, niveles y analistas asignados, las solicitudes se enrutarían a personas equivocadas o quedarían sin autorizador |
-| Concentración de empresas en un mismo analista | Una sola analista atiende cuatro empresas; su ausencia afectaría simultáneamente a varios negocios y no hay suplente definido |
+| Concentración de empresas en una misma persona | Alejandra Cortés es el Funcional de cuatro empresas e Israel Escutia el Country Manager de otras cuatro; la ausencia de cualquiera de los dos afecta simultáneamente a varios negocios. La autorización jerárquica y RF-28 lo mitigan, pero desplazan la carga a niveles superiores |
+| Concentración de funciones en Contabilidad | Las personas que autorizan en el nivel Funcional son las mismas que después gestionan el pago del gasto ante Tesorería. El sistema impide que autoricen sus propias solicitudes, pero autorizar y tramitar el pago recae en el mismo equipo |
 
 ### Supuestos
 
@@ -314,12 +318,10 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 
 | **Tema** | **Pregunta abierta** |
 | --- | --- |
-| Autorización | ¿Quién es el "Funcional" de cada área y empresa? La política nombra el nivel pero no identifica a las personas. Es el dato que falta para dar de alta usuarios y para enrutar las solicitudes de monto bajo, que son la mayoría |
 | Tipo de cambio | ¿Qué fuente pública oficial y gratuita se usará para cada moneda? Banxico o DOF resuelven el peso mexicano y el Banco Central Europeo el euro, pero falta definir la fuente para las conversiones que involucren peso colombiano y peso chileno |
 | Catálogo de empresas | ISAMAD aparece en la relación de gestión de pagos pero no tiene niveles en la matriz, por lo que queda fuera del portal. ¿Se le definirán niveles de autorización para incorporarla más adelante? |
-| Catálogo de empresas | Go Virtual España está en la matriz pero no opera aún ni tiene analista asignado. ¿Cuándo se prevé su incorporación efectiva? |
-| Datos de usuarios | Falta el apellido de "Brian", analista de Garantiplus Colombia, para su alta como usuario |
-| Datos de usuarios | Garantiplus México, Garantiplus Colombia y Engine CX tienen registrados buzones genéricos —`administracion@`, `contabilidad@`— en lugar de cuentas personales. Sirven para recibir notificaciones, pero bajo SSO un buzón compartido no identifica a una persona. ¿Se dan de alta cuentas personales para esos analistas? |
+| Catálogo de empresas | Go Virtual España opera con normalidad y tiene Funcional y Country Manager asignados. Falta confirmar si su analista de pagos es Claudia Vigueras, como sugiere la relación de gestión de pagos, que no separa Go Virtual por país |
+| Datos de usuarios | Falta el apellido de "Brian" —Funcional y analista de Garantiplus Colombia— y las **cuentas personales de Google Workspace** de Ilse García y de Brian, que hoy figuran con los buzones compartidos `administracion@garantiplus.mx` y `contabilidad@garantiplus.co`. Sin cuenta nominal no pueden autorizar, porque la autorización no sería atribuible a una persona |
 | Retención | El histórico de solicitudes se conservará 2 años. ¿Los archivos de factura requieren un plazo mayor por criterio fiscal? En México lo habitual son 5 años; corresponde a Finanzas definirlo |
 | Retención | ¿Qué debe ocurrir con la información una vez cumplido el plazo de retención: eliminación, archivado o exportación? |
 | Operación | ¿Existe suplente para los analistas de Finanzas que concentran varias empresas, y debe el portal contemplarlo? |

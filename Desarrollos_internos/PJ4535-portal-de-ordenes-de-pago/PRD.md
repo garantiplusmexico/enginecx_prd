@@ -4,7 +4,7 @@
 | --- | --- |
 | **Proyecto** | Portal de Órdenes de Pago |
 | **Área / empresa** | EngineCX — transversal a todas las empresas del Grupo Engine CX |
-| **Versión** | v0.1 |
+| **Versión** | v0.2 |
 | **Fecha** | 2026-08-11 |
 | **Autores** | Aldo Álvarez (Dirección de TI) |
 | **Revisión / liderazgo** | Octavio Zetina Lara (CFO) — patrocinador; Aldo Álvarez — revisión técnica |
@@ -67,8 +67,8 @@ La mejora medible esperada es que el 100% de las solicitudes de gasto se origine
 | Funcional | Responsable funcional del área (Capital Humano, Finanzas, BI, Operaciones); primer nivel de autorización según la matriz |
 | Country Manager | Autoriza los montos de su tramo en el negocio que dirige; no aplica en Engine CX ni Celta Soluciones |
 | CFO (Octavio Zetina Lara) | Autoriza los montos de su tramo; es además el patrocinador de la política y del proyecto |
-| CEO | Autoriza los montos altos de su tramo |
-| Consejo | Autoriza los montos que exceden el tope del CEO |
+| CEO (Héctor Izquierdo) | Autoriza los montos altos de su tramo |
+| Consejo | Autoriza los montos que exceden el tope del CEO. Está representado por Héctor Izquierdo, quien opera con un usuario distinto del de CEO para que quede registrado con qué investidura autorizó cada gasto |
 | Analista de Finanzas | Asignado por empresa; recibe el aviso de pago autorizado y solicita el pago a Tesorería |
 | Tesorería | Ejecuta el pago los jueves, fuera del portal |
 | Proveedor | Actor externo; emite la factura por el monto autorizado. No es usuario del portal en el MVP |
@@ -180,6 +180,7 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 | RF-22 | Administración de usuarios y niveles | Un administrador puede dar de alta usuarios, asociarlos a su empresa y asignarles su nivel de autorización |
 | RF-23 | Mantenimiento de la matriz | Un administrador puede actualizar los montos de la matriz sin requerir despliegue de código, y el sistema conserva la versión anterior y la fecha del cambio |
 | RF-24 | Aplicación de la matriz vigente al momento de la solicitud | Cada solicitud se resuelve con la versión de la matriz vigente cuando fue enviada, de modo que un cambio posterior no altere autorizaciones ya registradas |
+| RF-25 | Representación del Consejo | El sistema admite que una misma persona opere con usuarios separados para el nivel CEO y para el nivel Consejo, y registra en cada autorización con cuál de los dos resolvió. Un usuario de nivel CEO no puede autorizar montos que corresponden al Consejo: debe hacerlo con el usuario de ese nivel |
 
 ## 9. Requerimientos no funcionales
 
@@ -275,7 +276,7 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 
 | **Riesgo** | **Impacto potencial** |
 | --- | --- |
-| Que la operación siga usando el correo en paralelo | Es el riesgo principal: el portal solo resuelve el desorden si es el único camino. Si conviven ambos mecanismos quedarían dos fuentes de verdad y el problema empeoraría respecto de hoy |
+| Convivencia con el correo durante la transición | Finanzas dejará de recibir autorizaciones por correo una vez que el portal opere, lo que elimina el riesgo de fondo. Subsiste el riesgo de transición: mientras la instrucción se difunde y las áreas se habitúan, pueden llegar solicitudes por el canal anterior y quedar fuera del histórico |
 | Desalineación entre la matriz cargada y la política vigente | Se autorizarían gastos con niveles obsoletos, incumpliendo una política declarada de observancia estricta y sin excepciones |
 | Indisponibilidad de la fuente gratuita de tipo de cambio | Al no tener acuerdo de nivel de servicio, su caída detendría la autorización de gastos en moneda extranjera si no existiera el mecanismo manual de respaldo |
 | Manipulación del tipo de cambio o de la empresa que absorbe el gasto | Seleccionar una empresa o un tipo de cambio incorrectos, deliberadamente o por error, puede colocar el gasto en un nivel de autorización más bajo del que le corresponde |
@@ -287,6 +288,7 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 
 | **Supuesto** | **Descripción** |
 | --- | --- |
+| Sustitución del canal | Finanzas dejará de recibir autorizaciones de gasto por correo electrónico una vez que el portal esté en operación; el portal será el único canal válido para autorizar un gasto |
 | Vigencia de la matriz | La matriz de niveles de autorización, versión 01 de julio 2026, con las diez empresas y sus rangos normalizados, es la regla vigente y aplicable |
 | Rangos exclusivos y contiguos | Cada nivel de la matriz opera desde el monto inmediato superior al techo del nivel anterior, sin traslapes ni huecos |
 | Identidad corporativa disponible | Todos los usuarios del portal —solicitantes, autorizadores, Finanzas y Tesorería— cuentan con cuenta corporativa habilitada para SSO |
@@ -299,11 +301,10 @@ Este flujo aplica a toda solicitud, sea cual sea la empresa. La política define
 
 | **Tema** | **Pregunta abierta** |
 | --- | --- |
-| Adopción | ¿Finanzas dejará de aceptar autorizaciones de gasto por correo una vez que el portal esté en operación? El respaldo explícito del CFO a esta regla es determinante para el éxito del proyecto |
 | Identidad | ¿Cuál es el proveedor de identidad para el SSO: Microsoft Entra ID, Google Workspace u otro? |
 | Identidad | ¿Se confirma que el portal será accesible desde internet, sin restricción a red interna o VPN, dado que los autorizadores resuelven desde su teléfono? |
 | Autorización | ¿Puede un usuario autorizar una solicitud que él mismo originó? Se recomienda impedirlo por control interno y escalar automáticamente al nivel superior, pero requiere definición de Finanzas |
-| Autorización | ¿Cómo se registra la autorización del Consejo, siendo un órgano colegiado y no un usuario individual? ¿Se habilita un usuario que actúe en su representación, o se adjunta el acta correspondiente? |
+| Autorización | El Consejo autoriza mediante un usuario propio a nombre de Héctor Izquierdo. ¿Esa autorización debe respaldarse adjuntando el acta o minuta de la sesión del Consejo, o basta con el registro del sistema? Al tratarse de un órgano colegiado, el registro del portal por sí solo no evidencia el acuerdo de sus integrantes |
 | Autorización | ¿Quién es el "Funcional" de cada área y empresa? La política nombra el nivel pero no identifica a las personas; hace falta ese mapeo para dar de alta usuarios |
 | Tipo de cambio | ¿Qué fuente pública se usará para cada moneda, y qué fecha de tipo de cambio aplica: la del envío de la solicitud o la del momento de la autorización? |
 | Catálogo de empresas | ISAMAD aparece en la relación de gestión de pagos pero no tiene niveles en la matriz, por lo que queda fuera del portal. ¿Se le definirán niveles de autorización para incorporarla más adelante? |

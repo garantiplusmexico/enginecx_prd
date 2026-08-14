@@ -17,11 +17,13 @@
 
 ## Resumen de estado
 
-Fase 0 en marcha. T-02 (API .NET Core 8) y T-03 (frontend React) están completas y verificadas con servidores reales corriendo, compilando y comunicándose entre sí por CORS. T-04 (PostgreSQL) está a medio camino: el SDK de .NET, EF Core, el `DbContext` y la migración inicial ya existen y compilan; falta un PostgreSQL vivo para correr `dotnet ef database update` — su instalación está en curso.
+Fase 0 en marcha. T-02, T-03 y T-04 completas y verificadas con servidores y base de datos reales: PostgreSQL 17 corriendo como servicio de Windows, migración `InitialCreate` aplicada, y el health check confirmando la conexión en vivo (con prueba negativa: apuntado a un puerto sin escucha, reporta `databaseReachable:false`; apuntado al real, `true`). Quedan T-05 y T-06 para cerrar la fase.
 
 **El repositorio no tiene remoto.** Se inicializó local por decisión del responsable para no detener el arranque; falta crearlo en GitHub y conectar `origin` para poder publicar las ramas. Hasta entonces, todo commit de código vive únicamente en la máquina del responsable.
 
 **El .NET SDK 8 y PostgreSQL no estaban instalados en la máquina.** El responsable autorizó instalarlos durante la ejecución (ver Decisiones). Docker Desktop sigue sin resolverse, pendiente para T-05/T-06.
+
+**Nota operativa:** la instalación de PostgreSQL por `winget` (en segundo plano) terminó correctamente pero el sistema no dejó registro de finalización — se verificó de forma independiente (servicio de Windows `postgresql-x64-17` en estado `Running`, puerto `5432` escuchando, `psql` conecta) antes de continuar. No se asumió que había terminado solo porque "ya debería haber terminado".
 
 ---
 
@@ -46,14 +48,13 @@ Fase 0 en marcha. T-02 (API .NET Core 8) y T-03 (frontend React) están completa
 |---|---|---|---|---|
 | T-02 | Solución .NET Core 8 con la estructura de carpetas de Engine | Claude Code | 2026-08-14 | API real levantada en local; `/health` responde 200 `{"status":"ok"}` |
 | T-03 | Proyecto React con layout, ruteo y cliente HTTP | Claude Code | 2026-08-14 | Vite real levantado en local; verificadas las 5 rutas y CORS end-to-end contra la API real |
+| T-04 | PostgreSQL local y capa de acceso a datos con migraciones | Claude Code | 2026-08-14 | PostgreSQL 17 instalado y corriendo como servicio; migración `InitialCreate` aplicada; `/health` extendido para reportar conectividad real a la base, verificado con prueba positiva y negativa |
 
 ---
 
 ## Tareas en progreso 🟡
 
-| ID | Tarea | Responsable | Iniciada | Notas |
-|---|---|---|---|---|
-| T-04 | PostgreSQL local y capa de acceso a datos con migraciones | Claude Code | 2026-08-14 | Paquetes, `AppDbContext` y migración `InitialCreate` listos y compilando. Falta un PostgreSQL vivo para `database update` — instalación en curso |
+*(ninguna — Fase 0 pausada en T-05, a la espera de la decisión de Docker)*
 
 ---
 
@@ -61,7 +62,7 @@ Fase 0 en marcha. T-02 (API .NET Core 8) y T-03 (frontend React) están completa
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-05 | Dockerfiles y composición local | Docker Desktop no está instalado; decisión pendiente del responsable |
+| T-05 | Dockerfiles y composición local | Docker Desktop no está instalado; decisión pendiente del responsable — mismo punto abierto desde el arranque de T-04 |
 | T-06 | Despliegue base en ECS + Fargate para desarrollo | Consola AWS de Engine transversal sin definir |
 | T-07 a T-13 | Fase 1 — Identidad, catálogos y modelo de datos | |
 | T-14 a T-20 | Fase 2 — Motor de reglas y conversión de moneda | Fuente de tipo de cambio para COP y CLP sin definir (afecta solo a T-18) |
@@ -89,6 +90,7 @@ Fase 0 en marcha. T-02 (API .NET Core 8) y T-03 (frontend React) están completa
 | `/health` sin `[Authorize]` y sin versionar (`v1/...`) | Es un endpoint de infraestructura consumido por el ALB y por el frontend antes de que exista sesión; exigir versión y auth ahí no aporta y rompe el patrón de probes | Ninguno de los demás endpoints del portal sigue esta excepción — todos los de negocio sí llevan `v1/` y `[Authorize]` |
 | CORS restringido por configuración (`Cors:AllowedOrigins`), no `AllowAny` | `coding-guidelines.md` exige CORS restrictivo; el origen de desarrollo (`localhost:5173`) vive en `appsettings.Development.json`, no hardcodeado en código | QA y producción deberán definir su propio origen permitido antes de desplegar |
 | Instalar PostgreSQL nativo en vez de esperar a Docker (T-05) | El responsable eligió resolver T-04 sin depender de la decisión de Docker, que sigue abierta | Desacopla T-04 de T-05/T-06; cuando se instale Docker, T-05 apuntará el `docker-compose` a un Postgres en contenedor, independiente de este local |
+| `/health` reporta `databaseReachable` además de `status` | No estaba en el plan original, pero es la única forma honesta de verificar el criterio de completitud de T-04 ("la API conecta") sin escribir un endpoint desechable; además es exactamente lo que necesitará el health check del ALB en T-06 | Cambia el contrato del endpoint; se actualizó el tipo `HealthStatus` del frontend para reflejarlo |
 
 ---
 
@@ -108,6 +110,9 @@ Fase 0 en marcha. T-02 (API .NET Core 8) y T-03 (frontend React) están completa
 | `src/Api/appsettings.Development.json` | Modificado | T-02, T-04 |
 | `src/Api/Data/AppDbContext.cs` | Creado | T-04 |
 | `src/Api/Migrations/20260814151728_InitialCreate.cs` | Creado | T-04 |
+| `src/Api/Controllers/HealthController.cs` | Modificado (verifica conexión a BD) | T-04 |
+| `src/Api/DTOs/Health/Responses/HealthResponse.cs` | Modificado (campo `DatabaseReachable`) | T-04 |
+| `frontend/src/api/client.ts` | Modificado (`HealthStatus.databaseReachable`) | T-04 |
 | `frontend/` (Vite + React + TypeScript, scaffold completo) | Creado | T-03 |
 | `frontend/src/api/client.ts` | Creado | T-03 |
 | `frontend/src/layout/AppLayout.tsx` | Creado | T-03 |
@@ -127,7 +132,7 @@ Fase 0 en marcha. T-02 (API .NET Core 8) y T-03 (frontend React) están completa
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** cerrar T-04 en cuanto PostgreSQL termine de instalarse (`dotnet ef database update` desde `src/Api`), luego decidir Docker para T-05/T-06. Nada de esto está commiteado todavía — el commit de Fase 0 se hace hasta que T-01 a T-06 estén completas, con autorización explícita del responsable (Paso 4.1 del workflow).
+- **Por dónde continuar:** decidir Docker para desbloquear T-05 y T-06 — es lo único que falta para cerrar la Fase 0. Nada de esto está commiteado todavía — el commit de Fase 0 se hace hasta que T-01 a T-06 estén completas, con autorización explícita del responsable (Paso 4.1 del workflow).
 - **Contexto importante:** el repositorio de código vive en `Finanzas/Portal de ordenes de compra` en la máquina de Aldo Álvarez, todavía sin remoto. El PRD, el plan y este avance viven en `enginecx_prd/Desarrollos_internos/PJ4535-portal-de-ordenes-de-pago/`. La API corre en `http://localhost:5118` (perfil `http`), el frontend en `http://localhost:5173`.
 - **Decisiones pendientes que requieren input:** organización y nombre del repositorio en GitHub; Docker Desktop sí/no para T-05/T-06; consola AWS destino; fuente pública de tipo de cambio para peso colombiano y peso chileno; cuentas nominales de Google Workspace para Ilse García y Brian.
 - **Lo más delicado del proyecto** es la Fase 2: las fronteras de la matriz de autorización. Un error ahí aprueba gastos en el nivel equivocado sin que nadie lo note. T-20 exige casos de prueba en ambas fronteras de cada rango de las 10 empresas.

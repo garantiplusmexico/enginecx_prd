@@ -9,7 +9,7 @@
 | Responsable actual | Aldo Álvarez |
 | Folio PRD | `PJ4535` |
 | ID plan (BD) | `35` |
-| Última actualización | 2026-08-13 |
+| Última actualización | 2026-08-14 |
 | Estado general | 🟡 En progreso |
 | Modelo de ejecución | `claude-sonnet-5` — esfuerzo: alto |
 
@@ -17,9 +17,15 @@
 
 ## Resumen de estado
 
-Ejecución recién iniciada. El repositorio quedó inicializado localmente con las cuatro ramas obligatorias (`main`, `develop`, `pre-qa`, `qa`) y la rama funcional `feature/portal-de-ordenes-de-pago-mvp`, con `CLAUDE.md` y `.gitignore` versionados. Ninguna tarea del plan se ha ejecutado todavía.
+Fase 0 en marcha. T-02, T-03 y T-04 completas y verificadas con servidores y base de datos reales: PostgreSQL 17 corriendo como servicio de Windows, migración `InitialCreate` aplicada, y el health check confirmando la conexión en vivo (con prueba negativa: apuntado a un puerto sin escucha, reporta `databaseReachable:false`; apuntado al real, `true`). Quedan T-05 y T-06 para cerrar la fase.
 
 **El repositorio no tiene remoto.** Se inicializó local por decisión del responsable para no detener el arranque; falta crearlo en GitHub y conectar `origin` para poder publicar las ramas. Hasta entonces, todo commit de código vive únicamente en la máquina del responsable.
+
+**El .NET SDK 8 y PostgreSQL no estaban instalados en la máquina.** El responsable autorizó instalarlos durante la ejecución (ver Decisiones). Docker Desktop sigue sin resolverse, pendiente para T-05/T-06.
+
+**Nota operativa:** la instalación de PostgreSQL por `winget` (en segundo plano) terminó correctamente pero el sistema no dejó registro de finalización — se verificó de forma independiente (servicio de Windows `postgresql-x64-17` en estado `Running`, puerto `5432` escuchando, `psql` conecta) antes de continuar. No se asumió que había terminado solo porque "ya debería haber terminado".
+
+**Docker Desktop** se instaló con autorización del responsable. El primer intento falló porque requiere un diálogo de UAC interactivo que el responsable canceló por accidente; el segundo intento se completó. El binario ya responde (`docker --version`); el motor (`dockerd`) está arrancando — Docker Desktop tarda en inicializar la primera vez.
 
 ---
 
@@ -40,13 +46,17 @@ Ejecución recién iniciada. El repositorio quedó inicializado localmente con l
 
 ## Tareas completadas ✅
 
-*(ninguna todavía)*
+| ID | Tarea | Completada por | Fecha | Notas |
+|---|---|---|---|---|
+| T-02 | Solución .NET Core 8 con la estructura de carpetas de Engine | Claude Code | 2026-08-14 | API real levantada en local; `/health` responde 200 `{"status":"ok"}` |
+| T-03 | Proyecto React con layout, ruteo y cliente HTTP | Claude Code | 2026-08-14 | Vite real levantado en local; verificadas las 5 rutas y CORS end-to-end contra la API real |
+| T-04 | PostgreSQL local y capa de acceso a datos con migraciones | Claude Code | 2026-08-14 | PostgreSQL 17 instalado y corriendo como servicio; migración `InitialCreate` aplicada; `/health` extendido para reportar conectividad real a la base, verificado con prueba positiva y negativa |
 
 ---
 
 ## Tareas en progreso 🟡
 
-*(ninguna todavía — la ejecución arranca en T-01)*
+*(ninguna — Fase 0 pausada en T-05, a la espera de la decisión de Docker)*
 
 ---
 
@@ -54,11 +64,7 @@ Ejecución recién iniciada. El repositorio quedó inicializado localmente con l
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-01 | Crear el repositorio y las cuatro ramas obligatorias | Parcialmente hecho en local; el remoto depende de crear el repo en GitHub |
-| T-02 | Solución .NET Core 8 con la estructura de carpetas de Engine | |
-| T-03 | Proyecto React con layout, ruteo y cliente HTTP | |
-| T-04 | PostgreSQL local y capa de acceso a datos con migraciones | |
-| T-05 | Dockerfiles y composición local | |
+| T-05 | Dockerfiles y composición local | Docker Desktop no está instalado; decisión pendiente del responsable — mismo punto abierto desde el arranque de T-04 |
 | T-06 | Despliegue base en ECS + Fargate para desarrollo | Consola AWS de Engine transversal sin definir |
 | T-07 a T-13 | Fase 1 — Identidad, catálogos y modelo de datos | |
 | T-14 a T-20 | Fase 2 — Motor de reglas y conversión de moneda | Fuente de tipo de cambio para COP y CLP sin definir (afecta solo a T-18) |
@@ -82,6 +88,11 @@ Ejecución recién iniciada. El repositorio quedó inicializado localmente con l
 |---|---|---|
 | Inicializar el repositorio en local sin remoto | El repositorio en GitHub no existía y el responsable pidió arrancar de inmediato; detenerse habría bloqueado toda la ejecución | Los commits de código no son visibles para el equipo hasta que se cree el remoto y se publiquen las ramas |
 | Excluir del control de versiones los insumos del PRD (`Pagos.csv`, `Aprobadores.csv`, la política y el `.xlsx`) | Su fuente de verdad es `enginecx_prd`; además `Aprobadores.csv` contiene correos de personas identificables | En T-11 los datos de seed se incorporan en su propia ruta bajo `src/Api/Data/Seed/`, no desde la raíz del repo |
+| Instalar el SDK de .NET 8 durante la ejecución (winget) | No estaba presente en la máquina y es obligatorio para todo backend nuevo de Engine | Autorizado explícitamente por el responsable antes de instalar |
+| `/health` sin `[Authorize]` y sin versionar (`v1/...`) | Es un endpoint de infraestructura consumido por el ALB y por el frontend antes de que exista sesión; exigir versión y auth ahí no aporta y rompe el patrón de probes | Ninguno de los demás endpoints del portal sigue esta excepción — todos los de negocio sí llevan `v1/` y `[Authorize]` |
+| CORS restringido por configuración (`Cors:AllowedOrigins`), no `AllowAny` | `coding-guidelines.md` exige CORS restrictivo; el origen de desarrollo (`localhost:5173`) vive en `appsettings.Development.json`, no hardcodeado en código | QA y producción deberán definir su propio origen permitido antes de desplegar |
+| Instalar PostgreSQL nativo en vez de esperar a Docker (T-05) | El responsable eligió resolver T-04 sin depender de la decisión de Docker, que sigue abierta | Desacopla T-04 de T-05/T-06; cuando se instale Docker, T-05 apuntará el `docker-compose` a un Postgres en contenedor, independiente de este local |
+| `/health` reporta `databaseReachable` además de `status` | No estaba en el plan original, pero es la única forma honesta de verificar el criterio de completitud de T-04 ("la API conecta") sin escribir un endpoint desechable; además es exactamente lo que necesitará el health check del ALB en T-06 | Cambia el contrato del endpoint; se actualizó el tipo `HealthStatus` del frontend para reflejarlo |
 
 ---
 
@@ -91,6 +102,25 @@ Ejecución recién iniciada. El repositorio quedó inicializado localmente con l
 |---|---|---|
 | `CLAUDE.md` | Creado | Prerequisito del plan |
 | `.gitignore` | Creado | T-01 |
+| `PortalOrdenesPago.sln` | Creado | T-02 |
+| `src/Api/Api.csproj` | Creado | T-02 |
+| `src/Api/Program.cs` | Creado | T-02, T-04 |
+| `src/Api/Controllers/HealthController.cs` | Creado | T-02 |
+| `src/Api/DTOs/Health/Responses/HealthResponse.cs` | Creado | T-02 |
+| `src/Api/Options/CorsOptions.cs` | Creado | T-02 |
+| `src/Api/appsettings.json` | Creado (scaffold) | T-02 |
+| `src/Api/appsettings.Development.json` | Modificado | T-02, T-04 |
+| `src/Api/Data/AppDbContext.cs` | Creado | T-04 |
+| `src/Api/Migrations/20260814151728_InitialCreate.cs` | Creado | T-04 |
+| `src/Api/Controllers/HealthController.cs` | Modificado (verifica conexión a BD) | T-04 |
+| `src/Api/DTOs/Health/Responses/HealthResponse.cs` | Modificado (campo `DatabaseReachable`) | T-04 |
+| `frontend/src/api/client.ts` | Modificado (`HealthStatus.databaseReachable`) | T-04 |
+| `frontend/` (Vite + React + TypeScript, scaffold completo) | Creado | T-03 |
+| `frontend/src/api/client.ts` | Creado | T-03 |
+| `frontend/src/layout/AppLayout.tsx` | Creado | T-03 |
+| `frontend/src/routes/` (Login, Inbox, Search, RequestDetail, NotFound) | Creado | T-03 |
+| `frontend/src/index.css` | Modificado (limpiado el estilo de marketing del scaffold) | T-03 |
+| `frontend/.env.example` | Creado | T-03 |
 
 ---
 
@@ -104,9 +134,9 @@ Ejecución recién iniciada. El repositorio quedó inicializado localmente con l
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** T-02, la solución .NET Core 8. T-01 quedó completa salvo la publicación de las ramas en el remoto.
-- **Contexto importante:** el repositorio de código vive en `Finanzas/Portal de ordenes de compra` en la máquina de Aldo Álvarez, todavía sin remoto. El PRD, el plan y este avance viven en `enginecx_prd/Desarrollos_internos/PJ4535-portal-de-ordenes-de-pago/`.
-- **Decisiones pendientes que requieren input:** organización y nombre del repositorio en GitHub; consola AWS destino; fuente pública de tipo de cambio para peso colombiano y peso chileno; cuentas nominales de Google Workspace para Ilse García y Brian.
+- **Por dónde continuar:** decidir Docker para desbloquear T-05 y T-06 — es lo único que falta para cerrar la Fase 0. Nada de esto está commiteado todavía — el commit de Fase 0 se hace hasta que T-01 a T-06 estén completas, con autorización explícita del responsable (Paso 4.1 del workflow).
+- **Contexto importante:** el repositorio de código vive en `Finanzas/Portal de ordenes de compra` en la máquina de Aldo Álvarez, todavía sin remoto. El PRD, el plan y este avance viven en `enginecx_prd/Desarrollos_internos/PJ4535-portal-de-ordenes-de-pago/`. La API corre en `http://localhost:5118` (perfil `http`), el frontend en `http://localhost:5173`.
+- **Decisiones pendientes que requieren input:** organización y nombre del repositorio en GitHub; Docker Desktop sí/no para T-05/T-06; consola AWS destino; fuente pública de tipo de cambio para peso colombiano y peso chileno; cuentas nominales de Google Workspace para Ilse García y Brian.
 - **Lo más delicado del proyecto** es la Fase 2: las fronteras de la matriz de autorización. Un error ahí aprueba gastos en el nivel equivocado sin que nadie lo note. T-20 exige casos de prueba en ambas fronteras de cada rango de las 10 empresas.
 
 ---

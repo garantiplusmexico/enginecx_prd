@@ -14,7 +14,7 @@
 | Folio PRD | PJ8360 |
 | Fecha de generación | 14 de agosto de 2026 |
 | Estado | Borrador |
-| ID plan (BD) | *(lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | 40 |
 
 ---
 
@@ -486,13 +486,13 @@ Estimación en **días hábiles** para **un (1) desarrollador**.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Fundación e infraestructura** | Proyecto Next.js, Vercel, PostgreSQL, S3, sistema de diseño, manejo de errores | T-01 a T-06 | 4 – 6 días | |
-| **Fase 1 — Sitio público (H1)** | Catálogo con ficha técnica y filtros, importador, mapa regional, formularios, ruteo de leads, SEO | T-07 a T-16 | 12 – 16 días | |
-| **Fase 2 — Portal de distribuidor (H1)** | Usuarios y roles, autenticación, alta/baja, repositorio de material, carga masiva, trazabilidad | T-17 a T-24 | 10 – 14 días | |
-| **Fase 3 — Analítica y salida a producción (H1)** | Instrumentación GA4/GTM, dominio y seguridad, pruebas de desempeño, aceptación y salida | T-25 a T-28 | 3 – 5 días | |
-| **Fase 4 — E-learning: núcleo de cursos (H2)** | Modelo de cursos, back office de autoría, carga de lecciones, reproductor, progreso | T-29 a T-36 | 15 – 20 días | |
-| **Fase 5 — E-learning: evaluación y acreditación (H2)** | Banco de preguntas, editor de evaluaciones, calificación, reintentos, certificados | T-37 a T-42 | 10 – 14 días | |
-| **Fase 6 — E-learning: rutas, reportes y cierre (H2)** | Rutas por rol, administración de rutas, tablero de reportes, retención, aceptación | T-43 a T-48 | 8 – 11 días | |
+| **Fase 0 — Fundación e infraestructura** | Proyecto Next.js, Vercel, PostgreSQL, S3, sistema de diseño, manejo de errores | T-01 a T-06 | 4 – 6 días | 108 |
+| **Fase 1 — Sitio público (H1)** | Catálogo con ficha técnica y filtros, importador, mapa regional, formularios, ruteo de leads, SEO | T-07 a T-16 | 12 – 16 días | 109 |
+| **Fase 2 — Portal de distribuidor (H1)** | Usuarios y roles, autenticación, alta/baja, repositorio de material, carga masiva, trazabilidad | T-17 a T-24 | 10 – 14 días | 110 |
+| **Fase 3 — Analítica y salida a producción (H1)** | Instrumentación GA4/GTM, dominio y seguridad, pruebas de desempeño, aceptación y salida | T-25 a T-28 | 3 – 5 días | 111 |
+| **Fase 4 — E-learning: núcleo de cursos (H2)** | Modelo de cursos, back office de autoría, carga de lecciones, reproductor, progreso | T-29 a T-36 | 15 – 20 días | 112 |
+| **Fase 5 — E-learning: evaluación y acreditación (H2)** | Banco de preguntas, editor de evaluaciones, calificación, reintentos, certificados | T-37 a T-42 | 10 – 14 días | 113 |
+| **Fase 6 — E-learning: rutas, reportes y cierre (H2)** | Rutas por rol, administración de rutas, tablero de reportes, retención, aceptación | T-43 a T-48 | 8 – 11 días | 114 |
 | **Total proyecto (H1 + H2)** | | 48 tareas | **~62 – 86 días hábiles (≈ 12.5 – 17 semanas)** | — |
 | **Solo H1 (guardarraíl del PRD)** | Fase 0 + Fase 1 + Fase 2 + Fase 3 | T-01 a T-28 | **~29 – 41 días hábiles (≈ 6 – 8 semanas)** | — |
 | **Solo H2 (e-learning)** | Fase 4 + Fase 5 + Fase 6 | T-29 a T-48 | **~33 – 45 días hábiles (≈ 7 – 9 semanas)** | — |

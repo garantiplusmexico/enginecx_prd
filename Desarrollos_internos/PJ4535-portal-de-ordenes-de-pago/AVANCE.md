@@ -25,6 +25,8 @@ Fase 0 en marcha. T-02, T-03 y T-04 completas y verificadas con servidores y bas
 
 **Nota operativa:** la instalación de PostgreSQL por `winget` (en segundo plano) terminó correctamente pero el sistema no dejó registro de finalización — se verificó de forma independiente (servicio de Windows `postgresql-x64-17` en estado `Running`, puerto `5432` escuchando, `psql` conecta) antes de continuar. No se asumió que había terminado solo porque "ya debería haber terminado".
 
+**Docker Desktop** se instaló con autorización del responsable. El primer intento falló porque requiere un diálogo de UAC interactivo que el responsable canceló por accidente; el segundo intento se completó. El binario ya responde (`docker --version`); el motor (`dockerd`) está arrancando — Docker Desktop tarda en inicializar la primera vez.
+
 ---
 
 ## Relación de tareas y tiempos (seguimiento)

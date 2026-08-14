@@ -10,10 +10,11 @@
 | Rama base | `develop` |
 | Rama | `feature/PJ9259-digitos-rut` |
 | Tipo | Feature |
-| Responsable | Javier Antonio Oropeza Camacho |
+| Responsable | Javier Antonio Oropeza Camacho (javier.oropeza@garantiplus.mx) |
 | Folio PRD | `PJ9259` |
 | Fecha de generación | 2026-07-24 |
-| Estado | Validado |
+| Fecha de cierre | 2026-08-14 |
+| Estado | ✅ Finalizado — liberado a producción (2026-08-14) |
 | ID plan (BD) | 32 |
 | Modelo | Claude Opus 4.8 (`claude-opus-4-8`) — esfuerzo: normal |
 

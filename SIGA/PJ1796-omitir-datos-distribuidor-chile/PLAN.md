@@ -14,7 +14,7 @@
 | Folio PRD | `PJ1796` |
 | Fecha de generación | 2026-07-23 |
 | Fecha de cierre | 2026-08-11 |
-| Estado | ✅ Completado |
+| Estado | ✅ Finalizado — liberado a producción (2026-08-14) |
 | ID plan (BD) | 19 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 

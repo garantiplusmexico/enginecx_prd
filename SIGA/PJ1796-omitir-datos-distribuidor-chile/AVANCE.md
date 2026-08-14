@@ -6,16 +6,17 @@
 |---|---|
 | Plan de origen | `PLAN.md` |
 | Rama | `feature/PJ1796-omitir-datos-distribuidor-chile` (base: `develop` @ `303817c`) |
-| Responsable actual | Javier Antonio Oropeza Camacho |
-| Última actualización | 2026-08-11 |
+| Responsable | Javier Antonio Oropeza Camacho |
+| Última actualización | 2026-08-14 |
 | Fecha de cierre | 2026-08-11 |
-| Estado general | ✅ Completado — código y pruebas funcionales validadas |
+| Liberación a producción | 2026-08-14 |
+| Estado general | ✅ Finalizado — liberado a producción (2026-08-14) |
 
 ---
 
 ## Resumen de estado
 
-**Plan cerrado.** Se implementó el cambio de código completo: los campos **Cuenta bancaria** y **CLABE** ya no se renderizan en `_EditCHL.cshtml`, y las reglas jQuery de esos campos en `Create.cshtml` / `Edit.cshtml` quedaron condicionadas a que el input exista en el DOM (guard `.length`), evitando el error de `validator` en Chile sin tocar México/Colombia/Perú/Argentina.
+**Plan cerrado el 2026-08-11 y liberado a producción el 2026-08-14.** Se implementó el cambio de código completo: los campos **Cuenta bancaria** y **CLABE** ya no se renderizan en `_EditCHL.cshtml`, y las reglas jQuery de esos campos en `Create.cshtml` / `Edit.cshtml` quedaron condicionadas a que el input exista en el DOM (guard `.length`), evitando el error de `validator` en Chile sin tocar México/Colombia/Perú/Argentina.
 
 El proyecto compila sin errores (`dotnet build GarantiplusWeb` → 0 errores). Las pruebas funcionales T-06, T-07 y T-08 fueron ejecutadas y validadas por el programador en ambiente el 2026-08-11 — no quedan tareas abiertas. No se requirió activar T-05 (ajuste server-side): T-07 confirmó que los valores previos de `cuenta_bancaria`/`clabe` se conservan.
 

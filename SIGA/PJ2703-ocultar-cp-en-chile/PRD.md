@@ -6,7 +6,7 @@
 | **Área / empresa** | Garantiplus Chile |
 | **Versión** | v0.1 |
 | **Fecha** | 2026-07-23 |
-| **Autores** | Operaciones Chile (solicitante) |
+| **Autores** | Javier Antonio Oropeza Camacho (javier.oropeza@garantiplus.mx) — solicitante: Operaciones Chile |
 | **Revisión / liderazgo** | Alexis Salvador Herrera Garcia (alexis.herrera@gplusseguros.mx) |
 | **Tipo de proyecto** | Feature web/API |
 

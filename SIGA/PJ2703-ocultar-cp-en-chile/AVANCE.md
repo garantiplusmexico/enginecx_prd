@@ -7,17 +7,18 @@
 | Plan de origen | `PLAN.md` |
 | Repositorio | `gp_4.0_siga` |
 | Rama | `feature/PJ2703-ocultar-cp-en-chile` (desde `develop`) |
-| Responsable actual | Javier Antonio Oropeza Camacho |
+| Responsable | Javier Antonio Oropeza Camacho |
 | Fecha de inicio | 2026-07-30 |
-| Última actualización | 2026-08-11 |
+| Última actualización | 2026-08-14 |
 | Fecha de cierre | 2026-08-11 |
-| Estado general | ✅ Completado — código y pruebas funcionales validadas |
+| Liberación a producción | 2026-08-14 |
+| Estado general | ✅ Finalizado — liberado a producción (2026-08-14) |
 
 ---
 
 ## Resumen de estado
 
-**Plan cerrado el 2026-08-11.** Las pruebas funcionales T-07, T-08 y T-09 fueron ejecutadas y validadas por el programador en ambiente CHL y MX/COL. No quedan tareas abiertas.
+**Plan cerrado el 2026-08-11 y liberado a producción el 2026-08-14.** Las pruebas funcionales T-07, T-08 y T-09 fueron ejecutadas y validadas por el programador en ambiente CHL y MX/COL. No quedan tareas abiertas.
 
 El baseline (T-02) confirmó que **la emisión CHL ya no muestra CP en `develop`**: `PaisCL` entrega `localidades_show_postal_code = false` y `_LocalidadesMEX` gatea el bloque de CP con ese flag, tanto en `Create` como en `EmisionEspecial`. Por eso T-03 y T-06 quedaron **N/A**.
 

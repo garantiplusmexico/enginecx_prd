@@ -13,7 +13,7 @@
 | Folio PRD | `PJ4535` |
 | Fecha de generación | 2026-08-13 |
 | Estado | Borrador |
-| ID plan (BD) | *(pendiente de registro)* |
+| ID plan (BD) | `35` |
 
 ---
 
@@ -374,12 +374,12 @@ Dentro del backend, el motor de reglas se aísla en su propia capa de servicios 
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Andamiaje e infraestructura** | Repositorio y ramas, solución .NET, SPA React, PostgreSQL, Docker, despliegue base en ECS | T-01 a T-06 | 6 – 9 días | |
-| **Fase 1 — Identidad, catálogos y modelo (P1)** | SSO con Google, alta automática, esquema de catálogos, carga inicial, autorización por rol y empresa | T-07 a T-13 | 8 – 11 días | |
-| **Fase 2 — Motor de reglas y moneda (P1)** | Matriz versionada, resolución de nivel, jerarquía y excepciones, doble investidura, tipo de cambio con respaldo manual, pruebas del motor | T-14 a T-20 | 9 – 12 días | |
-| **Fase 3 — Ciclo de la solicitud (P1)** | Esquema de solicitudes, captura con documentos en S3, envío, bandeja, autorización y rechazo, reenvío, cancelación, factura con ±2% | T-21 a T-28 | 12 – 16 días | |
-| **Fase 4 — Notificaciones, histórico y consulta (P1)** | Correo, disparo de notificaciones, bitácora inmutable, eventos BI, consulta con filtros, detalle con línea de tiempo | T-29 a T-34 | 9 – 12 días | |
-| **Fase 5 — Administración, calidad y producción** | Pantallas de administración, edición de la matriz, usabilidad móvil, pruebas de integración, revisión de seguridad, despliegue | T-35 a T-40 | 7 – 10 días | |
+| **Fase 0 — Andamiaje e infraestructura** | Repositorio y ramas, solución .NET, SPA React, PostgreSQL, Docker, despliegue base en ECS | T-01 a T-06 | 6 – 9 días | `84` |
+| **Fase 1 — Identidad, catálogos y modelo (P1)** | SSO con Google, alta automática, esquema de catálogos, carga inicial, autorización por rol y empresa | T-07 a T-13 | 8 – 11 días | `85` |
+| **Fase 2 — Motor de reglas y moneda (P1)** | Matriz versionada, resolución de nivel, jerarquía y excepciones, doble investidura, tipo de cambio con respaldo manual, pruebas del motor | T-14 a T-20 | 9 – 12 días | `86` |
+| **Fase 3 — Ciclo de la solicitud (P1)** | Esquema de solicitudes, captura con documentos en S3, envío, bandeja, autorización y rechazo, reenvío, cancelación, factura con ±2% | T-21 a T-28 | 12 – 16 días | `87` |
+| **Fase 4 — Notificaciones, histórico y consulta (P1)** | Correo, disparo de notificaciones, bitácora inmutable, eventos BI, consulta con filtros, detalle con línea de tiempo | T-29 a T-34 | 9 – 12 días | `88` |
+| **Fase 5 — Administración, calidad y producción** | Pantallas de administración, edición de la matriz, usabilidad móvil, pruebas de integración, revisión de seguridad, despliegue | T-35 a T-40 | 7 – 10 días | `89` |
 | **Total proyecto (MVP completo)** | | 40 tareas | **~51 – 70 días hábiles** (≈ 10 a 14 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-13 | ~14 – 20 días hábiles (≈ 3 a 4 semanas) | — |
 

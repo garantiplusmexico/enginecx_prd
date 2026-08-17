@@ -10,10 +10,11 @@
 | Rama base | `develop` |
 | Rama | `feature/PJ1894-estado-colonia-chile` |
 | Tipo | Feature |
-| Responsable | Alejandro Govea Hernandez |
+| Responsable | Javier Antonio Oropeza Camacho (javier.oropeza@garantiplus.mx) |
 | Folio PRD | `PJ1894` |
 | Fecha de generación | 2026-07-23 |
-| Estado | Borrador |
+| Fecha de cierre | 2026-08-14 |
+| Estado | ✅ Finalizado — liberado a producción (2026-08-14) |
 | ID plan (BD) | 20 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 

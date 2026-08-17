@@ -10,8 +10,9 @@
 | Responsable | Javier Antonio Oropeza Camacho |
 | Ejecutado por | Javier Antonio Oropeza Camacho (Claude Code) |
 | Fecha de inicio | 2026-08-11 |
-| Última actualización | 2026-08-11 |
-| Estado general | ✅ Completado (pendiente prueba manual en ambiente Chile) |
+| Última actualización | 2026-08-14 |
+| Fecha de cierre | 2026-08-14 |
+| Estado general | ✅ Finalizado — liberado a producción (2026-08-14) |
 
 ---
 
@@ -19,7 +20,7 @@
 
 Se implementó el alcance P1 completo (Fases 0 a 2): RUT de Chile pasa a 8–12 caracteres y HP acepta 1 o más dígitos incluido `0`. La causa raíz del bloqueo no era solo el rango de `PaisesService`: el plugin de máscara (`input_mask.js`) **borra el contenido del campo en `blur`** cuando el valor no llena la máscara completa, por lo que ningún RUT de menos de 12 caracteres ni ningún HP de menos de 3 dígitos podía capturarse, independientemente del rango configurado. Se eliminaron esas máscaras fijas en Chile y se reemplazó el formateo del RUT por un formateador de longitud variable.
 
-Compila sin errores (`PaisesService` y `GarantiplusWeb`, 0 errores). El formateador tiene 18 casos verificados. Falta únicamente la prueba manual end-to-end en ambiente Chile (T-09) y el smoke MX/CO (T-10), que requieren ambiente levantado.
+Compila sin errores (`PaisesService` y `GarantiplusWeb`, 0 errores). El formateador tiene 18 casos verificados. La prueba manual end-to-end en ambiente Chile (T-09) y el smoke MX/CO (T-10) fueron ejecutados y validados por el programador. **Plan finalizado y liberado a producción el 2026-08-14.**
 
 ---
 
@@ -35,15 +36,14 @@ Compila sin errores (`PaisesService` y `GarantiplusWeb`, 0 errores). El formatea
 | T-06 | Consistencia flag fiscal / backend Chile | Claude Code | 2026-08-11 | `IsEnabledFiscalIdValidation() => false`. |
 | T-07 | Eliminar longitud fija de HP en emisión especial Chile | Claude Code | 2026-08-11 | Máscara `999` eliminada; regla `entero` ya permitía `0`. |
 | T-08 | Verificar Create / cotizador Chile para HP | Claude Code | 2026-08-11 | Sin cambios necesarios: no tenían máscara fija. |
+| T-09 | Prueba manual Chile (matriz RUT/HP de §10 del plan) | Javier Antonio Oropeza Camacho | 2026-08-14 | Validada por el programador. |
+| T-10 | Smoke MX y CO (no regresión) | Javier Antonio Oropeza Camacho | 2026-08-14 | Sin regresión detectada. |
 
 ---
 
 ## Tareas pendientes ⏳
 
-| ID | Tarea | Bloqueada por (si aplica) |
-|---|---|---|
-| T-09 | Prueba manual Chile (matriz RUT/HP de §10 del plan) | Requiere ambiente local Chile levantado (`CountryBase=CHILE`, `Hub:HubBaseCountryCode=CHL`) |
-| T-10 | Smoke MX y CO (no regresión) | Requiere ambientes MX/CO levantados |
+Ninguna. **Plan finalizado y liberado a producción el 2026-08-14.**
 
 > Verificación estática de no-regresión ya hecha: ningún archivo de MX/CO/PER fue modificado; los dos archivos compartidos que se tocaron cambian solo dentro de ramas exclusivas de Chile (ver §Decisiones, punto 6).
 

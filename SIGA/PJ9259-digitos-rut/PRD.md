@@ -6,7 +6,7 @@
 | **Área / empresa** | Garantiplus Chile |
 | **Versión** | v0.1 |
 | **Fecha** | 2026-07-23 |
-| **Autores** | Alejandro Govea Hernández |
+| **Autores** | Javier Antonio Oropeza Camacho (javier.oropeza@garantiplus.mx) |
 | **Revisión / liderazgo** | Alexis Salvador Herrera García (alexis.herrera@gplusseguros.mx) |
 | **Tipo de proyecto** | Feature web / API |
 

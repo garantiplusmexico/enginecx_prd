@@ -7,18 +7,24 @@
 | Plan de origen | `PLAN.md` |
 | Repositorio | `gp_4.0_siga` |
 | Rama | `feature/PJ2703-ocultar-cp-en-chile` (desde `develop`) |
-| Responsable actual | Javier Oropeza |
+| Responsable | Javier Antonio Oropeza Camacho |
 | Fecha de inicio | 2026-07-30 |
-| Última actualización | 2026-07-30 |
-| Estado general | ✅ Completado (código) — pendiente validación funcional en ambiente CHL |
+| Última actualización | 2026-08-14 |
+| Fecha de cierre | 2026-08-11 |
+| Liberación a producción | 2026-08-14 |
+| Estado general | ✅ Finalizado — liberado a producción (2026-08-14) |
 
 ---
 
 ## Resumen de estado
 
+**Plan cerrado el 2026-08-11 y liberado a producción el 2026-08-14.** Las pruebas funcionales T-07, T-08 y T-09 fueron ejecutadas y validadas por el programador en ambiente CHL y MX/COL. No quedan tareas abiertas.
+
 El baseline (T-02) confirmó que **la emisión CHL ya no muestra CP en `develop`**: `PaisCL` entrega `localidades_show_postal_code = false` y `_LocalidadesMEX` gatea el bloque de CP con ese flag, tanto en `Create` como en `EmisionEspecial`. Por eso T-03 y T-06 quedaron **N/A**.
 
-El único hueco Chile-específico real era el **Cotizador CHL**, que renderizaba el campo CP explícitamente. Se eliminó (T-04). La solución compila sin errores. Falta únicamente la validación funcional en un ambiente con proyecto Chile (T-07 a T-10) y, si producción Chile aún muestra el CP en emisión, el despliegue de `develop`.
+El único hueco Chile-específico real era el **Cotizador CHL**, que renderizaba el campo CP explícitamente. Se eliminó (T-04). La solución compila sin errores y la validación funcional en ambiente Chile quedó confirmada (T-07, T-08), junto con el smoke de no-regresión MX/COL (T-09).
+
+Queda como nota operativa, no como tarea del plan: si producción Chile aún muestra el CP en emisión, la causa es el **despliegue pendiente de `develop`**, no código.
 
 ---
 
@@ -32,7 +38,9 @@ El único hueco Chile-específico real era el **Cotizador CHL**, que renderizaba
 | T-04 | Quitar CP del Cotizador Chile (`CreateCHL`) | Claude Code | 2026-07-30 | Eliminado el bloque label/input/validation de `beneficiario.cp` (líneas 252–258). Sin referencias JS huérfanas |
 | T-05 | Confirmar que `PaisCL` no exige CP | Claude Code | 2026-07-30 | Verificado sin cambios: `beneficiario_cp_requerido = false` (línea 1571), `localidades_show_postal_code = false` (línea 1578) |
 | T-06 | Ajuste server-side para no exigir/persistir CP | Claude Code | 2026-07-30 | **N/A** — `beneficiario_poliza.cp` no tiene `[Required]`; `CotizadorController` no referencia `cp` en ningún punto |
-| T-09 | Smoke no-regresión MX/CO (revisión estática) | Claude Code | 2026-07-30 | El diff toca **un solo archivo exclusivo de CHL**. `_LocalidadesMEX`, `CreateMEX`, `PaisMX` y `PaisCO` sin modificar |
+| T-07 | Prueba funcional: emisión Create CHL sin CP | Javier Antonio Oropeza Camacho | 2026-08-11 | Validada en ambiente CHL: el contrato se emite y `beneficiario_poliza.cp` queda null/vacío |
+| T-08 | Prueba funcional: cotización CHL sin CP | Javier Antonio Oropeza Camacho | 2026-08-11 | Validada en ambiente CHL: la cotización concluye sin error JS tras quitar el campo de `CreateCHL.cshtml` |
+| T-09 | Smoke no-regresión MX/CO | Claude Code + Javier Antonio Oropeza Camacho | 2026-07-30 / 2026-08-11 | Revisión estática: el diff toca **un solo archivo exclusivo de CHL**; `_LocalidadesMEX`, `CreateMEX`, `PaisMX` y `PaisCO` sin modificar. Smoke funcional validado en ambiente MX: el lookup de colonias por CP sigue operando |
 | T-10 | Smoke visual CHL | Claude Code | 2026-07-30 | Revisado el grid `tw-grid-cols-2`: al quitar CP el bloque queda telefonos/email → Región/Comuna → dirección (span 2). Sin labels ni huecos huérfanos (de hecho elimina un hueco que existía) |
 | T-11 | Commit y push de la feature | Claude Code | 2026-07-30 | Ver sección Commits |
 
@@ -54,13 +62,7 @@ El único hueco Chile-específico real era el **Cotizador CHL**, que renderizaba
 
 ## Tareas pendientes ⏳
 
-| ID | Tarea | Bloqueada por (si aplica) |
-|---|---|---|
-| T-07 | Prueba funcional: emisión Create CHL sin CP → contrato emitido, `beneficiario_poliza.cp` null/vacío | Requiere ambiente/proyecto con país CHL |
-| T-08 | Prueba funcional: cotización CHL sin CP → OK, sin error JS | Requiere ambiente/proyecto con país CHL |
-| T-09 | Smoke funcional MX (lookup de colonias por CP) y COL | Requiere ambiente MX/COL |
-
-> Nota: T-09 quedó cubierto a nivel de revisión estática (el diff no toca nada compartido); la prueba en ambiente es confirmación adicional recomendada antes del PR a `pre-qa`.
+Ninguna — todas las tareas del plan (T-01 a T-11) quedaron cerradas.
 
 ---
 
@@ -116,8 +118,8 @@ dotnet build GarantiplusWeb/GarantiplusWeb.csproj
 
 | Criterio | Estado |
 |---|---|
-| Emisión Create CHL no renderiza CP | ✅ Verificado en código (ya cubierto por flags en `develop`) — pendiente confirmar en ambiente |
-| Emisión CHL concluye sin capturar/persistir CP | ⏳ Pendiente prueba funcional (T-07) |
+| Emisión Create CHL no renderiza CP | ✅ Verificado en código (ya cubierto por flags en `develop`) y confirmado en ambiente CHL (T-07) |
+| Emisión CHL concluye sin capturar/persistir CP | ✅ Validado en ambiente CHL — 2026-08-11 (T-07) |
 | `PaisCL` no exige CP | ✅ Verificado |
 | Formularios y reglas MX/CO sin cambios | ✅ Verificado (diff toca solo archivo exclusivo CHL) |
 | Cotizador CHL sin CP | ✅ Implementado (T-04) |
@@ -127,18 +129,17 @@ dotnet build GarantiplusWeb/GarantiplusWeb.csproj
 
 ---
 
-## Notas para quien retome el trabajo
+## Notas de cierre
 
-**¿Por dónde continuar?**
-1. Levantar un ambiente/proyecto con país **CHL** y ejecutar T-07 y T-08 (emisión y cotización sin CP).
-2. Smoke MX: confirmar que el lookup de colonias por CP sigue funcionando en `Create` MEX.
-3. Merge de la rama a `pre-qa` y PR `pre-qa → qa` (responsabilidad del programador).
+**Plan cerrado el 2026-08-11.** No hay trabajo abierto en este folio.
+
+**Siguiente paso de proceso:** merge de `feature/PJ2703-ocultar-cp-en-chile` a `pre-qa` y PR `pre-qa → qa` — responsabilidad del programador. Claude Code no crea PRs.
 
 **Contexto importante:**
 - **El PRD tiene una imprecisión:** RF-01 dice que el CP vive en `_BeneficiarioCHL`, pero ese partial nunca tuvo CP. El CP de emisión vive en el partial de localidades compartido (`_LocalidadesMEX` como fallback de CHL), gateado por flag de país. No buscar el campo en `_BeneficiarioCHL`.
 - **Gran parte del MVP ya estaba resuelta en `develop`.** Si Operaciones Chile reporta que sigue viendo el CP en emisión, el siguiente paso es verificar **qué versión está desplegada en el ambiente Chile**, no volver a tocar código.
 
-**Decisiones pendientes que requieren input del equipo o del solicitante:**
+**Follow-ups posibles — fuera del alcance de este folio, no bloquean el cierre:**
 - **Cotizador:** el plan permitía marcar T-04 como N/A si negocio confirmaba que el Cotizador está fuera de alcance. Se optó por incluirlo (es vista exclusiva CHL y mostraba el campo). Si Operaciones dice que no aplica, revertir es un solo commit.
 - **Endosos CHL:** `_BeneficiaryEndorsementCHL`, `_TransferEndorsementCHL` y `_FullPackageAssignmentEndorsementCHL` siguen mostrando CP como **required**. Está fuera del alcance de este folio. Si Operaciones Chile lo pide, abrir un PJ de follow-up.
 - **Leads:** `Areas/Leads/Views/Leads/Contratar.cshtml` también referencia `beneficiario.cp`. No se tocó — fuera del alcance del PRD (emisión/cotizador). Evaluar si aplica a Chile en un follow-up.

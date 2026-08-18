@@ -1,0 +1,22 @@
+﻿empresa,area,nivel,nombre_completo,correo,notas
+Garantiplus Mexico,Contabilidad,Funcional,Ilse Garcia,administracion@garantiplus.mx,Duplicar esta fila por cada area que solicite gastos en esta empresa
+Garantiplus Colombia,Contabilidad,Funcional,Brian ,contabilidad@garantiplus.co,Duplicar esta fila por cada area que solicite gastos en esta empresa
+Garantiplus Chile,Operaciones,Funcional,Andres Merino,andres.merino@garantiplus.cl,Duplicar esta fila por cada area que solicite gastos en esta empresa
+Go Virtual Mexico,Contabilidad,Funcional,Claudia Vigueras,claudia.vigueras@govirtual.com.mx,Duplicar esta fila por cada area que solicite gastos en esta empresa
+Go Virtual Espana,Contabilidad,Funcional,Claudia Vigueras,claudia.vigueras@govirtual.com.mx,No opera aun - dejar vacio si no aplica
+Invarat,Contabilidad,Funcional,Alejandra Cortes,janette.cortes@enginecx.com,Duplicar esta fila por cada area que solicite gastos en esta empresa
+Gplus Seguros,Contabilidad,Funcional,Alejandra Cortes,janette.cortes@enginecx.com,Duplicar esta fila por cada area que solicite gastos en esta empresa
+TPA,Contabilidad,Funcional,Alejandra Cortes,janette.cortes@enginecx.com,Duplicar esta fila por cada area que solicite gastos en esta empresa
+Celta Soluciones,Contabilidad,Funcional,Alejandra Cortes,janette.cortes@enginecx.com,Duplicar esta fila por cada area que solicite gastos en esta empresa
+Engine CX,Contabilidad,Funcional,Ursula garcia,ursula.garcia@garantiplus.mx,Duplicar esta fila por cada area que solicite gastos en esta empresa
+Garantiplus Mexico,NO APLICA,Country Manager,Israel Escutia,israel.escutia@garantiplus.mx,Un solo titular por empresa
+Garantiplus Colombia,NO APLICA,Country Manager,Luz Godoy,luz.godoy@garantiplus.co,Un solo titular por empresa
+Garantiplus Chile,NO APLICA,Country Manager,Fabrizio Alvarez,fabrizio.alvarez@garantiplus.cl,Un solo titular por empresa
+Go Virtual Mexico,NO APLICA,Country Manager,Juan Berner,juan.berner@enginecx.com,Un solo titular por empresa
+Go Virtual Espana,NO APLICA,Country Manager,Roberto Herranz,roberto.herranz@govirtual.es,No opera aun - dejar vacio si no aplica
+Invarat,NO APLICA,Country Manager,Israel Escutia,israel.escutia@garantiplus.mx,Un solo titular por empresa
+Gplus Seguros,NO APLICA,Country Manager,Israel Escutia,israel.escutia@garantiplus.mx,Un solo titular por empresa
+TPA,NO APLICA,Country Manager,Israel Escutia,israel.escutia@garantiplus.mx,Un solo titular por empresa
+TODAS,NO APLICA,CFO,Octavio Zetina Lara,octavio.zetina@enginecx.com,Confirmar correo corporativo
+TODAS,NO APLICA,CEO,Hector Izquierdo,haizquierdo@enginecx.com,Confirmar correo corporativo
+TODAS,NO APLICA,Consejo,Hector Izquierdo,haizquierdo@enginecx.com,Usuario separado del de CEO - requiere un correo distinto al de la fila anterior

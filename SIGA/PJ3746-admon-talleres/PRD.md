@@ -1,168 +1,218 @@
-# PRD - Documentación obligatoria en el registro de talleres (SIGA)
+# PRD - Administración de talleres y documentación obligatoria (SIGA)
 
 | **Campo** | **Detalle** |
 | --- | --- |
-| **Proyecto** | Documentación obligatoria en el registro de talleres (SIGA) |
-| **Área / empresa** | Garantiplus Colombia |
-| **Versión** | v0.1 |
-| **Fecha** | 2026-07-21 |
-| **Autores** | Javier Oropeza |
+| **Proyecto** | Administración de talleres y documentación obligatoria (SIGA) |
+| **Área / empresa** | Garantiplus (México, Colombia y Chile) |
+| **Versión** | v0.2.1 |
+| **Fecha** | 2026-07-21 (v0.1) · Actualizado 2026-08-06 (v0.2 / v0.2.1) |
+| **Autores** | Javier Oropeza · Addendum de alcance: Alejandro Govea Hernandez |
 | **Revisión / liderazgo** | Alexis Herrera (Jefe de Desarrollo) |
 | **Tipo de proyecto** | Feature web/API |
 
 ## 1. Resumen ejecutivo
 
-Este proyecto agrega a **SIGA** la exigencia de **documentación obligatoria** al registrar y actualizar un taller de la red de servicio de **Garantiplus Colombia**. Está dirigido al equipo de **administración operativa** que gestiona la red de talleres y a los **talleres (proveedores)** que se incorporan a ella.
+Este proyecto agrega a **SIGA** un **módulo de administración del taller** y la exigencia de **documentación** (catálogo configurable, requerido u opcional) tanto en el **alta** como en la **actualización** de datos del taller. El alcance aplica a **todos los países** donde opera Garantiplus en SIGA (**México, Colombia y Chile**). Está dirigido a la **administración operativa** que gestiona la red de talleres, a los **talleres (proveedores)** que se incorporan o ya operan en ella, y a **validadores internos** que revisan la veracidad de la información y documentos.
 
-Hoy un taller puede quedar registrado con información mínima y **sin documentación de soporte**, lo que abre la puerta a proveedores no confiables. El registro ocurre por dos caminos —**auto-registro público** y **solicitud interna en SIGA**— y en ninguno existe carga de documentos.
+Hoy un taller puede quedar registrado con información mínima y **sin documentación de soporte**. Tras la aprobación se crea el taller y un usuario con rol `Taller`, que puede operar averías, pero **no existe un área administrativa** donde el taller gestione su expediente (datos fiscales/bancarios y documentos) ni un flujo de validación posterior.
 
-El MVP (alcance único) exige, en ambos caminos, cargar y validar cinco elementos: **RUT, Cámara de Comercio y brochure** (archivos) y **descuentos pactados y cuenta bancaria** (datos estructurados con archivo de soporte). Incluye el **análisis de la cuenta bancaria** dentro de este desarrollo. La documentación se exige tanto en el **alta** como al **actualizar datos sensibles**.
+El MVP exige:
 
-El resultado esperado es **reducir el riesgo de proveedores no confiables** y mejorar la calidad de la red: ningún taller queda aprobado/activo sin documentación completa y validada por el aprobador.
+1. **Documentación en el alta** (auto-registro público y solicitud interna), según un **catálogo** de documentos requeridos/opcionales.
+2. Un **módulo de administración** post-alta donde el taller actualice datos (`nombre_taller`, `rfc`, `cp`, `municipio`, `colonia`, `direccion`, `telefonos`, `observaciones`, CLABE/`iban`, `banco`, `sucursal`, número de cuenta) y suba documentos.
+3. Un **flujo de validación**: al subir o actualizar información, el taller queda en estatus de validación y se notifica por correo a uno o varios validadores definidos en settings; se audita quién validó qué y cuándo; el validador ve quién cargó/cambió y cuándo.
+4. **Roles diferenciados** vinculados a un solo taller: `Taller-Administracion` (admin + ver averías sin mutar) y `Taller-Averias` (crear/seguimiento de averías, sin admin).
+5. **Compuerta configurable** al subir factura de avería para pago: si el taller no tiene información/documentos validados, se le pide completar la administración primero (habilitable desde settings).
+6. **Almacenamiento dual** (servidor + bucket S3), con `uri` en metadatos y descarga con fallback.
 
-**Registro/actualización de taller** → **Carga de documentos obligatorios** → **Validación de obligatoriedad** → **Revisión y aprobación** → **Taller aprobado/activo**
+El resultado esperado es **reducir el riesgo de proveedores no confiables**, mejorar la calidad de la red y dar a los talleres un expediente administrativo trazable y validado.
+
+**Alta / actualización** → **Carga de datos y documentos** → **Validación de obligatoriedad** → **Revisión por validador** → **Taller / perfil validado** → (opcional) **Compuerta en factura de avería**
 
 ## 2. Contexto y problema
 
-- **Proceso actual:** un taller ingresa a la red por dos vías: (a) **auto-registro público** (el propio taller se registra) y (b) **solicitud interna en SIGA**. En ambas se captura información mínima y **no hay carga de documentos**. Existe además un **flujo de actualización de cuenta bancaria** ya operativo.
-- **Dolor concreto:** al no exigirse documentación de soporte, se pueden dar de alta talleres sin validar su formalidad legal, comercial ni bancaria — riesgo de proveedores no confiables en la red de servicio.
-- **Por qué ahora:** es un tema de **alta importancia** por reducción de riesgo y calidad de la red; hoy no existe ningún mecanismo de carga documental.
-- **Conceptos clave del dominio:**
-  - **Alta** (registro nuevo del taller) vs. **actualización** (modificación de datos, en particular la cuenta bancaria) — la exigencia documental aplica a ambos.
-  - **Auto-registro público** vs. **solicitud interna en SIGA** — dos puntos de entrada que deben quedar cubiertos por igual.
-  - **Documento-archivo** (RUT, Cámara de Comercio, brochure) vs. **dato estructurado con soporte** (descuentos pactados, cuenta bancaria).
+- **Proceso actual:** el taller ingresa por (a) **auto-registro público** o (b) **solicitud interna en SIGA**. Si se aprueba, se crea el registro de taller y un usuario con rol `Taller`. Ese usuario puede consultar, crear y dar seguimiento a averías. Existe actualización de cuenta bancaria operativa, pero **sin archivo de soporte ni flujo de validación documental**.
+- **Dolor concreto:** no hay carga documental obligatoria en el alta, no hay módulo donde el taller administre su expediente, no hay validadores notificados ni auditoría de validación, y se pueden pagar facturas de avería aunque el taller no tenga datos/documentos validados.
+- **Por qué ahora:** alta importancia por reducción de riesgo y calidad de la red; el addendum de alcance (2026-08-06) amplía el PRD v0.1 de “docs en el alta” a **administración continua del taller**.
+- **Conceptos clave:**
+  - **Alta** vs. **administración post-alta** (módulo nuevo).
+  - **Catálogo de documentos** (requerido/opcional) vs. lista fija hardcodeada.
+  - **Validador** (interno, settings) vs. aprobador de alta de taller (pueden solaparse según operación).
+  - **Roles** `Taller-Administracion` / `Taller-Averias` / legacy `Taller`.
 
 ## 3. Objetivo del producto
 
-Garantizar que todo taller de la red de **Garantiplus Colombia** cuente con **documentación obligatoria cargada y validada** —RUT, Cámara de Comercio, brochure, descuentos pactados y cuenta bancaria— tanto al **registrarse** (por canal público o solicitud interna) como al **actualizar sus datos sensibles**, con el fin de **reducir el riesgo de proveedores no confiables** y elevar la calidad de la red de servicio. El alcance es **único** (sin fases) e incluye el análisis de la cuenta bancaria dentro de este desarrollo.
+Garantizar que los talleres de la red de **Garantiplus en México, Colombia y Chile** cuenten con **información administrativa y documentación cargada y validada** —tanto al registrarse como al actualizar su expediente— mediante un **módulo de administración**, un **catálogo de documentos** (seed/tipos por país cuando aplique), un **flujo de validación auditado** y, de forma configurable, una **compuerta al subir factura de avería**, con el fin de **reducir el riesgo de proveedores no confiables** y elevar la calidad de la red de servicio.
 
 ## 4. Usuarios y actores
 
 | **Usuario / Actor** | **Rol en el proceso** |
 | --- | --- |
-| Taller (proveedor) | Se auto-registra (canal público) o es capturado por solicitud interna; **sube su propia documentación y datos** (RUT, Cámara de Comercio, brochure, descuentos, cuenta bancaria). |
-| Aprobador de talleres | Rol interno único: **revisa toda la documentación, valida la cuenta bancaria y aprueba o rechaza** el taller. Lo hace todo. |
-| Operador interno de SIGA | Gestiona la **solicitud interna** de taller. |
-| Administración operativa / gerencia de red | Dueña del proceso; responsable de la calidad de la red de talleres. |
-| TI / Desarrollo (Alexis Herrera) | Diseño técnico, construcción y soporte de la funcionalidad. |
+| Taller (rol legacy `Taller`) | Tras el alta puede operar averías; con el cambio, también accede a la administración del taller (según decisión de convivencia con roles nuevos). |
+| Usuario `Taller-Administracion` | Vinculado a un solo taller: administra datos y documentos; ve listado y detalle de averías **sin** poder actuar sobre ellas. |
+| Usuario `Taller-Averias` | Vinculado a un solo taller: crea averías y da seguimiento; **sin** acceso al módulo de administración. |
+| Validador(es) interno(s) | Definidos en settings (uno o varios): reciben correo al haber cambios; revisan y aprueban/rechazan documentos e información; quedan registrados en la auditoría. |
+| Aprobador de talleres | Revisa la solicitud de alta (incluye documentación del catálogo) y aprueba o rechaza el alta del taller. |
+| Operador interno de SIGA | Gestiona la solicitud interna de taller. |
+| Administración operativa / gerencia de red | Dueña del proceso; responsable de la calidad de la red. |
+| TI / Desarrollo | Diseño técnico, construcción y soporte. |
 
 ## 5. Alcance MVP y funcionalidades
 
 | **Funcionalidad** | **Descripción** |
 | --- | --- |
-| Carga documental en auto-registro público | El taller sube RUT, Cámara de Comercio y brochure (archivos) y captura descuentos pactados y cuenta bancaria (datos + archivo de soporte). |
-| Carga documental en solicitud interna SIGA | Los mismos documentos y datos se cargan/gestionan en el flujo de solicitud interna. |
-| Modelo de datos de documentos de taller | Nueva tabla/modelo en PostgreSQL para metadatos de cada documento (tipo, archivo, estatus, quién y cuándo). |
-| Almacenamiento en S3 | Los archivos se guardan en Amazon S3; en la base de datos se guardan sus metadatos y referencia. |
-| Validación de obligatoriedad | El sistema **impide enviar** el registro/solicitud si falta cualquier documento o dato obligatorio. |
-| Documentación en actualización de datos sensibles | Al actualizar la cuenta bancaria (y demás datos sensibles) se exige el soporte correspondiente. |
-| Flujo de aprobación | El aprobador revisa cada documento, valida la cuenta bancaria y **aprueba o rechaza** el taller. |
-| Análisis de cuenta bancaria | Incluido en el alcance único (ver Preguntas abiertas para las reglas exactas del análisis). |
+| Alta con documentación (catálogo) | En auto-registro público y solicitud interna se cargan los documentos definidos en el catálogo (requeridos/opcionales) y los datos administrativos/bancarios aplicables. |
+| Creación de taller y usuario al aprobar | Se mantiene el comportamiento actual: al aprobar se crea el taller y el usuario (rol a acordar: `Taller` y/o roles nuevos). |
+| Catálogo de documentos | Tabla que define qué documentos se solicitan al taller e indica si cada uno es **requerido** u **opcional**. |
+| Módulo de administración del taller | Pantalla nueva donde el taller gestiona: `nombre_taller`, `rfc`, `cp`, `municipio`, `colonia`, `direccion`, `telefonos`, `observaciones`, CLABE/`iban`, `banco`, `sucursal`, número de cuenta, y sus documentos. |
+| UI de completitud | El taller ve de forma clara: documentos subidos, estatus de validación y faltantes (documentos e información). |
+| Flujo de validación post-cambio | Al subir o actualizar información/documentos, el taller queda en estatus de validación y se envía correo a los validadores configurados. |
+| Auditoría de validación | Se guarda quién validó, qué documento/información validó y la fecha/hora. El validador ve quién subió o cambió y cuándo. |
+| Almacenamiento dual | Archivos en servidor y en bucket (patrón contratos); ruta base en settings; campo `uri` por archivo. |
+| Descarga de documentos | Desde servidor o bucket; si no está en ninguno, mensaje de que el documento no se encuentra. |
+| Roles `Taller-Administracion` y `Taller-Averias` | Permisos diferenciados como se describe en §4; usuarios vinculados a un solo taller. |
+| Compuerta en factura de avería | Si el taller no tiene información/documentos validados al subir factura para pago, se le solicita completar y validar su administración. **Configurable en settings** (habilitar/deshabilitar). |
+| Guardarraíl de aprobación de alta | Ningún taller nuevo queda aprobado/activo sin la documentación **requerida** del catálogo completa y validada (en MX, COL y CHL). |
 
-**Principio rector del MVP:** *un taller no puede quedar aprobado/activo sin la documentación obligatoria completa y validada.*
+**Principio rector del MVP:** *un taller no puede quedar aprobado/activo sin la documentación requerida validada; y, si la compuerta de factura está activa, no puede cobrar vía factura de avería con expediente incompleto o no validado.*
 
 ## 6. Fuera de alcance
 
-- **Verificación automática de RUT / Cámara de Comercio contra fuentes oficiales:** la validación la realiza el aprobador **manualmente**; no hay integración externa automatizada. Se habilitaría si se decide invertir en una integración con las fuentes oficiales.
-- **OCR / extracción automática de datos de los documentos:** no se lee el contenido de los archivos para pre-llenar campos. Requeriría un componente de OCR adicional.
-- **Gestión de vencimiento / renovación de documentos:** no se controla caducidad ni recordatorios de renovación. Sería una evolución posterior.
-- **Validación bancaria externa:** no se verifica la cuenta contra el banco ni una API externa; solo el análisis/revisión interna del aprobador.
-- **Regularización retroactiva de talleres existentes:** la exigencia aplica **solo a nuevos registros y a actualizaciones futuras**; los talleres ya registrados no se obligan a subir documentación en este MVP.
+- **Verificación automática de documentos contra fuentes oficiales** (RUT, RFC, Cámara de Comercio, etc.): la validación la realiza el validador/aprobador manualmente.
+- **OCR / extracción automática** de datos desde los archivos.
+- **Gestión de vencimiento / renovación** automática de documentos.
+- **Validación bancaria externa** contra el banco o APIs de terceros.
+- **Regularización masiva retroactiva** de talleres existentes: no se obliga a todos a subir documentación de golpe; el módulo admin permite completar de forma voluntaria y la compuerta de factura puede forzarlos si el flag está activo.
+- **Administración del catálogo de documentos vía UI avanzada** (CRUD completo de tipos): puede diferirse; el MVP puede seedear el catálogo por script/SQL.
 
 ## 7. Flujos principales
 
 ```mermaid
 flowchart TD
-    A[Inicio: alta o actualización de taller] --> B{Canal}
-    B -->|Auto-registro público| C[Taller carga documentos y datos]
-    B -->|Solicitud interna SIGA| C
-    C --> D[RUT, Cámara de Comercio, brochure,<br/>descuentos, cuenta bancaria]
-    D --> E{¿Documentación obligatoria completa?}
-    E -->|No| F[Bloqueo: no permite enviar]
-    F --> C
-    E -->|Sí| G[Archivos a S3 + metadatos a PostgreSQL]
-    G --> H[Aprobador revisa documentos<br/>y valida cuenta bancaria]
-    H --> I{¿Completo y válido?}
-    I -->|No| J[Rechazo / devolución al taller]
-    J --> C
-    I -->|Sí| K[Taller aprobado / activo]
+    A[Inicio] --> B{Canal}
+    B -->|Alta: auto-registro / solicitud| C[Carga datos + docs del catálogo]
+    B -->|Post-alta: módulo admin| C
+    C --> D{¿Requeridos completos?}
+    D -->|No| E[Bloqueo / faltantes visibles]
+    E --> C
+    D -->|Sí| F[Servidor + S3 + metadatos]
+    F --> G[Estatus: pendiente de validación]
+    G --> H[Correo a validadores settings]
+    H --> I[Validador revisa autor, fecha, contenido]
+    I --> J{¿Válido?}
+    J -->|No| K[Rechazo + motivo + taller corrige]
+    K --> C
+    J -->|Sí| L[Auditoría: quién / qué / cuándo]
+    L --> M{¿Es alta?}
+    M -->|Sí| N[Aprobar taller + crear usuario]
+    M -->|No| O[Perfil administrativo validado]
+    O --> P{Factura avería + flag ON?}
+    P -->|Perfil no validado| Q[Bloqueo: completar administración]
+    P -->|Validado o flag OFF| R[Flujo de factura actual]
 ```
-
-El flujo unifica los dos canales de entrada en un mismo punto de carga documental. La **validación de obligatoriedad** actúa como compuerta previa al envío (no deja avanzar sin documentación completa), y la **aprobación humana** es la segunda compuerta: el aprobador es quien finalmente valida y decide. El mismo flujo aplica al actualizar datos sensibles (p. ej. cuenta bancaria), exigiendo el soporte antes de guardar el cambio.
 
 ## 8. Requerimientos funcionales
 
 | **ID** | **Requerimiento** | **Descripción** |
 | --- | --- | --- |
-| RF-01 | Carga documental en auto-registro público | El taller carga RUT, Cámara de Comercio y brochure (archivos) y captura descuentos pactados y cuenta bancaria (datos + archivo de soporte). |
+| RF-01 | Carga documental en auto-registro público | El taller carga los documentos del catálogo y los datos administrativos/bancarios aplicables. |
 | RF-02 | Carga documental en solicitud interna | Los mismos documentos/datos se cargan en el flujo de solicitud interna de SIGA. |
-| RF-03 | Validación de obligatoriedad | El sistema impide finalizar/enviar el registro o solicitud si falta cualquier documento o dato obligatorio. |
-| RF-04 | Almacenamiento de archivos | Los archivos se guardan en Amazon S3 y sus metadatos (tipo, referencia, estatus, autor, fecha) en PostgreSQL. |
-| RF-05 | Documentación en actualización | Al actualizar la cuenta bancaria u otros datos sensibles, el sistema exige el soporte correspondiente antes de guardar. |
-| RF-06 | Flujo de aprobación | El aprobador revisa cada documento, valida la cuenta bancaria y aprueba o rechaza el taller, registrando el resultado. |
-| RF-07 | Estado condicionado a documentación | Ningún taller puede quedar aprobado/activo sin documentación obligatoria completa y validada. |
-| RF-08 | Formatos soportados | El sistema acepta archivos PDF, JPG y PNG. |
-| RF-09 | Roles diferenciados | El taller sube su documentación; el aprobador revisa, aprueba o rechaza. |
-| RF-10 | Trazabilidad de la decisión | Se registra quién cargó cada documento y quién aprobó/rechazó, con fecha/hora y motivo de rechazo. |
+| RF-03 | Validación de obligatoriedad | El sistema impide finalizar/enviar si falta cualquier documento o dato **requerido**. |
+| RF-04 | Catálogo de documentos | Existe una tabla/catálogo que define documentos solicitados e indica si son requeridos u opcionales. |
+| RF-05 | Almacenamiento dual | Los archivos se guardan en servidor y bucket; metadatos en PostgreSQL incluyen `uri` y referencia para descarga. |
+| RF-06 | Descarga de documentos | La descarga intenta servidor y/o bucket; si no existe, se informa que el documento no se encuentra. |
+| RF-07 | Módulo de administración del taller | El taller (según rol) edita los campos administrativos definidos y gestiona documentos. |
+| RF-08 | UI de completitud | Vista clara de documentos subidos, estatus de validación y faltantes (docs e información). |
+| RF-09 | Estatus de validación al cambiar | Al subir/actualizar información o documentos, el expediente queda en validación y se notifica a validadores (settings, 1..N). |
+| RF-10 | Auditoría de validación | Se registra quién validó, qué validó y fecha/hora; el validador ve autor y fecha de la carga/cambio. |
+| RF-11 | Flujo de aprobación de alta | El aprobador revisa documentación y datos; no se activa el taller sin docs requeridos validados. |
+| RF-12 | Creación de usuario al aprobar | Al aprobar el alta se crea el usuario vinculado al taller (comportamiento actual, extendido con roles nuevos según acuerdo). |
+| RF-13 | Rol `Taller-Administracion` | Acceso al módulo admin; listado y detalle de averías en solo lectura. |
+| RF-14 | Rol `Taller-Averias` | Crear y dar seguimiento a averías; sin acceso al módulo de administración. |
+| RF-15 | Compuerta configurable en factura | Si el flag de settings está activo y el taller no tiene información/documentos validados, se bloquea la carga de factura de pago y se orienta a completar la administración. |
+| RF-16 | Formatos soportados | PDF, JPG y PNG. |
+| RF-17 | Trazabilidad de cargas | Se registra quién cargó cada documento y cuándo. |
 
 ## 9. Requerimientos no funcionales
 
 | **ID** | **Requerimiento** | **Descripción** |
 | --- | --- | --- |
-| RNF-01 | Seguridad y permisos | Control de acceso por rol: el taller solo carga/ve su documentación; el aprobador puede revisar y cambiar estatus. Control de permisos estándar (sin requerimientos especiales de cifrado solicitados). |
-| RNF-02 | Trazabilidad / auditabilidad | Auditoría de cargas, aprobaciones y rechazos (usuario, fecha/hora, motivo). |
-| RNF-03 | Almacenamiento y consistencia | Archivos en S3 y metadatos en PostgreSQL deben mantenerse consistentes (referencia válida ↔ archivo existente). |
-| RNF-04 | Manejo de errores en carga | Manejo controlado de fallos de subida (archivo corrupto, formato inválido, interrupción) con mensaje claro al usuario. |
+| RNF-01 | Seguridad y permisos | Control por rol y vínculo a un solo taller; validadores solo mutan estatus de validación. |
+| RNF-02 | Trazabilidad / auditabilidad | Auditoría de cargas, cambios, aprobaciones y rechazos (usuario, fecha/hora, motivo). |
+| RNF-03 | Almacenamiento y consistencia | Archivo en servidor y/o S3 coherente con metadatos (`uri`). |
+| RNF-04 | Manejo de errores en carga/descarga | Fallos de subida o archivo inexistente con mensaje claro en español. |
 | RNF-05 | Formatos soportados | PDF, JPG y PNG. |
-| RNF-06 | Límite de tamaño de archivo | **Pendiente de definir** (hoy no hay tope establecido) — ver Preguntas abiertas. |
-| RNF-07 | Disponibilidad | El canal público de carga debe estar disponible para los talleres; nivel exacto (24/7 vs. horario operativo) a confirmar. |
+| RNF-06 | Límite de tamaño de archivo | **Pendiente de definir** (propuesta técnica: 5 MB) — ver Preguntas abiertas. |
+| RNF-07 | Configuración externa | Validadores, ruta base de archivos, prefijo S3 y flag de compuerta de factura viven en settings (no hardcode). |
+| RNF-08 | Disponibilidad | Canal de carga disponible para talleres; nivel exacto (24/7 vs. horario) a confirmar. |
 
 ## 10. Integraciones y datos
 
 | **Integración / Fuente** | **Uso esperado** |
 | --- | --- |
-| SIGA (registro público + solicitud interna + módulo de talleres) | Lectura/escritura del registro del taller; punto donde se insertan la carga documental y las validaciones de obligatoriedad y aprobación. |
-| Amazon S3 | Escritura/lectura de los archivos de documentos del taller. |
-| PostgreSQL / RDS | Nueva tabla/modelo de documentos de taller (metadatos y estatus). |
+| SIGA (registro público, solicitud, averías, nuevo módulo admin) | Lectura/escritura del taller; carga documental; validación; compuerta de factura. |
+| Amazon S3 + filesystem local | Escritura/lectura de documentos del taller (patrón contratos). |
+| PostgreSQL / RDS | Catálogo de tipos, metadatos de documentos, bitácora de validación, roles Identity. |
+| Correo (`IEmailSender`) | Notificación a validadores al haber cambios pendientes. |
 
-**Datos mínimos requeridos:** `taller_id`, `tipo_documento` (RUT / Cámara de Comercio / brochure / descuentos / cuenta bancaria), `archivo_ref` (URL/clave S3), `fecha_carga`, `cargado_por`, `estatus_validacion`, `aprobado_por`, `fecha_aprobacion`, `motivo_rechazo`; datos estructurados de **descuentos pactados** y de **cuenta bancaria** (p. ej. banco, número, tipo de cuenta, titular — campos exactos a definir).
+**Datos mínimos:**
 
-**Esquema de permisos:** el **taller** puede crear y cargar su propia documentación y datos; el **aprobador** puede leer toda la documentación de un taller y cambiar su estatus (aprobar/rechazar); **queda bloqueado** activar/aprobar un taller sin documentación obligatoria completa. No hay validación automática contra fuentes externas.
+- Catálogo: `tipo_documento`, `requerido`, `activo`, `pais` (tipos pueden variar por país: p. ej. RUT/Cámara en COL vs RFC/Constancia en MX).
+- Documento: `taller_id` / `solicitud_id`, `tipo_documento`, `uri`, ruta local, `fecha_carga`, `cargado_por`, `estatus_validacion`, `validado_por`, `fecha_validacion`, `motivo_rechazo`.
+- Administrativos: `nombre_taller`, `rfc`, `cp`, `municipio`, `colonia`, `direccion`, `telefonos`, `observaciones`, CLABE/`iban`, `banco`, `sucursal`, número de cuenta.
+- Settings: lista de validadores, ruta base, prefijo S3, flag `EnforceValidatedProfileOnInvoice`.
 
-## 12. Métricas de éxito
+## 11. Métricas de éxito
 
-Por decisión del solicitante, **no se definen métricas cuantitativas** en este PRD. De requerirse más adelante, podrán definirse con administración operativa (p. ej. % de talleres nuevos con documentación completa, rechazos por documentación faltante).
+Por decisión del solicitante en v0.1, **no se definen métricas cuantitativas**. De requerirse, podrán definirse con administración operativa (p. ej. % de talleres con expediente validado, bloqueos de factura por perfil incompleto).
 
-## 13. Riesgos y supuestos
+## 12. Riesgos y supuestos
 
 ### Riesgos
 
 | **Riesgo** | **Impacto potencial** |
 | --- | --- |
-| Análisis de la cuenta bancaria aún no resuelto | Puede cambiar el comportamiento/alcance de esa parte una vez definidas las reglas del análisis. |
-| Talleres existentes sin documentación (no retroactivo) | Red mixta: coexisten talleres documentados (nuevos) y no documentados (previos). |
-| Sin límite de tamaño de archivo definido | Costos de almacenamiento S3 no acotados y posibles cargas excesivas. |
-| Datos sensibles (cuenta bancaria) sin cifrado especial | Riesgo de exposición si cambian las políticas de seguridad. |
-| Validación 100% manual (sin verificación automática) | Dependencia del criterio del aprobador; riesgo de error humano o documentación fraudulenta no detectada. |
+| Catálogo/documentos distintos por país (MX / COL / CHL) | Seed incompleto o etiquetas incorrectas por país pueden bloquear altas legítimas. |
+| Convivencia del rol `Taller` con roles nuevos | Riesgo de menús/autorizaciones rotas si no se define la matriz de permisos. |
+| Análisis de cuenta bancaria aún no resuelto | Puede cambiar el comportamiento de esa parte. |
+| Compuerta de factura activada de forma prematura | Puede bloquear operación real de talleres sin expediente validado. |
+| Talleres existentes sin documentación | Red mixta; la compuerta puede forzar regularización gradual. |
+| Sin límite de tamaño de archivo definido | Costos de almacenamiento no acotados. |
+| Validación 100% manual | Dependencia del criterio del validador; riesgo de error humano. |
 
 ### Supuestos
 
 | **Supuesto** | **Descripción** |
 | --- | --- |
-| Validación manual | El aprobador valida los documentos sin integración con fuentes oficiales. |
-| Aplica solo a nuevos | La exigencia rige para nuevos registros y actualizaciones futuras; no es retroactiva. |
-| Análisis bancario dentro del alcance | El "análisis pendiente" de la cuenta bancaria se resuelve dentro de este desarrollo (alcance único). |
-| SIGA expone los puntos de integración | El registro público y la solicitud interna permiten insertar la carga documental y las validaciones. |
-| S3 disponible | Amazon S3 es el almacenamiento definido para los archivos. |
+| Validación manual | El validador/aprobador valida sin integración con fuentes oficiales. |
+| No hay regularización masiva | La exigencia rige para nuevos registros y actualizaciones; históricos vía módulo admin y/o flag de factura. |
+| Storage dual disponible | Mismo patrón operativo que contratos (servidor + bucket). |
+| Settings operables por ambiente | Validadores y flags se configuran sin redeploy de código de negocio (appsettings / secrets). |
 
-## 14. Preguntas abiertas
+## 13. Preguntas abiertas
 
-| **Tema** | **Pregunta abierta** |
+| **Tema** | **Estado** |
 | --- | --- |
-| Cuenta bancaria | ¿En qué consiste exactamente el "análisis para actualización" pendiente? ¿Qué reglas/validaciones debe aplicar? |
-| Datos estructurados | ¿Qué campos exactos componen "descuentos pactados" y "cuenta bancaria"? |
-| Límite de archivo | ¿Cuál es el tamaño máximo permitido por archivo (y formatos aceptados por tipo de documento)? |
-| Disponibilidad | ¿El canal de carga debe estar 24/7 o solo en horario operativo? |
-| Notificaciones | ¿Se debe notificar al taller el resultado (aprobado/rechazado)? (hoy fuera de alcance; confirmar). |
-| Talleres existentes | ¿Habrá una campaña futura de regularización documental para los talleres ya registrados? |
-| Retención | ¿Hay requisitos de retención/eliminación de los documentos almacenados? |
+| Catálogo por país | **Cerrado** — tabla `documento_solicitado_taller`; datos pre-cargados en BD; sin UI CRUD en MVP. |
+| Cuenta bancaria / análisis | **Cerrado** — checklist manual; duda → contacto externo; histórico al aprobar. |
+| Descuentos pactados | **Cerrado** — fuera de alcance; mejora posterior. |
+| Rol `Taller` legacy | **Cerrado** — convive con acceso completo; roles nuevos adicionales. |
+| Nombres de roles | **Cerrado** — `Taller-Administracion`, `Taller-Averias`. |
+| Límite de archivo | **Cerrado** — 5 MB; visible en UI; settings. |
+| Flag de factura | **Cerrado** — default `true`; apagable por settings. |
+| Disponibilidad | **Cerrado** — hereda SIGA. |
+| Notificaciones al taller | **Cerrado** — sí, gobernado por settings (apagar en pruebas). |
+| Talleres existentes | **Cerrado** — sin campaña masiva; regularización al pedir pago de avería. |
+| Retención | **Cerrado** — sin política especial; como contratos. |
+| API Workshops | **Cerrado** — fuera de alcance MVP. |
+
+---
+
+### Historial de versiones
+
+| Versión | Fecha | Cambio |
+| --- | --- | --- |
+| v0.1 | 2026-07-21 | Alcance inicial: documentación obligatoria en alta (RUT, Cámara, brochure, descuentos, cuenta bancaria) — Colombia. |
+| v0.2 | 2026-08-06 | Addendum: módulo admin, catálogo requerido/opcional, validadores + correo, auditoría, roles nuevos, storage dual, compuerta factura configurable. |
+| v0.2.1 | 2026-08-06 | Alcance multi-país explícito: México, Colombia y Chile (no solo Colombia). |
+| v0.2.2 | 2026-08-06 | Preguntas abiertas T-01 cerradas (catálogo, roles, settings, compuerta factura, etc.). |

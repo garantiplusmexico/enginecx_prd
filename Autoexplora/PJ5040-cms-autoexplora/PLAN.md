@@ -61,8 +61,8 @@ CMS acotado y **aislado** para que el cliente Autoexplora gestione su propio con
 - [ ] **Repositorio nuevo `autoexplora-cms` creado** en `Sitios-Web-Go-Virtual` con acceso al equipo de desarrollo.
 - [ ] Acceso confirmado al repo del sitio `autoexplora-alfa` (rama `dev` para preview).
 - [x] **Buckets S3** `govirtual-autoexplora-cms-prod` y `govirtual-autoexplora-cms-qa` — credenciales IAM entregadas (un solo usuario con acceso a ambos buckets; ver riesgo en §11).
-- [ ] **Instancia EC2** (Ubuntu recomendado, a definir por el equipo de infraestructura) con PostgreSQL local y Nginx; aprovisionamiento fuera del alcance de este plan.
-- [ ] Secrets definidos: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, credenciales S3, credenciales DB (nunca en código — AWS Secrets Manager / variables de entorno).
+- [x] **Instancia EC2** (Ubuntu, aprovisionada por Alexis Herrera) con PostgreSQL local y Nginx — QA (2026-07-31) y producción (2026-08-07), instancias separadas.
+- [x] Secrets definidos: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, credenciales S3, credenciales DB — generados por ambiente (nunca en código, solo en `.env` de cada instancia).
 - [ ] `CLAUDE.md` presente en el repo del CMS (ejecutar `/init` en el repo nuevo tras el scaffold de Strapi).
 - [x] **Decisión técnica confirmada** (2026-07-17, por el programador) sobre el modelo de publicación borrador→`dev`→producción: Draft & Publish nativo de Strapi + webhook (ver §3).
 - [ ] Disponibilidad de Memo para dudas puntuales sobre infra/API existente.
@@ -216,8 +216,10 @@ Fases alineadas a la priorización del PRD (P1 → P2 → P3) con una Fase 0 de 
 
 - [ ] **T-18** — Manejo de errores y mensajes claros (formato/peso/subida/publicación) + observabilidad (logs).
   - Criterio (RNF-06/RNF-09/RNF-10): mensajes de error claros para usuarios no técnicos; logs de publicaciones y fallos.
-- [ ] **T-19** — Despliegue a la instancia EC2 (Nginx + systemd), verificación 24/7 (health checks, `systemctl enable` para arranque automático) y monitoreo de facturación AWS.
-  - Criterio (RNF-04): CMS disponible; servicio se reinicia solo ante fallo/reinicio de la instancia; alertas de billing configuradas.
+- [x] **T-19** — Despliegue a la instancia EC2 (Nginx + systemd), verificación 24/7 (health checks, `systemctl enable` para arranque automático) y monitoreo de facturación AWS. *(QA completo 2026-07-31; producción completa 2026-08-07 — ver AVANCE.md)*
+  - Criterio (RNF-04): CMS disponible; servicio se reinicia solo ante fallo/reinicio de la instancia; alertas de billing configuradas. ✅ (QA) / ✅ (producción — instancia separada `govirtual-autoexplora-cms-prod`, secrets propios, alertas de facturación confirmadas por Alexis Herrera)
+  - **Adelantado fuera de orden:** QA se ejecutó antes que T-16/T-17 (Fase 3) porque el programador priorizó tener un ambiente real para validar todo lo construido en P1/P2, en vez de seguir el orden estricto de fases.
+  - ⏳ **Único sub-pendiente:** bucket S3 privado dedicado para backup externo de la base de datos de producción (lo hará Alexis Herrera después — mismo esquema de `pg_dump` local sin backup externo que QA mientras tanto).
 
 ---
 
@@ -267,6 +269,8 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 | `STRAPI_PUBLICATION_STATUS` (en el sitio) | `draft` en preview (`dev`) / `published` en producción | Dev / Prod |
 | `SITE_REVALIDATE_WEBHOOK_URL` (en el CMS) | URL del endpoint de revalidación del sitio; sin ella, el webhook no se registra (T-11 debe proveerla) | Prod |
 | `PREVIEW_WEBHOOK_SECRET` (en el CMS y el sitio) | Firma del webhook de publicación (header `X-Webhook-Secret`) | Prod |
+| `SITE_URL` (en el CMS) | URL del sitio a la que apunta el botón "Previsualización" de Banner/Artículo | Dev / QA / Prod |
+| `PREVIEW_SECRET` (en el CMS y el sitio, mismo valor) | Autoriza `/api/preview` en el sitio a activar el Draft Mode de Next.js | Dev / QA / Prod |
 
 > Todos los secrets viven en variables de entorno / AWS Secrets Manager. Nunca en el código (`coding-guidelines.md` §11, `infraestructura.md` §5).
 
@@ -306,7 +310,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 - [ ] Guardar borrador → visible en preview (`dev`); publicar → visible en producción; despublicar/revertir disponible (RF-06/RF-07/RNF-05).
 - [ ] Media almacenada en S3 (RF-12).
 - [ ] Auditoría de acciones por usuario registrada (RNF-03).
-- [ ] CMS desplegado en la instancia EC2 (Nginx + systemd) y disponible 24/7 (RNF-04).
+- [x] CMS desplegado en la instancia EC2 (Nginx + systemd) y disponible 24/7 (RNF-04). ✅ QA y producción, ambas verificadas.
 - [ ] **(P2, si tiempo)** CRUD de blog con editor enriquecido y embeds (RF-08/RF-09).
 - [ ] **(P3, si tiempo)** Edición de textos estáticos por sección (RF-10).
 
@@ -326,7 +330,7 @@ Strapi expone automáticamente REST (y opcionalmente GraphQL) por content type. 
 | Sanitización de embeds del editor (XSS) | Baja | Medio | Sanitizar HTML/embeds; whitelist de dominios (YouTube/redes) |
 | App + BD en la misma instancia EC2 (sin RDS) | Media | Alto | Backups manuales (`pg_dump` programado); si la instancia falla, se pierde app y datos juntos. Decisión de infraestructura ya tomada por el programador — mitigar con backups frecuentes, no revertir sin autorización |
 | Un solo usuario IAM con acceso a ambos buckets S3 (prod y qa) | Baja | Medio | Sin aislamiento entre ambientes a nivel de credencial; una fuga de la credencial de qa expone también prod. Aceptado por el programador; recomendable separar en el futuro |
-| Instancia EC2 no existe aún (la crea el equipo de infraestructura) | Media | Medio | Fase 0 (T-05) deja Nginx/systemd/guía listos pero sin poder verificar en la instancia real hasta que exista; verificación real pendiente |
+| ~~Instancia EC2 no existe aún (la crea el equipo de infraestructura)~~ | ~~Media~~ | ~~Medio~~ | ✅ **Resuelto**: QA desplegada y verificada 2026-07-31; producción desplegada y verificada 2026-08-07 (instancia separada, secrets propios). Ver T-19 en AVANCE.md |
 | ~~Buckets S3 sin bucket policy de lectura pública~~ (ACLs deshabilitadas) | ~~Alta~~ | ~~Alto~~ | ✅ **Resuelto 2026-07-17**: Alexis Herrera aplicó bucket policy de `s3:GetObject` público + ajustó Block Public Access en ambos buckets. Verificado con `curl` → `200 OK` |
 | Buckets S3 sin configuración de CORS | Alta | Medio | Las miniaturas de imagen/video no se ven en el admin (aunque las URLs son públicas) porque el navegador necesita encabezados `Access-Control-Allow-Origin` que el bucket no manda. Solicitado a Alexis Herrera (2026-07-20): CORS con `AllowedMethods: GET`, `AllowedOrigins: "*"` en ambos buckets. No bloquea el desarrollo backend, sí la experiencia visual en admin/sitio hasta resolverse |
 

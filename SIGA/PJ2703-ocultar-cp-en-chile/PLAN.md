@@ -10,10 +10,11 @@
 | Rama base | `develop` |
 | Rama | `feature/PJ2703-ocultar-cp-en-chile` |
 | Tipo | Feature |
-| Responsable | Javier Oropeza |
+| Responsable | Javier Antonio Oropeza Camacho (javier.oropeza@garantiplus.mx) |
 | Folio PRD | `PJ2703` |
 | Fecha de generación | 2026-07-23 |
-| Estado | Borrador |
+| Fecha de cierre | 2026-08-11 |
+| Estado | ✅ Finalizado — liberado a producción (2026-08-14) |
 | ID plan (BD) | 22 |
 | Modelo / esfuerzo | Claude Opus 4.8 (`claude-opus-4-8`) — normal |
 

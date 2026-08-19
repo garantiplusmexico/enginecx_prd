@@ -29,6 +29,23 @@ Fase 0 en marcha. T-02, T-03, T-04 y T-05 completas y verificadas. `docker compo
 
 **Incidente durante la verificación de T-05 (autocontenido, ya resuelto):** al diagnosticar por qué `curl` a `localhost:5173` devolvía el HTML del dev server de Vite en vez del build servido por el contenedor, se identificó mal al proceso dueño del puerto — se asumió por coincidencia de nombre (`node`) que era un servidor de desarrollo colgado de T-03, y se terminó. Eran en realidad procesos propios de Docker Desktop (`wslrelay.exe`, `com.docker.backend.exe`), y su terminación tumbó el motor completo (los tres contenedores murieron con código 255). Se relanzó Docker Desktop, se identificó correctamente al dueño real del puerto por nombre de proceso (no solo PID) antes de tocar nada, y se volvió a levantar el stack — sin pérdida de datos ni cambios de código de por medio.
 
+**Repositorio publicado en GitHub (2026-08-19).** Mismo criterio que la cuenta AWS: no existe
+namespace transversal de Engine en GitHub, solo el org `garantiplusmexico`. Con autorización del
+responsable, el repo quedó publicado en dos lugares:
+
+- **`origin`** → `https://github.com/garantiplusmexico/portal-ordenes-pago` (privado). Es el
+  repositorio de trabajo real, con las reglas de rama de Engine. `main` tiene una regla de
+  protección propia del org que exige un status check y una fuente específica (`release`) —
+  coherente con `version-control.md`, así que **`main` no se pudo empujar directo y eso es
+  correcto**, no un error a corregir. `develop`, `pre-qa`, `qa` y la rama funcional sí se
+  publicaron sin problema.
+- **`backup`** → `https://github.com/aldoalvarez-engine/Portal_pagos_finanzas` (del
+  responsable, ya existía vacío). Recibe copia de las cinco ramas, `main` incluida, sin las
+  reglas de protección del org.
+
+A partir de ahora, cada vez que el responsable autorice un commit/push (por fase, según
+`ejecutar-plan.md`), se publica en ambos remotos en el mismo paso.
+
 **Decisión pendiente de infraestructura resuelta parcialmente — cuenta AWS destino (T-06).** No existe hoy una cuenta AWS "transversal" de Engine; `infraestructura.md` la marca como "por definir". Se investigó junto con el responsable cómo entra a la consola de AWS: no usa SSO/IAM Identity Center (se descartó tras revisar la URL real de inicio de sesión), sino un **usuario IAM clásico** en la cuenta con alias **`gplus`** (Gplus Seguros), una de las seis consolas por empresa. El responsable decidió **desplegar el MVP temporalmente en esa cuenta** (`gplus`) mientras se resuelve la cuenta transversal, aceptando que la facturación de un sistema que sirve a las 10 empresas del grupo quede mezclada con la de una sola mientras tanto. **Queda como pendiente de migración** cuando exista la cuenta transversal — no es una decisión técnica, es de Dirección/Finanzas y no debe re-litigarse por el equipo de desarrollo sin involucrarlos.
 
 ---

@@ -345,7 +345,7 @@ Dentro del backend, el motor de reglas se aísla en su propia capa de servicios 
 | Fuente indefinida para peso colombiano y chileno | Alta | Medio | Pregunta abierta del PRD. Resolver antes de la Fase 2; si no hay fuente oficial gratuita, esas conversiones arrancan con captura manual |
 | Cuota de envío de Google Workspace | Baja | Medio | ~500 correos al mes está muy por debajo del límite, pero conviene medirlo desde el inicio para no descubrirlo en producción |
 | Autorizadores con buzón compartido | Media | **Alto** | Ilse García y Brian figuran con `administracion@` y `contabilidad@`. Sin cuenta nominal, su autorización no es atribuible a una persona y se rompe el propósito del histórico. Bloqueante para producción, no para desarrollo |
-| Consola AWS destino sin definir | Media | Medio | La consola de Engine transversal aparece como "por definir" en `rules/infraestructura.md`. Confirmarlo antes de T-06 |
+| Consola AWS destino sin definir | Media | Medio | La consola de Engine transversal aparece como "por definir" en `rules/infraestructura.md`. **Resuelto temporalmente** (2026-08-14): no existe cuenta transversal hoy; el responsable autorizó desplegar en la cuenta de Gplus Seguros (alias `gplus`) mientras se crea la cuenta transversal. Queda como deuda de infraestructura: facturación de un sistema de las 10 empresas mezclada con la de una sola, y migración pendiente cuando exista la cuenta correcta |
 | Cambio de la política de autorización a media construcción | Baja | Alto | El versionado de la matriz (T-14, T-36) absorbe el cambio sin tocar código ni alterar autorizaciones ya emitidas |
 
 ---

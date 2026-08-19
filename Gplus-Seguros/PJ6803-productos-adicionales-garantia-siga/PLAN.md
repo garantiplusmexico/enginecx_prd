@@ -14,7 +14,7 @@
 | Folio PRD | PJ6803 |
 | Fecha de generación | 2026-08-18 |
 | Estado | Borrador |
-| ID plan (BD) | *(pendiente de registrar)* |
+| ID plan (BD) | 48 |
 | Modelo | claude-opus-5[1m] — esfuerzo: alto |
 
 ---
@@ -378,12 +378,12 @@ Los cuatro requieren su entrada correspondiente en `Services/apigateway/krakend.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Habilitadores y cliente de SIGA (P1)** | Prerequisitos con Garantiplus, `Common/SigaApiClient`, caché de catálogos | T-01 a T-03 | 3 – 5 días | |
-| **Fase 1 — Cotización de garantía · backend (P1)** | Esquema, modelo, worker `CotizadorGarantiaSIGA`, publicación NATS, persistencia, endpoint, infraestructura ECS | T-04 a T-10 | 6 – 9 días | |
-| **Fase 2 — Cotización de garantía · frontend (P2)** | Polling, tarjeta con costo y check, arrastre de la decisión | T-11 a T-13 | 3 – 4 días | |
-| **Fase 3 — Emisión del contrato · backend (P2)** | Esquema, DTO, `SigaWarrantyContractService`, enganche en `Emitir`, descarga y reintento, wire-up | T-14 a T-19 | 6 – 9 días | |
-| **Fase 4 — Emisión · frontend (P3)** | Check en emisión, certificado en la vista de póliza | T-20 a T-21 | 2 – 3 días | |
-| **Fase 5 — Pruebas, observabilidad y despliegue (P3)** | Matriz de 9 escenarios en QA, eventos de BI, despliegue | T-22 a T-24 | 3 – 4 días | |
+| **Fase 0 — Habilitadores y cliente de SIGA (P1)** | Prerequisitos con Garantiplus, `Common/SigaApiClient`, caché de catálogos | T-01 a T-03 | 3 – 5 días | 150 |
+| **Fase 1 — Cotización de garantía · backend (P1)** | Esquema, modelo, worker `CotizadorGarantiaSIGA`, publicación NATS, persistencia, endpoint, infraestructura ECS | T-04 a T-10 | 6 – 9 días | 151 |
+| **Fase 2 — Cotización de garantía · frontend (P2)** | Polling, tarjeta con costo y check, arrastre de la decisión | T-11 a T-13 | 3 – 4 días | 152 |
+| **Fase 3 — Emisión del contrato · backend (P2)** | Esquema, DTO, `SigaWarrantyContractService`, enganche en `Emitir`, descarga y reintento, wire-up | T-14 a T-19 | 6 – 9 días | 153 |
+| **Fase 4 — Emisión · frontend (P3)** | Check en emisión, certificado en la vista de póliza | T-20 a T-21 | 2 – 3 días | 154 |
+| **Fase 5 — Pruebas, observabilidad y despliegue (P3)** | Matriz de 9 escenarios en QA, eventos de BI, despliegue | T-22 a T-24 | 3 – 4 días | 155 |
 | **Total proyecto (P1+P2+P3)** | | 24 tareas | ~23 – 34 días hábiles (≈ 5 – 7 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-10 | ~9 – 14 días hábiles (≈ 2 – 3 semanas) | — |
 

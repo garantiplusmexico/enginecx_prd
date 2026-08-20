@@ -11,10 +11,10 @@
 | Rama | `feature/parche-cms-panel-clientes-roles-y-ambito` |
 | Tipo | Feature |
 | Responsable | Javier Antonio Oropeza Camacho |
-| Folio PRD | *(pendiente de asignar — ver §12)* |
+| Folio PRD | `PJ0222` |
 | Fecha de generación | 2026-08-20 |
-| Estado | Borrador |
-| ID plan (BD) | *(lo escribe el flujo al registrar el plan)* |
+| Estado | Validado |
+| ID plan (BD) | `52` |
 
 > ⚠️ No existe rama `develop` en este repositorio (solo `main` y `stage`). El plan se generó desde `main`.
 > Se recomienda crear `develop` antes de continuar con el flujo estándar de Engine.
@@ -36,8 +36,8 @@ El trabajo se agrupa en cinco fases. La Fase 0 cierra riesgos de autorización q
 ## 2. Prerequisitos
 
 - [x] `CLAUDE.md` presente en el repositorio (generado durante este flujo)
-- [ ] PRD validado por el responsable
-- [ ] Folio `PJ####` asignado
+- [x] PRD validado por el responsable
+- [x] Folio `PJ0222` asignado y plan registrado en base de datos (plan id 52)
 - [ ] Acceso al repositorio `Sitios-Web-Go-Virtual/govirtual-api` confirmado
 - [ ] Listado de formularios de Go Virtual recibido (bloquea T-26, no bloquea fases previas)
 - [ ] Sesión de definición de lead driver y pop-ups agendada (bloquea T-27 y T-28)
@@ -329,7 +329,7 @@ El punto de atención no es de infraestructura sino **operativo**: la reconfigur
 
 **Ramas.** Esta rama cubre Fase 0 y Fase 1. Las fases 2, 3 y 4 deberían tomar su propia rama funcional desde `develop` una vez que exista, para no arrastrar una rama de larga vida.
 
-**Folio.** Falta asignar el `PJ####` antes de registrar el plan en la base de datos.
+**Folio y registro en base de datos.** Folio `PJ0222`. El plan quedó registrado como `pm_plan_desarrollo.id = 52` con estatus `Aprobado` y `dias = 74` (límite superior del rango de la §13), y sus cinco fases como `pm_plan_fase` 172 a 176, todas en `Pendiente`. No existe fila en `pm_projects` con `prd_id = PJ0222`: mientras no se cree, el gantt general mostrará el plan sin nombre ni unidad resueltos por el join.
 
 ---
 
@@ -337,11 +337,11 @@ El punto de atención no es de infraestructura sino **operativo**: la reconfigur
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Cierre de riesgos (P0)** | Virtual de grupo, denegación por defecto, inventario y decoración de rutas, bloqueo de escalada | T-01 a T-04 | 3 – 5 días | |
-| **Fase 1 — Roles y ámbito (P1)** | Catálogo de permisos, `scopeLevel`, seed de roles, token con ámbito, `ScopeService`, filtrado y caché, validaciones de alta, bitácora con ámbito, suite de autorización | T-05 a T-17 | 20 – 28 días | |
-| **Fase 2 — Banners y promociones (P2)** | Modelo de tres niveles, migración, herencia y orden, endpoints, cambio de contrato del feed, corte de External Collections | T-18 a T-24 | 10 – 15 días | |
-| **Fase 3 — Módulos nuevos (P3)** | TYP con precarga, pop-ups, lead driver y sus feeds en Grid y Brick | T-25 a T-29 | 12 – 18 días | |
-| **Fase 4 — Acceso a Duda** | Spike de la Partner API e implementación del acceso autenticado | T-30 a T-31 | 4 – 8 días | |
+| **Fase 0 — Cierre de riesgos (P0)** | Virtual de grupo, denegación por defecto, inventario y decoración de rutas, bloqueo de escalada | T-01 a T-04 | 3 – 5 días | 172 |
+| **Fase 1 — Roles y ámbito (P1)** | Catálogo de permisos, `scopeLevel`, seed de roles, token con ámbito, `ScopeService`, filtrado y caché, validaciones de alta, bitácora con ámbito, suite de autorización | T-05 a T-17 | 20 – 28 días | 173 |
+| **Fase 2 — Banners y promociones (P2)** | Modelo de tres niveles, migración, herencia y orden, endpoints, cambio de contrato del feed, corte de External Collections | T-18 a T-24 | 10 – 15 días | 174 |
+| **Fase 3 — Módulos nuevos (P3)** | TYP con precarga, pop-ups, lead driver y sus feeds en Grid y Brick | T-25 a T-29 | 12 – 18 días | 175 |
+| **Fase 4 — Acceso a Duda** | Spike de la Partner API e implementación del acceso autenticado | T-30 a T-31 | 4 – 8 días | 176 |
 | **Total proyecto (P0+P1+P2+P3+F4)** | | 31 tareas | ~49 – 74 días hábiles (≈ 10 – 15 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-17 | ~23 – 33 días hábiles (≈ 5 – 7 semanas) | — |
 

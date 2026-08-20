@@ -13,7 +13,7 @@
 | Folio PRD | `PJ0221` |
 | Fecha de generación | 2026-08-20 |
 | Estado | Borrador |
-| ID plan (BD) | *(pm_plan_desarrollo.id — lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | `51` (pm_plan_desarrollo.id) |
 | Rama base | `develop` (existe en ambos repos; ya sincronizada con `origin/develop`) |
 | Modelo / esfuerzo | `claude-opus-5` — esfuerzo alto |
 
@@ -518,12 +518,12 @@ accesible.
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Reloj de negocio y configuración de la ventana** | `IBusinessClock`, `ContractBackdatingOptions`, `PlacementDateWindowService`, documentación y task definitions | T-01 a T-04 | 2 – 3 días | |
-| **Fase 1 — Backend: captura, validación y persistencia** | Campo `PlacementDate`, parseo estricto, validación de ventana, `StartDate` real, columna `fecha_colocacion`, auditoría y habilitación por proyecto en el servicio compartido | T-05 a T-10 | 4 – 6 días | |
-| **Fase 2 — Backend: reanudación** | Snapshot con fecha, respeto/recálculo de la fecha original y aviso al usuario | T-11 a T-13 | 2 – 3 días | |
-| **Fase 3 — Endpoint de la ventana** | `GET v1/placement-window/{projectId}` (autoridad única del "hoy") | T-14 | 1 – 2 días | |
-| **Fase 4 — Frontend: captura y validación** | Campo nuevo acotado, helper de ventana con pruebas, consumo del endpoint, validación y envío `yyyy-MM-dd`, aviso de reanudación | T-15 a T-22 | 3 – 5 días | |
-| **Fase 5 — Pruebas, no-regresión y despliegue** | Matriz de casos borde, no-regresión de BMW/financieras/WhatsApp, configuración y validación en QA | T-23 a T-25 | 2 – 3 días | |
+| **Fase 0 — Reloj de negocio y configuración de la ventana** | `IBusinessClock`, `ContractBackdatingOptions`, `PlacementDateWindowService`, documentación y task definitions | T-01 a T-04 | 2 – 3 días | 166 |
+| **Fase 1 — Backend: captura, validación y persistencia** | Campo `PlacementDate`, parseo estricto, validación de ventana, `StartDate` real, columna `fecha_colocacion`, auditoría y habilitación por proyecto en el servicio compartido | T-05 a T-10 | 4 – 6 días | 167 |
+| **Fase 2 — Backend: reanudación** | Snapshot con fecha, respeto/recálculo de la fecha original y aviso al usuario | T-11 a T-13 | 2 – 3 días | 168 |
+| **Fase 3 — Endpoint de la ventana** | `GET v1/placement-window/{projectId}` (autoridad única del "hoy") | T-14 | 1 – 2 días | 169 |
+| **Fase 4 — Frontend: captura y validación** | Campo nuevo acotado, helper de ventana con pruebas, consumo del endpoint, validación y envío `yyyy-MM-dd`, aviso de reanudación | T-15 a T-22 | 3 – 5 días | 170 |
+| **Fase 5 — Pruebas, no-regresión y despliegue** | Matriz de casos borde, no-regresión de BMW/financieras/WhatsApp, configuración y validación en QA | T-23 a T-25 | 2 – 3 días | 171 |
 | **Total proyecto** | | **25 tareas** | **~14 – 22 días hábiles (≈ 3 – 4.5 semanas)** | — |
 | **Mínimo comprometido (guardarraíl)** | Fases 0 + 1 + 3 + 4 + 5 (todo menos reanudación) | T-01 a T-10, T-14 a T-25 | **~12 – 19 días hábiles (≈ 2.5 – 4 semanas)** | — |
 

@@ -20,9 +20,9 @@
 **Alcance acotado a P1 (Fase 0 + Fase 1, T-01 a T-14)** por decisión del responsable el 2026-08-21.
 Las Fases 2, 3 y 4 quedan fuera de esta ejecución y se retomarán en un ciclo posterior.
 
-La **Fase 0 está completa** y la **Fase 1 está escrita al 100%**: T-01 a T-13 terminadas. Quedan los 4
-endpoints nuevos, el catálogo de estatus con su validación, las entidades espejo en los dos contextos EF, el
-script SQL y la carpeta `doc/` con sus 3 entradas.
+La **Fase 0 está completa** y la **Fase 1 está escrita al 100%**: T-01 a T-13 terminadas. Lo entregado son
+los 4 endpoints nuevos, el catálogo de estatus con su validación, las entidades espejo en los dos contextos
+EF, el script SQL y la carpeta `doc/` con sus 3 entradas.
 
 **El proyecto compila** (verificado por el responsable el 2026-08-21; el único error fue un `using` faltante
 de `Claims.Models.Issues` en `IssuesService.cs`, corregido). Código commiteado y subido a `origin`.
@@ -164,10 +164,10 @@ Repo hermano `gp_4.0_siga`, rama `feature/PJ3173-issues-lectura-evidencia`:
 | Hash | Repo | Mensaje | Fecha |
 |---|---|---|---|
 | `9150dee` | `enginecx_prd` | `[PJ3173] Fase 0 - Rama base y cierre de supuestos` | 2026-08-21 |
-| `15e7ada` | `gp_4.0_siga` | `tablas requeridas para estatus de incidencias` (commiteado por el responsable) | 2026-08-21 |
+| `bdb9c23` | `gp_4.0_siga` | `Catálogo de estatus de incidencia (tabla + entidades espejo)` (commiteado por el responsable) | 2026-08-21 |
 | `2c722fd` | `gp_3.0_siga_api` | `[PJ3173] Fase 1 - Lectura de evidencia y estatus confiable` | 2026-08-21 |
 
-`2c722fd` depende de `15e7ada`: sin la tabla y las entidades espejo del repo hermano, el servicio no compila.
+`2c722fd` depende de `bdb9c23`: sin la tabla y las entidades espejo del repo hermano, el servicio no compila.
 
 ---
 

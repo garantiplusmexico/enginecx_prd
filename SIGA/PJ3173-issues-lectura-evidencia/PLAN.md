@@ -14,7 +14,7 @@
 | Folio PRD | PJ3173 |
 | Fecha de generación | 2026-08-21 |
 | Estado | Borrador |
-| ID plan (BD) | *(lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | 54 |
 | Modelo | `claude-opus-5` — esfuerzo: alto |
 
 ---
@@ -676,11 +676,11 @@ cada fase (que en este proyecto no es opcional: es el único mecanismo de prueba
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Rama base y cierre de supuestos** | Rama funcional, verificación del rol real del panel y del agente en QA, confirmación de las 3 decisiones de diseño con JC | T-01 a T-03 | 0.5 – 1 día | |
-| **Fase 1 — Lectura de evidencia y estatus confiable (P1)** | Tabla `estatus_incidencia` + entidades espejo, 4 endpoints nuevos, validación y normalización de estatus en `UpdateIssue`, carpeta `doc/` con 3 entradas, verificación de paridad de bytes y de aislamiento de ids | T-04 a T-14 | 4 – 6 días | |
-| **Fase 2 — Anotaciones de incidencia (P2)** | Tabla `seguimiento_incidencia` + entidades espejo, anotación estructurada y automática de transición, `notes` en `GetIssueById`, flag de convivencia de formatos, 2 entradas de `doc/`, ventana de despliegue coordinado con Ana y Pedro | T-15 a T-22 | 4 – 6 días | |
-| **Fase 3 — Observaciones de avería y gateway (P3)** | Endpoint de seguimiento de la avería, fechas con zona en todo el servicio de Issues, declaración del casing y del 301 | T-23 a T-25 | 2 – 3 días | |
-| **Fase 4 — Habilitación a producción** | URL del gateway y cuenta de servicio, scripts en producción, batería de sondas contra producción | T-26 a T-28 | 1 – 2 días de trabajo propio | |
+| **Fase 0 — Rama base y cierre de supuestos** | Rama funcional, verificación del rol real del panel y del agente en QA, confirmación de las 3 decisiones de diseño con JC | T-01 a T-03 | 0.5 – 1 día | 181 |
+| **Fase 1 — Lectura de evidencia y estatus confiable (P1)** | Tabla `estatus_incidencia` + entidades espejo, 4 endpoints nuevos, validación y normalización de estatus en `UpdateIssue`, carpeta `doc/` con 3 entradas, verificación de paridad de bytes y de aislamiento de ids | T-04 a T-14 | 4 – 6 días | 182 |
+| **Fase 2 — Anotaciones de incidencia (P2)** | Tabla `seguimiento_incidencia` + entidades espejo, anotación estructurada y automática de transición, `notes` en `GetIssueById`, flag de convivencia de formatos, 2 entradas de `doc/`, ventana de despliegue coordinado con Ana y Pedro | T-15 a T-22 | 4 – 6 días | 183 |
+| **Fase 3 — Observaciones de avería y gateway (P3)** | Endpoint de seguimiento de la avería, fechas con zona en todo el servicio de Issues, declaración del casing y del 301 | T-23 a T-25 | 2 – 3 días | 184 |
+| **Fase 4 — Habilitación a producción** | URL del gateway y cuenta de servicio, scripts en producción, batería de sondas contra producción | T-26 a T-28 | 1 – 2 días de trabajo propio | 185 |
 | **Total proyecto (P1+P2+P3+F4)** | | **28 tareas** | **~12 – 18 días hábiles** (≈ 2.5 – 3.5 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-14 | **~4.5 – 7 días hábiles** (≈ 1 – 1.5 semanas) | — |
 

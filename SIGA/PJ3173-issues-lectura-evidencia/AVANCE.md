@@ -20,10 +20,17 @@
 **Alcance acotado a P1 (Fase 0 + Fase 1, T-01 a T-14)** por decisión del responsable el 2026-08-21.
 Las Fases 2, 3 y 4 quedan fuera de esta ejecución y se retomarán en un ciclo posterior.
 
-La **Fase 0 está completa**: la rama funcional existe en `origin`, el rol del panel quedó confirmado como
-Administrador General (cierra el riesgo bloqueante del PRD §14) y las tres decisiones de diseño abiertas
-fueron ratificadas sin cambios. **No hay nada bloqueado.** Sigue la Fase 1 con T-04 (script SQL del catálogo
-de estatus).
+La **Fase 0 está completa** y la **Fase 1 está escrita al 100%**: T-01 a T-13 terminadas. Quedan los 4
+endpoints nuevos, el catálogo de estatus con su validación, las entidades espejo en los dos contextos EF, el
+script SQL y la carpeta `doc/` con sus 3 entradas.
+
+**El proyecto compila** (verificado por el responsable el 2026-08-21; el único error fue un `using` faltante
+de `Claims.Models.Issues` en `IssuesService.cs`, corregido). Código commiteado y subido a `origin`.
+
+**Falta T-14: nada se ha probado en ejecución.** El script SQL no consta aplicado en QA y la batería de
+`Services/Claims/doc/verificacion-fase-1.http` no se ha corrido. Hasta entonces, la lectura de evidencia y la
+validación de estatus **no están verificadas**: compilar no prueba que la consulta de OData se traduzca a SQL,
+ni que el aislamiento de espacios de ids se sostenga. **No hay nada bloqueado.**
 
 Dos desviaciones respecto al `PLAN.md` original, ambas por decisión del responsable: **Colombia se incluye
 igual que México** (el plan contemplaba aplicar los scripts solo en MEX) y los **DTOs nuevos van planos**
@@ -59,6 +66,16 @@ en `DTOs/Issues/`, sin subcarpeta `Responses/`. Ver la tabla de decisiones.
 | T-01 | Crear la rama funcional desde `develop` | Claude Code | 2026-08-21 | `develop` estaba actualizado y sin cambios pendientes. Rama creada y publicada en `origin` con tracking. Working tree limpio |
 | T-02 | Verificar el rol con que el panel y el agente llaman a Issues | Javier Antonio Oropeza Camacho | 2026-08-21 | **Cerrada por confirmación del responsable, no por sonda empírica contra QA.** El panel llama como Administrador General → satisface `ICanManageIssues` ([Program.cs:235-236](../../../gp_3.0_siga_api/Services/Claims/Program.cs#L235-L236)). El riesgo bloqueante del PRD §14 queda cerrado y **no se amplía la policy** |
 | T-03 | Confirmar con el responsable las tres decisiones de diseño | Javier Antonio Oropeza Camacho | 2026-08-21 | Las tres ratificadas **sin cambios** respecto al plan. No aplica el escenario de "+2 días por FK" |
+| T-04 | Script SQL del catálogo `estatus_incidencia` | Claude Code | 2026-08-21 | Un solo script idempotente aplicable a MEX y COL, siguiendo la convención del script `2026-07-17_incidencias`. Ids fijos (no `BIGSERIAL`) para que sean iguales en las tres bases. `GRANT` solo de `SELECT` |
+| T-05 | Entidad y mapeo de `estatus_incidencia` en los dos contextos espejo | Claude Code | 2026-08-21 | Entidad y mapeo **idénticos** en `DataAccess` y `DataAccessColombia`, verificado con `diff`. `OnModelCreatingIncidencias` ya se invoca en ambos |
+| T-06 | DTOs de lectura de documentos y de estatus | Claude Code | 2026-08-21 | Planos en `DTOs/Issues/` por decisión del responsable. `StatusId` **no** se replicó: `documento_incidencia` no tiene estatus por documento |
+| T-07 | Contrato de servicio en `IIssuesService` | Claude Code | 2026-08-21 | 4 métodos nuevos con XML docs. Además cambió la firma de `UpdateIssue` a resultado tipado |
+| T-08 | Implementación de la lectura de documentos | Claude Code | 2026-08-21 | `IssuesService.Documents.cs`. **Criterio de aislamiento verificado con `grep`: cero referencias a `documento_averia` o `averia`** |
+| T-09 | Resultados tipados y mapeo de errores | Claude Code | 2026-08-21 | `IssueDocumentReadStatus`, `IssueDocumentListResult`, `IssueDocumentDownloadResult`, `IssueUpdateResult` + `MapDocumentRead` y `MapInvalidStatus` en español |
+| T-10 | Endpoints de lectura de evidencia | Claude Code | 2026-08-21 | En un `partial` nuevo del controller (ya tenía 501 líneas). Los 4 con `LogRequestAsync` de 3 argumentos por ser GET |
+| T-11 | Catálogo de estatus consultable | Claude Code | 2026-08-21 | `IssuesService.Status.cs`, leído de la tabla y no de una constante |
+| T-12 | Validación y normalización de estatus en `UpdateIssue` | Claude Code | 2026-08-21 | Validación **antes** de asignar cualquier campo y antes de cualquier `SaveChangesAsync`. Normaliza acentos y mayúsculas, persiste la forma canónica, registra el rechazo en `Warning` |
+| T-13 | Carpeta `doc/` de Claims + 3 entradas | Claude Code | 2026-08-21 | La carpeta no existía en este microservicio. `README.md` con índice + 3 entradas con el formato de `Services/Authentication/doc/` |
 
 ---
 
@@ -66,7 +83,7 @@ en `DTOs/Issues/`, sin subcarpeta `Responses/`. Ver la tabla de decisiones.
 
 | ID | Tarea | Responsable | Iniciada | Notas |
 |---|---|---|---|---|
-| T-04 | Script SQL del catálogo `estatus_incidencia` | Claude Code | 2026-08-21 | Se entrega en carpeta para ejecución manual. **Dos versiones: MEX y COL** |
+| T-14 | Verificación empírica de la Fase 1 contra QA | Javier Antonio Oropeza Camacho | 2026-08-21 | Batería de llamadas escrita y lista en `doc/verificacion-fase-1.http`. **Falta ejecutarla**: requiere compilar, aplicar el script en QA y correr los 6 bloques |
 
 ---
 
@@ -76,16 +93,6 @@ Alcance de esta ejecución: **solo hasta T-14**.
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-05 | Entidad y mapeo de `estatus_incidencia` en `DataAccess` y `DataAccessColombia` | — |
-| T-06 | DTOs de lectura de documentos de incidencia | — |
-| T-07 | Contrato de servicio: métodos de lectura en `IIssuesService` | — |
-| T-08 | Implementación de la lectura de documentos (`IssuesService.Documents.cs`) | T-07 |
-| T-09 | Resultados tipados y mapeo de errores de lectura | — |
-| T-10 | Endpoints de lectura de evidencia en `IssuesController` | T-08, T-09 |
-| T-11 | Catálogo de estatus consultable (`IssuesService.Status.cs`) | T-05 |
-| T-12 | Validación y normalización de estatus en `UpdateIssue` | T-11 |
-| T-13 | Carpeta `Services/Claims/doc/` + las 3 entradas de la Fase 1 | — |
-| T-14 | Verificación empírica de la Fase 1 contra QA | T-04 (ejecución de scripts por el responsable), T-10, T-12 |
 | T-15 a T-28 | Fases 2, 3 y 4 | **Fuera de alcance de esta ejecución** (decisión del responsable) |
 
 ---
@@ -111,29 +118,72 @@ Alcance de esta ejecución: **solo hasta T-14**.
 | **Scripts SQL se entregan, no se ejecutan** | Decisión del responsable: él los aplica en QA | T-14 no puede cerrarse hasta que los scripts estén aplicados. Es una dependencia explícita, no un bloqueo |
 | **La batería de sondas de Pedro no existe** | El PRD la daba por existente; ni el responsable ni el equipo la ubican | La verificación empírica de T-14 se arma desde cero en este proyecto y se documenta con sus resultados aquí |
 | **T-02 cerrada por confirmación, no por sonda** | El responsable confirmó que el panel opera como Administrador General | Coherente con lo que exige `ICanManageIssues` en código. Si en producción apareciera un `403`, el primer sospechoso es este supuesto |
+| **Permisos de lectura: espejo de `GetIssues`, NO de `UploadIssueDocument`** ⚠️ *se aparta de la letra de T-08* | T-08 pedía las dos cosas y **no son equivalentes**: la regla interna del upload concede a admin externo, gerente de país y taller acceso a **cualquier** incidencia, mientras que `GetIssues` los acota a sus distribuidores / a lo que registraron. Copiar la del upload habría hecho que el listado ocultara una incidencia y el endpoint de detalle entregara sus fotos | Decisión del responsable el 2026-08-21. La lectura queda **más estricta** que la escritura, que es lo que RNF-01 persigue, y lista y detalle coinciden. Documentado en `doc/incidencias-quien-puede-leer-la-evidencia.md` |
+| **`CreationDate` es `DateTime` con Kind=Utc, no `DateTimeOffset`** ⚠️ *se aparta de T-06* | T-06 pedía `DateTimeOffset`, pero construirlo dentro de la proyección LINQ (`DateTime.SpecifyKind` / `new DateTimeOffset(...)`) **no tiene traducción a SQL**, y esa proyección alimenta el `IQueryable` que compone OData: `GetIssueDocuments` habría reventado en ejecución. El Kind se fija con un value converter en el mapeo EF, que sí se aplica en proyecciones | Se cumple RF-17 igual: el JSON sale como `2026-08-21T20:04:53.356Z`, con marca de zona y misma forma en todos los endpoints. Entregar `DateTimeOffset` de verdad exigiría migrar la columna a `timestamptz`, que es justo lo que la decisión §12.2 descartó |
+| **Los 4 endpoints nuevos van en un `partial` del controller** | `IssuesController.cs` ya tenía 501 líneas; agregarle ~250 más lo llevaría a 750. `CLAUDE.md` pide dividir por encima de ~200 | Se agregó la palabra `partial` a la declaración de la clase (cambio de una palabra, sin refactorizar lo existente) y los endpoints viven en `IssuesController.Documents.cs` |
+| **El `GRANT` del catálogo es solo `SELECT`** | La API lee el catálogo y nunca lo escribe; agregar un estatus es una migración, no una operación de la aplicación. Se aparta de la convención del repo, que otorga los cuatro permisos | Si algún día el catálogo se administra desde el sistema, hay que ampliar el `GRANT`. Anotado en el encabezado del script |
 
 ---
 
 ## Archivos creados o modificados
 
+Repo `gp_3.0_siga_api`, rama `feature/PJ3173-issues-lectura-evidencia`:
+
 | Archivo | Tipo de cambio | Tarea relacionada |
 |---|---|---|
-| *(ninguno todavía — Fase 0 solo produjo la rama)* | — | — |
+| `Services/Claims/DTOs/Issues/IssueDocumentQueryResponse.cs` | Creado | T-06 |
+| `Services/Claims/DTOs/Issues/IssueStatusResponse.cs` | Creado | T-06 |
+| `Services/Claims/Interfaces/IIssuesService.cs` | Modificado | T-07, T-12 |
+| `Services/Claims/Models/Issues/IssueResult.cs` | Modificado | T-09, T-12 |
+| `Services/Claims/Services/IssuesService.Documents.cs` | Creado | T-08 |
+| `Services/Claims/Services/IssuesService.Status.cs` | Creado | T-11, T-12 |
+| `Services/Claims/Services/IssuesService.cs` | Modificado | T-12 |
+| `Services/Claims/Services/IssueResultMapper.cs` | Modificado | T-09, T-12 |
+| `Services/Claims/Controllers/IssuesController.Documents.cs` | Creado | T-10 |
+| `Services/Claims/Controllers/IssuesController.cs` | Modificado | T-10, T-12 |
+| `Services/Claims/doc/README.md` | Creado | T-13 |
+| `Services/Claims/doc/incidencias-quien-puede-leer-la-evidencia.md` | Creado | T-13 |
+| `Services/Claims/doc/incidencias-ids-no-se-cruzan-con-averias.md` | Creado | T-13 |
+| `Services/Claims/doc/incidencias-estatus-validado-por-nombre.md` | Creado | T-13 |
+| `Services/Claims/doc/verificacion-fase-1.http` | Creado | T-14 |
+
+Repo hermano `gp_4.0_siga`, rama `feature/PJ3173-issues-lectura-evidencia`:
+
+| Archivo | Tipo de cambio | Tarea relacionada |
+|---|---|---|
+| `GarantiplusWeb/BD/2026-08-21_estatus_incidencia/estatus_incidencia.sql` | Creado | T-04 |
+| `DataAccess/Models/estatus_incidencia.cs` | Creado | T-05 |
+| `DataAccessColombia/Models/estatus_incidencia.cs` | Creado | T-05 |
+| `DataAccess/IncidenciasExtensions/garantiplus_dbContext.cs` | Modificado | T-05, T-08 |
+| `DataAccessColombia/IncidenciasExtensions/garantiplus_dbContext.cs` | Modificado | T-05, T-08 |
 
 ---
 
 ## Commits realizados
 
-| Hash | Mensaje | Fecha |
-|---|---|---|
-| *(pendiente — el primer commit se solicita al cerrar la Fase 1)* | | |
+| Hash | Repo | Mensaje | Fecha |
+|---|---|---|---|
+| `9150dee` | `enginecx_prd` | `[PJ3173] Fase 0 - Rama base y cierre de supuestos` | 2026-08-21 |
+| `15e7ada` | `gp_4.0_siga` | `tablas requeridas para estatus de incidencias` (commiteado por el responsable) | 2026-08-21 |
+| `2c722fd` | `gp_3.0_siga_api` | `[PJ3173] Fase 1 - Lectura de evidencia y estatus confiable` | 2026-08-21 |
+
+`2c722fd` depende de `15e7ada`: sin la tabla y las entidades espejo del repo hermano, el servicio no compila.
 
 ---
 
 ## Notas para quien retome el trabajo
 
-**¿Por dónde continuar?** Por **T-04**: el script SQL del catálogo `estatus_incidencia`, en versión MEX y COL.
-La Fase 0 está cerrada y no hay nada bloqueado.
+**¿Por dónde continuar?** Por **T-14**, la única tarea de P1 que falta. Todo el código está escrito pero
+**no compilado ni probado**. En orden:
+
+1. `dotnet build` desde `Services/Claims/` — el responsable compila, Claude Code no.
+2. Aplicar `2026-08-21_estatus_incidencia/estatus_incidencia.sql` en la QA de México y, si hay acceso, en la
+   de Colombia.
+3. Correr los 6 bloques de `Services/Claims/doc/verificacion-fase-1.http` y anexar resultados aquí.
+4. Confirmar con el panel que la pestaña de Evidencia ya muestra contenido.
+
+Los bloques 2.2/2.3 (el 400 no persiste nada) y 4 (aislamiento de espacios de ids) son los que de verdad
+importan; el resto es cobertura.
 
 **Contexto importante:**
 

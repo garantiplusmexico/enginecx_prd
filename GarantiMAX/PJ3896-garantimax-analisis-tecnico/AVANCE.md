@@ -20,7 +20,7 @@
 
 Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `main` de `enginecx_prd`. El repositorio analizado (`garantimax`) se sincronizó a `origin/master` = `3771e7f` (2026-08-19 11:24 -0400), que es el commit fijado de vigencia (RNF-14).
 
-**Fase 0 y Fase 1 completadas y commiteadas** (T-01 a T-15, PUERTA 1 pasada). **Fase 2 completada** (T-16 a T-21) — los 5 capítulos de calidad (arquitectura, seguridad, rendimiento, testing/CI-CD, observabilidad) cerrados en Etapa A, con el registro de hallazgos consolidado: **8 hallazgos** en total (1 Crítico ya escalado — `mora_corte`; 1 Alto — cero tests de UI/componentes en todo el sistema; 3 Medio; 2 Bajo-Medio; 1 Bajo). Pendiente de autorización para el commit de cierre de Fase 2; al autorizarse, arranca Fase 3 (T-23 — Supabase vs. .NET 8 y los cinco escenarios).
+**Fases 0, 1 y 2 completadas y commiteadas** (T-01 a T-21, PUERTA 1 pasada, 8 hallazgos consolidados). **Fase 3 completada** (T-23 a T-26) — Supabase evaluado por servicio (C15), los cinco escenarios E0–E4 comparados (C16), las tres opciones de PWA (C17), y el **dictamen preliminar** emitido (C18): **E4 (retención parcial por dominio) es el candidato preliminar más prometedor**, porque el Realtime —la pieza más cara de sustituir— se concentra en el dominio que E4 propone conservar; no es una conclusión, depende de T-35/T-37 en Etapa B. Pendiente de autorización para el commit de cierre de Fase 3; al autorizarse, arranca Fase 4 (T-27 — resumen ejecutivo, cierre de la Etapa A y PUERTA 2).
 
 ---
 
@@ -32,7 +32,7 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | **Fase 0 — Habilitación, línea base y método** | `186` | T-01 a T-05 | 1 – 2 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
 | **Fase 1 — Inventario y mapeo** | `187` | T-06 a T-15 | 4 – 6 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
 | **Fase 2 — Análisis de calidad y riesgos** | `188` | T-16 a T-21 | 3 – 4 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
-| **Fase 3 — Escenarios y dictamen preliminar** | `189` | T-23 a T-26 | 3 – 4 | | | 0 | 4 | ⏳ Pendiente |
+| **Fase 3 — Escenarios y dictamen preliminar** | `189` | T-23 a T-26 | 3 – 4 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
 | **Fase 4 — Resumen ejecutivo, revisión y cierre de Etapa A** | `190` | T-27 a T-30 | 2 – 3 | | | 0 | 3 | ⏳ Pendiente |
 | **Subtotal Etapa A** | — | 29 tareas | ~13 – 19 | | | 0 | 19 | 🟡 En progreso |
 | **ETAPA B — La plataforma** *(sin fecha)* | | | | | | | | |
@@ -92,11 +92,22 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 
 ---
 
+## Tareas completadas ✅ (Fase 3)
+
+| ID | Tarea | Completada por | Fecha | Notas |
+|---|---|---|---|---|
+| T-23 | Supabase vs. .NET 8, servicio por servicio | Claude Code | 2026-08-24 | `analisis/16-supabase-vs-net8.md`. Los cinco servicios con veredicto estructural. Realtime identificado como el más caro/riesgoso de sustituir (backplane, afinidad de sesión, reponer la emisión de `postgres_changes`). Reparto por dominio a nivel estructural (sin peso, T-35 pendiente). |
+| T-24 | Comparación de los cinco escenarios (E0–E4) | Claude Code | 2026-08-24 | `analisis/17-escenarios-destino.md`. Árbol de decisión republicado con la rama de E4. Los cinco evaluados con la misma rejilla de 6 criterios; E0 como línea base explícita. |
+| T-25 | Evaluación de las tres opciones de PWA | Claude Code | 2026-08-24 | `analisis/18-opciones-pwa.md`. Matriz de decisión ligada a qué escenario de backend/front se elija y a los datos pendientes de A6. |
+| T-26 | Dictamen preliminar y recomendación | Claude Code | 2026-08-24 | `analisis/19-dictamen.md`. Recomendación preliminar: E4 como candidato más prometedor (el Realtime, la pieza más cara, coincide con el dominio que E4 conserva), E0 como línea base seria, E2 sin evidencia que lo justifique. Marcado preliminar en título y en cada sección relevante. |
+
+---
+
 ## Tareas pendientes ⏳
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-23 a T-30 | Fases 3 y 4 (Etapa A) | Autorización de commit de cierre de Fase 2 |
+| T-27 a T-30 | Fase 4 (Etapa A) | Autorización de commit de cierre de Fase 3 |
 | T-31 a T-35 | Fase 5 (Etapa B) | A1 (lectura Supabase) y A2 (paneles de costo) |
 | T-36 a T-38 | Fase 6 (Etapa B) | A3 (fuente de la API de SIGA) |
 
@@ -144,6 +155,8 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | `analisis/inventarios/archivos-grandes-500mas.txt` | Creado | T-16 |
 | `analisis/hallazgos.md` | Consolidado v1.0 (8 hallazgos) | T-17 a T-21 |
 | `analisis/README.md` | Actualizado (índice, cierre Fase 2) | Cierre de Fase 2 |
+| `analisis/16-supabase-vs-net8.md`, `17-escenarios-destino.md`, `18-opciones-pwa.md`, `19-dictamen.md` | Completados (contenido) | T-23 a T-26 |
+| `analisis/README.md` | Actualizado (índice, cierre Fase 3, dictamen preliminar) | Cierre de Fase 3 |
 
 ---
 
@@ -153,12 +166,14 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 |---|---|---|
 | `4609986` | `[PJ3896-garantimax-analisis-tecnico] Fase 0 - Habilitacion, linea base y metodo` | 2026-08-24 |
 | `4617417` | `[PJ3896-garantimax-analisis-tecnico] Fase 1 - Inventario y mapeo (PUERTA 1)` | 2026-08-24 |
+| `0629d14` | `[PJ3896-garantimax-analisis-tecnico] Fase 2 - Analisis de calidad y riesgos` | 2026-08-24 |
 
 ---
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** Fase 2 completa, pendiente de autorización de commit. Al autorizarse, arranca Fase 3 (T-23 — Supabase vs. .NET 8 por servicio, con el reparto por dominio y el costo de reponer el tiempo real).
+- **Por dónde continuar:** Fase 3 completa (dictamen preliminar emitido), pendiente de autorización de commit. Al autorizarse, arranca Fase 4 (T-27 — resumen ejecutivo, re-verificación de vigencia y cobertura, y la PUERTA 2 con la Dirección de TI).
+- **El dictamen es preliminar y debe leerse como tal:** `analisis/19-dictamen.md` recomienda E4 como candidato más prometedor, pero lo dice explícitamente sujeto a T-35 (peso real por dominio) y T-37 (costuras resueltas) en Etapa B.
 - **Contexto importante:** el repositorio analizado (`garantimax`) está fijado en `origin/master` = `3771e7f` (2026-08-19). Si se retoma días después, verificar si `origin/master` avanzó y decidir si re-sincronizar o mantener el commit fijado (el PRD exige declarar vigencia, RNF-14 — no re-sincronizar a mitad de análisis sin registrar el salto).
 - **Hallazgo Crítico pendiente de verificación en cuanto llegue A1:** `mora_corte` (`hallazgos.md` #1) — es la primera tabla a revisar en T-32.
 - **Decisión pendiente del solicitante:** fecha de compromiso (aunque sea tentativa) para A1 (`.env` de Supabase) y A3 (fuente de la API de SIGA), para poder planificar cuándo arranca la Etapa B.

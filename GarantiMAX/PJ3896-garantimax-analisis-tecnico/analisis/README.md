@@ -6,7 +6,7 @@
 | Plan | `../PLAN.md` |
 | Avance | `../AVANCE.md` |
 | Metodología | [`00-metodologia-y-evidencia.md`](00-metodologia-y-evidencia.md) |
-| Versión de este índice | 0.4 |
+| Versión de este índice | 0.5 |
 | Última actualización | 2026-08-24 |
 
 ---
@@ -30,7 +30,7 @@ Si al retomar el trabajo `origin/master` avanzó de nuevo, **no re-sincronizar s
 
 | | Etapa A — El proyecto por dentro | Etapa B — La plataforma |
 |---|---|---|
-| Estado | 🟡 En progreso (Fase 2 cerrada) | 🔴 Bloqueada — sin fecha |
+| Estado | 🟡 En progreso (Fase 3 cerrada — dictamen preliminar emitido) | 🔴 Bloqueada — sin fecha |
 | Necesita | Solo el repositorio | A1 (lectura Supabase) + A3 (API de SIGA) |
 | Entrega | Análisis técnico completo + dictamen **preliminar** | Verificación contra la base + dictamen **definitivo** |
 
@@ -58,10 +58,10 @@ Detalle completo en `PLAN.md` §1.4. Estado de accesos en [`preguntas-abiertas.m
 | 13 | [Rendimiento y escalabilidad](13-rendimiento-escalabilidad.md) | RF-14 | A — T-18 | ✅ Cerrado |
 | 14 | [Testing, CI/CD y proceso](14-testing-cicd-proceso.md) | RF-15 | A — T-19 | ✅ Cerrado |
 | 15 | [Observabilidad y operación](15-observabilidad-operacion.md) | RF-16 | A — T-20 | ✅ Cerrado |
-| 16 | [Supabase vs. .NET 8](16-supabase-vs-net8.md) | RF-17 | A (estructura) — T-23 · B (peso y costo) — T-35 | ⏳ Pendiente |
-| 17 | [Escenarios de destino (E0–E4)](17-escenarios-destino.md) | RF-18, RF-20 | A (preliminar) — T-24 · B (E4 resuelto) — T-37 | ⏳ Pendiente |
-| 18 | [Opciones de PWA](18-opciones-pwa.md) | RF-19 | A — T-25 | ⏳ Pendiente |
-| 19 | [Dictamen y recomendación](19-dictamen.md) | RF-21 | A (preliminar) — T-26 · B (definitivo) — T-38 | ⏳ Pendiente |
+| 16 | [Supabase vs. .NET 8](16-supabase-vs-net8.md) | RF-17 | A (estructura) — T-23 · B (peso y costo) — T-35 | 🟡 Cerrado en A, pendiente de B |
+| 17 | [Escenarios de destino (E0–E4)](17-escenarios-destino.md) | RF-18, RF-20 | A (preliminar) — T-24 · B (E4 resuelto) — T-37 | 🟡 Cerrado en A, pendiente de B |
+| 18 | [Opciones de PWA](18-opciones-pwa.md) | RF-19 | A — T-25 | ✅ Cerrado |
+| 19 | [Dictamen y recomendación](19-dictamen.md) | RF-21 | A (preliminar) — T-26 · B (definitivo) — T-38 | 🟡 **Preliminar** — pendiente de B |
 | 20 | [Resumen ejecutivo](20-resumen-ejecutivo.md) | RF-22 | A — T-27 · B (actualizado) — T-38 | ⏳ Pendiente |
 | — | [Registro de hallazgos](hallazgos.md) | RNF-09 | Transversal | ✅ Consolidado — 8 hallazgos (1 Crítico, 1 Alto, 3 Medio, 2 Bajo-Medio, 1 Bajo) |
 | — | [Accesos y preguntas abiertas](preguntas-abiertas.md) | RF-23, RNF-11 | Transversal | 🟡 En curso |
@@ -91,6 +91,10 @@ Se avanza a Fase 2 (análisis de calidad y riesgos) con esta base.
 
 Los cinco capítulos de calidad (C10–C14) cerrados en su alcance de Etapa A. **6 hallazgos nuevos** en esta fase (más los 2 de Fase 1 = 8 totales, ver `hallazgos.md`): 1 Alto (cero tests de UI/componentes en todo el sistema), 2 Medio (`strict` de TypeScript apagado; sin tipos generados de Supabase), 2 Bajo-Medio (CORS abierto en 34/46 funciones; Sentry ausente del backend), 1 Bajo (límite de filas sin `.limit()` explícito en una consulta del War Room). Ninguno bloquea el avance a Fase 3.
 
+## Cierre de Fase 3 (T-23 a T-26) — dictamen preliminar emitido
+
+Los cinco servicios de Supabase evaluados por separado (C15), los cinco escenarios E0–E4 comparados con la misma rejilla (C16), las tres opciones de PWA (C17), y un **dictamen preliminar** (C18) derivado paso a paso del árbol de decisión del PRD. **Lectura preliminar: E4 (retención parcial por dominio) es el candidato más prometedor**, porque el Realtime — la pieza más cara de sustituir de las cinco de Supabase — se concentra justo en el dominio que E4 propone conservar. **No es una conclusión**: depende de T-35 (peso real) y T-37 (costuras resueltas) en Etapa B. E0 sigue siendo línea base seria; E2 (rehacer todo) no tiene evidencia que lo justifique hoy.
+
 ## Cobertura declarada (RNF-11)
 
-**Fases 0, 1 y 2 cerradas (24-08-2026).** 17 de 20 capítulos cerrados por completo en Etapa A (C1, C2, C4, C5, C6, C8, C9, C10, C12, C13, C14 — 11 capítulos al 100% de su alcance en Etapa A). C3, C5' y C11 cerrados en su alcance de Etapa A, con su mitad de Etapa B explícitamente pendiente (T-31 a T-34, T-32). C7 sin empezar, bloqueada por diseño (A3). Faltan C15–C19 (Fase 3) y C19 actualizado + verificación final (Fase 4). Detalle de qué falta por capítulo en cada archivo, sección "Cobertura declarada" propia.
+**Fases 0 a 3 cerradas (24-08-2026).** 20 de 20 capítulos tienen contenido — 12 al 100% de su alcance en Etapa A (C1, C2, C4, C5, C6, C8, C9, C10, C12, C13, C14, C17). C3, C5', C11, C15, C16 y C19 cerrados en su alcance de Etapa A, con su mitad de Etapa B explícitamente pendiente y marcada en cada uno. C7 sin empezar, bloqueada por diseño (A3). Falta Fase 4: C19 (resumen ejecutivo, T-27), re-verificación de vigencia, y la revisión con la Dirección de TI (PUERTA 2).

@@ -10,7 +10,7 @@
 | Folio PRD | `PJ3896` |
 | ID plan (BD) | `55` |
 | Última actualización | 2026-08-24 |
-| Estado general | 🟡 En progreso |
+| Estado general | 🟡 Etapa A con contenido completo — pendiente PUERTA 2 (T-29) y publicación (T-30), ambas a cargo del programador |
 | Modelo de ejecución | `claude-sonnet-5` — esfuerzo: alto |
 | Etapa activa | **Etapa A** — El proyecto por dentro (ver `PLAN.md` §1.4). La Etapa B (Fases 5–6) queda apartada sin fecha hasta que lleguen los accesos A1 (lectura Supabase, `.env` pendiente) y A3 (fuente de la API de SIGA). |
 
@@ -20,7 +20,9 @@
 
 Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `main` de `enginecx_prd`. El repositorio analizado (`garantimax`) se sincronizó a `origin/master` = `3771e7f` (2026-08-19 11:24 -0400), que es el commit fijado de vigencia (RNF-14).
 
-**Fases 0, 1 y 2 completadas y commiteadas** (T-01 a T-21, PUERTA 1 pasada, 8 hallazgos consolidados). **Fase 3 completada** (T-23 a T-26) — Supabase evaluado por servicio (C15), los cinco escenarios E0–E4 comparados (C16), las tres opciones de PWA (C17), y el **dictamen preliminar** emitido (C18): **E4 (retención parcial por dominio) es el candidato preliminar más prometedor**, porque el Realtime —la pieza más cara de sustituir— se concentra en el dominio que E4 propone conservar; no es una conclusión, depende de T-35/T-37 en Etapa B. Pendiente de autorización para el commit de cierre de Fase 3; al autorizarse, arranca Fase 4 (T-27 — resumen ejecutivo, cierre de la Etapa A y PUERTA 2).
+**Fases 0, 1, 2 y 3 completadas y commiteadas** (T-01 a T-26, PUERTA 1 pasada, dictamen preliminar emitido). **Fase 4 casi completa** (T-27, T-28 hechas): resumen ejecutivo emitido (`20-resumen-ejecutivo.md`), vigencia re-verificada (`origin/master` sigue en `3771e7f`, sin deriva). **Etapa A tiene contenido completo en los 20 capítulos.**
+
+**T-29 (PUERTA 2) y T-30 (publicación/PR) no pueden completarse de forma autónoma:** T-29 requiere una sesión real con Aldo Álvarez; T-30 exige que el programador abra el PR (`rules/version-control.md` §5, Claude Code nunca lo hace). Pendiente de autorización para el commit de T-27/T-28; al autorizarse, la Etapa A queda lista para que Javier agende la revisión con Aldo y abra el PR cuando corresponda.
 
 ---
 
@@ -33,8 +35,8 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | **Fase 1 — Inventario y mapeo** | `187` | T-06 a T-15 | 4 – 6 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
 | **Fase 2 — Análisis de calidad y riesgos** | `188` | T-16 a T-21 | 3 – 4 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
 | **Fase 3 — Escenarios y dictamen preliminar** | `189` | T-23 a T-26 | 3 – 4 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
-| **Fase 4 — Resumen ejecutivo, revisión y cierre de Etapa A** | `190` | T-27 a T-30 | 2 – 3 | | | 0 | 3 | ⏳ Pendiente |
-| **Subtotal Etapa A** | — | 29 tareas | ~13 – 19 | | | 0 | 19 | 🟡 En progreso |
+| **Fase 4 — Resumen ejecutivo, revisión y cierre de Etapa A** | `190` | T-27 a T-30 | 2 – 3 | 2026-08-24 | | 1 | 1-2 | 🟡 En progreso — T-27/T-28 hechas, T-29/T-30 requieren al programador |
+| **Subtotal Etapa A** | — | 29 tareas | ~13 – 19 | | | 4 | 1-2 | 🟡 En progreso |
 | **ETAPA B — La plataforma** *(sin fecha)* | | | | | | | | |
 | **Fase 5 — Supabase verificado** | `191` | T-31 a T-35 | 3 – 4 | | | 0 | 4 | 🔴 Bloqueada (falta A1/A2) |
 | **Fase 6 — API de SIGA, E4 y dictamen definitivo** | `192` | T-36 a T-38 | 2 – 3 | | | 0 | 3 | 🔴 Bloqueada (falta A3) |
@@ -103,11 +105,21 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 
 ---
 
+## Tareas completadas ✅ (Fase 4, parcial)
+
+| ID | Tarea | Completada por | Fecha | Notas |
+|---|---|---|---|---|
+| T-27 | Resumen ejecutivo para Dirección | Claude Code | 2026-08-24 | `analisis/20-resumen-ejecutivo.md`. Sin detalle técnico, mismo dictamen preliminar en lenguaje de negocio. Marcado preliminar, se reemplaza en T-38. |
+| T-28 | Re-verificación de vigencia y cobertura declarada | Claude Code | 2026-08-24 | `analisis/README.md` actualizado. `origin/master` re-consultado: sigue en `3771e7f`, sin deriva durante toda la ventana de trabajo. Cobertura consolidada de los 20 capítulos publicada. |
+
+---
+
 ## Tareas pendientes ⏳
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-27 a T-30 | Fase 4 (Etapa A) | Autorización de commit de cierre de Fase 3 |
+| T-29 | Revisión con la Dirección de TI (PUERTA 2) | Requiere sesión real con Aldo Álvarez — no ejecutable de forma autónoma |
+| T-30 | Publicación final y confidencialidad (PR) | El PR lo abre siempre el programador (`rules/version-control.md` §5) — no Claude Code |
 | T-31 a T-35 | Fase 5 (Etapa B) | A1 (lectura Supabase) y A2 (paneles de costo) |
 | T-36 a T-38 | Fase 6 (Etapa B) | A3 (fuente de la API de SIGA) |
 
@@ -157,6 +169,8 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | `analisis/README.md` | Actualizado (índice, cierre Fase 2) | Cierre de Fase 2 |
 | `analisis/16-supabase-vs-net8.md`, `17-escenarios-destino.md`, `18-opciones-pwa.md`, `19-dictamen.md` | Completados (contenido) | T-23 a T-26 |
 | `analisis/README.md` | Actualizado (índice, cierre Fase 3, dictamen preliminar) | Cierre de Fase 3 |
+| `analisis/20-resumen-ejecutivo.md` | Completado (contenido) | T-27 |
+| `analisis/README.md` | Actualizado (vigencia re-verificada, cobertura de los 20 capítulos, cierre de Fase 4 parcial) | T-28 |
 
 ---
 
@@ -167,16 +181,17 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | `4609986` | `[PJ3896-garantimax-analisis-tecnico] Fase 0 - Habilitacion, linea base y metodo` | 2026-08-24 |
 | `4617417` | `[PJ3896-garantimax-analisis-tecnico] Fase 1 - Inventario y mapeo (PUERTA 1)` | 2026-08-24 |
 | `0629d14` | `[PJ3896-garantimax-analisis-tecnico] Fase 2 - Analisis de calidad y riesgos` | 2026-08-24 |
+| `3e54bd2` | `[PJ3896-garantimax-analisis-tecnico] Fase 3 - Escenarios y dictamen preliminar` | 2026-08-24 |
 
 ---
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** Fase 3 completa (dictamen preliminar emitido), pendiente de autorización de commit. Al autorizarse, arranca Fase 4 (T-27 — resumen ejecutivo, re-verificación de vigencia y cobertura, y la PUERTA 2 con la Dirección de TI).
-- **El dictamen es preliminar y debe leerse como tal:** `analisis/19-dictamen.md` recomienda E4 como candidato más prometedor, pero lo dice explícitamente sujeto a T-35 (peso real por dominio) y T-37 (costuras resueltas) en Etapa B.
-- **Contexto importante:** el repositorio analizado (`garantimax`) está fijado en `origin/master` = `3771e7f` (2026-08-19). Si se retoma días después, verificar si `origin/master` avanzó y decidir si re-sincronizar o mantener el commit fijado (el PRD exige declarar vigencia, RNF-14 — no re-sincronizar a mitad de análisis sin registrar el salto).
+- **Por dónde continuar:** T-27 y T-28 completas, pendiente de autorización de commit. Al autorizarse, **la Etapa A queda con contenido completo en sus 20 capítulos** — lo único que falta es acción humana: T-29 (agendar y realizar la revisión con Aldo Álvarez) y T-30 (abrir el PR, siempre responsabilidad del programador).
+- **El dictamen es preliminar y debe leerse como tal:** `analisis/19-dictamen.md` y `analisis/20-resumen-ejecutivo.md` recomiendan E4 como candidato más prometedor, pero lo dicen explícitamente sujeto a T-35 (peso real por dominio) y T-37 (costuras resueltas) en Etapa B.
+- **Contexto importante:** el repositorio analizado (`garantimax`) está fijado en `origin/master` = `3771e7f` (2026-08-19), re-verificado sin cambios al cierre de Fase 4 (T-28, 2026-08-24). Si se retoma días después de esto, volver a verificar si `origin/master` avanzó (RNF-14 — no re-sincronizar sin registrar el salto).
 - **Hallazgo Crítico pendiente de verificación en cuanto llegue A1:** `mora_corte` (`hallazgos.md` #1) — es la primera tabla a revisar en T-32.
-- **Decisión pendiente del solicitante:** fecha de compromiso (aunque sea tentativa) para A1 (`.env` de Supabase) y A3 (fuente de la API de SIGA), para poder planificar cuándo arranca la Etapa B.
+- **Decisión pendiente del solicitante:** fecha de compromiso (aunque sea tentativa) para A1 (`.env` de Supabase) y A3 (fuente de la API de SIGA), para poder planificar cuándo arranca la Etapa B — y agendar la sesión de T-29 con Aldo Álvarez.
 - **No tocar:** `garantimax` es de solo lectura durante todo el proyecto. Cualquier necesidad de escritura ahí requiere autorización explícita de TI (RNF-01).
 
 ---

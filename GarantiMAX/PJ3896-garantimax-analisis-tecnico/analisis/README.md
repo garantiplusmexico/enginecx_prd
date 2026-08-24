@@ -24,13 +24,15 @@
 
 Si al retomar el trabajo `origin/master` avanzó de nuevo, **no re-sincronizar sin registrar el salto aquí** — el objetivo es que la vigencia del documento sea rastreable, no que sea siempre el código más nuevo.
 
+**Re-verificación de cierre de Etapa A (T-28, 2026-08-24):** `origin/master` se volvió a consultar al cerrar la Fase 4 — **sigue en `3771e7f`, sin cambios** desde que se fijó el 24-08-2026. El commit que rige todo este análisis (Fases 0 a 4) es el mismo del arranque; no hubo deriva del código durante la ventana de trabajo. Se detectó una rama nueva sin mergear (`feat/escenario-agosto`), que no afecta la vigencia por no estar en `master`. Próxima re-verificación: T-38, al cierre de la Etapa B — para entonces, si `origin/master` avanzó, se documentará el salto y los cambios relevantes del período.
+
 ---
 
 ## Etapas
 
 | | Etapa A — El proyecto por dentro | Etapa B — La plataforma |
 |---|---|---|
-| Estado | 🟡 En progreso (Fase 3 cerrada — dictamen preliminar emitido) | 🔴 Bloqueada — sin fecha |
+| Estado | 🟡 Análisis completo — pendiente PUERTA 2 (revisión de Dirección) | 🔴 Bloqueada — sin fecha |
 | Necesita | Solo el repositorio | A1 (lectura Supabase) + A3 (API de SIGA) |
 | Entrega | Análisis técnico completo + dictamen **preliminar** | Verificación contra la base + dictamen **definitivo** |
 
@@ -62,7 +64,7 @@ Detalle completo en `PLAN.md` §1.4. Estado de accesos en [`preguntas-abiertas.m
 | 17 | [Escenarios de destino (E0–E4)](17-escenarios-destino.md) | RF-18, RF-20 | A (preliminar) — T-24 · B (E4 resuelto) — T-37 | 🟡 Cerrado en A, pendiente de B |
 | 18 | [Opciones de PWA](18-opciones-pwa.md) | RF-19 | A — T-25 | ✅ Cerrado |
 | 19 | [Dictamen y recomendación](19-dictamen.md) | RF-21 | A (preliminar) — T-26 · B (definitivo) — T-38 | 🟡 **Preliminar** — pendiente de B |
-| 20 | [Resumen ejecutivo](20-resumen-ejecutivo.md) | RF-22 | A — T-27 · B (actualizado) — T-38 | ⏳ Pendiente |
+| 20 | [Resumen ejecutivo](20-resumen-ejecutivo.md) | RF-22 | A — T-27 · B (actualizado) — T-38 | 🟡 **Preliminar** — pendiente de B |
 | — | [Registro de hallazgos](hallazgos.md) | RNF-09 | Transversal | ✅ Consolidado — 8 hallazgos (1 Crítico, 1 Alto, 3 Medio, 2 Bajo-Medio, 1 Bajo) |
 | — | [Accesos y preguntas abiertas](preguntas-abiertas.md) | RF-23, RNF-11 | Transversal | 🟡 En curso |
 
@@ -95,6 +97,25 @@ Los cinco capítulos de calidad (C10–C14) cerrados en su alcance de Etapa A. *
 
 Los cinco servicios de Supabase evaluados por separado (C15), los cinco escenarios E0–E4 comparados con la misma rejilla (C16), las tres opciones de PWA (C17), y un **dictamen preliminar** (C18) derivado paso a paso del árbol de decisión del PRD. **Lectura preliminar: E4 (retención parcial por dominio) es el candidato más prometedor**, porque el Realtime — la pieza más cara de sustituir de las cinco de Supabase — se concentra justo en el dominio que E4 propone conservar. **No es una conclusión**: depende de T-35 (peso real) y T-37 (costuras resueltas) en Etapa B. E0 sigue siendo línea base seria; E2 (rehacer todo) no tiene evidencia que lo justifique hoy.
 
-## Cobertura declarada (RNF-11)
+## Cierre de Fase 4 (T-27, T-28) — Etapa A con contenido completo
 
-**Fases 0 a 3 cerradas (24-08-2026).** 20 de 20 capítulos tienen contenido — 12 al 100% de su alcance en Etapa A (C1, C2, C4, C5, C6, C8, C9, C10, C12, C13, C14, C17). C3, C5', C11, C15, C16 y C19 cerrados en su alcance de Etapa A, con su mitad de Etapa B explícitamente pendiente y marcada en cada uno. C7 sin empezar, bloqueada por diseño (A3). Falta Fase 4: C19 (resumen ejecutivo, T-27), re-verificación de vigencia, y la revisión con la Dirección de TI (PUERTA 2).
+**T-27** — resumen ejecutivo (`20-resumen-ejecutivo.md`) emitido, sin detalle técnico, para Dirección — mismo dictamen preliminar de C18 en lenguaje no técnico.
+
+**T-28** — re-verificación de vigencia: `origin/master` sigue en el commit fijado (`3771e7f`), sin deriva durante toda la ventana de trabajo (24-08-2026). Cobertura declarada (RNF-11), consolidada al cierre de toda la Etapa A:
+
+| Capítulo | Estado |
+|---|---|
+| C1, C2, C4, C5, C6, C8, C9, C10, C12, C13, C14, C17 (12 capítulos) | ✅ 100% de su alcance en Etapa A |
+| C3, C5', C11, C15, C16 (5 capítulos) | 🟡 Cerrados en Etapa A — inferido/estructural, verificación real pendiente de Etapa B |
+| C18, C19 (dictamen y resumen ejecutivo) | 🟡 **Preliminares** por diseño — se reemplazan en T-38 |
+| C7 (API de SIGA) | 🔴 Sin empezar — bloqueada por diseño (A3), no es un hueco |
+
+**Los 20 capítulos tienen contenido (100%).** Ninguno quedó vacío ni con relleno sin evidencia — donde falta profundidad, está declarado explícitamente el porqué y qué tarea de Etapa B lo cierra.
+
+---
+
+## Pendiente para cerrar la Etapa A — requiere al programador, no a Claude Code
+
+**T-29 (PUERTA 2 — revisión con la Dirección de TI)** no se puede ejecutar de forma autónoma: requiere una sesión real con Aldo Álvarez que registre sus preguntas y las cierre antes de dar el documento por final. Queda **pendiente de agendar**.
+
+**T-30 (publicación final)**: antes de abrir el PR, falta la revisión de confidencialidad final (ya verificada de forma incremental en cada fase — ningún secreto ni dato personal transcrito, `hallazgos.md` revisado). **El Pull Request lo abre siempre el programador, nunca Claude Code** (`rules/version-control.md` §5) — la rama `feature/PJ3896-garantimax-analisis-tecnico` está lista y pusheada para que Javier abra el PR hacia `main` cuando lo considere oportuno, marcado como **entrega parcial** (Etapa A completa, Etapa B pendiente de accesos).

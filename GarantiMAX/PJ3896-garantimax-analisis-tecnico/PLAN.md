@@ -11,6 +11,7 @@
 | Rama base | `main` (en `enginecx_prd`) — ⚠️ no existe `develop`, ver §12 |
 | Rama | `feature/PJ3896-garantimax-analisis-tecnico` |
 | Tipo | Análisis técnico / discovery — entregable documental, **no se escribe código de producto** |
+| Etapas | **A** — el proyecto por dentro (arranca 24-08, solo repositorio) · **B** — la plataforma: Supabase y API de SIGA (sin fecha, arranca al recibir A1/A3). Ver §1.4 |
 | Responsable | Javier Antonio Oropeza Camacho |
 | Folio PRD | `PJ3896` |
 | Fecha de generación | 24-08-2026 |
@@ -27,6 +28,8 @@ Este plan ejecuta un **análisis técnico de solo lectura** sobre GarantiMAX y p
 **Qué se crea:** 21 documentos `.md` (un archivo por capítulo C1–C19, más índice y metodología), un registro único de hallazgos priorizados, un registro de supuestos y preguntas abiertas, y una carpeta de inventarios extraídos de forma automatizada. Todo vive en `enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/analisis/`.
 
 **Qué se modifica:** nada del sistema analizado. La única escritura es documental, en el repositorio de PRDs.
+
+**El plan se ejecuta en dos etapas** (ver §1.4): la **Etapa A** levanta todo lo técnico del proyecto usando solo el repositorio, y arranca hoy; la **Etapa B** cierra lo que exige accesos externos —verificación contra la base Supabase y auditoría de la API de SIGA— y arranca cuando esos accesos lleguen.
 
 **Arquitectura aplicable:** ninguna de las de `rules/arquitectura.md` — este proyecto no despliega componentes. Lo que sí aplica es el **marco de comparación**: la evaluación de escenarios de destino se hace contra el estándar corporativo de Engine (.NET 8, ECS + Fargate, RDS PostgreSQL, Identity, SignalR, EF Core), tomado de `rules/stack.md`, `rules/infraestructura.md` y `rules/arquitectura.md` como referencia de sustitución. Ver §3.
 
@@ -57,29 +60,31 @@ Dimensionamiento adicional levantado para estimar (aproximado, a confirmar contr
 
 ### 1.2 Trazabilidad capítulo → requerimiento → tarea
 
-| Cap. | Requerimientos | Tarea | Prioridad |
+| Cap. | Requerimientos | Etapa A | Etapa B (cierre) |
 |---|---|---|---|
-| C1 Ficha tecnológica | RF-01 | T-06 | P1 |
-| C2 Mapa de módulos y lógica | RF-02, RF-03 | T-07 | P1 |
-| C3 Modelo de datos | RF-04 | T-08, T-09 | P1 |
-| C4 Catálogo Edge Functions | RF-06 | T-11 | P1 |
-| C5 Integraciones externas | RF-07 | T-12 | P1 |
-| C5' Datos muertos | RF-05 | T-10 | P2 |
-| C6 Uso de SIGA (Excel) | RF-08 | T-13 | P1 |
-| C7 Cobertura API de SIGA | RF-09 | T-22 | P3 (depende de acceso) |
-| C8 Mapa de Realtime | RF-10 | T-14 | P1 |
-| C9 PWA y offline | RF-11 | T-15 | P1 |
-| C10 Arquitectura y patrones | RF-12 | T-16 | P1 |
-| C11 Seguridad | RF-13 | T-17 | P1 |
-| C12 Rendimiento y escalabilidad | RF-14 | T-18 | P2 |
-| C13 Testing, CI/CD y proceso | RF-15 | T-19 | P2 |
-| C14 Observabilidad y operación | RF-16 | T-20 | P2 |
-| C15 Supabase vs .NET 8 — qué alberga, por dominio | RF-17 | T-23 | P1 |
-| C16 Escenarios E0–E3 **+ E4 (retención parcial)** | RF-18, RF-20 | T-24 | P1 |
-| C17 Opciones de PWA | RF-19 | T-25 | P1 |
-| C18 Dictamen | RF-21 | T-26 | P1 |
-| C19 Resumen ejecutivo | RF-22 | T-27 | P1 |
-| Transversal | RF-23, RF-24, RNF-01…14 | T-03, T-04, T-28, T-30 | P1 |
+| C1 Ficha tecnológica | RF-01 | T-06 | — |
+| C2 Mapa de módulos, lógica y **dominio** | RF-02, RF-03 | T-07 | — |
+| C3 Modelo de datos | RF-04 | T-08, T-09 *(inferido)* | **T-31, T-33** *(verificado)* |
+| C4 Catálogo Edge Functions | RF-06 | T-11 | — |
+| C5 Integraciones externas | RF-07 | T-12 | — |
+| C5' Datos muertos | RF-05 | T-10 *(candidatos)* | **T-34** *(confirmados)* |
+| C6 Uso de SIGA (Excel) | RF-08 | T-13 | — |
+| C7 Cobertura API de SIGA | RF-09 | — | **T-36** |
+| C8 Mapa de Realtime | RF-10 | T-14 | — |
+| C9 PWA y offline | RF-11 | T-15 | — |
+| C10 Arquitectura y patrones | RF-12 | T-16 | — |
+| C11 Seguridad | RF-13 | T-17 *(código; RLS declarado)* | **T-32** *(RLS real)* |
+| C12 Rendimiento y escalabilidad | RF-14 | T-18 | — |
+| C13 Testing, CI/CD y proceso | RF-15 | T-19 | — |
+| C14 Observabilidad y operación | RF-16 | T-20 | — |
+| C15 Supabase vs .NET 8 — qué alberga, por dominio | RF-17 | T-23 *(estructura)* | **T-35** *(peso y costo)* |
+| C16 Escenarios E0–E4 | RF-18, RF-20 | T-24 | **T-37** *(E4 resuelto)* |
+| C17 Opciones de PWA | RF-19 | T-25 | — |
+| C18 Dictamen | RF-21 | T-26 *(preliminar)* | **T-38** *(definitivo)* |
+| C19 Resumen ejecutivo | RF-22 | T-27 | **T-38** *(actualizado)* |
+| Transversal | RF-23, RF-24, RNF-01…14 | T-03, T-04, T-28, T-30 | T-38 |
+
+> De los 20 capítulos, **12 se cierran por completo en la Etapa A** (C1, C2, C4, C5, C6, C8, C9, C10, C12, C13, C14, C17), **7 quedan a medias** esperando verificación (C3, C5', C11, C15, C16, C18, C19) y solo **1 —C7, la API de SIGA— no puede ni empezarse** sin el acceso. Ese reparto es la razón por la que arrancar hoy tiene sentido: la mayor parte del análisis técnico no depende de los permisos que faltan.
 
 > La columna **Prioridad** no viene del PRD (que declara las tres fases como un único MVP). Se deriva aquí a partir del árbol de decisión de la §7.3 del PRD: **P1** es lo sin lo cual el dictamen no se sostiene, **P2** es profundidad que puede recortarse declarando cobertura (RNF-11), **P3** es lo que depende de un tercero.
 >
@@ -101,23 +106,54 @@ Si la hipótesis se sostiene, **E4 es el escenario más barato de todos**: no mi
 
 Esto **no es un escenario más en la lista**: cambia lo que Fase 1 tiene que producir. T-07 y T-08 dejan de ser un inventario plano y pasan a ser una **segmentación por dominio**, con la pregunta explícita de qué tablas, RPCs y cálculos cruzan la frontera. Esas costuras son lo que decide si E4 es viable, y no se pueden reconstruir después sin volver a recorrer los 24 módulos.
 
+La **hipótesis de dominios se construye en la Etapa A** desde el código y las migraciones (que es donde vive la estructura). Lo que la Etapa B añade no es la hipótesis sino el **peso**: cuántas filas, cuántas invocaciones y cuánto costo hay a cada lado de la frontera. Se puede proponer el corte sin la base; no se puede recomendarlo.
+
+### 1.4 Las dos etapas y por qué se separan
+
+Dos de los seis accesos (§2.1) no están disponibles hoy: **A1**, lectura de la base Supabase —el `.env` está pendiente de entrega— y **A3**, la fuente autoritativa de la API de SIGA. En lugar de esperar, el plan se parte en dos etapas con entregable propio cada una.
+
+| | **Etapa A — El proyecto por dentro** | **Etapa B — La plataforma** |
+|---|---|---|
+| **Arranca** | Ahora (24-08-2026) | Al recibir A1 / A3 |
+| **Necesita** | Solo el repositorio | A1 lectura Supabase, A2 costos, A3 API de SIGA, A4 muestras Excel |
+| **Fases** | 0 a 4 (T-01 a T-30) | 5 y 6 (T-31 a T-38) |
+| **Estimación** | 13 – 19 días hábiles | 5 – 7 días hábiles |
+| **Entrega** | Análisis técnico completo + **dictamen preliminar** | Verificación contra la base, matriz de SIGA, E4 resuelto y **dictamen definitivo** |
+
+**Qué queda dentro de la Etapa A** (todo lo técnico del proyecto, que es lo que se pidió priorizar): stack y dependencias, los 24 módulos con sus reglas de negocio y su segmentación por dominio, el modelo de datos **inferido de las 364 migraciones**, las 46 Edge Functions, las integraciones externas, el flujo real de importación de Excel, los 11 canales de Realtime, la PWA y su offline, la evaluación de arquitectura y patrones, la seguridad **a nivel de código**, rendimiento, testing/CI-CD, observabilidad, y la comparación de los cinco escenarios con dictamen preliminar.
+
+**Qué se aparta a la Etapa B:** solo lo que es imposible afirmar sin el acceso — el modelo de datos *verificado contra el catálogo real* (frente al inferido), las políticas RLS *reales* (frente a las declaradas en migraciones), los volúmenes y el costo, los datos muertos *confirmados*, y la matriz de cobertura de la API de SIGA.
+
+**El caso de SIGA merece una nota,** porque el orden importa: hoy los datos entran por **importación manual de Excel**, y eso se documenta entero en la Etapa A (T-13) leyendo los parsers, que son la fuente de verdad de lo que realmente se consume. Solo cuando esa lista de campos exista se puede preguntarle algo útil a la API de SIGA — *"¿cubres estos 40 campos concretos?"* en lugar de *"¿qué tienes?"*. Así que la Etapa B no está esperando el acceso por comodidad: **necesita el resultado de la Etapa A para que la auditoría valga**.
+
+**Lo que cuesta partirlo.** Dos etapas suman más que una sola: **18 – 26 días hábiles** contra los 15 – 22 de la versión monolítica. La diferencia es el retrabajo de volver a abrir capítulos ya escritos para reemplazar lo inferido por lo verificado. Es un precio consciente: se compra la posibilidad de arrancar hoy en lugar de esperar bloqueado, y lo que se paga son días de re-verificación, no calidad del resultado final.
+
+**El riesgo real de este esquema** es que la Etapa B nunca llegue y el dictamen preliminar se lea como definitivo. Mitigación explícita: cada capítulo afectado lleva una marca visible de **"inferido — pendiente de verificación en Etapa B"**, y el dictamen preliminar declara en su primera línea qué conclusiones podrían cambiar cuando se verifique. Un documento que se pasa por definitivo sin serlo es peor que no tenerlo.
+
 ---
 
 ## 2. Prerequisitos
 
-- [ ] PRD validado por el responsable
-- [x] Acceso al repositorio analizado confirmado (`garantimax` local, remoto `garantiplusmexico/garantiplus-dashboard`)
-- [x] Acceso al repositorio del entregable confirmado (`garantiplusmexico/enginecx_prd`, rama `main` al día)
-- [x] `CLAUDE.md` presente en el repositorio analizado
-- [ ] **A1 — Lectura de la base Supabase** (bloquea T-08, T-09, T-10 y parte de T-17)
-- [ ] **A2 — Paneles de costo y consumo de Supabase y Vercel** (bloquea la dimensión de costo de T-23 y T-24)
-- [ ] **A3 — Fuente autoritativa de la API de SIGA** (bloquea T-22)
-- [ ] **A4 — Muestras de los reportes Excel de SIGA** (bloquea el detalle de T-13)
-- [ ] **A5 — Panel de Sentry** (bloquea el detalle de T-20)
-- [ ] **A6 — Ventanas de conversación con los interlocutores** (bloquea la validación de T-07, T-14 y T-25)
-- [x] **Confirmado: la decisión de migrar NO está tomada.** El propósito del análisis es determinarla. Los cinco escenarios se evalúan con criterios idénticos y sin escenario favorito (RNF-10). Ver §1.3 y §12 nota 5.
+**Para la Etapa A — todo listo, se arranca hoy:**
 
-> **Ninguno de los prerequisitos abiertos detiene el arranque.** Fase 0 y buena parte de Fase 1 corren con solo el repositorio. Lo que falte se registra como pregunta abierta (T-02) en lugar de rellenarse con una estimación inventada — es el patrón que el PRD fija en su §7.1.
+- [ ] PRD validado por el responsable
+- [x] Acceso al repositorio analizado (`garantimax` local, remoto `garantiplusmexico/garantiplus-dashboard`)
+- [x] Acceso al repositorio del entregable (`garantiplusmexico/enginecx_prd`, rama `main` al día)
+- [x] `CLAUDE.md` presente en el repositorio analizado
+- [x] **Confirmado: la decisión de migrar NO está tomada.** El propósito del análisis es determinarla. Los cinco escenarios se evalúan con criterios idénticos y sin favorito (RNF-10). Ver §1.3 y §12 nota 5.
+- [ ] **A5 — Panel de Sentry** — deseable, no bloqueante. Sin él, T-20 documenta la configuración desde el código pero no qué se captura de verdad.
+- [ ] **A6 — Ventanas de conversación con los interlocutores** — deseable, no bloqueante. Sin ellas, la criticidad operativa (T-07) y la latencia exigida (T-14) se marcan como supuesto.
+
+> **Nada de lo anterior detiene el arranque de la Etapa A.** Las cinco fases corren con el repositorio en la mano. Lo que falte se registra como pregunta abierta (T-02) en lugar de rellenarse con una estimación inventada — es el patrón que el PRD fija en su §7.1.
+
+**Para la Etapa B — pendientes, y por eso la etapa está apartada:**
+
+- [ ] **A1 — Lectura de la base Supabase** · ⏳ *el `.env` está pendiente de entrega*. Gobierna toda la Fase 5 (T-31 a T-35).
+- [ ] **A2 — Paneles de costo y consumo de Supabase y Vercel**. Gobierna T-35 y la dimensión de costo del dictamen definitivo.
+- [ ] **A3 — Fuente autoritativa de la API de SIGA**. Gobierna T-36.
+- [ ] **A4 — Muestras de los reportes Excel de SIGA**. Refina T-13 (Etapa A) y alimenta T-36.
+
+> **La Etapa B no arranca hasta que llegue A1 o A3**, y no pasa nada: su entregable es *verificación*, no descubrimiento. Mientras no lleguen, los capítulos afectados quedan marcados como **inferido — pendiente de verificación en Etapa B**, nunca como cerrados.
 
 ### 2.1 Qué se necesita exactamente, de quién y en qué forma
 
@@ -141,8 +177,8 @@ Detalle operativo para poder pedir los accesos sin una segunda ronda de aclaraci
 - La fuente autoritativa: repositorio, Swagger/OpenAPI o documentación vigente — **con cuál de las tres es la buena**, si hay más de una.
 - Un contacto con nombre para validar cobertura y para responder si se pueden agregar endpoints.
 - Acceso de lectura al repositorio, si la fuente es el código.
-- **No se piden credenciales de ejecución:** la auditoría de T-22 es documental, no se llama la API.
-- **Si no llega:** T-22 se cierra declarando el hueco, y el dictamen asume como riesgo aceptado que cualquier escenario de migración arrastra la dependencia manual de Excel.
+- **No se piden credenciales de ejecución:** la auditoría de T-36 es documental, no se llama la API.
+- **Si no llega:** T-36 se cierra declarando el hueco, y el dictamen asume como riesgo aceptado que cualquier escenario de migración arrastra la dependencia manual de Excel.
 
 **A4 — Muestras de reportes Excel de SIGA** · pedir a: Fabrizio Álvarez o quien ejecute la carga
 - Un archivo real de cada uno de los tres: averías **ACTIVAS**, averías **CERRADAS** y **contratos**.
@@ -243,7 +279,7 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
 
 ---
 
-## 4. Tareas de desarrollo
+## 4. Tareas de desarrollo — Etapa A (el proyecto por dentro)
 
 > Todas las tareas son de **lectura y redacción**. Ninguna modifica el sistema analizado (RNF-01).
 > Todo hallazgo, cifra o afirmación cita su fuente: archivo y línea, consulta, configuración o interlocutor (RF-23).
@@ -275,7 +311,7 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
   - Acción: comandos de solo lectura sobre el repositorio, guardados junto a su salida para que cualquiera con los mismos accesos los reproduzca (RNF-02).
   - Criterio de completitud: las siete métricas de §1.1 quedan reproducibles con el comando que las generó, y las diferencias contra el PRD v0.1 quedan explicadas.
 
-### Fase 1 — Inventario y mapeo (26-08 → 03-09) · **PUERTA 1 al cierre**
+### Fase 1 — Inventario y mapeo (26-08 → 02-09) · **PUERTA 1 al cierre**
 
 - [ ] **T-06** — C1: Ficha tecnológica con veredicto por dependencia *(RF-01)*
   - Archivos a crear/modificar: `analisis/01-ficha-tecnologica.md`
@@ -291,20 +327,21 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
 - [ ] **T-08** — C3: Inventario de tablas, RLS, relaciones y volúmenes *(RF-04)*
   - Archivos a crear/modificar: `analisis/03-modelo-datos.md`, `analisis/inventarios/tablas.csv`
   - Contenido: todas las tablas con propósito, dominio, claves y relaciones, volumen de filas, política RLS asociada, y módulos que la leen y escriben. Diagramas ER por dominio en mermaid.
-  - Punto de partida: ~152 `CREATE TABLE` en el historial de migraciones — el número vivo se confirma contra el catálogo real.
-  - **Además — segmentación por dominio (insumo de E4, §1.3):** cada tabla se etiqueta con su dominio (comercial / operación / transversal) y se marca si la escriben o leen módulos de **más de un** dominio. La salida crítica es la lista de **tablas, RPCs y cálculos que cruzan la frontera**: son el precio exacto de partir la plataforma, y también el argumento para no partirla.
-  - Criterio de completitud: cada tabla del catálogo real aparece o queda declarada como no alcanzada (RNF-11); toda tabla compartida entre dominios está identificada como tal. **Depende del acceso A1.**
+  - **Alcance en Etapa A: reconstruido desde las 364 migraciones y desde el uso en el código**, no desde el catálogo real. El esquema se reconstruye leyendo el historial completo (`CREATE TABLE`, `ALTER TABLE`, `CREATE POLICY`), que es una fuente legítima y sorprendentemente completa — solo no es *autoritativa*, porque no revela lo que se cambió a mano fuera de las migraciones ni los volúmenes.
+  - Punto de partida: ~152 `CREATE TABLE` en el historial. El número vivo se confirma en **T-31 (Etapa B)**.
+  - **Además — segmentación por dominio (insumo de E4, §1.3):** cada tabla se etiqueta con su dominio (comercial / operación / transversal) y se marca si la escriben o leen módulos de **más de un** dominio. La salida crítica es la lista de **tablas, RPCs y cálculos que cruzan la frontera**: son el precio exacto de partir la plataforma, y también el argumento para no partirla. Esto **no requiere A1**: la frontera se deduce de qué módulo toca qué tabla, y eso está en el código.
+  - Criterio de completitud: toda tabla hallada en las migraciones tiene ficha y dominio; toda tabla compartida entre dominios está identificada. El capítulo se cierra con la marca **inferido — pendiente de verificación en Etapa B** y con la lista de lo que solo la base puede responder (volúmenes, tablas efectivamente vivas, RLS real).
 
 - [ ] **T-09** — C3: Inventario de RPCs *(RF-04)*
   - Archivos a crear/modificar: `analisis/03-modelo-datos.md`, `analisis/inventarios/rpcs.csv`
   - Contenido: por RPC — nombre, firma, propósito, si muta datos, `security definer` sí/no, y llamadores localizados en el código.
-  - Punto de partida: ~269 declaraciones `CREATE [OR REPLACE] FUNCTION` en migraciones; el número de RPCs vivas será menor por los reemplazos.
-  - Criterio de completitud: toda RPC viva tiene firma, propósito y al menos un llamador o la marca explícita "sin llamador localizado" (insumo directo de T-10).
+  - **Alcance en Etapa A:** las ~269 declaraciones `CREATE [OR REPLACE] FUNCTION` de las migraciones se colapsan por nombre para deducir la **última definición** de cada RPC, que es la que presumiblemente está viva. Los llamadores sí son definitivos: salen de buscar cada nombre en `src/` y en las Edge Functions, y eso no necesita la base.
+  - Criterio de completitud: toda RPC deducida tiene firma, propósito y al menos un llamador o la marca "sin llamador localizado" (insumo directo de T-10). La confirmación de qué RPCs existen realmente y con qué `security definer` se cierra en **T-33 (Etapa B)**.
 
-- [ ] **T-10** — C5': Detección de datos muertos *(RF-05)* · **P2**
+- [ ] **T-10** — C5': Candidatos a datos muertos, por ausencia de uso en el código *(RF-05)* · **P2**
   - Archivos a crear/modificar: `analisis/04-datos-muertos.md`
-  - Contenido: tablas, columnas y RPCs sin uso, y duplicidades, cruzando el historial de las 364 migraciones contra el catálogo real y contra los llamadores hallados en T-07/T-09.
-  - Criterio de completitud: lista con nivel de confianza por ítem (confirmado sin uso / sospechoso / no concluyente). Es insumo para no arrastrar basura a un sistema nuevo, así que un falso positivo cuesta más que un hueco: lo dudoso se marca dudoso.
+  - **Alcance en Etapa A:** la mitad del trabajo que **sí** se puede hacer sin la base — cruzar el inventario de T-08/T-09 contra todas las referencias en `src/` y en las 46 Edge Functions, para producir la lista de tablas, columnas y RPCs **que nadie invoca desde el código**. También las duplicidades evidentes en el historial de migraciones (tablas creadas y sustituidas, RPCs redefinidas con otro nombre).
+  - Criterio de completitud: lista con nivel de confianza por ítem (*sin referencia en código* / *sospechoso* / *no concluyente*). **Ninguno se declara "muerto" en esta etapa:** una tabla sin referencia en el front puede estar escribiéndose desde un trigger, un cron o a mano. Afirmar el desuso requiere la base, y eso es **T-34 (Etapa B)** — que es exactamente por qué esta tarea sola no cierra el capítulo.
 
 - [ ] **T-11** — C4: Catálogo de las 46 Edge Functions *(RF-06)*
   - Archivos a crear/modificar: `analisis/05-edge-functions.md`, `analisis/inventarios/edge-functions.csv`
@@ -319,7 +356,7 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
 - [ ] **T-13** — C6: Consumo real de SIGA por importación de Excel *(RF-08)*
   - Archivos a crear/modificar: `analisis/07-uso-de-siga.md`
   - Contenido: flujo real de `ImportarAverias.tsx` / `parseAverias.ts` y `ImportarContratos.tsx` / `parseContratos.ts` — columnas consumidas, encabezado en fila 3, transformaciones, validaciones, tabla destino del upsert, frecuencia y responsable de la carga.
-  - Criterio de completitud: deja constancia explícita de que **hoy no hay consumo por API** (ninguna llamada HTTP a un host de SIGA en `src/` ni en las 46 Edge Functions), verificada de nuevo sobre el commit fijado. Alimenta directamente la matriz de T-22.
+  - Criterio de completitud: deja constancia explícita de que **hoy no hay consumo por API** (ninguna llamada HTTP a un host de SIGA en `src/` ni en las 46 Edge Functions), verificada de nuevo sobre el commit fijado. Alimenta directamente la matriz de T-36 (Etapa B).
 
 - [ ] **T-14** — C8: Mapa exacto de uso de Realtime *(RF-10)*
   - Archivos a crear/modificar: `analisis/09-mapa-realtime.md`
@@ -333,7 +370,7 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
 
 > **PUERTA 1 — Inventario completo y validado.** Antes de pasar a Fase 2: los 24 módulos, las 46 funciones, los 11 canales y el modelo de datos tienen ficha o declaración de no cobertura. Si hay huecos, se vuelve a Fase 1. No se juzga la calidad de lo que no está inventariado.
 
-### Fase 2 — Análisis de calidad y riesgos (04-09 → 10-09)
+### Fase 2 — Análisis de calidad y riesgos (03-09 → 08-09)
 
 - [ ] **T-16** — C10: Evaluación de arquitectura, patrones y buenas prácticas *(RF-12)*
   - Archivos a crear/modificar: `analisis/11-arquitectura-y-patrones.md`
@@ -342,8 +379,9 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
 
 - [ ] **T-17** — C11: Auditoría de seguridad *(RF-13)*
   - Archivos a crear/modificar: `analisis/12-seguridad.md`, `analisis/hallazgos.md`
-  - Contenido: políticas RLS por tabla y huecos, uso de `anon key` vs `service_role`, secretos en Edge Functions, endpoints públicos (portal cliente, webhooks de WhatsApp), exposición y tratamiento de datos personales, y esquema de roles/permisos frente al estándar de Engine (`rules/coding-guidelines.md` §6 y §11).
-  - Criterio de completitud: hallazgos con severidad y evidencia. **Una vulnerabilidad activa se escala a TI en el momento de detectarla, sin esperar al documento final** (acuerdo del PRD §13).
+  - Contenido: uso de `anon key` vs `service_role`, secretos en Edge Functions, endpoints públicos (portal cliente, webhooks de WhatsApp), exposición y tratamiento de datos personales, esquema de roles/permisos frente al estándar de Engine (`rules/coding-guidelines.md` §6 y §11), y las **políticas RLS tal como están declaradas en las migraciones**, con las tablas que nunca reciben una política.
+  - **Alcance en Etapa A:** todo lo anterior es auditable desde el código, y es donde vive la mayoría de los hallazgos serios — una llave mal usada, un webhook sin verificar o un secreto en el lugar equivocado se ven leyendo. Lo que **no** se puede afirmar sin la base es si RLS está *efectivamente activo* en cada tabla y si las políticas reales coinciden con las declaradas: eso es **T-32 (Etapa B)**.
+  - Criterio de completitud: hallazgos con severidad y evidencia; las conclusiones de RLS marcadas como *declaradas, no verificadas*. **Una vulnerabilidad activa se escala a TI en el momento de detectarla, sin esperar al documento final** (acuerdo del PRD §13) — y esto aplica desde el día 1, no al cierre de la etapa.
 
 - [ ] **T-18** — C12: Auditoría de rendimiento y escalabilidad *(RF-14)* · **P2**
   - Archivos a crear/modificar: `analisis/13-rendimiento-escalabilidad.md`, `analisis/hallazgos.md`
@@ -365,17 +403,16 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
   - Contenido: registro único con dimensión, severidad, descripción, evidencia (archivo/línea o consulta), impacto y recomendación, ordenado por severidad según el criterio publicado en T-04.
   - Criterio de completitud: 100% de los hallazgos con evidencia citada; ninguno sin severidad; los no verificables marcados como supuesto (RF-23).
 
-### Fase 3 — Escenarios, pros/contras y dictamen (11-09 → 17-09)
+### Fase 3 — Escenarios, pros/contras y dictamen preliminar (09-09 → 14-09)
 
-- [ ] **T-22** — C7: Auditoría de la API de SIGA y matriz de cobertura *(RF-09)* · **P3 — depende de acceso**
-  - Archivos a crear/modificar: `analisis/08-api-siga-cobertura.md`
-  - Contenido: matriz **dato requerido → endpoint que lo cubre / no existe**, campo por campo, derivada de los campos que T-13 documentó como consumidos hoy por Excel. Más la lista de endpoints que habría que construir.
-  - Criterio de completitud: cada campo con veredicto. **No se desarrolla ningún endpoint** (fuera de alcance). Si el acceso no llega, el capítulo se cierra declarando el hueco y su dueño — y el dictamen asume que cualquier escenario de migración arrastra la dependencia manual.
+- [ ] ~~**T-22**~~ — **trasladada a la Etapa B como T-36** (auditoría de la API de SIGA y matriz de cobertura). Requiere A3, y además necesita la lista de campos que produce T-13 para que la pregunta a SIGA sea útil. Ver §1.4.
+  - Lo que **sí** queda en la Etapa A: T-13 documenta qué campos entran hoy por Excel y deja preparada la **columna vacía** de la matriz (*dato requerido → endpoint que lo cubriría*). Cuando llegue A3, T-36 solo rellena la segunda columna.
 
 - [ ] **T-23** — C15: Supabase vs. .NET 8, servicio por servicio *(RF-17)*
   - Archivos a crear/modificar: `analisis/16-supabase-vs-net8.md`
   - Contenido: tabla por los cinco servicios (Postgres+RLS, Auth, Storage, Edge Functions, Realtime) con qué aporta hoy, sustituto en .NET 8, esfuerzo, riesgo y veredicto de convivencia. Incluye obligatoriamente **SignalR frente a Supabase Realtime** e **Identity frente a Supabase Auth**.
   - **Añadido: ¿qué alberga Supabase, por dominio?** Responder la pregunta de la Dirección con números, no con adjetivos: qué proporción de tablas, filas, invocaciones de Edge Function y mensajes de Realtime corresponde al dominio comercial y qué proporción al operativo (§1.3). Es lo que convierte E4 de intuición en escenario evaluable — y si el reparto resulta ser 90/10, el dictamen se escribe solo.
+  - **Alcance en Etapa A:** el reparto se estima por **estructura** — cuántas tablas, RPCs y Edge Functions hay a cada lado de la frontera, y de qué lado están los 11 canales de Realtime (que ya se sabe: War Room, call center y postventa). Eso alcanza para una hipótesis con forma. El reparto por **peso** —filas, invocaciones, mensajes, costo— exige A1 y A2, y se cierra en **T-35 (Etapa B)**.
   - **Añadido: qué haría falta exactamente para tener ese tiempo real en .NET.** No basta con "SignalR". Se dimensiona la pieza completa: servicio SignalR en ECS + Fargate, **backplane** (Redis o Azure SignalR) porque con más de una instancia detrás del ALB los grupos no se comparten solos, afinidad de sesión en el ALB, la reescritura del lado cliente de los 11 canales, y quién publica los eventos que hoy emite Postgres solo (`postgres_changes` no tiene equivalente gratuito: hay que emitirlos a mano desde la capa .NET). Con su costo mensual estimado y su riesgo operativo.
   - Criterio de completitud: los cinco servicios con veredicto, el reparto por dominio cuantificado (o declarado no cuantificable si falta A2), y el costo de reponer el tiempo real dimensionado en infraestructura y en desarrollo. Es el capítulo central: debe prevenir el error de subestimar lo que Supabase resuelve sin costo de desarrollo (riesgo declarado en el PRD §13). Aplica RNF-10 — el veredicto "no conviene sustituirlo" es un resultado válido.
 
@@ -390,13 +427,14 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
   - Contenido: mismo proyecto reutilizando vistas / proyecto o app separada consumiendo la misma API / app nativa o híbrida. Cada una con pros, contras, esfuerzo y riesgo, contrastada contra lo que hoy resuelve el offline de terreno (medido en T-15).
   - Criterio de completitud: las tres con dictamen. Se apoya en el grado de acoplamiento de T-15; si faltan los datos de uso real (cuántos asesores la usan, qué tan crítico es el offline), la comparación se declara cualitativa en lugar de fingir cuantificación.
 
-- [ ] **T-26** — C18: Dictamen y recomendación argumentada *(RF-21)*
+- [ ] **T-26** — C18: Dictamen **preliminar** y recomendación argumentada *(RF-21)*
   - Archivos a crear/modificar: `analisis/19-dictamen.md`
   - Contenido: recomendación explícita (refactorizar, rehacer, migrar por partes o **partir la plataforma por dominio**), qué tecnología conservar y cuál abandonar, en qué orden, qué debe decidirse antes de arrancar y qué riesgos deben aceptarse explícitamente.
+  - **Preliminar, y dicho en su primera línea.** El dictamen de la Etapa A se emite sobre evidencia de código y migraciones, que es suficiente para recomendar pero no para cerrar. Debe declarar **qué conclusiones concretas podrían cambiar** al verificar en Etapa B — típicamente las que dependen de volúmenes, de costo o de RLS real. El dictamen definitivo es **T-38**.
   - Criterio de completitud: la recomendación se deriva paso a paso del árbol de decisión publicado en la §7.3 del PRD, citando en cada bifurcación el hallazgo que la resuelve. Trazabilidad de decisiones (RNF-06): cada juicio con su razón, para que pueda auditarse o rebatirse.
   - **Ajuste al árbol del PRD:** su §7.3 pregunta *"¿Supabase es sustituible a costo razonable?"* como un sí/no. Con E4 sobre la mesa la respuesta admite un tercer valor —*"en parte"*— así que el árbol se republica con esa rama añadida al **inicio de Fase 3**, antes de aplicarlo. El PRD publica su árbol antes de conocer los resultados a propósito; retocarlo después sería exactamente lo que esa regla previene.
 
-### Fase 4 — Resumen ejecutivo, revisión y cierre (18-09 → 22-09) · **PUERTA 2**
+### Fase 4 — Resumen ejecutivo, revisión y cierre de la Etapa A (15-09 → 17-09) · **PUERTA 2**
 
 - [ ] **T-27** — C19: Resumen ejecutivo para Dirección *(RF-22)*
   - Archivos a crear/modificar: `analisis/20-resumen-ejecutivo.md`
@@ -416,7 +454,59 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
 - [ ] **T-30** — Publicación final y confidencialidad *(RNF-12, RF-24)*
   - Archivos a crear/modificar: `analisis/README.md`; PR de `feature/PJ3896-garantimax-analisis-tecnico` → `main`
   - Acción: cerrar versiones y fechas de cada documento, verificar que **ningún secreto, llave ni dato personal quedó transcrito** (RNF-03, RNF-04), y abrir el PR para la revisión formal.
-  - Criterio de completitud: el PR lo abre el programador, nunca Claude Code (`rules/version-control.md` §5). Difusión limitada a TI y Dirección. Ver la decisión de §12 sobre no publicar este documento en el repositorio de GarantiMAX.
+  - Criterio de completitud: el PR lo abre el programador, nunca Claude Code (`rules/version-control.md` §5). Difusión limitada a TI y Dirección. Ver la decisión de §12 sobre no publicar este documento en el repositorio de GarantiMAX. **El PR de la Etapa A se marca como entrega parcial**, con la lista de capítulos pendientes de verificación en Etapa B.
+
+---
+
+## 4-B. Etapa B — Supabase y API de SIGA
+
+> **Esta etapa no tiene fechas: arranca cuando lleguen los accesos** (A1 para la Fase 5, A3 para la Fase 6), y las dos fases son independientes entre sí — si llega A3 antes que A1, se arranca por la Fase 6.
+>
+> **Su entregable es verificación, no descubrimiento.** Cada tarea toma un capítulo que la Etapa A dejó marcado como *inferido* y lo cierra con la fuente autoritativa, dejando constancia de **en qué se equivocaba la inferencia** — porque esa diferencia es, en sí misma, un hallazgo sobre el gobierno del sistema: mide cuánto se ha desviado la base real de sus migraciones.
+
+### Fase 5 — Supabase verificado: modelo de datos, RLS y consumo *(requiere A1; T-35 requiere además A2)*
+
+- [ ] **T-31** — Verificar el modelo de datos contra el catálogo real *(cierra T-08 / RF-04)*
+  - Archivos a modificar: `analisis/03-modelo-datos.md`, `analisis/inventarios/tablas.csv`
+  - Acción: leer `information_schema` y `pg_catalog` y contrastar contra el esquema reconstruido en T-08 — tablas que existen y no estaban, tablas inferidas que ya no existen, columnas y relaciones divergentes. Añadir el **volumen de filas** por tabla.
+  - Criterio de completitud: cada tabla del catálogo real tiene ficha con volumen; las divergencias contra lo inferido están listadas una por una. Se retira la marca *inferido* del capítulo.
+
+- [ ] **T-32** — Auditoría de RLS real por tabla *(cierra la parte diferida de T-17 / RF-13)*
+  - Archivos a modificar: `analisis/12-seguridad.md`, `analisis/hallazgos.md`
+  - Acción: leer `pg_policies` y el estado de `rowsecurity` por tabla, y contrastar contra las políticas declaradas en las migraciones. Identificar **tablas con RLS desactivado**, políticas más permisivas de lo que aparentan y tablas sin ninguna política.
+  - Criterio de completitud: veredicto de RLS por tabla, con severidad. Es la tarea de mayor valor de seguridad de todo el plan: una tabla sin RLS con la `anon key` circulando en el navegador es un hallazgo crítico, y **no hay forma de detectarlo leyendo el repositorio**. Vulnerabilidad activa → escalamiento inmediato a TI.
+
+- [ ] **T-33** — RPCs vivas, firmas reales y `security definer` *(cierra T-09 / RF-04)*
+  - Archivos a modificar: `analisis/03-modelo-datos.md`, `analisis/inventarios/rpcs.csv`
+  - Acción: leer `pg_proc` / `pg_get_functiondef` y contrastar contra las RPCs deducidas en T-09 — qué existe de verdad, con qué firma, y cuáles corren con `security definer` (que es lo que permite saltarse RLS).
+  - Criterio de completitud: toda RPC viva con firma y `security definer` confirmados; las RPCs `security definer` **sin control de permisos propio** se reportan como hallazgo de seguridad.
+
+- [ ] **T-34** — Datos muertos confirmados *(cierra T-10 / RF-05)*
+  - Archivos a modificar: `analisis/04-datos-muertos.md`
+  - Acción: cruzar los candidatos de T-10 (*sin referencia en código*) contra la base — volumen de filas, fecha del registro más reciente y existencia de triggers o crons que escriban en ellos. Solo entonces se declara el desuso.
+  - Criterio de completitud: cada candidato pasa a *confirmado sin uso*, *en uso por vía no evidente* o *no concluyente*. Aquí un falso positivo cuesta más que un hueco: es la lista que decidirá qué no se migra.
+
+- [ ] **T-35** — Consumo y costo por dominio *(cierra la parte diferida de T-23 / RF-17, RF-20)*
+  - Archivos a modificar: `analisis/16-supabase-vs-net8.md`, `analisis/17-escenarios-destino.md`
+  - Acción: cuantificar el reparto entre dominio comercial y operativo en filas, invocaciones de Edge Functions, mensajes y conexiones de Realtime, Storage y egreso; y cruzarlo con el costo mensual real de A2.
+  - Criterio de completitud: la pregunta *"¿qué alberga Supabase y cuánto cuesta cada mitad?"* queda respondida con cifras y fuente. Si A2 no llega pero sí A1, se entrega el reparto de **consumo** sin el de costo, declarando el hueco.
+
+### Fase 6 — API de SIGA, E4 y dictamen definitivo *(requiere A3; T-37 requiere la Fase 5)*
+
+- [ ] **T-36** — Auditoría de la API de SIGA y matriz de cobertura *(era T-22 / C7, RF-09)*
+  - Archivos a crear/modificar: `analisis/08-api-siga-cobertura.md`
+  - Acción: sobre la lista de campos que T-13 documentó como consumidos hoy por Excel, rellenar la matriz **dato requerido → endpoint que lo cubre / no existe**, campo por campo. Cerrar con la lista de endpoints que habría que construir y con la respuesta del equipo de SIGA sobre si pueden construirse.
+  - Criterio de completitud: cada campo con veredicto. **No se desarrolla ningún endpoint** (fuera de alcance, PRD §6). El resultado tiene consecuencia directa: si la API no cubre lo que entra por Excel, **todo escenario de migración arrastra la dependencia manual o suma un proyecto no contemplado** — y eso cambia la comparación de T-24.
+
+- [ ] **T-37** — Resolver E4 con evidencia *(cierra §1.3 / RF-18)*
+  - Archivos a modificar: `analisis/17-escenarios-destino.md`
+  - Acción: con la frontera de dominios de la Etapa A, los volúmenes y el costo de T-35 y la cobertura de SIGA de T-36, dictaminar si partir la plataforma por dominio es viable y conveniente: qué cuesta desacoplar lo que cruza la frontera, cuánto costo se ahorra de verdad y qué queda peor que hoy.
+  - Criterio de completitud: **E4 con veredicto — a favor o en contra, ambos con evidencia.** Descartarlo con la lista exacta de costuras que lo impiden es un resultado igual de útil que aprobarlo; lo inaceptable sería dejarlo en "habría que ver".
+
+- [ ] **T-38** — Dictamen definitivo y resumen ejecutivo actualizado *(cierra T-26, T-27 / RF-21, RF-22)*
+  - Archivos a modificar: `analisis/19-dictamen.md`, `analisis/20-resumen-ejecutivo.md`, `analisis/README.md`
+  - Acción: reemplazar el dictamen preliminar por el definitivo, dejando **constancia de qué cambió respecto del preliminar y por qué** — que es la prueba de que la verificación valió la pena. Retirar todas las marcas de *inferido*, actualizar la cobertura declarada (RNF-11) y re-fijar el commit de vigencia (RNF-14), que a estas alturas se habrá movido otra vez.
+  - Criterio de completitud: ningún capítulo queda marcado como pendiente de verificación, o los que quedan lo declaran con su causa. Segunda revisión con la Dirección de TI si el dictamen cambió de recomendación respecto del preliminar.
 
 ---
 
@@ -428,14 +518,15 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
 |---|---|---|
 | — | — | No se crean, modifican ni eliminan tablas, columnas, índices, RPCs ni políticas RLS. |
 
-**Lecturas requeridas sobre la base de GarantiMAX** (`jrykbalmnpymeyzdhsam`), todas con usuario de solo lectura:
+**Lecturas requeridas sobre la base de GarantiMAX** (`jrykbalmnpymeyzdhsam`), todas con usuario de solo lectura. **Todas pertenecen a la Etapa B** — la Etapa A no toca la base en absoluto:
 
 | Fuente | Para qué | Tarea |
 |---|---|---|
-| `information_schema` / `pg_catalog` | Tablas, columnas, claves y relaciones reales | T-08 |
-| `pg_policies` | Políticas RLS por tabla | T-08, T-17 |
-| `pg_proc` / `pg_get_functiondef` | Firmas de RPCs y `security definer` | T-09, T-17 |
-| Conteos por tabla | Volúmenes para dimensionar y detectar datos muertos | T-08, T-10 |
+| `information_schema` / `pg_catalog` | Tablas, columnas, claves y relaciones reales | T-31 |
+| `pg_policies` + `rowsecurity` | Políticas RLS por tabla y si RLS está activo | T-32 |
+| `pg_proc` / `pg_get_functiondef` | Firmas de RPCs y `security definer` | T-33 |
+| Conteos y fecha del último registro por tabla | Volúmenes, y confirmar el desuso | T-31, T-34 |
+| Métricas de consumo (Edge Functions, Realtime, Storage) | Reparto por dominio y costo | T-35 |
 
 > **Queda bloqueado sin autorización explícita de TI:** cualquier `INSERT`/`UPDATE`/`DELETE`/DDL, ejecutar Edge Functions que muten datos o consuman servicios de pago, pruebas de carga contra producción, y extraer datos personales o secretos fuera del entorno. Si en algún momento el análisis pareciera requerir una escritura, se detiene y se pide autorización — no se resuelve por criterio propio.
 
@@ -447,7 +538,7 @@ enginecx_prd/GarantiMAX/PJ3896-garantimax-analisis-tecnico/
 
 | Método | Ruta | Descripción | Estado |
 |---|---|---|---|
-| — | — | La API de SIGA se **audita documentalmente** en T-22; construir endpoints está explícitamente fuera de alcance (PRD §6). | — |
+| — | — | La API de SIGA se **audita documentalmente** en T-36 (Etapa B); construir endpoints está explícitamente fuera de alcance (PRD §6). | — |
 
 ---
 
@@ -497,26 +588,42 @@ Lo relevante en infraestructura es que **GarantiMAX vive fuera de las seis conso
 
 ## 10. Criterios de aceptación
 
-- [ ] Los 19 capítulos (C1–C19) están entregados como archivos `.md` versionados con diagramas mermaid e índice navegable (RF-24), o declarados explícitamente como no alcanzados con su razón (RNF-11).
-- [ ] Los **24 módulos** tienen ficha con propósito, reglas de negocio, tablas/RPCs que tocan, criticidad y **ubicación de la lógica** (front / RPC / Edge Function).
-- [ ] Las **46 Edge Functions** están catalogadas, con sus cron y sus webhooks públicos identificados.
-- [ ] Los **11 canales de Realtime** tienen veredicto individual: necesario o sustituible por refresco.
-- [ ] El modelo de datos está inventariado contra el catálogo real (no solo inferido de las 364 migraciones), con RLS por tabla — o el hueco está declarado con su causa.
-- [ ] Los **cinco escenarios E0–E4** están evaluados con criterios idénticos y esfuerzo en rangos, con E0 funcionando como línea base.
-- [ ] **E4 (retención parcial) tiene veredicto sostenido en evidencia**: los 24 módulos y las tablas están segmentados por dominio, y las tablas, RPCs y cálculos que cruzan la frontera están listados uno por uno — sea para concluir que el corte es viable o para descartarlo.
-- [ ] **Está respondido qué alberga Supabase por dominio**, con el reparto de tablas, filas, invocaciones de Edge Function y mensajes de Realtime entre lo comercial y lo operativo (o declarado no cuantificable si faltó A2).
-- [ ] **Está dimensionado qué haría falta para reponer el tiempo real en .NET**: servicio SignalR, backplane, afinidad de sesión, quién emite los eventos que hoy emite Postgres, y la reescritura de los 11 canales — con costo e riesgo, no solo con el nombre de la tecnología.
-- [ ] Las **tres opciones de PWA** están evaluadas con pros, contras, esfuerzo y riesgo.
-- [ ] Los cinco servicios de Supabase tienen veredicto de sustitución/convivencia, incluidos SignalR vs. Realtime e Identity vs. Auth.
-- [ ] El dictamen recomienda explícitamente refactor, re-escritura o migración por partes, derivado del árbol de decisión de la §7.3 del PRD, con los riesgos que se aceptan.
-- [ ] El resumen ejecutivo es comprensible para Dirección sin conocimiento del stack.
-- [ ] **100% de hallazgos y afirmaciones con evidencia citada**; lo no verificable declarado como supuesto (RF-23, RNF-02).
-- [ ] Todos los hallazgos tienen severidad asignada según el criterio publicado en T-04 (RNF-09).
-- [ ] El commit y la fecha del código analizado están declarados, y los cambios ocurridos durante la ventana registrados (RNF-14).
-- [ ] Ningún secreto, llave, cadena de conexión ni dato personal quedó transcrito en el entregable (RNF-03, RNF-04).
-- [ ] El sistema analizado quedó **intacto**: sin commits, sin escrituras en la base, sin cambios de configuración (RNF-01).
-- [ ] La revisión con la Dirección de TI se realizó y sus preguntas quedaron cerradas o registradas (PUERTA 2).
-- [ ] **Prueba de independencia del autor original (RNF-13):** un desarrollador .NET de Engine sin contacto previo con el proyecto logra explicar el flujo de un módulo crítico y ubicar dónde vive su lógica usando solo la documentación.
+> Los criterios se cumplen en dos cortes: al cierre de la **Etapa A** (marcados **A**) y al cierre de la **Etapa B** (marcados **B**). Un criterio **B** no cuenta como incumplimiento mientras la Etapa B no haya arrancado — cuenta como pendiente declarado.
+
+**Etapa A — cierre del análisis técnico del proyecto**
+
+- [ ] **A** · Los 19 capítulos (C1–C19) están entregados como archivos `.md` versionados con diagramas mermaid e índice navegable (RF-24), o declarados explícitamente como no alcanzados con su razón (RNF-11). C7 se entrega como estructura vacía a la espera de A3.
+- [ ] **A** · Cada capítulo que depende de la base lleva la marca visible **inferido — pendiente de verificación en Etapa B**, y el dictamen preliminar declara en su primera línea qué conclusiones podrían cambiar.
+- [ ] **A** · El modelo de datos está reconstruido desde las 364 migraciones, con la lista explícita de lo que solo la base puede responder.
+- [ ] **A** · Los 24 módulos y las tablas están **segmentados por dominio**, con la lista de lo que cruza la frontera (insumo de E4).
+- [ ] **A** · Los **24 módulos** tienen ficha con propósito, reglas de negocio, tablas/RPCs que tocan, criticidad y **ubicación de la lógica** (front / RPC / Edge Function).
+- [ ] **A** · Las **46 Edge Functions** están catalogadas, con sus cron y sus webhooks públicos identificados.
+- [ ] **A** · Los **11 canales de Realtime** tienen veredicto individual: necesario o sustituible por refresco.
+- [ ] **A** · Está documentado el flujo real de importación de Excel de SIGA, con la **lista de campos consumidos** y la matriz de cobertura preparada con su segunda columna vacía.
+- [ ] **A** · Las **tres opciones de PWA** están evaluadas con pros, contras, esfuerzo y riesgo.
+- [ ] **A** · Los **cinco escenarios E0–E4** están evaluados con criterios idénticos y esfuerzo en rangos, con E0 funcionando como línea base.
+- [ ] **A** · Los cinco servicios de Supabase tienen veredicto de sustitución/convivencia, incluidos SignalR vs. Realtime e Identity vs. Auth.
+- [ ] **A** · **Está dimensionado qué haría falta para reponer el tiempo real en .NET**: servicio SignalR, backplane, afinidad de sesión, quién emite los eventos que hoy emite Postgres, y la reescritura de los 11 canales — con costo y riesgo, no solo con el nombre de la tecnología.
+- [ ] **A** · El dictamen **preliminar** recomienda explícitamente un camino, derivado del árbol de decisión de la §7.3 del PRD (republicado con la rama de E4), con los riesgos que se aceptan.
+- [ ] **A** · El resumen ejecutivo es comprensible para Dirección sin conocimiento del stack.
+- [ ] **A** · **100% de hallazgos y afirmaciones con evidencia citada**; lo no verificable declarado como supuesto (RF-23, RNF-02).
+- [ ] **A** · Todos los hallazgos tienen severidad asignada según el criterio publicado en T-04 (RNF-09).
+- [ ] **A** · El commit y la fecha del código analizado están declarados, y los cambios ocurridos durante la ventana registrados (RNF-14).
+- [ ] **A** · Ningún secreto, llave, cadena de conexión ni dato personal quedó transcrito en el entregable (RNF-03, RNF-04).
+- [ ] **A** · El sistema analizado quedó **intacto**: sin commits, sin escrituras en la base, sin cambios de configuración (RNF-01).
+- [ ] **A** · La revisión con la Dirección de TI se realizó y sus preguntas quedaron cerradas o registradas (PUERTA 2).
+- [ ] **A** · **Prueba de independencia del autor original (RNF-13):** un desarrollador .NET de Engine sin contacto previo con el proyecto logra explicar el flujo de un módulo crítico y ubicar dónde vive su lógica usando solo la documentación. Es el criterio que mide si la Etapa A sirvió — y **no depende de la Etapa B**.
+
+**Etapa B — cierre de la verificación y de la decisión**
+
+- [ ] **B** · El modelo de datos está inventariado **contra el catálogo real**, con volúmenes por tabla y la lista de divergencias respecto de lo inferido.
+- [ ] **B** · Hay **veredicto de RLS real por tabla**, incluidas las tablas con RLS desactivado y las políticas más permisivas de lo que aparentan, con severidad.
+- [ ] **B** · Las RPCs vivas están confirmadas con firma y `security definer`; las `security definer` sin control de permisos propio están reportadas como hallazgo.
+- [ ] **B** · Los datos muertos están **confirmados** (no solo sospechados por ausencia de referencia en código).
+- [ ] **B** · **Está respondido qué alberga Supabase por dominio**, con el reparto de tablas, filas, invocaciones de Edge Function y mensajes de Realtime entre lo comercial y lo operativo, y el costo de cada mitad (o declarado no cuantificable si faltó A2).
+- [ ] **B** · La **matriz de cobertura de la API de SIGA** está completa campo por campo, con la lista de endpoints que habría que construir.
+- [ ] **B** · **E4 tiene veredicto sostenido en evidencia** — a favor o en contra, ambos válidos; lo inaceptable es dejarlo en "habría que ver".
+- [ ] **B** · El **dictamen definitivo** reemplaza al preliminar, dejando constancia de qué cambió y por qué. No queda ningún capítulo marcado como *inferido*, o los que queden lo declaran con su causa.
 
 ---
 
@@ -524,14 +631,15 @@ Lo relevante en infraestructura es que **GarantiMAX vive fuera de las seis conso
 
 | Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| ~~El alcance completo no cabe en la ventana~~ — **mitigado**: la Dirección extendió el calendario, de 10 a 22 días hábiles, para ejecutar el alcance completo sin compresión | — | — | **Cerrado el 24-08-2026 por decisión de la Dirección.** Entrega entre el 11-09 y el 22-09-2026 (§13) en lugar del 04-09. Las prioridades P1/P2/P3 se conservan solo como palanca de reserva si aparece un imprevisto. |
+| ~~El alcance completo no cabe en la ventana~~ — **mitigado dos veces**: primero extendiendo el calendario (de 10 a 22 días hábiles), luego partiendo el plan en dos etapas | — | — | **Cerrado el 24-08-2026 por decisión de la Dirección.** La Etapa A cierra entre el 09-09 y el 17-09 y no depende de accesos pendientes; la Etapa B queda sin fecha por diseño (§1.4). Las prioridades P1/P2/P3 quedan solo como palanca de reserva. |
 | **El corte por dominio de E4 resulta inviable** porque los dominios comparten tablas, RPCs o cálculos | Media | Medio | No es un fracaso del análisis sino su resultado: E4 se descarta con la lista exacta de costuras que lo impiden (T-08), que además es el mejor argumento disponible para no partir la plataforma. El riesgo real sería *no medirlo* y descartarlo por intuición. |
 | **Subestimar el costo de reponer el tiempo real en .NET** — creer que "SignalR" es la respuesta completa | Media | Alto | `postgres_changes` no tiene equivalente gratuito: hoy Postgres emite los eventos solo, y en .NET hay que emitirlos a mano. T-23 dimensiona la pieza entera (servicio, backplane, afinidad de sesión, reescritura de los 11 canales, quién publica los eventos), no solo la tecnología. |
 | **La copia local estaba 29 commits atrás** al generar el plan (`de6ce01` vs `3771e7f`) — el supuesto del PRD "el repositorio local está actualizado" es falso | Confirmado | Medio | T-01 sincroniza y fija el commit antes de cualquier lectura. Cifras del PRD v0.1 ya corregidas en §1.1. |
 | **El sistema sigue en desarrollo activo** durante el análisis — se movió 29 commits en 13 días, y la ventana ahora es más larga (hasta el 22-09) | Alta | Medio | Es la contrapartida de extender el calendario: más días son más deriva. Commit fijado y declarado (RNF-14); T-28 re-verifica al cierre y lista los cambios del período. Pregunta abierta que ahora pesa más: ¿se congela el desarrollo durante la ventana, o al menos se avisa de los cambios estructurales? |
-| **No obtener acceso de lectura a Supabase** | Media | Alto | El modelo de datos se inferiría solo de las migraciones, con riesgo de describir tablas que ya no existen y volúmenes equivocados. T-02 lo escala el día 1; si no llega, T-08/T-09/T-10 se marcan como inferidos, no verificados. |
+| **Que la Etapa B nunca arranque** porque A1/A3 no llegan y la Etapa A "ya se ve completa" | **Alta** | **Alto** | Es el riesgo dominante del plan reestructurado. Quedarían sin responder las tres cosas que cierran la decisión: RLS real, costo por dominio y cobertura de la API de SIGA. Mitigación: dictamen rotulado **preliminar** en su primera línea, marca *inferido* visible en cada capítulo afectado, PR de la Etapa A como **entrega parcial**, y fecha de compromiso —aunque tentativa— para A1 y A3 desde ahora. |
+| **No obtener acceso de lectura a Supabase (A1)** | Media | Alto | Ya no bloquea el arranque: la Etapa A reconstruye el esquema desde las 364 migraciones y lo marca como inferido. Lo que se pierde si nunca llega es la verificación (T-31), **el veredicto de RLS real (T-32) —el hallazgo de seguridad de mayor severidad potencial del análisis—** y la confirmación de datos muertos (T-34). |
 | **No obtener acceso a los paneles de costo (A2)** | Alta | Alto | Uno de los dos drivers del proyecto queda sin cifras — y con E4 en juego, también el criterio que decide si conviene partir la plataforma por dominio. Mitigación: documentar el modelo de costo y sus factores; en T-24 la dimensión de costo se marca como no cuantificada **en los cinco escenarios por igual**, para no sesgar la comparación. |
-| **La API de SIGA no cubre lo que hoy entra por Excel** | Media | Alto | Cualquier escenario de migración arrastra la dependencia manual o suma un proyecto de construcción de endpoints no contemplado. T-22 lo deja explícito en la matriz; el dictamen lo asume como riesgo aceptado si no hay acceso. |
+| **La API de SIGA no cubre lo que hoy entra por Excel** | Media | Alto | Cualquier escenario de migración arrastra la dependencia manual o suma un proyecto de construcción de endpoints no contemplado. T-36 lo deja explícito en la matriz; el dictamen lo asume como riesgo aceptado si no hay acceso. |
 | **Lógica de negocio crítica no documentada ni evidente en el código** (cierres, comisiones, siniestralidad, proyecciones) | Media | Alto | Podría perderse en una re-escritura. T-07 la verifica con Fabrizio Álvarez y con el mantenedor actual, y marca como supuesto lo no confirmado. |
 | **Subestimar lo que Supabase resuelve sin costo de desarrollo** (RLS, Auth, Storage, Realtime, serverless) | Media | Alto | Es precisamente lo que T-23 debe prevenir: cinco servicios evaluados por separado, no "Supabase" como bloque. |
 | **Sesgo hacia el estándar corporativo** — concluir "hay que rehacerlo en .NET" por homogeneidad y no por evidencia | Media | Alto | Criterios publicados antes de los resultados (T-04 y el árbol de la §7.3 del PRD), neutralidad tecnológica (RNF-10), y **E0 evaluado formalmente** para que cualquier migración tenga que justificarse contra no migrar. |
@@ -573,7 +681,15 @@ Lo que sí conviene levantar temprano es la **latencia que la operación exige d
 
 Una matización sobre el costo de plataforma: el PRD lo declara fuera de alcance cuantitativo *porque no había acceso a los paneles*. No es una exclusión de principio. Si A2 (§2.1) llega, la cifra entra en T-23 y T-24 — y conviene que entre, porque con E4 sobre la mesa el reparto del costo entre dominios pasó de ser un dato interesante a ser un criterio de decisión.
 
-**7. Estrategia sugerida para sostener el ritmo.** El inventario (Fase 1) es la parte más mecánica y la más paralelizable: T-07 (módulos), T-08/T-09 (modelo de datos) y T-11 (Edge Functions) no dependen entre sí. Es donde un segundo recurso rinde más y donde la extracción automatizada de T-05 más ahorra. Fases 2 y 3, en cambio, son de juicio y no se paralelizan bien: partirlas entre dos personas produce dos criterios distintos, que es justo lo que RNF-07 y RNF-09 buscan evitar.
+**7. Por qué el plan se partió en dos etapas (24-08-2026).**
+Decisión de la Dirección: en lugar de esperar bloqueado el `.env` de Supabase y la fuente de la API de SIGA, se levanta primero todo lo técnico del proyecto desde el repositorio (**Etapa A**, arranca hoy) y se aparta la verificación de plataforma a una **Etapa B** sin fecha, que arranca cuando lleguen los accesos. Cuatro consecuencias que conviene tener presentes:
+
+- **La mayor parte del análisis no dependía de esos accesos.** De 20 capítulos, 12 se cierran completos en la Etapa A y solo 1 (C7, la API de SIGA) no puede ni empezarse. Los otros 7 se entregan inferidos y se verifican después.
+- **El orden resultó ser el correcto, no solo el posible.** Preguntarle a la API de SIGA *"¿cubres estos 40 campos concretos?"* —con la lista que produce T-13 leyendo los parsers— vale mucho más que preguntarle *"¿qué tienes?"*. La Etapa B necesita el resultado de la Etapa A para que la auditoría sirva.
+- **Cuesta 3–4 días más en total** (18–26 frente a 15–22): es el retrabajo de reabrir capítulos para cambiar lo inferido por lo verificado. Precio consciente por arrancar hoy.
+- **Reconstruir el esquema desde 364 migraciones es una fuente legítima, no un parche.** Da tablas, columnas, relaciones y políticas declaradas. Lo que no da es lo que se cambió a mano fuera de las migraciones, los volúmenes reales y si RLS está efectivamente activo — y esa última es justamente la que puede esconder el hallazgo más grave.
+
+**8. Estrategia sugerida para sostener el ritmo.** El inventario (Fase 1) es la parte más mecánica y la más paralelizable: T-07 (módulos), T-08/T-09 (modelo de datos) y T-11 (Edge Functions) no dependen entre sí. Es donde un segundo recurso rinde más y donde la extracción automatizada de T-05 más ahorra. Fases 2 y 3, en cambio, son de juicio y no se paralelizan bien: partirlas entre dos personas produce dos criterios distintos, que es justo lo que RNF-07 y RNF-09 buscan evitar.
 
 ---
 
@@ -581,23 +697,39 @@ Una matización sobre el costo de plataforma: el PRD lo declara fuera de alcance
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | Ventana (límite alto) | ID (BD) |
 |---|---|---|---|---|---|
-| **Fase 0 — Habilitación, línea base y método** | Commit fijado (RNF-14), los seis accesos A1–A6 pedidos o escalados, esqueleto de 21 documentos, metodología y escala de severidad publicadas, inventarios automatizados | T-01 a T-05 | 1 – 2 días | 24-08 → 25-08 | `186` |
-| **Fase 1 — Inventario y mapeo (P1)** | C1 ficha tecnológica, C2 los 24 módulos + ubicación de la lógica **+ segmentación por dominio**, C3 tablas/RLS/RPCs **+ tablas que cruzan la frontera**, C5' datos muertos, C4 las 46 Edge Functions, C5 integraciones, C6 uso real de SIGA, C8 los 11 canales, C9 PWA y offline · **PUERTA 1** | T-06 a T-15 | 5 – 7 días | 26-08 → 03-09 | `187` |
-| **Fase 2 — Análisis de calidad y riesgos (P1/P2)** | C10 arquitectura y patrones, C11 seguridad, C12 rendimiento, C13 testing/CI-CD, C14 observabilidad, registro de hallazgos priorizados | T-16 a T-21 | 3 – 5 días | 04-09 → 10-09 | `188` |
-| **Fase 3 — Escenarios, pros/contras y dictamen (P1/P3)** | C7 matriz de la API de SIGA, C15 Supabase vs .NET 8 por servicio **+ reparto por dominio + costo de reponer el tiempo real**, C16 **los cinco escenarios E0–E4**, C17 las tres opciones de PWA, C18 dictamen | T-22 a T-26 | 4 – 5 días | 11-09 → 17-09 | `189` |
-| **Fase 4 — Resumen ejecutivo, revisión y cierre** | C19 resumen ejecutivo, re-verificación de vigencia y cobertura declarada, revisión con Dirección (**PUERTA 2**), publicación y control de confidencialidad | T-27 a T-30 | 2 – 3 días | 18-09 → 22-09 | `190` |
-| **Total proyecto (alcance completo)** | | **30 tareas** | **~15 – 22 días hábiles** (≈ 3 – 4,4 semanas) | **11-09 → 22-09-2026** | — |
-| **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-15 | ~6 – 9 días hábiles | 31-08 → 03-09 | — |
-| **Ruta mínima al dictamen** *(reserva, no planificada)* | P1 de las cinco fases, con P2 recortado y cobertura declarada (RNF-11) | T-01 a T-30 (profundidad reducida) | ~11 – 14 días hábiles | — | — |
+| **ETAPA A — El proyecto por dentro** *(arranca hoy, solo repositorio)* | | | | | |
+| **Fase 0 — Habilitación, línea base y método** | Commit fijado (RNF-14), accesos A1–A6 pedidos o escalados, esqueleto de 21 documentos, metodología y escala de severidad publicadas, inventarios automatizados | T-01 a T-05 | 1 – 2 días | 24-08 → 25-08 | `186` |
+| **Fase 1 — Inventario y mapeo** | C1 ficha tecnológica, C2 los 24 módulos + ubicación de la lógica **+ segmentación por dominio**, C3 modelo de datos **inferido de las 364 migraciones** + tablas que cruzan la frontera, C5' candidatos a datos muertos, C4 las 46 Edge Functions, C5 integraciones, C6 uso real de SIGA por Excel, C8 los 11 canales, C9 PWA y offline · **PUERTA 1** | T-06 a T-15 | 4 – 6 días | 26-08 → 02-09 | `187` |
+| **Fase 2 — Análisis de calidad y riesgos** | C10 arquitectura y patrones, C11 seguridad **a nivel de código** (RLS declarado), C12 rendimiento, C13 testing/CI-CD, C14 observabilidad, registro de hallazgos priorizados | T-16 a T-21 | 3 – 4 días | 03-09 → 08-09 | `188` |
+| **Fase 3 — Escenarios y dictamen preliminar** | C15 Supabase vs .NET 8 por servicio + reparto por **estructura** + costo de reponer el tiempo real, C16 los cinco escenarios E0–E4, C17 las tres opciones de PWA, C18 **dictamen preliminar** | T-23 a T-26 | 3 – 4 días | 09-09 → 14-09 | `189` |
+| **Fase 4 — Resumen ejecutivo, revisión y cierre de Etapa A** | C19 resumen ejecutivo, re-verificación de vigencia y cobertura declarada, revisión con Dirección (**PUERTA 2**), publicación como entrega parcial | T-27 a T-30 | 2 – 3 días | 15-09 → 17-09 | `190` |
+| **Subtotal Etapa A** | 12 capítulos cerrados + 7 a medias | **29 tareas** | **~13 – 19 días hábiles** | **09-09 → 17-09-2026** | — |
+| **ETAPA B — La plataforma** *(sin fecha: arranca al recibir los accesos)* | | | | | |
+| **Fase 5 — Supabase verificado** *(requiere A1; T-35 requiere A2)* | Modelo de datos contra el catálogo real, **RLS real por tabla**, RPCs vivas y `security definer`, datos muertos confirmados, consumo y costo por dominio | T-31 a T-35 | 3 – 4 días | — | `191` |
+| **Fase 6 — API de SIGA, E4 y dictamen definitivo** *(requiere A3)* | C7 matriz de cobertura campo por campo, E4 resuelto con evidencia, **dictamen definitivo** y resumen ejecutivo actualizado | T-36 a T-38 | 2 – 3 días | — | `192` |
+| **Subtotal Etapa B** | Cierra los 7 capítulos a medias + C7 | **8 tareas** | **~5 – 7 días hábiles** | — | — |
+| **TOTAL PROYECTO** | 20 capítulos | **37 tareas** | **~18 – 26 días hábiles** | Etapa A al 17-09; Etapa B según accesos | — |
 
 > **Notas sobre la tabla:**
-> - **El alcance completo se ejecuta entero.** La Dirección extendió el calendario el 24-08-2026 para no comprimir el análisis, así que los rangos de esta tabla son los de la ejecución real, no un ideal. La fila *Ruta mínima al dictamen* queda solo como **plan de reserva** por si aparece un imprevisto — no es lo planificado.
-> - La columna **Ventana** proyecta el límite alto de cada rango desde el arranque del 24-08-2026, contando solo días hábiles y en secuencia (las fases no se solapan). Si los rangos salen por el extremo bajo, la entrega cae el **viernes 11-09**; por el extremo alto, el **martes 22-09**.
-> - Las prioridades P1/P2/P3 (§1.2) ya no gobiernan el alcance: sirven para ordenar el trabajo dentro de cada fase y como palanca de reserva.
-> - **Fase 1 sube de 4–6 a 5–7 días** y **Fase 3 de 3–4 a 4–5**: es el costo de E4 (§1.3). En Fase 1, etiquetar los 24 módulos y las ~152 tablas por dominio y aislar las que cruzan la frontera; en Fase 3, un quinto escenario, el reparto de consumo por dominio y el dimensionamiento de reponer el tiempo real en .NET.
-> - Los rangos salen del volumen medido en §1.1, no de los números del PRD v0.1. Los mayores consumidores siguen siendo T-07 (24 fichas con evidencia y dominio) y T-08/T-09 (~152 tablas con RLS y las RPCs vivas de ~269 declaraciones): entre los tres, más de la mitad de Fase 1.
-> - La duración registrada en BD por fase redondea el **límite superior** del rango (2 + 7 + 5 + 5 + 3 = 22), que es el valor del campo `dias` del plan.
-> - Fase 3 asume que T-22 puede quedar sin acceso a la API de SIGA (A3). Si el acceso llega, sube al extremo alto del rango; si no llega, se cierra declarando el hueco y no baja del extremo bajo, porque el resto del capítulo no depende de él.
+> - **El plan se partió en dos etapas el 24-08-2026** para no quedar bloqueado esperando el `.env` de Supabase y la fuente de la API de SIGA (§1.4). La Etapa A arranca hoy con lo que hay; la Etapa B queda armada y a la espera.
+> - La columna **Ventana** proyecta el límite alto de cada rango desde el 24-08-2026, contando solo días hábiles y en secuencia. Si los rangos salen por el extremo bajo, la Etapa A cierra el **miércoles 09-09**; por el extremo alto, el **jueves 17-09**. La Etapa B **no tiene ventana** a propósito: depende de cuándo lleguen A1 y A3, no de nuestra capacidad.
+> - **El total sube de 15–22 a 18–26 días** respecto de la versión de una sola etapa. Los 3–4 días de diferencia son el retrabajo de reabrir capítulos para reemplazar lo inferido por lo verificado. Es el precio de arrancar hoy, y está declarado en lugar de escondido.
+> - **Fase 1 baja de 5–7 a 4–6 días** y **Fase 2 de 3–5 a 3–4**, porque parte de T-08/T-09/T-10/T-17 se aparta a la Etapa B. **Fase 3 baja de 4–5 a 3–4** porque T-22 sale completa. Nada de eso es alcance perdido: es alcance movido.
+> - Las prioridades P1/P2/P3 (§1.2) ya no gobiernan el alcance: ordenan el trabajo dentro de cada fase y quedan como palanca de reserva.
+> - Los rangos salen del volumen medido en §1.1. Los mayores consumidores siguen siendo T-07 (24 fichas con evidencia y dominio) y T-08/T-09 (reconstruir el esquema desde 364 migraciones y colapsar ~269 declaraciones de función).
+> - La duración en BD por fase redondea el **límite superior** del rango (2+6+4+4+3 en Etapa A, 4+3 en Etapa B = **26**), que es el valor del campo `dias` del plan.
+> - **Las dos fases de la Etapa B son independientes.** Si llega A3 antes que A1, se arranca por la Fase 6; el único orden obligado es que T-37 (resolver E4) necesita T-35, y T-38 necesita las dos fases.
+
+> **El riesgo que gobierna ahora es la Etapa B, no el calendario.**
+>
+> La Etapa A está financiada: tiene todo lo que necesita y cierra entre el 09-09 y el 17-09. Su entregable —análisis técnico completo del proyecto con dictamen preliminar— ya es útil por sí solo: permite que TI entienda y opere el sistema, que se conozca la deuda técnica y que se vea la forma de los cinco escenarios.
+>
+> Lo que **no** permite es cerrar la decisión, y conviene ser explícito sobre por qué. Tres conclusiones quedan fuera de alcance hasta la Etapa B:
+> - **Si RLS está realmente activo en cada tabla** (T-32). Es el hallazgo de seguridad de mayor severidad potencial de todo el análisis, y no hay forma de verlo leyendo el repositorio: una tabla con RLS desactivado y la `anon key` circulando en el navegador es exposición directa de datos.
+> - **Cuánto cuesta cada mitad de la plataforma** (T-35). Sin eso, E4 —que puede ser el escenario más barato— se queda en hipótesis, y el costo es uno de los dos motores del proyecto.
+> - **Si la API de SIGA cubre lo que hoy entra por Excel** (T-36). Sin eso, no se sabe si migrar arrastra la dependencia manual o suma un proyecto entero de endpoints.
+>
+> Por eso el dictamen de la Etapa A se emite y se rotula **preliminar**, y por eso cada capítulo afectado lleva la marca *inferido — pendiente de verificación*. **El riesgo concreto es que la Etapa B nunca arranque** porque el `.env` no llega y la Etapa A "ya se ve completa". Recomendación: fijar desde ahora una fecha de compromiso para A1 y A3, aunque sea tentativa, y tratar la Etapa A como entrega parcial en el PR — nunca como cierre del PRD.
 
 > **Calendario: extendido por decisión de la Dirección (24-08-2026).**
 >

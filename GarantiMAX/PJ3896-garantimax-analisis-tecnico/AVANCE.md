@@ -20,7 +20,7 @@
 
 Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `main` de `enginecx_prd`. El repositorio analizado (`garantimax`) se sincronizó a `origin/master` = `3771e7f` (2026-08-19 11:24 -0400), que es el commit fijado de vigencia (RNF-14).
 
-**Fase 0 completada y commiteada** (T-01 a T-05). **Fase 1 completada** (T-06 a T-15) — **PUERTA 1 pasada**: los 24 módulos, las 46 Edge Functions, las 136 tablas vivas (inferidas) y los 11 canales de Realtime tienen ficha o declaración de cobertura. Durante T-08/T-09 se detectó y escaló un hallazgo de seguridad **Crítico** (`mora_corte` sin restricción de lectura — `hallazgos.md` #1) y durante T-11 uno **Medio, histórico y ya remediado** (`dossier-ia` sin JWT hasta el 03-08-2026 — `hallazgos.md` #2). Pendiente de autorización para el commit de cierre de Fase 1; al autorizarse, arranca Fase 2 (T-16).
+**Fase 0 y Fase 1 completadas y commiteadas** (T-01 a T-15, PUERTA 1 pasada). **Fase 2 completada** (T-16 a T-21) — los 5 capítulos de calidad (arquitectura, seguridad, rendimiento, testing/CI-CD, observabilidad) cerrados en Etapa A, con el registro de hallazgos consolidado: **8 hallazgos** en total (1 Crítico ya escalado — `mora_corte`; 1 Alto — cero tests de UI/componentes en todo el sistema; 3 Medio; 2 Bajo-Medio; 1 Bajo). Pendiente de autorización para el commit de cierre de Fase 2; al autorizarse, arranca Fase 3 (T-23 — Supabase vs. .NET 8 y los cinco escenarios).
 
 ---
 
@@ -31,7 +31,7 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | **ETAPA A — El proyecto por dentro** | | | | | | | | |
 | **Fase 0 — Habilitación, línea base y método** | `186` | T-01 a T-05 | 1 – 2 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
 | **Fase 1 — Inventario y mapeo** | `187` | T-06 a T-15 | 4 – 6 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
-| **Fase 2 — Análisis de calidad y riesgos** | `188` | T-16 a T-21 | 3 – 4 | | | 0 | 4 | ⏳ Pendiente |
+| **Fase 2 — Análisis de calidad y riesgos** | `188` | T-16 a T-21 | 3 – 4 | 2026-08-24 | 2026-08-24 | 1 | 0 | ✅ Completada |
 | **Fase 3 — Escenarios y dictamen preliminar** | `189` | T-23 a T-26 | 3 – 4 | | | 0 | 4 | ⏳ Pendiente |
 | **Fase 4 — Resumen ejecutivo, revisión y cierre de Etapa A** | `190` | T-27 a T-30 | 2 – 3 | | | 0 | 3 | ⏳ Pendiente |
 | **Subtotal Etapa A** | — | 29 tareas | ~13 – 19 | | | 0 | 19 | 🟡 En progreso |
@@ -79,11 +79,24 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 
 ---
 
+## Tareas completadas ✅ (Fase 2)
+
+| ID | Tarea | Completada por | Fecha | Notas |
+|---|---|---|---|---|
+| T-16 | Evaluación de arquitectura y patrones | Claude Code | 2026-08-24 | `analisis/11-arquitectura-y-patrones.md`. Acierto confirmado: `postventa/dominio` es una capa de dominio genuina y testeada. Hallazgo: `CasoDetalle.tsx` (3525 líneas) y `casosDb.ts` (3070 líneas) — 58 archivos > 500 líneas en total. `strict: true` no está activado en ningún tsconfig. |
+| T-17 | Auditoría de seguridad (código, RLS declarado) | Claude Code | 2026-08-24 | `analisis/12-seguridad.md`. Confirmado: `SERVICE_ROLE_KEY` nunca en el frontend; guard de modo demo con lista blanca + backstop por patrón. CORS abierto (`'*'`) en 34/46 funciones, restringido en las 8 más sensibles. |
+| T-18 | Auditoría de rendimiento y escalabilidad | Claude Code | 2026-08-24 | `analisis/13-rendimiento-escalabilidad.md`. Confirma la regla de `manualChunks` de `CLAUDE.md`. Hallazgo Bajo: una consulta del War Room sin `.limit()` explícito, expuesta al límite de 1000 filas de PostgREST. |
+| T-19 | Diagnóstico de testing, CI/CD y proceso | Claude Code | 2026-08-24 | `analisis/14-testing-cicd-proceso.md`. Hallazgo Alto: cero tests de componentes/UI en todo el sistema (sin `@testing-library`, `playwright` ni `cypress`); 12 de 22 módulos sin ningún test. CI confirmado (contradice la duda del PRD). |
+| T-20 | Diagnóstico de observabilidad y operación | Claude Code | 2026-08-24 | `analisis/15-observabilidad-operacion.md`. Hallazgo: Sentry no tiene ninguna presencia en las 46 Edge Functions — el backend no reporta errores a ningún sistema centralizado. |
+| T-21 | Consolidar el registro de hallazgos priorizados | Claude Code | 2026-08-24 | `analisis/hallazgos.md` v1.0. 8 hallazgos consolidados y ordenados por severidad, 100% con evidencia citada. Lectura agregada: solo 1 es exposición de datos activa; el resto es deuda técnica de proceso con causa raíz común (redes de seguridad automatizadas solo en la lógica de dominio pura, no en UI/integración/infraestructura). |
+
+---
+
 ## Tareas pendientes ⏳
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-16 a T-21, T-23 a T-30 | Fases 2 a 4 (Etapa A) | Autorización de commit de cierre de Fase 1 |
+| T-23 a T-30 | Fases 3 y 4 (Etapa A) | Autorización de commit de cierre de Fase 2 |
 | T-31 a T-35 | Fase 5 (Etapa B) | A1 (lectura Supabase) y A2 (paneles de costo) |
 | T-36 a T-38 | Fase 6 (Etapa B) | A3 (fuente de la API de SIGA) |
 
@@ -107,6 +120,7 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | Rama funcional creada en `enginecx_prd` (no en `garantimax`) | El repositorio analizado se lee, nunca se escribe (RNF-01); el entregable documental vive en `enginecx_prd` | `garantimax` permanece en `master` sin ramas ni commits nuevos durante todo el proyecto |
 | Corrección de método en la extracción de RLS/policies (T-08) | El primer grep literal producía falsos negativos masivos por espacios múltiples de alineación y por bloques PL/pgSQL dinámicos (`foreach t in array...execute format(...)`) que ocultan el nombre de tabla tras un `%I` | De 45 tablas "sin RLS" (falso) a 0 tras la corrección — documentado explícitamente en `03-modelo-datos.md` §1 por transparencia de método (RNF-02) |
 | Hallazgo de seguridad Crítico (`mora_corte`) escalado fuera de orden, durante T-08/T-09 en vez de esperar a T-17/Fase 2 | El protocolo de `00-metodologia-y-evidencia.md` §3 exige escalar una vulnerabilidad al detectarla, no al cierre de fase | Registrado en `hallazgos.md` #1 y comunicado al desarrollador en el mismo turno en que se detectó |
+| No se ejecutó `npm install`/`npm run build`/`npm test` en ningún momento de Fase 2 | Instalar dependencias toca red y filesystem fuera del repositorio versionado — excede el alcance de solo lectura sin autorización adicional (RNF-01) | Tamaño real de bundle y cobertura de línea de tests quedan como pendiente explícito en C12/C13, no estimados ni fabricados |
 
 ---
 
@@ -126,6 +140,10 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | `analisis/inventarios/tablas-*.txt`, `rpcs-*.txt`, `edge-functions-detalle.txt`, `dependencias-entre-modulos.txt`, `tablas-rpcs-por-modulo.txt` (~20 archivos) | Creados | T-07 a T-11 |
 | `analisis/hallazgos.md` | Actualizado (2 hallazgos) | T-08/T-09, T-11 |
 | `analisis/README.md` | Actualizado (índice, PUERTA 1) | Cierre de Fase 1 |
+| `analisis/11-arquitectura-y-patrones.md`, `12-seguridad.md`, `13-rendimiento-escalabilidad.md`, `14-testing-cicd-proceso.md`, `15-observabilidad-operacion.md` | Completados (contenido) | T-16 a T-20 |
+| `analisis/inventarios/archivos-grandes-500mas.txt` | Creado | T-16 |
+| `analisis/hallazgos.md` | Consolidado v1.0 (8 hallazgos) | T-17 a T-21 |
+| `analisis/README.md` | Actualizado (índice, cierre Fase 2) | Cierre de Fase 2 |
 
 ---
 
@@ -134,12 +152,13 @@ Plan aprobado y registrado en BD el 24-08-2026. Rama funcional creada desde `mai
 | Hash | Mensaje | Fecha |
 |---|---|---|
 | `4609986` | `[PJ3896-garantimax-analisis-tecnico] Fase 0 - Habilitacion, linea base y metodo` | 2026-08-24 |
+| `4617417` | `[PJ3896-garantimax-analisis-tecnico] Fase 1 - Inventario y mapeo (PUERTA 1)` | 2026-08-24 |
 
 ---
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** Fase 1 completa (PUERTA 1 pasada), pendiente de autorización de commit. Al autorizarse, arranca Fase 2 (T-16 — arquitectura y patrones).
+- **Por dónde continuar:** Fase 2 completa, pendiente de autorización de commit. Al autorizarse, arranca Fase 3 (T-23 — Supabase vs. .NET 8 por servicio, con el reparto por dominio y el costo de reponer el tiempo real).
 - **Contexto importante:** el repositorio analizado (`garantimax`) está fijado en `origin/master` = `3771e7f` (2026-08-19). Si se retoma días después, verificar si `origin/master` avanzó y decidir si re-sincronizar o mantener el commit fijado (el PRD exige declarar vigencia, RNF-14 — no re-sincronizar a mitad de análisis sin registrar el salto).
 - **Hallazgo Crítico pendiente de verificación en cuanto llegue A1:** `mora_corte` (`hallazgos.md` #1) — es la primera tabla a revisar en T-32.
 - **Decisión pendiente del solicitante:** fecha de compromiso (aunque sea tentativa) para A1 (`.env` de Supabase) y A3 (fuente de la API de SIGA), para poder planificar cuándo arranca la Etapa B.

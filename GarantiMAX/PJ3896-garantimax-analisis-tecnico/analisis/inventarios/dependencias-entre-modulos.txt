@@ -1,0 +1,44 @@
+### auth -> depende de:
+visitas 
+### averias -> depende de:
+
+### bienvenida -> depende de:
+
+### callcenter -> depende de:
+auth 
+### cobertura -> depende de:
+
+### config -> depende de:
+auth averias facturacion hunter induccion mora productos salas vendedores 
+### facturacion -> depende de:
+auth averias config induccion salas visitas 
+### gastos -> depende de:
+auth 
+### hunter -> depende de:
+auth facturacion solicitudes 
+### incentivos -> depende de:
+
+### induccion -> depende de:
+
+### mora -> depende de:
+
+### portal -> depende de:
+bienvenida 
+### postventa -> depende de:
+auth callcenter config 
+### productos -> depende de:
+
+### resumen -> depende de:
+auth cobertura config facturacion salas visitas 
+### salas -> depende de:
+auth config facturacion induccion mora productos vendedores visitas 
+### solicitudes -> depende de:
+auth visitas 
+### unoauno -> depende de:
+cobertura config mora salas visitas 
+### vendedores -> depende de:
+auth induccion salas visitas 
+### visitas -> depende de:
+auth config induccion resumen salas solicitudes vendedores warroom 
+### warroom -> depende de:
+averias facturacion resumen salas vendedores visitas 

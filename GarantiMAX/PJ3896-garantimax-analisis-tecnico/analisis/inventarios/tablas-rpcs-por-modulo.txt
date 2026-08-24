@@ -1,0 +1,132 @@
+### auth
+-- tablas (.from):
+asesores usuarios 
+-- rpcs (.rpc):
+
+
+### averias
+-- tablas (.from):
+averias 
+-- rpcs (.rpc):
+siniestralidad siniestralidad_cobertura siniestralidad_tendencia_scope velocidad_siniestro_scope 
+
+### bienvenida
+-- tablas (.from):
+
+-- rpcs (.rpc):
+marcar_bienvenida_vista 
+
+### callcenter
+-- tablas (.from):
+av_casos cc_llamadas cc_pausas cc_presencia cc_sesiones llamadas 
+-- rpcs (.rpc):
+cc_kpi_agente cc_kpi_conexion cc_kpi_diario cc_kpi_distribucion cc_kpi_pausas cc_kpi_vivo usuario_actual 
+
+### cobertura
+-- tablas (.from):
+cobertura_diaria 
+-- rpcs (.rpc):
+cobertura_datos cobertura_snapshot 
+
+### config
+-- tablas (.from):
+areas asesores av_config capacidades feriados grupos_distribuidores grupos_manuales grupos_meta_unidades monedas nuevos_clientes_etapa presupuestos proveedores rol_capacidades roles salas_asignacion salas_catalogo salas_grupo salas_zona solicitud_tipos usuario_areas usuario_roles usuarios 
+-- rpcs (.rpc):
+hunter_guardar_mi_firma organigrama proveedor_actualizar proveedor_borrar proveedor_crear proveedor_set_activo solicitud_tipo_crear solicitud_tipo_set_activa tarea_proveedor_crear 
+
+### facturacion
+-- tablas (.from):
+asesores cargas_siga contratos contratos_staging grupos_manuales grupos_meta_unidades plan_tareas planes_accion presupuestos 
+-- rpcs (.rpc):
+aplicar_contratos_staging aplicar_contratos_staging_anio facturacion_diaria facturacion_diaria_grupo facturacion_diaria_scope facturacion_mensual meses_con_datos pc_mix_grupo 
+
+### gastos
+-- tablas (.from):
+gasto_archivos gasto_asignaciones gasto_categorias gastos rendicion_eventos rendiciones usuario_areas usuarios visitas 
+-- rpcs (.rpc):
+gasto_crear gasto_fusionar rendicion_aprobar_jefe rendicion_aprobar_ops rendicion_enviar rendicion_marcar_pagada rendicion_rechazar rendicion_reenviar 
+
+### hunter
+-- tablas (.from):
+areas empresas espejo_plan espejo_precio espejo_tramo hunter_actividad hunter_contacto_rol hunter_contrato hunter_cotizacion hunter_handoff hunter_oportunidad hunter_precio hunter_reunion mercado_concesionario mercado_financiera mercado_importador mercado_parametro personas rol_capacidades sala_vendedores solicitud_tipos usuario_roles usuarios 
+-- rpcs (.rpc):
+hunter_agendar_onboarding hunter_agendar_reunion hunter_cerrar_reunion hunter_firma_cargar hunter_firma_firmar hunter_firma_firmar_interno hunter_firma_solicitar hunter_firmantes_de hunter_opp_archivar hunter_prerregistrar hunter_ventas_resumen vendedor_por_rut 
+
+### incentivos
+-- tablas (.from):
+asesores incentivo_comentario incentivo_envio incentivo_linea incentivo_pago incentivo_periodo vendedores 
+-- rpcs (.rpc):
+incentivos_aplicar_datos incentivos_enviar incentivos_gc_comentar incentivos_generar incentivos_marcar incentivos_reabrir incentivos_resolver incentivos_sugerencias incentivos_sync 
+
+### induccion
+-- tablas (.from):
+
+-- rpcs (.rpc):
+
+
+### mora
+-- tablas (.from):
+mora_clientes mora_corte mora_vinculos 
+-- rpcs (.rpc):
+salas_resumen 
+
+### portal
+-- tablas (.from):
+
+-- rpcs (.rpc):
+
+
+### postventa
+-- tablas (.from):
+av_casos av_clausulados av_config av_cuestionarios av_encuesta_cascada av_encuestas av_eventos_caso av_evidencias av_facturas av_informes av_kit_evaluacion av_notificaciones av_ordenes_compra av_pagos av_preevaluaciones av_resoluciones av_talleres av_wa_mensajes cc_llamadas contratos monedas 
+-- rpcs (.rpc):
+av_acta_entrega_de av_acta_entrega_subir av_ajustar_carga av_asesores av_carga_asesores av_caso_publico av_caso_siga av_cerrar_con_oc_sin_factura av_cerrar_sin_cobertura av_clausulado_aprobar av_comentario_taller av_confirmar_entrega av_confirmar_retiro av_contratos_por_familia av_copago_link av_cuestionario_enviar av_cuestionario_guardar av_cuestionario_reabrir av_emitir_informe av_encuesta_estado av_encuesta_responder av_evidencia_cliente av_evidencia_taller av_evidencia_taller_borrar av_forzar_cierre_sin_retiro av_ingreso_firmar av_ingreso_guardar av_kit_feedback av_mantenciones_requeridas av_marcar_sin_ingreso av_nota_asesor av_reabrir_caso av_reporte_resolucion av_taller_avanzar_reparacion av_taller_caso av_taller_kit_enviar av_taller_portal av_taller_portal_de_caso av_taller_recepcion av_taller_sistema 
+
+### productos
+-- tablas (.from):
+productos_catalogo 
+-- rpcs (.rpc):
+productos_distintos productos_economia 
+
+### resumen
+-- tablas (.from):
+asesores bitacoras plan_tareas proyeccion_diaria resumen_diario usuarios visitas 
+-- rpcs (.rpc):
+cobertura_datos 
+
+### salas
+-- tablas (.from):
+americar_siga_real asesores metas_aceptacion mora_clientes mora_salud_salas nuevos_clientes_etapa plan_tareas salas_asignacion salas_autos salas_comentario salas_cruce_objetivo salas_geo salas_meta salas_meta_analisis salas_region salas_zona usuarios 
+-- rpcs (.rpc):
+activacion_sala cierre_salas_margen crear_tarea_sala cruce_sala_anual decalogo_ultimo metas_guardar_bulk organigrama pc_ejecutivos_americar pc_mix_americar productos_de_sala salas_activacion salas_puede_comentar salas_puede_crear_tarea salas_resumen set_etapa_sala set_producto_economia tareas_pendientes_por_sala usuario_actual ventas_por_tipo 
+
+### solicitudes
+-- tablas (.from):
+areas plan_tareas proveedores proveedores_publico solicitud_eventos solicitud_tipos solicitudes tarea_avances usuario_areas usuarios 
+-- rpcs (.rpc):
+proveedor_eventos_ver proveedor_tareas proveedores_tablero solicitud_asignar solicitud_cambiar_estado solicitud_comentar solicitud_confirmar solicitud_convertir_en_tarea solicitud_crear solicitud_reabrir solicitud_resolver_desde_tarea solicitud_tomar tarea_calificar_proveedor tarea_proveedor_cambiar_plazo tarea_proveedor_crear tarea_proveedor_pedir_correccion 
+
+### unoauno
+-- tablas (.from):
+agenda_eventos asesores bitacoras lobbies plan_tareas planes_accion tarea_avances uno_a_uno_sesiones usuarios visitas 
+-- rpcs (.rpc):
+cierre_salas_margen cobertura_datos 
+
+### vendedores
+-- tablas (.from):
+autos_vendedor incentivo_pago interacciones_vendedor sala_vendedores vendedores visitas 
+-- rpcs (.rpc):
+asignar_vendedor_sala borrar_vendedor_manual buscar_vendedor_siga candidatos_vendedores fusionar_vendedor interacciones_de_vendedor merge_vendedores pool_sin_pv vendedor_inactivo_por_nombre vendedor_por_nombre vendedor_por_rut ventas_vendedor 
+
+### visitas
+-- tablas (.from):
+agenda_eventos asesores bitacoras lobbies notificaciones plan_tareas planes_accion proyecto_operadores proyectos sala_vendedores saludos_cumpleanos solicitudes tarea_avances usuarios visitas visitas_abiertas visitas_en_curso 
+-- rpcs (.rpc):
+calificar_tarea completar_tarea crear_proyecto crear_tarea_sala cumpleanos_vendedores eliminar_item_historial limite_habil notificar organigrama proyecto_eliminar proyecto_set_estado proyecto_set_operadores set_tarea_completada tarea_avance_crear vendedor_inactivo_por_nombre vendedor_por_nombre 
+
+### warroom
+-- tablas (.from):
+contratos sala_vendedores tv_dashboard_state visitas visitas_en_curso 
+-- rpcs (.rpc):
+vendedor_por_nombre 
+

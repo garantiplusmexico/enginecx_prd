@@ -1,0 +1,16 @@
+av_casos_borrados
+av_clausulados
+av_config
+bitacoras
+espejo_plan
+espejo_precio
+espejo_tramo
+ia_uso
+mercado_concesionario
+mercado_financiera
+mercado_importador
+mercado_marca
+mercado_parametro
+mora_clientes
+sala_vendedores
+visitas

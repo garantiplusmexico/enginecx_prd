@@ -1,0 +1,868 @@
+### averia-analizar-clausulado
+-- comentario inicial:
+// Edge Function: lee el CLAUSULADO de una familia y extrae el argumento con el
+// que se le responde a un cliente cuando lo que reporta no está cubierto.
+//
+// ⚠️ EL CLAUSULADO NO SE LE MANDA AL CLIENTE. Es material de trabajo interno.
+// Adjuntarle a alguien el contrato TIPO de su familia sería mandarle un
+// documento genérico como si fuera el suyo — no es su contrato firmado.
+// Lo que viaja al cliente es el ARGUMENTO que sale de acá.
+//
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+202
+
+### averia-borrar-caso
+-- comentario inicial:
+// Edge Function: BORRAR UN CASO DE PRUEBA — base de datos + archivos, de una.
+//
+// Existe porque borrar un caso a mano deja siempre basura: el 27-07, tras sacar
+// AVR-2026-00001 y 00006, quedaron 28 archivos huérfanos (5 MB) en el bucket. Y
+// ya había pasado antes: en Edge Functions vive el cadáver de
+// `purga-huerfanos-avr22`, hecha el 13-07 para lo mismo, de un solo uso.
+//
+// ⚠️ EL ORDEN IMPORTA Y NO ES OBVIO:
+-- secrets (Deno.env.get):
+SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh 
+-- mutacion (insert/update/delete/upsert):
+4
+-- lineas totales:
+204
+
+### averia-calidad-evidencia
+-- comentario inicial:
+// Edge Function: CALIDAD de las pruebas del kit con IA (Averías V6 · F6c → G3).
+// El asesor lo dispara (o corre solo al abrir el caso): Claude (Sonnet) mira los
+// archivos del taller AGRUPADOS POR PRUEBA y devuelve, por prueba, UNA nota 1-10 +
+// un resumen sobre el SET completo (varios archivos complementarios valen más que
+// uno). Se guarda en av_kit_evaluacion (ia_nota / ia_resumen / ia_evaluada_en).
+// El asesor luego decide "¿de acuerdo con la IA?"; el taller ve el veredicto endosado.
+//
+// Los videos no los lee Claude → se cuentan en el encabezado de la prueba para que
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+3
+-- lineas totales:
+267
+
+### averia-cuestionario-cron
+-- comentario inicial:
+// Edge Function (CRON */15): los avisos de Averías que no puede disparar un humano.
+// Barridos independientes, todos con dedup por `av_notificaciones`:
+//
+//  1) CORREO "recibimos tu formulario" (hasta 48 h hábiles) — el cliente que envía
+//     su formulario es ANÓNIMO y no puede disparar un correo por su cuenta; el
+//     aviso ya lo ve en pantalla, esto es la copia por correo. Solo cuestionarios
+//     'enviado' ≤48 h y sin cita (`agendado_para is null`).
+//
+-- secrets (Deno.env.get):
+AVERIA_FROM CRON_SECRET RESEND_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM 
+-- hosts externos:
+api.resend.com api.twilio.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+17
+-- lineas totales:
+718
+
+### averia-notificar
+-- comentario inicial:
+// Edge Function: NOTIFICA AL CLIENTE los hitos de su avería, por correo (Resend)
+// y/o WhatsApp (plantillas de Meta vía Twilio).
+// Tipos:
+//  · 'ingresado' — al crear el caso: link del formulario (encuesta + odómetro).
+//                  Correo + WhatsApp, cada canal por su lado.
+//  · 'agendado'  — al agendar: dirección/hora/asesor + .ics + Google Calendar.
+//                  Correo + WhatsApp, cada canal por su lado.
+//  · 'encuesta'  — al entregar el auto: encuesta de satisfacción, al instante.
+-- secrets (Deno.env.get):
+AVERIA_FROM CRON_SECRET RESEND_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_CONTENT_ENCUESTA TWILIO_CONTENT_ENCUESTA_LINK TWILIO_FROM 
+-- hosts externos:
+api.resend.com api.twilio.com calendar.google.com esm.sh wa.me waze.com www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+36
+-- lineas totales:
+1549
+
+### averia-preeval
+-- comentario inicial:
+// Edge Function: PRE-EVALUACIÓN de cobertura de una avería con IA (Claude).
+// Arma el paquete del caso (datos del sistema + cuestionario + kit + fotos) y,
+// con la lógica GPCL en el system prompt, pide a Claude un veredicto pre-armado
+// (APROBAR / RECHAZAR / PARCIAL / INSUFICIENTE) + fundamentos + borrador de
+// resolución. La salida es SIEMPRE un borrador: el asesor decide (human-in-the-loop).
+//
+// La API key vive solo aquí (secret ANTHROPIC_API_KEY). Verifica que quien llama
+// sea CM / GTE / FARMER real antes de gastar tokens.
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+4
+-- lineas totales:
+413
+
+### averia-purgar-huerfanos
+-- comentario inicial:
+// Edge Function: encuentra (y opcionalmente borra) los archivos del bucket de
+// evidencias que YA NO PERTENECEN A NADIE.
+//
+// ⚠️ ESTA FUNCIÓN EXISTE PARA NO VOLVER A ESCRIBIR UNA DE UN SOLO USO. En el
+// proyecto ya vive el cadáver de `purga-huerfanos-avr22` (13-07-2026), hecha
+// para este mismo problema y desactivada al día siguiente. Es reutilizable y
+// permanente a propósito.
+//
+-- secrets (Deno.env.get):
+SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+136
+
+### averia-resolucion-email
+-- comentario inicial:
+// Edge Function: envía por correo los DOCUMENTOS DE LA RESOLUCIÓN (Averías V6 · E3a-2).
+//
+//  · destinatario 'cliente' → 1 adjunto: la resolución (aprobación/rechazo).
+//  · destinatario 'taller'  → resolución técnica + Orden de Compra + Finiquito,
+//    todo en el MISMO correo (así el taller factura y cobra sin pedir nada más).
+//
+// Los PDF ya viven en el bucket privado `averia-evidencias` (los generó el
+// dashboard con jsPDF al "Emitir documentos"): aquí se bajan con service role,
+-- secrets (Deno.env.get):
+AVERIA_FROM RESEND_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+3
+-- lineas totales:
+358
+
+### callcenter-ivr
+-- comentario inicial:
+// Edge Function: IVR del call center GarantiMAX (Twilio Voice).
+// Twilio golpea este webhook en cada paso de la llamada y el edge responde
+// TwiML. Diseño: docs/callcenter/diseno-f0-f1.md — frases pre-grabadas (o
+// <Say> neural mientras no existan los audios), captura de RUT con dígito
+// verificador, estado del caso por etapa, desvío a celulares y grabación
+// dual descargada a Storage propio.
+//
+// Rutas (query ?paso=):
+-- secrets (Deno.env.get):
+IVR_AUDIOS_BASE IVR_URL_PUBLICA SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN 
+-- hosts externos:
+api.twilio.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+22
+-- lineas totales:
+650
+
+### callcenter-token
+-- comentario inicial:
+// Edge Function: callcenter-token — Access Token de Twilio Voice para el
+// softphone del dashboard (pestaña 📞 Teléfono).
+//
+// FASE EQUIPO (21-07): cada usuario habilitado recibe su PROPIA identidad
+// (`gp_{usuarioId}`) — la campana del IVR timbra a todos los conectados y el
+// primero que contesta se lleva la llamada. Habilitados: SOLO CM (capacidad
+// `callcenter`, hoy otorgada a nadie). Se reabre al equipo del 600 marcando
+// callcenter en Config → Equipo y accesos (espejada por app_tiene_capacidad()).
+-- secrets (Deno.env.get):
+SUPABASE_ANON_KEY SUPABASE_URL TWILIO_ACCOUNT_SID TWILIO_API_KEY TWILIO_API_SECRET TWILIO_TWIML_APP_SID 
+-- hosts externos:
+esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+85
+
+### callcenter-transcribir
+-- comentario inicial:
+// Edge Function: callcenter-transcribir — transcripción + nota de calidad de
+// una llamada del 600.
+//
+// La grabación dual de Twilio trae UN CANAL POR HABLANTE (izq = quien originó
+// la llamada, der = a quién se marcó). Para grabaciones .wav estéreo, acá se
+// separan los canales en TS puro y se transcribe CADA VOZ por separado con
+// timestamps (Groq Whisper verbose_json) → el diálogo se arma por tiempo, con
+// el hablante EXACTO (nada de adivinar). Claude queda solo para lo liviano:
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY GROQ_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com api.groq.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+415
+
+### construir-informe
+-- comentario inicial:
+// Edge Function: CONSTRUIR INFORME de resolución con IA (Averías V6 · Constructor F3).
+// El asesor lo dispara desde el Constructor. Claude (Sonnet) REDACTA el JSON de bloques
+// del informe a partir del expediente. NO decide: el veredicto, los montos aprobados y el
+// motivo vienen de av_resoluciones (los puso el asesor). Devuelve { modelo, texto_pdf,
+// advertencias } y guarda el borrador en av_informes (construido_por='ia').
+//
+// Secret: ANTHROPIC_API_KEY. Auth: CM / GTE / FARMER real (los asesores son FARMER).
+// deno-lint-ignore-file
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+3
+-- lineas totales:
+373
+
+### crear-demo
+-- comentario inicial:
+// Edge Function: gestión completa de USUARIOS DEMO (crear / cambiar clave /
+// eliminar) con permisos de admin, llamada desde el mantenedor web.
+//
+// El frontend usa la clave anon y NO puede crear cuentas de login; esta función
+// corre en el servidor con la SERVICE ROLE KEY (inyectada por Supabase, nunca
+// viaja al navegador). Verifica que quien llama sea el Country Manager real
+// (rol CM, no demo) antes de hacer nada.
+//
+-- secrets (Deno.env.get):
+SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+2
+-- lineas totales:
+132
+
+### dossier-cron
+-- comentario inicial:
+// Edge Function: PRE-GENERA los briefings del 1:1 sin navegador (cron dominical +
+// backfill). Usa las RPC verificadas uno_a_uno_ctx_asesor / uno_a_uno_ctx_gerente
+// como fuente de verdad del contexto (idéntica al frontend), porta el motor de
+// señales (senales.ts + cobertura.ts), llama a dossier-ia y guarda en
+// uno_a_uno_sesiones. SILENCIOSO (no manda correos).
+//
+//  accion 'semana'   → (cron domingo ~23:00 CL) genera la semana que termina hoy,
+//                       para TODOS los asesores gestionables + los Gerentes (GC).
+-- secrets (Deno.env.get):
+CRON_SECRET SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+272
+
+### dossier-ia
+-- comentario inicial:
+// Edge Function: genera el BRIEFING del 1:1 con IA (Claude). Recibe el contexto
+// ya armado por el cliente (señales del motor determinista + bitácoras, minutas,
+// salas, objetivos y compromisos) y devuelve un briefing accionable en JSON.
+//
+// La API key de Anthropic vive SOLO aquí (secret ANTHROPIC_API_KEY), nunca viaja
+// al navegador. Verifica que quien llama sea CM o GTE real antes de gastar tokens.
+//
+// verify_jwt=TRUE desde el 03-08-2026 (brecha #6): estaba desplegada sin exigir
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY CRON_SECRET SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+674
+
+### enviar-resumen
+-- comentario inicial:
+// Edge Function: envía el RESUMEN DEL DÍA por correo (vía Resend). Fase A del
+// correo automático: disparado a mano desde el botón "Enviarme por correo". La
+// Fase B (cron diario) reusará la misma función.
+//
+// Secrets requeridos:
+//   RESEND_API_KEY   = API key de Resend (https://resend.com → API Keys).
+//   RESUMEN_FROM     = remitente verificado, ej. "GarantiMAX <resumen@garantimax.com>".
+//                      (Para una prueba rápida sin verificar dominio, Resend permite
+-- secrets (Deno.env.get):
+CRON_SECRET RESEND_API_KEY RESUMEN_FROM SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh resend.com 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+138
+
+### hunter-enviar-cotizacion
+-- comentario inicial:
+// Edge Function: envía al CLIENTE la cotización HUNTER por correo (Resend) con el
+// PDF adjunto + documentos opcionales del bucket `hunter-docs` (presentación
+// "Quiénes somos" y fichas de producto). El ejecutivo autenticado va en copia y
+// como reply-to; acepta un CC adicional y el cuerpo redactado en el modal.
+// Secrets: RESEND_API_KEY (ya configurado). COTIZACION_FROM opcional
+// (default "GarantiMAX <cotizaciones@garantimax.com>" — dominio verificado).
+//
+// deno-lint-ignore-file
+-- secrets (Deno.env.get):
+COTIZACION_FROM RESEND_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+136
+
+### hunter-enviar-firma
+-- comentario inicial:
+// Edge Function: envía la INVITACIÓN A FIRMAR el contrato Hunter a los dos
+// representantes legales (GarantiPlus + cliente), cada uno con su link público
+// /firmar?t=<token>. La alerta in-app del CM la crea el RPC hunter_firma_solicitar;
+// este edge solo manda los correos (Resend).
+//
+// Entrada (POST JSON): { contrato_id: number }
+// Salida: { ok:true, enviados:number } | { ok:false, error }
+//
+-- secrets (Deno.env.get):
+COTIZACION_FROM PUBLIC_APP_URL RESEND_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+113
+
+### hunter-invitar-reunion
+-- comentario inicial:
+// Edge Function: envía al CLIENTE la invitación de una reunión HUNTER por correo
+// (vía Resend) con un archivo .ics adjunto para que se le agende en su calendario.
+//
+// Secrets: RESEND_API_KEY (ya configurado). REUNION_FROM opcional
+//   (default "GarantiPlus <reuniones@garantimax.com>" — dominio verificado).
+//
+// deno-lint-ignore-file
+-- secrets (Deno.env.get):
+RESEND_API_KEY REUNION_FROM SUPABASE_ANON_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+137
+
+### hunter-validar-contrato
+-- comentario inicial:
+// Edge Function: VALIDA CON IA (Claude) el contrato firmado que el ejecutivo subió
+// al Hunter. Compara el PDF firmado contra los TÉRMINOS que el sistema generó
+// (empresa, representante legal y productos del Anexo 1) y verifica que estén las
+// firmas de ambas partes. Devuelve un veredicto (valido | dudas | rechazado) y lo
+// guarda en hunter_contrato. NO avanza la etapa: eso lo decide el front (automático
+// si es válido con alta confianza; manual/override con justificación si duda).
+//
+// Entrada (POST JSON): { contrato_id: number }
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+243
+
+### incentivos-notif
+-- comentario inicial:
+// Edge Function: notificaciones del módulo de incentivos (APRECIO).
+//   tipo 'enviado'  → un asesor envió su informe → avisa al GC y al CM.
+//   tipo 'resuelto' → el GC aprobó/rechazó → avisa al asesor (con el comentario).
+//
+// Secrets (ya existen para el resumen): RESEND_API_KEY, RESUMEN_FROM.
+// Llamado desde el front con el JWT del usuario (verify_jwt = true).
+// deno-lint-ignore-file
+-- secrets (Deno.env.get):
+RESEND_API_KEY RESUMEN_FROM SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+94
+
+### leer-boleta
+-- comentario inicial:
+// Edge Function: LEE UNA BOLETA con IA (Claude visión) y devuelve los campos
+// del gasto en JSON garantizado (tool use + schema). La llama la cola del
+// módulo de Gastos apenas se sube el archivo al bucket privado `boletas`.
+//
+// Entrada (POST JSON):
+//   { path: string }                      → descarga el archivo del bucket `boletas`
+//   ó { base64: string, media_type: string } → archivo inline (fallback)
+//   + es_internacional?: boolean          → no se piden RUT ni nº de documento
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+365
+
+### leer-factura
+-- comentario inicial:
+// Edge Function: LEE UNA FACTURA del taller (PDF o imagen) con IA (Claude) y
+// devuelve los campos extraídos para que el asesor los REVISE antes de guardar.
+// No escribe en la base: el front confirma y hace el insert en av_facturas.
+//
+// La llama el detalle del caso (autenticado CM/GTE) tras subir la factura al
+// bucket privado `averia-evidencias`. Seguridad = capability por PATH: la primera
+// carpeta del path debe ser el id/token de un caso real (idéntico a leer-odometro).
+//
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+189
+
+### leer-odometro
+-- comentario inicial:
+// Edge Function: LEE EL KILOMETRAJE de una foto de odómetro con IA (Claude
+// visión) y lo guarda en av_casos.km_foto. La llaman la página pública del
+// cliente (/averia) y el intake del SAC apenas se sube la foto del odómetro al
+// bucket privado `averia-evidencias`.
+//
+// Seguridad = capability por PATH: la carpeta del path debe ser el id o el
+// token_publico de un caso real. No requiere login (el cliente es anónimo);
+// nadie puede leer un caso ajeno sin conocer su path exacto.
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+189
+
+### leer-presupuesto
+-- comentario inicial:
+// Edge Function: LEE EL PRESUPUESTO del taller (PDF o imagen) con IA (Claude) y
+// devuelve la MANO DE OBRA y las REFACCIONES por separado, NETAS (sin IVA), para
+// que el asesor pre-llene los montos declarados y solo los REVISE antes de guardar.
+// No escribe en la base: el front confirma y guarda la resolución.
+//
+// La llama el detalle del caso (autenticado CM/GTE) sobre el presupuesto que el
+// taller ya subió al bucket privado `averia-evidencias`. Seguridad = capability por
+// PATH: la primera carpeta del path debe ser el id/token de un caso real (idéntico
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+214
+
+### leer-transferencia
+-- comentario inicial:
+// Edge: LEE UN COMPROBANTE DE TRANSFERENCIA bancaria (PDF/imagen) con IA y
+// devuelve monto/RUT destino/banco/fecha/referencia para auto-derivarlo a un
+// taller + su OC (B3 · multi-upload de pagos). No guarda: el front revisa y crea
+// el av_pagos. verify_jwt=true (solo el dashboard autenticado CM/GTE lo llama).
+// deno-lint-ignore-file
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+101
+
+### mejorar-bitacora
+-- comentario inicial:
+// Edge Function: MEJORA LA REDACCIÓN de una bitácora con IA (Claude). Toma el
+// texto tal como está (tipeado o dictado por voz, a veces sin puntuación) y lo
+// devuelve más claro y bien redactado, SIN inventar ni agregar hechos. La llama
+// el botón "✨ Mejorar redacción con IA" de la Bitácora del día.
+//
+// Entrada (POST JSON):  { texto: string }
+// Salida: { ok: true, texto: string }  ó  { ok: false, error: string }
+//
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+170
+
+### mejorar-redaccion
+-- comentario inicial:
+// Edge Function: REVISAR Y MEJORAR la redacción del informe (Averías V6 · Constructor F4).
+// Toma los campos de texto del borrador y corrige SOLO la prosa (ortografía, gramática,
+// puntuación, claridad). NO cambia datos: antes de enviar, tokeniza montos/fechas/km/números,
+// citas «», códigos de falla/VIN/patentes y etiquetas HTML como marcadores ⟦Dn⟧; después
+// reinyecta. Si el modelo alteró/borró un marcador, ese texto se descarta (queda igual).
+//
+// Entrada: { textos: [{ ref, texto }], veredicto? }. Salida: { ok, textos:[{ref,texto}],
+//   cambios:[{ref, antes, despues}] }.  Secret: ANTHROPIC_API_KEY. Auth: CM/GTE/FARMER.
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+169
+
+### metas-aceptar
+-- comentario inicial:
+// Edge Function PÚBLICA (Fase 12B): la página /aceptar-metas de la web app la
+// consume por fetch. Devuelve JSON (NO HTML: Supabase fuerza text/plain en las
+// funciones, por eso la página se sirve desde Vercel). Dos acciones:
+//   - ver:     lee el registro sin mutar (para mostrar el resumen + botón).
+//   - aceptar: registra la aceptación con peso legal (fecha/hora del servidor, IP
+//              y user-agent) sobre el snapshot exacto enviado. Idempotente.
+// Deploy con verify_jwt=false (el token del enlace es la credencial).
+//
+-- secrets (Deno.env.get):
+SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+71
+
+### metas-analisis-ia
+-- comentario inicial:
+// Edge Function: análisis IA de metas (Fase 12A.2). Recibe un asesor + sus salas
+// con los datos duros ya calculados; trae del lado servidor las MINUTAS de las
+// visitas (por sala) y las BITÁCORAS del asesor, y le pide a Claude, POR SALA:
+//   1) un resumen ejecutivo que justifique la meta sugerida, y
+//   2) eventos materiales (cierre, fusión, churn, expansión) detectados en lo
+//      cualitativo, con su CITA textual y un ajuste_pct, y la meta_ajustada.
+// El número base viene de la fórmula (cliente): la IA justifica y ajusta, no inventa.
+// Guarda el resultado en salas_meta_analisis. Secret: ANTHROPIC_API_KEY.
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+188
+
+### metas-enviar
+-- comentario inicial:
+// Edge Function (Fase 12B): envía al ASESOR su documento de metas por correo
+// (Resend, PDF adjunto) y crea el registro de aceptación con un TOKEN único.
+// El correo trae un botón "Aceptar mis metas" que apunta a la página pública
+// /aceptar-metas de la web app (Vercel sirve HTML; las funciones no). Guarda
+// además el PDF exacto como respaldo. Solo CM o GC. Secret: RESEND_API_KEY.
+//
+// deno-lint-ignore-file
+-- secrets (Deno.env.get):
+METAS_APP_URL METAS_FROM RESEND_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+3
+-- lineas totales:
+118
+
+### monedas-cron
+-- comentario inicial:
+// Edge Function: actualiza el valor en CLP de las monedas del mantenedor
+// (Configuración → 💱 Monedas). Workstream A1 del cierre del módulo Post-Venta:
+// la UF alimenta el cálculo del CoPago a valor presente.
+//
+// Fuentes (best-effort, cada moneda por su lado — si una API falla, las demás
+// igual se actualizan):
+//   · mindicador.cl        → UF y USD (indicadores oficiales de Chile).
+//   · open.er-api.com      → ARS, MXN, PEN (tasa cruzada vía USD→CLP).
+-- secrets (Deno.env.get):
+CRON_SECRET SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh mindicador.cl open.er-api.com 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+91
+
+### portal-admin
+-- comentario inicial:
+// Edge Function: portal-admin
+// Mantenedor de los usuarios del Portal de Cliente (mig 0304-0306). Lo usa el CM
+// desde Configuración → 🔐 Portal de clientes.
+//
+// Por qué una Edge Function y no consultas directas: las tablas portal_* están
+// en deny-all (solo service_role). Además la clave se hashea con PBKDF2 y eso
+// tiene que pasar en el servidor — el navegador nunca debe ver un hash ni
+// generarlo. La función NUNCA devuelve clave_hash.
+-- secrets (Deno.env.get):
+AVERIA_FROM PORTAL_FROM PORTAL_URL RESEND_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+17
+-- lineas totales:
+369
+
+### portal-api
+-- comentario inicial:
+// Edge Function: portal-api
+// API del Portal del Proveedor (Fase 3b.2). Valida el token de sesión emitido por
+// `portal-login` (guardado hasheado en proveedor_sesion) y expone SOLO las tareas
+// de ese proveedor. Acciones (en el body):
+//   { token, accion: 'cola' }                      → sus tareas + el hilo de comentarios
+//   { token, accion: 'comentar', tarea_id, texto } → agrega un comentario (como proveedor)
+//   { token, accion: 'entregar', tarea_id, texto, nota, adjuntos } → entregable + cierre
+//   { token, accion: 'completar', tarea_id }       → cierre simple (legado)
+-- secrets (Deno.env.get):
+SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+13
+-- lineas totales:
+306
+
+### portal-cliente-api
+-- comentario inicial:
+// Edge Function: portal-cliente-api
+// Datos del Portal de Cliente (/forum). Separada del login a propósito: el login
+// maneja secretos (claves, códigos) y esta solo lee indicadores — mezclarlas
+// haría que un bug en una superficie exponga la otra.
+//
+// Acceso: NO usa JWT. El navegador manda el token de sesión que entregó
+// `portal-cliente-login` tras el 2FA; acá se valida contra portal_sesion (token
+// hasheado, revocable) y de ahí sale la org. El cliente NUNCA elige qué org
+-- secrets (Deno.env.get):
+SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+3
+-- lineas totales:
+106
+
+### portal-cliente-login
+-- comentario inicial:
+// Edge Function: portal-cliente-login
+// Acceso del Portal de Cliente (primer cliente: FORUM, /forum). Tablas de la
+// migración 0304 — todas deny-all, solo las toca esta función (service_role).
+//
+// Acciones (en el body):
+//   { accion:'login',            email, clave }            → valida clave, manda el OTP y devuelve `pre`
+//   { accion:'otp',              email, codigo, pre }      → valida OTP y abre sesión
+//   { accion:'cambiar_clave',    token, clave_actual?, clave_nueva }
+-- secrets (Deno.env.get):
+AVERIA_FROM PORTAL_FROM PORTAL_WA_CONTENT_OTP RESEND_API_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM 
+-- hosts externos:
+api.resend.com api.twilio.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+16
+-- lineas totales:
+443
+
+### portal-informe-cron
+-- comentario inicial:
+// Edge Function: portal-informe-cron
+// Reportería Xpress del Portal de Cliente: el informe que la bienvenida le
+// promete al cliente ("un resumen ejecutivo llega a tu correo dos veces al mes").
+//
+// Lo dispara pg_cron el día 1 y el 15 a las 12:00 UTC (08:00 Chile) — ver la
+// migración 0314. No lleva JWT: se autentica con `x-cron-secret`, igual que el
+// resto de los cron del proyecto.
+//
+-- secrets (Deno.env.get):
+AVERIA_FROM CRON_SECRET PORTAL_FROM PORTAL_URL RESEND_API_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+3
+-- lineas totales:
+274
+
+### portal-login
+-- comentario inicial:
+// Edge Function: portal-login
+// Login del Portal del Proveedor por código temporal (OTP) al correo de
+// Contacto 1 / Contacto 2. Dos acciones:
+//   { accion: 'solicitar', email }          → genera código, lo manda por correo.
+//   { accion: 'validar',  email, codigo }   → valida y devuelve { token, nombre }.
+// La sesión es un token aleatorio guardado HASHEADO en proveedor_sesion (8h,
+// revocable). Estas tablas no se exponen al cliente (RLS deny-all); solo esta
+// función (service_role) las toca. NO da acceso a nada más del sistema.
+-- secrets (Deno.env.get):
+PORTAL_FROM RESEND_API_KEY RESUMEN_FROM SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+8
+-- lineas totales:
+191
+
+### proveedor-correos
+-- comentario inicial:
+// Edge Function: correos a PROVEEDORES externos (Resend). 3 acciones:
+//   { accion: 'invitar', proveedor_id }  → invitación al portal (la llama el
+//        botón "✉️ Invitar"; auth: CM u Operaciones).
+//   { accion: 'nuevas' }   → (cron */15) avisa las tareas recién asignadas a un
+//        proveedor ("tienes una tarea nueva"); dedup en proveedor_email_enviado.
+//   { accion: 'diaria' }   → (cron lun-vie 8:00 CL) resumen de tareas abiertas /
+//        por vencer / vencidas de cada proveedor activo.
+//
+-- secrets (Deno.env.get):
+CRON_SECRET PROVEEDORES_FROM RESEND_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+9
+-- lineas totales:
+443
+
+### resumen-cron
+-- comentario inicial:
+// Edge Function: genera y envía el RESUMEN DEL DÍA automáticamente (Fase B).
+// Porta la agregación de señales al servidor (lo que en la web corre en el
+// navegador) y reusa `dossier-ia` (prompt) y `enviar-resumen` (HTML) vía CRON_SECRET.
+//
+//  accion 'generar'  → calcula señales, llama a la IA por rol (CM/GTE), guarda en
+//                      resumen_diario. (cron 6:50 Chile)
+//  accion 'enviar'   → lee el guardado de hoy y lo envía por correo a cada rol.
+//                      (cron 7:00 Chile)
+-- secrets (Deno.env.get):
+CRON_SECRET SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+esm.sh 
+-- mutacion (insert/update/delete/upsert):
+3
+-- lineas totales:
+462
+
+### tareas-atrasadas-cron
+-- comentario inicial:
+// Edge Function: recordatorios y escalamiento de TAREAS (plan_tareas).
+// El costo de ignorar una tarea deja de ser cero: el sistema empuja solo.
+// Cada aviso va SIEMPRE a la campanita in-app (tabla `notificaciones`) y, además,
+// por CORREO (Resend) — el correo complementa, no reemplaza.
+//
+//  accion 'nuevas'  → (cron cada ~15 min) tareas recién asignadas a OTRA persona
+//     → correo instantáneo al responsable ("X te asignó una tarea"). Dedup por
+//       tabla `tarea_email_enviado` (invisible). El aviso in-app 'tarea_nueva' ya
+-- secrets (Deno.env.get):
+CRON_SECRET RESEND_API_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL TAREAS_FROM 
+-- hosts externos:
+api.resend.com esm.sh www.garantimax.com 
+-- mutacion (insert/update/delete/upsert):
+9
+-- lineas totales:
+595
+
+### transcribir-bitacora
+-- comentario inicial:
+// Edge Function: TRANSCRIBE UN AUDIO de bitácora a texto (Groq · Whisper
+// large-v3-turbo, español). La llama el botón 🎙️ "Dictar" de la Bitácora del
+// día: el navegador graba con MediaRecorder y sube el audio en base64; acá se
+// reconstruye el archivo y se manda a Groq. El texto vuelve al cuadro de la
+// bitácora para que la persona lo revise/corrija antes de guardar (nunca se
+// guarda a ciegas).
+//
+// Entrada (POST JSON):
+-- secrets (Deno.env.get):
+GROQ_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.groq.com console.groq.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+0
+-- lineas totales:
+133
+
+### visitas-abiertas-cron
+-- comentario inicial:
+// Edge Function: vigila las VISITAS ABIERTAS (check-in sin check-out) de la app
+// de terreno y, cuando llevan demasiado tiempo, avisa por correo y/o las cierra.
+//
+//  accion 'recordatorios' → visitas abiertas hace +3 h sin aviso → correo al
+//                           asesor y a los GC, y marca recordatorio_enviado_at.
+//                           (cron cada ~15 min en horario hábil)
+//  accion 'cerrar-dia'    → cierra (borra) las que sigan abiertas y avisa que
+//                           quedaron sin check-out. (cron al fin del día)
+-- secrets (Deno.env.get):
+CRON_SECRET RESEND_API_KEY RESUMEN_FROM SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.resend.com esm.sh www.google.com 
+-- mutacion (insert/update/delete/upsert):
+2
+-- lineas totales:
+170
+
+### wa-enviar
+-- comentario inicial:
+// Edge Function: wa-enviar — el asesor le escribe al cliente por WhatsApp
+// DESDE la plataforma (chat del caso).
+//
+// Regla dura de Meta: el texto libre solo puede salir si el cliente escribió
+// en las últimas 24 horas (la ventana la abre ÉL). El edge decide solo:
+//  - Ventana ABIERTA  → mensaje de texto libre.
+//  - Ventana CERRADA  → el MISMO texto viaja dentro de la plantilla aprobada
+//    `averia_novedad_caso` ("Hola {{1}}, te escribimos de GarantiPLUS con
+-- secrets (Deno.env.get):
+SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM 
+-- hosts externos:
+api.twilio.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+3
+-- lineas totales:
+146
+
+### warroom-comando
+-- comentario inicial:
+// Edge Function: interpreta un COMANDO DE VOZ para el War Room. Recibe el texto
+// (ya transcrito por el 🎙️ de la PWA), Claude lo convierte en una intención
+// estructurada (foco / abrir sala / home) y lo publica en
+// `tv_dashboard_state.comando`. El War Room está suscrito por Realtime y resuelve
+// los nombres contra su catálogo vivo (grupos/zonas/asesores/salas).
+//
+// Entrada (POST JSON):  { texto: string }
+// Salida: { ok: true, dijo, comando } | { ok: false, error }
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+1
+-- lineas totales:
+151
+
+### whatsapp-inbound
+-- comentario inicial:
+// Webhook que Twilio llama cuando el cliente RESPONDE por WhatsApp.
+//  BANDEJA (21-07): además del timeline, cada mensaje queda en av_wa_mensajes
+//  (el chat del caso), los adjuntos se archivan en el bucket wa-media, y si un
+//  HUMANO tomó el hilo (av_casos.wa_humano_hasta vigente) el bot se calla y
+//  solo avisa al asesor. ?paso=estado recibe los ticks de los salientes.
+//  1) Si hay una sesión de encuesta activa (av_encuesta_wa) → sigue esa
+//     conversación (CSAT → NPS → comentario), sin cambios.
+//  2) Si no, busca a qué caso de Averías corresponde el teléfono. Si lo
+-- secrets (Deno.env.get):
+ANTHROPIC_API_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_URL TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN 
+-- hosts externos:
+api.anthropic.com esm.sh 
+-- mutacion (insert/update/delete/upsert):
+16
+-- lineas totales:
+447
+

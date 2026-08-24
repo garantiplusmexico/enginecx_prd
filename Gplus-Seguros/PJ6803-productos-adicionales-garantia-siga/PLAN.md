@@ -8,12 +8,13 @@
 | PRD de origen | `enginecx_prd/Gplus-Seguros/PJ6803-productos-adicionales-garantia-siga/PRD.md` (v0.2) |
 | Repositorio | `gp_seguros` (backend) + `frontend-omega` (frontend) |
 | Rama base | `develop` |
-| Rama | `feature/productos-adicionales-garantia-siga` (creada y publicada en ambos repos) |
+| Rama | `feature/productos-adicionales-garantia-siga` (creada y publicada en `gp_seguros`; **pendiente de crear en `frontend-omega`**) |
 | Tipo | Feature |
 | Responsable | Alexis Salvador Herrera Garcia |
 | Folio PRD | PJ6803 |
 | Fecha de generación | 2026-08-18 |
-| Estado | Borrador |
+| Fecha de inicio de ejecución | 2026-08-24 |
+| Estado | En curso |
 | ID plan (BD) | 48 |
 | Modelo | claude-opus-5[1m] — esfuerzo: alto |
 

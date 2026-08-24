@@ -15,7 +15,7 @@
 | Folio PRD | `PJ3896` |
 | Fecha de generación | 24-08-2026 |
 | Estado | Borrador |
-| ID plan (BD) | *(pm_plan_desarrollo.id — lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | `55` |
 | Modelo / esfuerzo de generación | `claude-opus-5` — esfuerzo alto |
 
 ---
@@ -498,11 +498,11 @@ Si la migración al estándar ya está decidida por política, evaluar E0 con ri
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Habilitación, línea base y método** | Commit fijado (RNF-14), accesos confirmados o escalados, esqueleto de 21 documentos, metodología y escala de severidad publicadas, inventarios automatizados | T-01 a T-05 | 1 – 2 días | |
-| **Fase 1 — Inventario y mapeo (P1)** | C1 ficha tecnológica, C2 los 24 módulos + ubicación de la lógica, C3 tablas/RLS/RPCs, C5' datos muertos, C4 las 46 Edge Functions, C5 integraciones, C6 uso real de SIGA, C8 los 11 canales, C9 PWA y offline · **PUERTA 1** | T-06 a T-15 | 4 – 6 días | |
-| **Fase 2 — Análisis de calidad y riesgos (P1/P2)** | C10 arquitectura y patrones, C11 seguridad, C12 rendimiento, C13 testing/CI-CD, C14 observabilidad, registro de hallazgos priorizados | T-16 a T-21 | 3 – 5 días | |
-| **Fase 3 — Escenarios, pros/contras y dictamen (P1/P3)** | C7 matriz de la API de SIGA, C15 Supabase vs .NET 8 por servicio, C16 escenarios E0–E3 con esfuerzo, C17 las tres opciones de PWA, C18 dictamen | T-22 a T-26 | 3 – 4 días | |
-| **Fase 4 — Resumen ejecutivo, revisión y cierre** | C19 resumen ejecutivo, re-verificación de vigencia y cobertura declarada, revisión con Dirección (**PUERTA 2**), publicación y control de confidencialidad | T-27 a T-30 | 2 – 3 días | |
+| **Fase 0 — Habilitación, línea base y método** | Commit fijado (RNF-14), accesos confirmados o escalados, esqueleto de 21 documentos, metodología y escala de severidad publicadas, inventarios automatizados | T-01 a T-05 | 1 – 2 días | `186` |
+| **Fase 1 — Inventario y mapeo (P1)** | C1 ficha tecnológica, C2 los 24 módulos + ubicación de la lógica, C3 tablas/RLS/RPCs, C5' datos muertos, C4 las 46 Edge Functions, C5 integraciones, C6 uso real de SIGA, C8 los 11 canales, C9 PWA y offline · **PUERTA 1** | T-06 a T-15 | 4 – 6 días | `187` |
+| **Fase 2 — Análisis de calidad y riesgos (P1/P2)** | C10 arquitectura y patrones, C11 seguridad, C12 rendimiento, C13 testing/CI-CD, C14 observabilidad, registro de hallazgos priorizados | T-16 a T-21 | 3 – 5 días | `188` |
+| **Fase 3 — Escenarios, pros/contras y dictamen (P1/P3)** | C7 matriz de la API de SIGA, C15 Supabase vs .NET 8 por servicio, C16 escenarios E0–E3 con esfuerzo, C17 las tres opciones de PWA, C18 dictamen | T-22 a T-26 | 3 – 4 días | `189` |
+| **Fase 4 — Resumen ejecutivo, revisión y cierre** | C19 resumen ejecutivo, re-verificación de vigencia y cobertura declarada, revisión con Dirección (**PUERTA 2**), publicación y control de confidencialidad | T-27 a T-30 | 2 – 3 días | `190` |
 | **Total proyecto (alcance completo)** | | **30 tareas** | **~13 – 20 días hábiles** (≈ 2,6 – 4 semanas) | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-15 | ~5 – 8 días hábiles (≈ 1 – 1,6 semanas) | — |
 | **Ruta mínima al dictamen** | P1 de las cinco fases, con P2 recortado y cobertura declarada (RNF-11) | T-01 a T-30 (profundidad reducida) | ~10 – 13 días hábiles (≈ 2 – 2,6 semanas) | — |

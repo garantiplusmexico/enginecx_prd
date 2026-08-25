@@ -13,7 +13,7 @@
 | Folio PRD | PJ4487 |
 | Fecha de generación | 2026-08-25 |
 | Estado | Borrador |
-| ID plan (BD) | *(lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | `56` (`pm_plan_desarrollo.id`) |
 
 **Rama base:** `develop` del repositorio nuevo `garantimax-app`.
 
@@ -573,11 +573,11 @@ Estimación en **días hábiles**, para **un desarrollador a tiempo completo**. 
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Fundaciones, guardarraíles y extracción de reglas** | Repositorio con ramas Engine, andamiaje, librerías del ADR-006, configuración tipada, jerarquía de errores, contratos y providers, contenedor, 5 reglas de linter, métricas y CI, PWA, sistema de componentes, **catálogos de reglas del sistema actual**, línea base medida y migraciones aditivas | T-01 a T-19 | 30 – 40 días | |
-| **Fase 1 — Núcleo verificable del asesor (P1)** | Identidad, sesión y capacidades sin tier legacy · shell adaptativo, rutas y bienvenida · motor offline completo (cola, idempotencia, decorador, estado observable) · Mi Día con snapshot · visitas con check-in, borrador, evidencia, aviso global y cierre · lobbies · catálogos de referencia en lectura | T-20 a T-43 | 40 – 52 días | |
-| **Fase 2 — Gestión del asesor (P2)** | Tareas y avances · agenda y días hábiles · cumpleaños y saludos · bitácora diaria con dictado y mejora de redacción | T-44 a T-54 | 20 – 26 días | |
-| **Fase 3 — Gastos y rendiciones (P3)** | Dominio de gasto y rendición · repositorios y RPCs · captura de boleta con lectura automática · decorador offline con imágenes · categorización y asignación · rendiciones y observación del flujo de aprobación | T-55 a T-61 | 20 – 27 días | |
-| **Fase 4 — Notificaciones, verificación, auditoría y corte** | Notificaciones · eventos de BI · observabilidad y auditoría · E2E de los 5 flujos críticos · pruebas de corte de red · auditoría de RLS de las 26 tablas · lista de paridad · despliegue · reversión ensayada · piloto · corte único | T-62 a T-72 | 32 – 42 días | |
+| **Fase 0 — Fundaciones, guardarraíles y extracción de reglas** | Repositorio con ramas Engine, andamiaje, librerías del ADR-006, configuración tipada, jerarquía de errores, contratos y providers, contenedor, 5 reglas de linter, métricas y CI, PWA, sistema de componentes, **catálogos de reglas del sistema actual**, línea base medida y migraciones aditivas | T-01 a T-19 | 30 – 40 días | 193 |
+| **Fase 1 — Núcleo verificable del asesor (P1)** | Identidad, sesión y capacidades sin tier legacy · shell adaptativo, rutas y bienvenida · motor offline completo (cola, idempotencia, decorador, estado observable) · Mi Día con snapshot · visitas con check-in, borrador, evidencia, aviso global y cierre · lobbies · catálogos de referencia en lectura | T-20 a T-43 | 40 – 52 días | 194 |
+| **Fase 2 — Gestión del asesor (P2)** | Tareas y avances · agenda y días hábiles · cumpleaños y saludos · bitácora diaria con dictado y mejora de redacción | T-44 a T-54 | 20 – 26 días | 195 |
+| **Fase 3 — Gastos y rendiciones (P3)** | Dominio de gasto y rendición · repositorios y RPCs · captura de boleta con lectura automática · decorador offline con imágenes · categorización y asignación · rendiciones y observación del flujo de aprobación | T-55 a T-61 | 20 – 27 días | 196 |
+| **Fase 4 — Notificaciones, verificación, auditoría y corte** | Notificaciones · eventos de BI · observabilidad y auditoría · E2E de los 5 flujos críticos · pruebas de corte de red · auditoría de RLS de las 26 tablas · lista de paridad · despliegue · reversión ensayada · piloto · corte único | T-62 a T-72 | 32 – 42 días | 197 |
 | **Total proyecto (P1+P2+P3+cierre)** | | **72 tareas** | **~142 – 187 días hábiles (≈ 28 – 37 semanas)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-43 | **~70 – 92 días hábiles (≈ 14 – 19 semanas)** | — |
 

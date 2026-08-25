@@ -6,16 +6,16 @@
 | Campo | Detalle |
 |---|---|
 | PRD de origen | `enginecx_prd/GarantiMAX/PJ4487-garantimax-refactor/PRD.md` (+ anexos A1 arquitectura, A2 ADRs, A3 inventario) |
-| Repositorio | **Nuevo** — `garantimax-app` (a crear). Repo del sistema actual: `garantiplusmexico/garantiplus-dashboard` (lectura para extracción de reglas; escritura solo para migraciones aditivas) |
+| Repositorio | **Nuevo** — `garantiplusmexico/siga_alfa` (creado, vacío). Repo del sistema actual: `garantiplusmexico/garantiplus-dashboard` (lectura para extracción de reglas; escritura solo para migraciones aditivas) |
 | Rama | `feature/PJ4487-garantimax-refactor-nucleo-asesor` (Fase 0) · una rama por fase con el mismo prefijo, todas desde `develop` |
 | Tipo | Proyecto nuevo (re-arquitectura sobre base de datos existente) |
 | Responsable | Javier Antonio Oropeza Camacho |
 | Folio PRD | PJ4487 |
 | Fecha de generación | 2026-08-25 |
-| Estado | Borrador |
+| Estado | Validado |
 | ID plan (BD) | `56` (`pm_plan_desarrollo.id`) |
 
-**Rama base:** `develop` del repositorio nuevo `garantimax-app`.
+**Rama base:** `develop` del repositorio nuevo `siga_alfa`.
 
 > ⚠️ **Nota sobre la rama base.** El repositorio del sistema actual (`garantiplus-dashboard`) **no tiene `develop` ni `main`**: trabaja sobre `master` con ramas `feat/` y `fix/`, y no cumple el estándar de `rules/version-control.md`. Como la aplicación nueva vive en un repositorio propio (decisión tomada en la generación de este plan), **el repositorio nuevo nace ya con la estructura Engine completa** — `main`, `develop`, `pre-qa`, `qa` — y este plan se ejecuta desde `develop`. El repositorio actual se deja como está: normalizarlo obligaría a tocar un sistema en producción que está fuera del alcance de este PRD.
 
@@ -40,7 +40,7 @@ Se **reconstruye desde cero la aplicación de terreno del Asesor Farmer** en un 
 ## 2. Prerequisitos
 
 - [ ] PRD validado por el responsable (PJ4487, v0.1) y anexos A1/A2/A3 leídos por quien ejecuta
-- [ ] **Repositorio nuevo `garantimax-app` creado** en la organización, con permisos para el responsable
+- [ ] **Repositorio nuevo `siga_alfa` creado** en la organización, con permisos para el responsable
 - [ ] Acceso de lectura al repositorio actual `garantiplusmexico/garantiplus-dashboard` (extracción de reglas) y de escritura para las migraciones aditivas
 - [ ] Credenciales del proyecto Supabase `jrykbalmnpymeyzdhsam` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) para desarrollo, QA y producción
 - [ ] `VITE_SENTRY_DSN` disponible (proyecto Sentry nuevo o reutilizado)
@@ -110,7 +110,7 @@ src/
 
 ### Fase 0 — Fundaciones, guardarraíles y extracción de reglas
 
-- [ ] **T-01** — Crear el repositorio `garantimax-app` con la estructura de ramas Engine
+- [ ] **T-01** — Crear el repositorio `siga_alfa` con la estructura de ramas Engine
   - Archivos a crear/modificar: `README.md`, `.gitignore`, `.github/CODEOWNERS`
   - Criterio de completitud: existen `main`, `develop`, `pre-qa`, `qa`; `main` protegida con 2 aprobaciones; `develop` sin commits directos; el responsable tiene acceso
 
@@ -475,7 +475,7 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 ## 9. Consideraciones de infraestructura
 
 - **No se crean recursos AWS.** No hay ECS, ni Fargate, ni RDS, ni S3 en este proyecto: la persistencia es el proyecto Supabase existente y el hospedaje es Vercel.
-- **Vercel**: proyecto nuevo para `garantimax-app`, framework Vite, SPA con reescrituras a `/index.html`, previews automáticas por PR. Costo marginal: un proyecto adicional dentro del plan vigente.
+- **Vercel**: proyecto nuevo para `siga_alfa`, framework Vite, SPA con reescrituras a `/index.html`, previews automáticas por PR. Costo marginal: un proyecto adicional dentro del plan vigente.
 - **Dominios (Cloudflare)**: durante el desarrollo y el piloto, la aplicación nueva vive en un subdominio de transición (propuesto: `app.garantimax.com`). **El día del corte** se decide entre apuntar `www.garantimax.com` a la aplicación nueva —dejando el sistema actual en un subdominio para el doble acceso de los demás roles— o mantener el subdominio y redirigir solo a los asesores. Es una pregunta abierta del PRD §14 y debe cerrarse antes de T-69.
 - **Convivencia**: ambas aplicaciones escriben la misma base de datos durante toda la transición. Las invariantes críticas se garantizan en la base (índices únicos de idempotencia, RPC), no solo en el código nuevo.
 - **Desviación del estándar Engine** (`rules/infraestructura.md`): el árbol de decisión llevaría una SPA a S3 + CloudFront y un backend nuevo a ECS + Fargate. Aquí no hay backend nuevo y el hospedaje se conserva en Vercel por continuidad operativa, porque el PRD deja el cambio de proveedor fuera de alcance. **Requiere visto bueno de TI**; migrar el hospedaje sería un proyecto propio y de bajo costo de cambio (A1 §13 lo clasifica como riesgo de lock-in bajo).
@@ -538,7 +538,7 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 
 **Decisiones tomadas durante la generación de este plan** (cierran preguntas abiertas del PRD §14):
 
-1. **Repositorio propio nuevo** (`garantimax-app`). Consecuencias que el plan ya asume: CI, Vercel y variables de entorno se duplican; **las migraciones y las Edge Functions siguen viviendo en el repositorio actual** y desde ahí se operan (T-18, T-67). No dupliques `supabase/` en el repo nuevo: se convertiría en dos fuentes de verdad sobre la misma base.
+1. **Repositorio propio nuevo** (`siga_alfa`). Consecuencias que el plan ya asume: CI, Vercel y variables de entorno se duplican; **las migraciones y las Edge Functions siguen viviendo en el repositorio actual** y desde ahí se operan (T-18, T-67). No dupliques `supabase/` en el repo nuevo: se convertiría en dos fuentes de verdad sobre la misma base.
 2. **ADR-006 aprobado**: React Router, TanStack Query y Zustand entran como decisión cerrada (T-03). Regla que no se negocia: **la función que se le pasa a TanStack Query siempre invoca un caso de uso**, nunca un repositorio ni el SDK. Sin esa regla, Query se convierte en la nueva forma de meter queries en las vistas.
 3. **La evidencia de visitas se encola sin señal**, igual que las boletas (T-39). El PRD lo dejaba abierto; encolarla es coherente con RNF-08 ("ninguna operación del asesor se pierde") y con la cola que T-30 ya construye para imágenes. Si la operación decide que la evidencia exige conexión, se simplifica T-39 — no al revés.
 4. **Rama base `develop` del repositorio nuevo**, con la estructura Engine completa (`main`, `develop`, `pre-qa`, `qa`). El repositorio actual queda como está: normalizarlo obligaría a tocar un sistema en producción fuera de alcance.
@@ -563,7 +563,7 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 - **MCP de Supabase:** las lecturas se ejecutan libremente; **cualquier escritura** (INSERT/UPDATE/DELETE/DDL/migración) requiere OK explícito, mostrando antes qué hace, el SQL exacto y cuántas filas toca.
 - **Versión:** no se edita a mano; la inyecta el build. Si el repositorio nuevo replica ese mecanismo, replica también la regla.
 - **Tope de PostgREST:** 1000 filas por resultado. Todo listado del asesor pagina o acota por fecha.
-- **Idioma:** `rules/coding-guidelines.md` exige código en inglés. El sistema actual y todo el dominio de este PRD están en español (`visitas`, `rendiciones`, `bitacoras`), y las tablas y RPCs también. **Recomendación:** conservar el español en los nombres del dominio —renombrarlos rompería la correspondencia con la base y con el lenguaje del negocio— y usar inglés para lo técnico transversal. Es una desviación consciente que conviene ratificar con TI antes de T-02, porque después es cara de revertir.
+- **Idioma:** `rules/coding-guidelines.md` exige código en inglés. El sistema actual y todo el dominio de este PRD están en español (`visitas`, `rendiciones`, `bitacoras`), y las tablas y RPCs también. **Recomendación:** conservar el español en los nombres del dominio —renombrarlos rompería la correspondencia con la base y con el lenguaje del negocio— y usar inglés para lo técnico transversal. Es una desviación consciente que conviene ratificar con TI antes de T-02, porque después es cara de revertir. **RATIFICADO (2026-08-25) por Javier Antonio Oropeza Camacho:** español en el dominio (entidades, casos de uso, invariantes, nombres de feature) e inglés en lo técnico transversal (`Repository`, `Provider`, `LocalStore`, errores, configuración, tooling). Se documenta en el `CLAUDE.md` del repositorio nuevo (T-02).
 
 ---
 

@@ -18,7 +18,7 @@
 
 ## Resumen de estado
 
-Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `develop`, `pre-qa`, `qa` creadas, y rama funcional `feature/PJ4487-garantimax-refactor-nucleo-asesor` abierta desde `develop`. T-01 completada. Plan `56` marcado `En curso` en BD, Fase 0 (`id 193`) marcada `En progreso`. Siguiente tarea: T-02 (andamiaje base de la aplicación).
+Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `develop`, `pre-qa`, `qa` creadas, y rama funcional `feature/PJ4487-garantimax-refactor-nucleo-asesor` abierta desde `develop`. T-01 y T-02 completadas: andamiaje base (Vite + React 19 + TypeScript + Tailwind v4) y árbol completo de `src/` según A1 §3, con `npx tsc -b` y `npm run build` en verde. Plan `56` marcado `En curso` en BD, Fase 0 (`id 193`) marcada `En progreso`. Siguiente tarea: T-03 (React Router, TanStack Query, Zustand — ADR-006).
 
 > ⚠️ **Nota sobre `main`:** el repositorio tiene una regla de organización (`validate-main-source-branch`) que **bloquea cualquier push directo a `main`**, incluido el primer commit — solo acepta merges vía PR desde `release`. `main` **no existe todavía como rama** en el remoto (0 refs). Es consistente con `rules/version-control.md` ("main solo se actualiza desde release, nunca commits directos"), pero es más estricto que en otros repos Engine, donde el primer commit sí se sembró directo en `main` antes de aplicar la regla. `main` se creará más adelante, cuando exista una rama `release` y se abra el primer PR `release → main` (ver Fase 4, T-72). El workflow `validate-prod-source.yml` equivalente (visto en `gp_4.0_siga`/`gp_3.0_siga_api`) deberá añadirse al repo antes de ese primer PR — pendiente, no bloquea la Fase 0.
 
@@ -43,6 +43,7 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 | ID | Tarea | Completada por | Fecha | Notas |
 |---|---|---|---|---|
 | T-01 | Crear el repositorio `siga_alfa` con la estructura de ramas Engine | Claude Code | 2026-08-25 | `develop`, `pre-qa`, `qa` creadas y en remoto. `main` pendiente — ver nota en "Resumen de estado". CODEOWNERS: `* @Javier-Oropeza`. Protección de `main` con 2 aprobaciones y bloqueo de commits directos a `develop` quedan a cargo del programador en la UI de GitHub |
+| T-02 | Andamiaje base de la aplicación y estructura de carpetas de A1 §3 | Claude Code | 2026-08-25 | Árbol completo de `src/` (49 carpetas con `index.ts` marcador) + `package.json`, `vite.config.ts`, `tsconfig*`, `CLAUDE.md`. `npx tsc -b` y `npm run build` en verde; verificado además con dev server sirviendo HTTP 200. Sin script `lint` todavía (llega con `eslint.config.js` en T-09) |
 
 ---
 
@@ -58,7 +59,6 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-02 | Andamiaje base de la aplicación y estructura de carpetas de A1 §3 | |
 | T-03 | Instalar y configurar React Router, TanStack Query y Zustand (ADR-006) | |
 | T-04 | Configuración tipada y validada al arranque | `VITE_SUPABASE_ANON_KEY` real de desarrollo pendiente (no bloquea T-04, sí el arranque real de la app) |
 | T-05 | Jerarquía de errores tipificados y su traducción a mensajes | |
@@ -108,6 +108,10 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 | `.github/CODEOWNERS` (siga_alfa) | Creado | T-01 |
 | `enginecx_prd/GarantiMAX/PJ4487-garantimax-refactor/PLAN.md` | Modificado (nombre de repo, estado, ratificación de idioma) | T-01 (previo a la ejecución) |
 | `enginecx_prd/GarantiMAX/PJ4487-garantimax-refactor/AVANCE.md` | Creado | T-01 |
+| `src/` (siga_alfa) — 49 carpetas con `index.ts`/`index.tsx` marcador, según A1 §3 | Creado | T-02 |
+| `package.json`, `package-lock.json`, `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`, `index.html` (siga_alfa) | Creado | T-02 |
+| `src/main.tsx`, `src/app/App.tsx`, `src/app/container.ts`, `src/index.css`, `src/vite-env.d.ts` (siga_alfa) | Creado | T-02 |
+| `CLAUDE.md`, `.env.example` (siga_alfa) | Creado | T-02 |
 
 ---
 
@@ -116,12 +120,13 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 | Hash | Mensaje | Fecha |
 |---|---|---|
 | `e4ec22e` (siga_alfa) | Andamiaje inicial del repositorio (T-01) | 2026-08-25 |
+| `ad4ce83` (siga_alfa) | Andamiaje base de la aplicación y estructura de A1 §3 (T-02) | 2026-08-25 |
 
 ---
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** T-02, andamiaje base de la aplicación (`package.json`, `vite.config.ts`, `tsconfig*`, Tailwind, estructura de `src/` según A1 §3). Rama activa: `feature/PJ4487-garantimax-refactor-nucleo-asesor`, ya en el remoto.
+- **Por dónde continuar:** T-03, instalar y configurar React Router, TanStack Query y Zustand (ADR-006). Rama activa: `feature/PJ4487-garantimax-refactor-nucleo-asesor`, ya en el remoto.
 - **Contexto importante:**
   - No dupliques `supabase/` en `siga_alfa` — migraciones y Edge Functions siguen viviendo en el repo actual (`garantiplus-dashboard`).
   - `main` de `siga_alfa` no existe aún — no intentar sembrarlo directo, ver nota en "Resumen de estado".

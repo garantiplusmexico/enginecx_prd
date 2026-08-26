@@ -4,8 +4,8 @@
 | --- | --- |
 | **Proyecto** | Reclamación de Incentivos |
 | **Área / empresa** | Go Virtual |
-| **Versión** | v0.2 |
-| **Fecha** | 25 de agosto de 2026 |
+| **Versión** | v0.3 |
+| **Fecha** | 26 de agosto de 2026 |
 | **Autores** | Aldo Álvarez |
 | **Revisión / liderazgo** | Laura Hernández Azpeitia (Autocom — solicitante y dueña del proceso) · Aldo Álvarez (Director de TI, Engine) |
 | **Tipo de proyecto** | Feature web o API |
@@ -25,7 +25,21 @@ Entre la v0.1 y esta versión se obtuvo acceso a AWS Athena y se analizaron cuat
 | **Existen cancelaciones, refacturaciones y unidades revendidas.** Con importes negativos espejo y VINs que reaparecen meses después bajo otra fuente. | Se agregan el neteo de cancelaciones y la detección de duplicidad de VIN (F26, F27 / RF-31, RF-32). |
 | **El MVP se vuelve el instrumento de levantamiento.** En lugar de esperar documentación adicional para explicar las diferencias, el MVP las presenta y Laura las explica desde la propia herramienta. | Se agrega el campo de comentarios transversal y el reporte de conformidad (F24, F25 / RF-29, RF-30). |
 
-Los siete hallazgos técnicos sobre la vista, con su evidencia y las peticiones a Autocom, viven en el documento **Diagnóstico de la vista de ventas nuevos** (25 de agosto de 2026), anexo a este PRD.
+Los ocho hallazgos técnicos sobre la vista, con su evidencia y las peticiones a Autocom, viven en el documento **Diagnóstico de la vista de ventas nuevos**, anexo a este PRD.
+
+## 0.1 Cambios en la v0.3
+
+Ajustes acordados con la dirección de TI el 26 de agosto de 2026, antes de arrancar la construcción, más el resultado del spike de conexión a Athena.
+
+| **Qué cambió** | **Consecuencia en este PRD** |
+| --- | --- |
+| **El flujo de trabajo se ordena desde el usuario: primero la oferta, después las transacciones.** Se selecciona el mes a auditar, se cargan los PDF de la oferta comercial, la plataforma los procesa, y solo entonces se consulta Athena. | §7.1 se reescribe en ese orden y la Fase 1 del plan se reordena en consecuencia. |
+| **La oferta comercial vigente debe ser consultable en todo momento**, no solo un dato interno del motor. | Se agrega F29 / RF-36: un apartado de consulta del catálogo, navegable por periodo y con acceso al documento original. |
+| **Definición de "mes a auditar": las ventas facturadas dentro del mes**, del día 1 al último. | Queda como supuesto explícito en §13. La ventana de "oferta comercial mes previo" que permite HMM se pospone hasta confirmar con la dirección comercial si se usa. |
+| **La validación exige catálogo aprobado; la sincronización no.** Se pueden traer y explorar las transacciones en cualquier momento, pero el motor no corre sin una oferta aprobada. | Se agrega RF-37. Evita resultados sin sustento sin estorbar el trabajo de exploración. |
+| **La sincronización trae el histórico completo, aunque la interfaz sea por mes.** El spike midió que acotar a un mes escanea 1,008 MB y no acotar nada escanea 1,245 MB: ahorra 19%, no 97%. | RF-09 pasa a refresco completo. La selección de mes es una vista, no un filtro de extracción. |
+| **La consulta a Athena tarda de 40 a 50 segundos.** Es tiempo del motor, no del sondeo. | RF-38: la sincronización es asíncrona en tres pasos —lanzar, sondear, materializar—, con avance visible. Una petición HTTP directa no cabe en ese tiempo. |
+| **El servicio de IA será OpenAI.** El PRD nunca ató proveedor; se deja constancia de la elección. | §10 nombra el proveedor. El alcance de la IA no cambia: cuerpo del boletín, nunca el anexo ni la validación. |
 
 ## 1. Resumen ejecutivo
 
@@ -182,6 +196,8 @@ Secuencia de dependencias previas al desarrollo. **Sin fechas comprometidas en e
 | **F26. Neteo de cancelaciones y refacturación** | Las cancelaciones aparecen como importe negativo espejo, con la referencia de la operación cancelada y con `ud = −1`. La plataforma netea por unidad antes de validar, de modo que una venta cancelada y refacturada no se reporte como discrepancia ni se contabilice dos veces. Sin este neteo, en el histórico analizado el 10% de las unidades habría generado falsos positivos. |
 | **F27. Alerta de duplicidad por VIN** | Detecta unidades que aparecen más de una vez como venta activa —posiblemente en fuentes distintas— y que acumulan más de un incentivo. La plataforma **no decide** si es una reventa legítima o un doble reclamo: levanta la alerta con la explicación de la sospecha y el detalle de ambas operaciones para que el equipo lo resuelva. Se detectaron 9 VINs en esta condición, algunos con dos ventas activas e incentivos distintos con meses de diferencia. |
 | **F28. Panel de excepciones de homologación** | Vista dedicada a las unidades cuya versión no se pudo empatar contra el catálogo, con el texto original de Quiter, las versiones candidatas del periodo y el campo de comentarios de F7. Es la lista de trabajo que el usuario resuelve para que el periodo quede completo. |
+| **F29. Consulta de la oferta comercial vigente** | Apartado permanente donde cualquier usuario autorizado consulta **qué incentivos están vigentes y con qué importes**, sin tener que abrir el PDF ni depender de quien lo cargó. Navegable por periodo —con el vigente por omisión—, muestra por modelo y versión el bono flexible, el reparto marca/dealer y las dos variantes del anexo con y sin IVA, e incluye el enlace al documento original que lo respalda y la fecha en que se aprobó. Cuando un periodo tiene actualizaciones a mitad de mes, se ve qué cambió y desde cuándo. |
+| **F30. Selección del periodo a auditar** | Toda la operación gira alrededor de un selector de mes: define qué catálogo aplica, qué ventas se muestran y sobre qué corre el motor. El periodo indica su estado de un vistazo —si tiene documentos cargados, si el catálogo está aprobado, cuándo fue la última sincronización y si ya se validó—, de modo que el usuario sepa siempre qué le falta para cerrarlo. |
 
 **Principio rector del MVP: la plataforma detecta y alerta; no corrige.** No escribe en Quiter, no emite ni cancela notas de crédito, no ajusta importes y no autoriza excepciones por su cuenta. Toda corrección la ejecuta una persona en el sistema origen, y toda excepción queda justificada por escrito por un humano. La consecuencia de diseño es que un falso negativo (dejar pasar un error) es más grave que un falso positivo: ante la duda, la plataforma levanta la alerta.
 
@@ -204,6 +220,34 @@ De ahí la decisión de método del MVP: **no se asume documentación faltante n
 - **Reconstrucción de periodos históricos**: la plataforma opera solo hacia adelante desde su puesta en marcha. El histórico de contabilidad se solicita únicamente para establecer la línea base de las métricas, no para reclamar incentivos vencidos.
 
 ## 7. Flujos principales
+
+### 7.0 El recorrido del usuario, de principio a fin
+
+El orden importa: **primero existe la oferta contra la cual auditar, después se traen las transacciones.** Todo cuelga de un periodo seleccionado.
+
+```mermaid
+flowchart TD
+    A[Selecciona el mes a auditar<br/>p. ej. julio 2026] --> B[Carga los PDF de la oferta comercial:<br/>boletín, anexo, actualizaciones,<br/>flotilla, semana híbrida]
+    B --> C[La plataforma los procesa:<br/>anexo por parseo determinista,<br/>cuerpo del boletín con IA]
+    C --> D{Revisa y aprueba<br/>el catálogo propuesto}
+    D -->|Corrige| C
+    D -->|Aprueba| E[Oferta comercial vigente,<br/>consultable en todo momento]
+    E --> F[Sincroniza las transacciones<br/>desde Athena]
+    F --> G[Motor de validación]
+    G --> H[Registros en coincidencia]
+    G --> I[Registros sin versión autorizada<br/>en la oferta]
+    G --> J[Registros que no cuadran<br/>en montos]
+    G --> K[Ventas con incentivo ofertado<br/>y no capturado]
+    G --> L[Alertas de duplicidad por VIN]
+    H & I & J & K & L --> M[El negocio comenta cada caso]
+    M --> N[Los comentarios alimentan<br/>el catálogo y las reglas]
+    N --> E
+```
+
+**Dos reglas de este recorrido:**
+
+- **La sincronización no espera al catálogo, la validación sí.** Las transacciones de un periodo se pueden traer y explorar en cualquier momento; el motor no corre hasta que ese periodo tenga una oferta aprobada (RF-37). Así nadie toma por bueno un resultado sin sustento, pero tampoco se estorba el trabajo de exploración.
+- **El periodo se define por fecha de factura**, del día 1 al último del mes. La ventana de "oferta comercial mes previo" que permite HMM —unidades con fecha retail de los primeros días del mes siguiente— se pospone hasta confirmar con la dirección comercial si realmente se utiliza.
 
 ### 7.1 Ingesta y vigencia del catálogo de incentivos
 
@@ -339,7 +383,7 @@ El MVP se construye como **primera entrega de la Fase 1** —no como prototipo d
 | RF-06 | Incentivos por regla porcentual | Permitir configurar incentivos calculados, no capturados: el 5% de comunidad coreana sobre precio de lista, recuperable de la marca y aplicable exista o no oferta comercial para la unidad. |
 | RF-07 | Tipos de incentivo por naturaleza | Modelar el tipo de beneficio (bono al precio, bono adicional, comisión de apertura en cero, seguro sin costo, flotilla) y tratar a todos como importes recuperables sujetos a validación. |
 | RF-08 | Homologación asistida de modelo y versión | Derivar modelo y versión del texto único que entrega Quiter, proponer la correspondencia contra el catálogo vigente y, cuando no se resuelva automáticamente, **presentar al usuario la lista de versiones candidatas del periodo para que seleccione la correcta**, con campo de comentarios obligatorio cuando ninguna aplique. Persistir cada resolución y reutilizarla en periodos posteriores. |
-| RF-09 | Extracción diaria de ventas | Obtener de AWS Athena, en corrida programada diaria, la vista consolidada de ventas nuevos con factura, referencia, fecha de factura, cliente, vendedor, modelo, año modelo, VIN, tipo de operación, financiera, bandera de cancelación, contador de unidad e importe de incentivo registrado sin IVA. La **versión** se deriva conforme a RF-08 y el **destino del bono** queda pendiente de que Autocom confirme si existe en origen (§14). |
+| RF-09 | Extracción de ventas — refresco completo | Obtener de AWS Athena la vista consolidada de ventas nuevos con factura, referencia, fecha de factura, cliente, vendedor, modelo, año modelo, VIN, tipo de operación, financiera, bandera de cancelación, contador de unidad e importe de incentivo registrado sin IVA. **Refresco completo del histórico de la marca en una sola consulta, no extracción incremental por periodo:** el spike midió que acotar a un mes escanea 1,008 MB y no acotar nada escanea 1,245 MB, de modo que traer todo cuesta prácticamente lo mismo y elimina la posibilidad de huecos entre corridas. La **versión** se deriva conforme a RF-08 y el **destino del bono** queda pendiente de que Autocom confirme si existe en origen (§14). |
 | RF-10 | Extracción diaria de notas de crédito | Obtener de AWS Athena las notas de crédito con VIN, importe con IVA, fecha y estatus de aplicación. |
 | RF-11 | Validación de importe contra catálogo | Validar cada línea de incentivo buscando en el catálogo vigente **a la fecha de factura** una coincidencia por modelo/versión, forma de aplicación e importe sin IVA de la aportación de la marca, incluyendo los incentivos por regla aplicables a la unidad. |
 | RF-12 | Discrepancia bidireccional | Levantar discrepancia cuando el importe registrado no corresponda a ningún incentivo vigente, tanto si es superior como si es inferior al esperado. |
@@ -366,6 +410,10 @@ El MVP se construye como **primera entrega de la Fase 1** —no como prototipo d
 | RF-33 | Expresión de la diferencia con IVA | Mostrar toda diferencia detectada tanto sin IVA —como se captura en Quiter— como con IVA —como la publica la marca y como la reconoce el negocio—, para que el usuario identifique de inmediato si corresponde a un programa conocido. |
 | RF-34 | Alertas ancladas al calendario de la marca | Derivar los avisos de las fechas límite publicadas por HMM en cada boletín —registro de VINs, carga de documentos, envío de monto aprobado y facturación— en lugar de un umbral genérico de días. |
 | RF-35 | Extracción determinista del anexo | Extraer las dos tablas de importes del anexo mediante parseo estructurado del documento, sin depender de IA, y verificar su consistencia interna comprobando que la aportación sin IVA corresponda a la aportación con IVA dividida entre 1.16, con tolerancia de redondeo de un peso. |
+| RF-36 | Consulta de la oferta comercial vigente | Ofrecer un apartado permanente de consulta del catálogo, navegable por periodo y con el vigente por omisión, que muestre por modelo y versión el bono flexible, el reparto marca/dealer, las dos variantes del anexo con y sin IVA, el enlace al documento original y la fecha de aprobación. Cuando el periodo tenga actualizaciones, señalar qué cambió y desde cuándo. |
+| RF-37 | Catálogo aprobado como requisito de validación | Permitir sincronizar y explorar las transacciones de un periodo en cualquier momento, e impedir que el motor de validación se ejecute mientras ese periodo no tenga un catálogo aprobado, indicando con claridad qué falta para poder correrlo. |
+| RF-38 | Sincronización asíncrona | Ejecutar la extracción desde Athena en tres pasos —lanzar la consulta y persistir su identificador, sondear el avance, y materializar los resultados al terminar—, exponiendo el progreso en la interfaz. El spike de T-05 midió entre 40 y 50 segundos por consulta, tiempo que no cabe en una petición HTTP síncrona. |
+| RF-39 | Selección del periodo a auditar | Ofrecer un selector de periodo que gobierne toda la operación —catálogo aplicable, ventas mostradas y alcance del motor— y que exponga el estado del periodo: documentos cargados, catálogo aprobado, fecha de última sincronización y si ya fue validado. El periodo se define por **fecha de factura**, del día 1 al último del mes. |
 
 ## 9. Requerimientos no funcionales
 
@@ -394,7 +442,7 @@ El MVP se construye como **primera entrega de la Fase 1** —no como prototipo d
 | **AWS Athena — vista `vw_full_master_view_ventas_nuevos_grupo_autocom`** (base `db-bi-quiterqbi`) | **Fuente principal y confirmada.** Vista consolidada que Autocom mantiene sobre múltiples tablas de Quiter. Entrega, por operación: `vin`, `modelo`, `anio_vehiculo`, `fec_factura`, `num_factura`, `referencia`, `bandera_cancelacion`, `ud`, `des_tipo_venta_destino`, `des_codigo_financiera` e `imp_concepto_tot_incentivos`. Acceso de solo lectura ya operativo. Cobertura verificada de enero 2024 a la fecha. |
 | **AWS Athena — `ftvenbi_pr`** (bases `db-qbi-kor` y `db-bi-quiterqbi-kor`) | Tabla base con el **desglose por concepto** de cada operación: `cod_concepto`, `desc_concepto`, `cta_concepto`, `imp_concepto`. Se usa cuando se requiera el detalle línea a línea que la vista entrega ya sumado. **Regla obligatoria:** `db-bi-quiterqbi-kor` escribe un snapshot completo de toda la historia en cada partición diaria, por lo que **toda consulta debe fijar una sola partición** (`year_`/`month_`/`day_`); omitirlo multiplica cada importe por el número de días cargados. Esa base está además congelada en octubre de 2025 y solo sirve como archivo histórico. |
 | Quiter (DMS) | Sistema de origen del dato. **Sin integración directa**: se lee a través de Athena y nunca se escribe en él. Las correcciones las ejecutan las personas directamente en Quiter. |
-| Servicio de IA (LLM multimodal) | Extracción estructurada de los documentos de oferta comercial, incluidos los que llegan como imagen. Se invoca solo en la carga de documentos, nunca en la validación transaccional. |
+| **Servicio de IA — OpenAI** (LLM multimodal) | Interpretación del **cuerpo del boletín**: bonos aditivos fuera de tabla, destinos permitidos del bono, programas vigentes de boletines anteriores y calendario de reclamo. También respaldo cuando el anexo llegue como imagen o con un formato que el parseo no reconozca. **No interviene en el anexo** —que se extrae de forma determinista (RF-35)— **ni en la validación transaccional.** El proveedor no está atado al producto: sustituirlo solo toca el módulo de extracción documental. |
 | Almacenamiento de documentos | Resguardo de los boletines originales y de los reportes de cierre generados, como evidencia auditable durante 5 años. |
 | Servicio de correo | Envío de alertas de discrepancias nuevas, escalamientos por antigüedad y fallos de extracción, complementado con notificación dentro de la plataforma. |
 | Contabilidad (Excel de rebates) | **Insumo manual, no integración.** El reporte de cierre se exporta para contrastarse fuera de la plataforma contra el detalle que entrega contabilidad. |
@@ -512,6 +560,8 @@ El MVP se construye como **primera entrega de la Fase 1** —no como prototipo d
 | Fuente única de ventas | La vista `vw_full_master_view_ventas_nuevos_grupo_autocom` es la fuente vigente y completa de las ventas de la agencia Hyundai, salvo el hueco de agosto y septiembre de 2025 ya reportado. |
 | Una línea de incentivo por operación | Verificado en el histórico: cada operación tiene a lo sumo una línea de incentivo, por lo que el total que entrega la vista equivale al detalle por concepto. Los incentivos múltiples se suman dentro de esa única línea. |
 | Redondeo del importe capturado | Quiter guarda la aportación de la marca sin IVA redondeada a pesos enteros. La validación usa por eso una tolerancia de ±1 peso, no una comparación exacta. |
+| Definición de periodo | **Acordado en v0.3:** el mes a auditar comprende las ventas **facturadas** entre el día 1 y el último del mes. La ventana de "oferta comercial mes previo" de HMM —unidades con fecha retail de los primeros días del mes siguiente que pueden reclamar la oferta anterior— no se modela en el MVP hasta confirmar con la dirección comercial si se utiliza en la práctica. |
+| Proveedor de IA | Se usará OpenAI para interpretar el cuerpo del boletín. La elección no está atada al producto: el alcance de la IA se limita al módulo de extracción documental y sustituirla no toca el motor de validación. |
 | Entrega completa de documentos | La dirección comercial entregará **todos** los documentos del periodo —boletín inicial, anexos, actualizaciones intermedias, flotilla y semana híbrida— y lo hará oportunamente. Se acordó explícitamente en el levantamiento. |
 | Todo incentivo está documentado | No existen incentivos negociados caso por caso fuera de boletín. Por lo tanto, todo importe que no corresponda a un incentivo del catálogo vigente es error por definición. |
 | Importe de captura | El importe que se captura en Quiter es siempre la **aportación de la marca sin IVA**, y es lo único que el distribuidor recupera. |

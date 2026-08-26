@@ -278,14 +278,14 @@
     <h1>Diagnóstico de la vista de ventas nuevos</h1>
     <p class="standfirst">
       Resultado del análisis de <code>vw_full_master_view_ventas_nuevos_grupo_autocom</code> filtrada
-      a Hyundai. Siete puntos a revisar con el equipo de Autocom: cuatro correcciones en origen y tres
-      solicitudes de información. Todo lo demás quedó verificado y sirve.
+      a Hyundai. Ocho puntos a revisar con el equipo de Autocom: tres correcciones en origen, cuatro
+      solicitudes de información y una oportunidad de optimización. Todo lo demás quedó verificado y sirve.
     </p>
     <div class="meta">
-      <span><b>Fecha</b> · 25 de agosto de 2026</span>
+      <span><b>Fecha</b> · 26 de agosto de 2026</span>
       <span><b>Prepara</b> · Aldo Álvarez, Engine CX</span>
       <span><b>Para</b> · Equipo de Datos, Autocom</span>
-      <span><b>Insumo</b> · Export de 2,812 operaciones</span>
+      <span><b>Insumo</b> · Export de 2,812 operaciones + consultas directas a Athena</span>
     </div>
   </header>
 
@@ -295,6 +295,7 @@
     <div class="stat"><span class="n">98%</span><span class="l">Filas con VIN</span></div>
     <div class="stat"><span class="n">86%</span><span class="l">Versiones homologadas contra el boletín</span></div>
     <div class="stat"><span class="n">69%</span><span class="l">Incentivos que cuadran en julio 2026</span></div>
+    <div class="stat"><span class="n">45 s</span><span class="l">Lo que tarda cada consulta a la vista</span></div>
   </section>
 
   <h2>Por qué este documento</h2>
@@ -533,6 +534,58 @@ C                              <-- un solo carácter</div>
     </div>
   </article>
 
+  <h2>Oportunidad de optimización</h2>
+  <p class="section-note">No está mal, pero cuesta caro. Y arreglarlo cambiaría lo que la plataforma puede ofrecer.</p>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-8</span>
+      <h3>La vista no poda por fecha: toda consulta escanea el histórico completo</h3>
+      <span class="chips"><span class="chip warn">Media</span><span class="chip info">Optimización</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        Ya conectamos a Athena con credenciales propias y medimos. Da igual cómo se acote la
+        consulta: el volumen escaneado y el tiempo son prácticamente los mismos.
+      </p>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>Consulta</th><th>Escaneado</th><th>Tiempo</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Hyundai, un solo mes (julio 2026)</td><td class="num">1,008 MB</td><td class="num">47 s</td></tr>
+            <tr><td>Hyundai, toda la historia</td><td class="num">1,245 MB</td><td class="num">38 s</td></tr>
+            <tr><td>Grupo completo, sin ningún filtro</td><td class="num">1,245 MB</td><td class="num">42 s</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Acotar a un mes ahorra 19%, no 97%.</strong> La causa está en la definición de la
+        vista: hace <code>UNION ALL</code> de las cuatro vistas de marca, cada una con
+        <code>SELECT DISTINCT</code>, y encima dos <code>LEFT JOIN</code>. Athena tiene que
+        materializar el conjunto completo antes de poder aplicar el <code>WHERE</code>, así que no
+        hay poda de particiones que sirva.
+      </p>
+      <p>
+        <strong>El costo económico es irrelevante</strong> —1.25 GB son unos 0.006 USD por consulta,
+        alrededor de dos dólares al año con una corrida diaria—. El problema son los
+        <strong>45 segundos</strong>: obligan a que la sincronización de nuestra plataforma sea
+        asíncrona, con barra de progreso, en lugar de una consulta directa. Ya lo resolvimos así de
+        nuestro lado, no los bloquea.
+      </p>
+      <p>
+        Lo señalamos porque probablemente <strong>no somos los únicos afectados</strong>. Si alguien más consulta
+        esta vista desde un tablero o un reporte, está pagando los mismos 45 segundos y el mismo
+        gigabyte cada vez.
+      </p>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>¿Es viable materializar esta vista en una tabla, o particionarla por <code>fec_factura</code>? Bajaría el tiempo de 45 segundos a segundos y haría posible la consulta interactiva. No nos bloquea —es una mejora que rendiría para todo el que use la vista.</p>
+      </div>
+    </div>
+  </article>
+
   <h2>Resumen de peticiones</h2>
   <p class="section-note">Lo mismo de arriba, en una sola vista para la junta.</p>
 
@@ -573,6 +626,11 @@ C                              <-- un solo carácter</div>
           <td class="who">Confirmación</td><td class="who">Media</td>
         </tr>
         <tr>
+          <td class="mono">H-8</td>
+          <td>Materializar o particionar la vista por <code>fec_factura</code> — hoy toda consulta escanea 1.25 GB en 45 s</td>
+          <td class="who">Optimización</td><td class="who">Media</td>
+        </tr>
+        <tr>
           <td class="mono">H-3</td>
           <td>Extender o eliminar el CTE <code>mes_cierre</code></td>
           <td class="who">Corrección</td><td class="who">Baja</td>
@@ -590,10 +648,12 @@ C                              <-- un solo carácter</div>
   <div class="clear">
     <h3>La vista sirve como fuente del proyecto</h3>
     <p>
-      Ninguno de los siete puntos anteriores nos detiene. Lo confirmamos sobre el export completo.
+      Ninguno de los ocho puntos anteriores nos detiene. Lo confirmamos sobre el export completo
+      y, después, consultando Athena directamente.
     </p>
   </div>
   <ul>
+    <li><strong>La conexión desde nuestra plataforma funciona.</strong> Probamos el ciclo completo contra Athena —firma, ejecución, sondeo y lectura de resultados— con las credenciales que ya tenemos. La ingesta automatizada es viable.</li>
     <li><strong>Los datos llegan al día.</strong> Cobertura continua de enero 2024 al 22 de agosto de 2026, salvo el hueco de H-1.</li>
     <li><strong>El VIN está y está bien.</strong> 2,757 de 2,812 filas, las 2,757 con 17 caracteres exactos. Es la llave de cruce de todo el sistema.</li>
     <li><strong>Las cancelaciones son limpias.</strong> <code>bandera_cancelacion</code> y <code>ud</code> (+1 / −1) permiten netear sin ambigüedad.</li>
@@ -603,7 +663,7 @@ C                              <-- un solo carácter</div>
 
   <footer>
     <span>Engine CX · Departamento de Desarrollo</span>
-    <span>Reclamación de Incentivos · PJ6082 · v1</span>
+    <span>Reclamación de Incentivos · PJ6082 · v2</span>
   </footer>
 
 </div>

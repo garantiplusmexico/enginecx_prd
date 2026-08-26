@@ -18,7 +18,7 @@
 
 ## Resumen de estado
 
-Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `develop`, `pre-qa`, `qa` creadas, y rama funcional `feature/PJ4487-garantimax-refactor-nucleo-asesor` abierta desde `develop`. T-01 y T-02 completadas: andamiaje base (Vite + React 19 + TypeScript + Tailwind v4) y árbol completo de `src/` según A1 §3, con `npx tsc -b` y `npm run build` en verde. Plan `56` marcado `En curso` en BD, Fase 0 (`id 193`) marcada `En progreso`. Siguiente tarea: T-03 (React Router, TanStack Query, Zustand — ADR-006).
+Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `develop`, `pre-qa`, `qa` creadas, y rama funcional `feature/PJ4487-garantimax-refactor-nucleo-asesor` abierta desde `develop`. T-01, T-02 y T-03 completadas: andamiaje base (Vite + React 19 + TypeScript + Tailwind v4), árbol completo de `src/` según A1 §3, y React Router + TanStack Query + Zustand instalados y configurados (ADR-006), con `npx tsc -b` y `npm run build` en verde. Plan `56` marcado `En curso` en BD, Fase 0 (`id 193`) marcada `En progreso`. Siguiente tarea: T-04 (configuración tipada y validada al arranque).
 
 > ⚠️ **Nota sobre `main`:** el repositorio tiene una regla de organización (`validate-main-source-branch`) que **bloquea cualquier push directo a `main`**, incluido el primer commit — solo acepta merges vía PR desde `release`. `main` **no existe todavía como rama** en el remoto (0 refs). Es consistente con `rules/version-control.md` ("main solo se actualiza desde release, nunca commits directos"), pero es más estricto que en otros repos Engine, donde el primer commit sí se sembró directo en `main` antes de aplicar la regla. `main` se creará más adelante, cuando exista una rama `release` y se abra el primer PR `release → main` (ver Fase 4, T-72). El workflow `validate-prod-source.yml` equivalente (visto en `gp_4.0_siga`/`gp_3.0_siga_api`) deberá añadirse al repo antes de ese primer PR — pendiente, no bloquea la Fase 0.
 
@@ -44,6 +44,7 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 |---|---|---|---|---|
 | T-01 | Crear el repositorio `siga_alfa` con la estructura de ramas Engine | Claude Code | 2026-08-25 | `develop`, `pre-qa`, `qa` creadas y en remoto. `main` pendiente — ver nota en "Resumen de estado". CODEOWNERS: `* @Javier-Oropeza`. Protección de `main` con 2 aprobaciones y bloqueo de commits directos a `develop` quedan a cargo del programador en la UI de GitHub |
 | T-02 | Andamiaje base de la aplicación y estructura de carpetas de A1 §3 | Claude Code | 2026-08-25 | Árbol completo de `src/` (49 carpetas con `index.ts` marcador) + `package.json`, `vite.config.ts`, `tsconfig*`, `CLAUDE.md`. `npx tsc -b` y `npm run build` en verde; verificado además con dev server sirviendo HTTP 200. Sin script `lint` todavía (llega con `eslint.config.js` en T-09) |
+| T-03 | Instalar y configurar React Router, TanStack Query y Zustand (ADR-006) | Claude Code | 2026-08-25 | Dos rutas de prueba con `createBrowserRouter` (temporales, se reemplazan a partir de T-20/T-27); `QueryProvider` con `staleTime` 30s y reintentos documentados; store de Zustand vacío en `shared/sync/store.ts` con su regla de uso también en `CLAUDE.md`. `tsc -b`/`build` en verde y ambas rutas responden HTTP 200 en dev; navegación client-side en navegador real **no verificada** (sin uno disponible en este entorno) |
 
 ---
 
@@ -59,7 +60,6 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-03 | Instalar y configurar React Router, TanStack Query y Zustand (ADR-006) | |
 | T-04 | Configuración tipada y validada al arranque | `VITE_SUPABASE_ANON_KEY` real de desarrollo pendiente (no bloquea T-04, sí el arranque real de la app) |
 | T-05 | Jerarquía de errores tipificados y su traducción a mensajes | |
 | T-06 | Contratos transversales (ports), sin implementación | |
@@ -112,6 +112,8 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 | `package.json`, `package-lock.json`, `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`, `index.html` (siga_alfa) | Creado | T-02 |
 | `src/main.tsx`, `src/app/App.tsx`, `src/app/container.ts`, `src/index.css`, `src/vite-env.d.ts` (siga_alfa) | Creado | T-02 |
 | `CLAUDE.md`, `.env.example` (siga_alfa) | Creado | T-02 |
+| `src/app/providers/QueryProvider.tsx`, `src/shared/sync/store.ts` (siga_alfa) | Creado | T-03 |
+| `src/app/App.tsx`, `src/app/providers/index.ts`, `src/app/routes/index.tsx`, `src/shared/sync/index.ts`, `package.json`, `CLAUDE.md` (siga_alfa) | Modificado | T-03 |
 
 ---
 
@@ -121,12 +123,13 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 |---|---|---|
 | `e4ec22e` (siga_alfa) | Andamiaje inicial del repositorio (T-01) | 2026-08-25 |
 | `ad4ce83` (siga_alfa) | Andamiaje base de la aplicación y estructura de A1 §3 (T-02) | 2026-08-25 |
+| `247908b` (siga_alfa) | Instalar y configurar React Router, TanStack Query y Zustand (T-03, ADR-006) | 2026-08-25 |
 
 ---
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** T-03, instalar y configurar React Router, TanStack Query y Zustand (ADR-006). Rama activa: `feature/PJ4487-garantimax-refactor-nucleo-asesor`, ya en el remoto.
+- **Por dónde continuar:** T-04, configuración tipada y validada al arranque (`src/config/env.ts`). Rama activa: `feature/PJ4487-garantimax-refactor-nucleo-asesor`, ya en el remoto.
 - **Contexto importante:**
   - No dupliques `supabase/` en `siga_alfa` — migraciones y Edge Functions siguen viviendo en el repo actual (`garantiplus-dashboard`).
   - `main` de `siga_alfa` no existe aún — no intentar sembrarlo directo, ver nota en "Resumen de estado".

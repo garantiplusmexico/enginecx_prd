@@ -1,0 +1,669 @@
+<title>Diagnóstico Vista Ventas Nuevos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --ground:#F2F5F7;
+    --surface:#FFFFFF;
+    --surface-2:#EAEFF3;
+    --ink:#111A22;
+    --ink-2:#3D4C59;
+    --muted:#687887;
+    --line:#D6DEE5;
+    --line-2:#C2CDD6;
+    --accent:#0F5F73;
+    --accent-soft:#DCEAEE;
+    --crit:#9E3226;
+    --crit-soft:#F6E3E0;
+    --warn:#8A6109;
+    --warn-soft:#F7EDD8;
+    --ok:#2A6349;
+    --ok-soft:#DEECE4;
+    --shadow:0 1px 2px rgba(17,26,34,.05), 0 8px 24px -12px rgba(17,26,34,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0D1319;
+      --surface:#151E26;
+      --surface-2:#1D2831;
+      --ink:#E7EEF3;
+      --ink-2:#B4C2CD;
+      --muted:#8698A6;
+      --line:#26333D;
+      --line-2:#33434F;
+      --accent:#6FBFD3;
+      --accent-soft:#15323B;
+      --crit:#E89184;
+      --crit-soft:#3A211D;
+      --warn:#E0B75F;
+      --warn-soft:#372B14;
+      --ok:#82C4A3;
+      --ok-soft:#17301F;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0D1319;
+    --surface:#151E26;
+    --surface-2:#1D2831;
+    --ink:#E7EEF3;
+    --ink-2:#B4C2CD;
+    --muted:#8698A6;
+    --line:#26333D;
+    --line-2:#33434F;
+    --accent:#6FBFD3;
+    --accent-soft:#15323B;
+    --crit:#E89184;
+    --crit-soft:#3A211D;
+    --warn:#E0B75F;
+    --warn-soft:#372B14;
+    --ok:#82C4A3;
+    --ok-soft:#17301F;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:60rem;margin:0 auto;padding:0 1.5rem 5rem}
+
+  /* ---------- encabezado ---------- */
+  .masthead{
+    border-bottom:2px solid var(--ink);
+    padding:3.5rem 0 1.25rem;
+    margin-bottom:2.5rem;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:.7rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 1rem;
+    font-weight:600;
+  }
+  h1{
+    font-family:"Archivo", ui-sans-serif, system-ui, sans-serif;
+    font-weight:700;
+    font-size:clamp(2rem,5.5vw,3.1rem);
+    line-height:1.05;
+    letter-spacing:-.025em;
+    margin:0 0 1rem;
+    text-wrap:balance;
+  }
+  .standfirst{
+    font-size:1.075rem;
+    color:var(--ink-2);
+    max-width:60ch;
+    margin:0 0 1.75rem;
+  }
+  .meta{
+    display:flex;flex-wrap:wrap;gap:.5rem 2rem;
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:.75rem;color:var(--muted);
+  }
+  .meta b{color:var(--ink-2);font-weight:500}
+
+  /* ---------- tira de cifras ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:3px;
+    overflow:hidden;
+    margin:0 0 3rem;
+  }
+  .stat{background:var(--surface);padding:1.1rem 1.25rem}
+  .stat .n{
+    font-family:"Archivo", sans-serif;
+    font-weight:700;font-size:1.6rem;line-height:1.1;
+    letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;
+    display:block;
+  }
+  .stat .l{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin-top:.4rem;display:block;line-height:1.45;
+  }
+
+  /* ---------- secciones ---------- */
+  h2{
+    font-family:"Archivo", sans-serif;
+    font-weight:700;font-size:1.35rem;letter-spacing:-.015em;
+    margin:3.5rem 0 .5rem;padding-top:1.25rem;
+    border-top:1px solid var(--line-2);
+    text-wrap:balance;
+  }
+  .section-note{color:var(--muted);font-size:.92rem;margin:0 0 1.75rem;max-width:62ch}
+  p{max-width:66ch}
+
+  /* ---------- fichas de hallazgo ---------- */
+  .finding{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:4px;
+    box-shadow:var(--shadow);
+    margin-bottom:1.25rem;
+    overflow:hidden;
+  }
+  .finding-head{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:.6rem .85rem;
+    padding:1.1rem 1.35rem .35rem;
+  }
+  .fid{
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:600;font-size:.78rem;
+    color:var(--surface);
+    background:var(--ink);
+    padding:.16rem .45rem;border-radius:2px;
+    letter-spacing:.03em;
+  }
+  .finding h3{
+    font-family:"Archivo", sans-serif;
+    font-size:1.08rem;font-weight:600;letter-spacing:-.01em;
+    margin:0;flex:1 1 20rem;line-height:1.35;
+  }
+  .chips{display:flex;gap:.4rem;flex-wrap:wrap}
+  .chip{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.65rem;letter-spacing:.07em;text-transform:uppercase;
+    font-weight:600;padding:.2rem .5rem;border-radius:2px;white-space:nowrap;
+  }
+  .chip.crit{background:var(--crit-soft);color:var(--crit)}
+  .chip.warn{background:var(--warn-soft);color:var(--warn)}
+  .chip.info{background:var(--accent-soft);color:var(--accent)}
+  .finding-body{padding:.35rem 1.35rem 1.35rem}
+  .finding-body p{margin:.7rem 0}
+  .ask{
+    margin-top:1rem;padding:.85rem 1rem;
+    background:var(--surface-2);
+    border-left:3px solid var(--accent);
+    border-radius:0 3px 3px 0;
+  }
+  .ask .ask-l{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;display:block;margin-bottom:.3rem;
+  }
+  .ask p{margin:0;max-width:none}
+
+  /* ---------- evidencia ---------- */
+  .ev{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:.78rem;line-height:1.65;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:.8rem 1rem;
+    margin:.85rem 0;
+    overflow-x:auto;
+    white-space:pre;
+    color:var(--ink-2);
+  }
+  code{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:.87em;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    padding:.06em .32em;border-radius:2px;
+    color:var(--ink-2);
+    white-space:nowrap;
+  }
+  .finding-body strong{color:var(--ink);font-weight:600}
+
+  /* ---------- tablas ---------- */
+  .tw{overflow-x:auto;margin:1rem 0;border:1px solid var(--line);border-radius:3px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:34rem}
+  th,td{padding:.6rem .85rem;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted);font-weight:600;
+    background:var(--surface-2);
+    border-bottom:1px solid var(--line-2);
+    white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.8rem;white-space:nowrap}
+  td.mono{font-family:"IBM Plex Mono",monospace;font-size:.78rem;white-space:nowrap}
+  .who{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--muted);white-space:nowrap;
+  }
+
+  /* ---------- cierre ---------- */
+  .clear{
+    background:var(--ok-soft);
+    border:1px solid var(--line);
+    border-left:3px solid var(--ok);
+    border-radius:0 4px 4px 0;
+    padding:1.25rem 1.4rem;
+    margin-top:1rem;
+  }
+  .clear h3{
+    font-family:"Archivo",sans-serif;font-size:1rem;font-weight:600;
+    margin:0 0 .5rem;color:var(--ok);
+  }
+  .clear p{margin:0;color:var(--ink-2);font-size:.95rem}
+  ul{padding-left:1.15rem;max-width:66ch}
+  li{margin:.35rem 0}
+  footer{
+    margin-top:4rem;padding-top:1.25rem;
+    border-top:1px solid var(--line-2);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.72rem;color:var(--muted);
+    display:flex;flex-wrap:wrap;gap:.5rem 2rem;justify-content:space-between;
+  }
+  a{color:var(--accent)}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Go Virtual · Engine CX — Reclamación de Incentivos</p>
+    <h1>Diagnóstico de la vista de ventas nuevos</h1>
+    <p class="standfirst">
+      Resultado del análisis de <code>vw_full_master_view_ventas_nuevos_grupo_autocom</code> filtrada
+      a Hyundai. Ocho puntos a revisar con el equipo de Autocom: tres correcciones en origen, cuatro
+      solicitudes de información y una oportunidad de optimización. Todo lo demás quedó verificado y sirve.
+    </p>
+    <div class="meta">
+      <span><b>Fecha</b> · 26 de agosto de 2026</span>
+      <span><b>Prepara</b> · Aldo Álvarez, Engine CX</span>
+      <span><b>Para</b> · Equipo de Datos, Autocom</span>
+      <span><b>Insumo</b> · Export de 2,812 operaciones + consultas directas a Athena</span>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Cifras del análisis">
+    <div class="stat"><span class="n">2,812</span><span class="l">Operaciones analizadas</span></div>
+    <div class="stat"><span class="n">32 meses</span><span class="l">Ene 2024 → 22 ago 2026</span></div>
+    <div class="stat"><span class="n">98%</span><span class="l">Filas con VIN</span></div>
+    <div class="stat"><span class="n">86%</span><span class="l">Versiones homologadas contra el boletín</span></div>
+    <div class="stat"><span class="n">69%</span><span class="l">Incentivos que cuadran en julio 2026</span></div>
+    <div class="stat"><span class="n">45 s</span><span class="l">Lo que tarda cada consulta a la vista</span></div>
+  </section>
+
+  <h2>Por qué este documento</h2>
+  <p class="section-note">
+    Estamos construyendo la plataforma que valida que cada incentivo capturado en Quiter corresponda
+    a un incentivo realmente ofertado por Hyundai. La vista de ventas nuevos es la fuente de la que
+    va a leer el sistema, así que la revisamos a fondo antes de programar sobre ella.
+  </p>
+  <p>
+    <strong>La conclusión de fondo es buena:</strong> la vista tiene lo que el proyecto necesita —VIN,
+    modelo, año, importe de incentivo, bandera de cancelación— y los datos llegan hasta anteayer.
+    Probamos el motor de validación contra el boletín de julio 2026 y funciona. Lo que sigue son los
+    puntos que hay que resolver para que funcione completo.
+  </p>
+
+  <h2>Correcciones en origen</h2>
+  <p class="section-note">Cosas que hoy están mal en la vista o en su carga, y que necesitamos que el equipo de Autocom corrija.</p>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-1</span>
+      <h3>Faltan agosto y septiembre de 2025 completos</h3>
+      <span class="chips"><span class="chip crit">Alta</span><span class="chip info">Corrección</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        La vista no devuelve <strong>ni una sola fila</strong> para esos dos meses. Julio 2025 trae 104
+        operaciones y octubre 2025 trae 101, así que no es un mes flojo: es un hueco.
+      </p>
+      <p>
+        No es que no hubiera ventas. La tabla base <code>ftvenbi_pr</code> sí tiene esos registros:
+        <strong>169 líneas de incentivo por $2,596,440</strong> que la vista está perdiendo.
+      </p>
+      <div class="ev">Operaciones por mes en la vista        Líneas de incentivo en ftvenbi_pr
+  2025-07     104                          2025-08      82    $1,286,705
+  2025-08       0   <--                    2025-09      87    $1,309,735
+  2025-09       0   <--                                 ---    ----------
+  2025-10     101                                       169    $2,596,440</div>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>Identificar por qué la vista descarta esos dos meses y recargarlos. Mientras no estén, cualquier medición histórica que hagamos va a estar incompleta.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-2</span>
+      <h3>Tres columnas de la vista nunca se llenan</h3>
+      <span class="chips"><span class="chip warn">Media</span><span class="chip info">Corrección</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        <code>segmento_bi</code>, <code>id_agencia_colaborador</code> y <code>agencia_colaborador</code>
+        vienen <strong>nulas en las 2,812 filas</strong>. No nos bloquean, pero si alguien está usando
+        esta vista para reportes de BI, está leyendo vacíos. En los dos casos ubicamos la causa:
+      </p>
+      <p>
+        <strong>segmento_bi</strong> — el <code>CASE</code> compara el modelo contra una lista de nombres
+        cortos, pero la columna <code>modelo</code> guarda la descripción completa. Nunca empata:
+      </p>
+      <div class="ev">CASE WHEN modelo IN ('CRETA', 'TUCSON', 'PALISADE', ...)
+     valor real de la columna:  'CRETA GLS PREMIUM'
+                                'TUCSON LIMITED HIBRIDO TA'</div>
+      <p>
+        <strong>id_agencia_colaborador / agencia_colaborador</strong> — el join corta el nombre del
+        vendedor con <code>STRPOS(nom_vendedor, ' - ')</code>, pero la columna que trae ese separador
+        es <code>venderor</code>, no <code>nom_vendedor</code>. <code>STRPOS</code> devuelve 0 y el join
+        nunca resuelve:
+      </p>
+      <div class="ev">nom_vendedor : KARLA IVETTE BADILLO GUTIERREZ        <-- sin ' - '
+venderor     : 106 - KARLA IVETTE BADILLO GUTIERREZ  <-- es esta</div>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>Corregir el <code>CASE</code> de segmento para que compare contra el modelo normalizado, y apuntar los dos joins de colaborador a <code>venderor</code>.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-3</span>
+      <h3>El calendario <code>mes_cierre</code> está fijo en 2025 y no se usa</h3>
+      <span class="chips"><span class="chip warn">Baja</span><span class="chip info">Corrección</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        El CTE <code>mes_cierre</code> solo cubre de enero a diciembre de 2025, y el
+        <code>LEFT JOIN</code> contra él se ejecuta aunque <strong>ninguna de sus columnas se proyecta
+        en el SELECT final</strong>. Hoy es código muerto que solo cuesta.
+      </p>
+      <p>
+        Además tiene un traslape: noviembre 2025 cierra el <code>2025-12-02</code> y diciembre 2025
+        abre ese mismo día, así que una factura de esa fecha empata con dos renglones y duplica la
+        operación. Hoy lo tapa el <code>SELECT DISTINCT</code>, pero es un riesgo latente.
+      </p>
+      <div class="ev">ROW ('Noviembre 2025', DATE '2025-11-01', DATE '2025-12-02')
+ROW ('Diciembre 2025', DATE '2025-12-02', DATE '2026-01-02')
+                                    ^^^^^^^^^^ mismo día en ambos rangos</div>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>Si el mes de cierre se ocupa, extenderlo a 2026 y cerrar el traslape. Si no se ocupa, quitar el CTE y su join.</p>
+      </div>
+    </div>
+  </article>
+
+  <h2>Información que necesitamos</h2>
+  <p class="section-note">Datos que no están hoy en la vista y sin los cuales la validación queda incompleta.</p>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-4</span>
+      <h3>No sabemos a qué se aplicó el bono</h3>
+      <span class="chips"><span class="chip crit">Alta</span><span class="chip info">Información</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        Este es el que más nos afecta. El anexo de Hyundai publica <strong>dos tablas de importes
+        distintas</strong> para el mismo modelo y versión, y cuál aplica depende de a dónde se aplicó
+        el bono: si bajó el precio de la unidad, o si se fue a enganche, tasa, accesorios o seguro.
+      </p>
+      <p>
+        Hoy la vista nos dice si la operación fue de contado o financiada
+        (<code>des_tipo_venta_destino</code>, <code>des_codigo_financiera</code>), pero no el destino
+        del bono. Sin ese dato no podemos elegir la tabla correcta y tenemos que dar por buena
+        cualquiera de las dos, lo que deja pasar errores reales.
+      </p>
+      <p>
+        Un dato que refuerza la duda: en julio 2026, dieciocho Tucson traen <strong>exactamente el mismo
+        importe de incentivo</strong> siendo unas de contado y otras financiadas por Banorte. O todas
+        usaron la misma tabla, o la distinción no se está registrando.
+      </p>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>¿Quiter guarda a qué se aplicó el bono —precio, enganche, tasa, accesorios, seguro—? Si existe en origen, necesitamos exponerlo en la vista. Si no existe, avísennos para resolverlo por otro camino.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-5</span>
+      <h3>La columna <code>version</code> es una copia de <code>modelo</code></h3>
+      <span class="chips"><span class="chip warn">Media</span><span class="chip info">Información</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        Las dos columnas traen <strong>el mismo texto en las 2,757 filas</strong> que tienen modelo.
+        No hay un campo de versión separado: todo viene en un solo string.
+      </p>
+      <p>
+        El boletín de Hyundai sí separa las dos cosas —modelo <code>CRETA MY26</code>, versión
+        <code>GLS PREMIUM</code>— y el importe del incentivo depende de la versión. Nosotros lo estamos
+        resolviendo partiendo el string, y así llegamos al 86%. El 14% que falta son nombres largos o
+        con erratas que ninguna regla automática alcanza:
+      </p>
+      <div class="ev">CRETA 5 PUERTAS N LINE LIMITED TURBO DCT 4CIL 1.5L
+TUCSON N LINE LIMITED TECH HIBRIDO T/A
+ELANTRA HIBRIDO 4 PUERTAS HIBRIDO GLS DCT 4 CIL.
+TUCSONLIMITED TECH AT          <-- sin espacio
+ELANTRA GLS  PREMIUM HIBRIDO   <-- doble espacio
+C                              <-- un solo carácter</div>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>¿Existe en Quiter un campo de versión o acabado separado del modelo? Si existe, exponerlo nos ahorra la homologación manual. Si no, seguimos resolviéndolo de nuestro lado con una tabla que el usuario podrá corregir.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-6</span>
+      <h3>Unidades vendidas dos veces, en dos fuentes, con dos incentivos</h3>
+      <span class="chips"><span class="chip crit">Alta</span><span class="chip info">Confirmación</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        La vista mezcla dos orígenes para la misma agencia: <code>Datos Hyundai</code> (1,779 filas) y
+        <code>Datos Autocom</code> (1,033), cada uno con su propia nomenclatura
+        —<code>VENTA AUTO NUEVO</code> contra <code>VENTA CONTADO MENUDEO</code>—.
+      </p>
+      <p>
+        No hay referencias repetidas, pero <strong>9 VINs aparecen en ambos orígenes</strong>. Algunos
+        se explican como cancelación y reventa. Otros no: aquí las dos operaciones están marcadas como
+        venta activa, con incentivos distintos y meses de diferencia.
+      </p>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>VIN</th><th>Origen</th><th>Fecha</th><th>Estatus</th><th>Incentivo</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">MF3PB2A2XTJ173460</td><td>Datos Hyundai</td><td class="mono">2025-07-31</td><td>VENTA</td><td class="num">18,103</td></tr>
+            <tr><td class="mono">MF3PB2A2XTJ173460</td><td>Datos Autocom</td><td class="mono">2026-02-28</td><td>VENTA</td><td class="num">29,508</td></tr>
+            <tr><td class="mono">MF3PB2A29TJ174678</td><td>Datos Hyundai</td><td class="mono">2025-10-18</td><td>VENTA</td><td class="num">20,431</td></tr>
+            <tr><td class="mono">MF3PB2A29TJ174678</td><td>Datos Autocom</td><td class="mono">2026-01-31</td><td>VENTA</td><td class="num">17,662</td></tr>
+            <tr><td class="mono">TMCJB3U12SJ389381</td><td>Datos Hyundai</td><td class="mono">2025-10-18</td><td>VENTA</td><td class="num">43,103</td></tr>
+            <tr><td class="mono">TMCJB3U12SJ389381</td><td>Datos Autocom</td><td class="mono">2026-02-26</td><td>VENTA</td><td class="num">30,172</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Si son unidades que legítimamente reingresaron a inventario y se revendieron, perfecto y lo
+        modelamos así. Si no, <strong>es un mismo VIN reclamado dos veces a la marca</strong>, y eso
+        tiene consecuencia frente a Hyundai.
+      </p>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>Confirmar cómo se reparten las dos fuentes y si estos 9 VINs son reventas legítimas. De cualquier forma la plataforma va a alertar estos casos para que alguien los revise.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-7</span>
+      <h3>Confirmar cuál base es la fuente de verdad</h3>
+      <span class="chips"><span class="chip warn">Media</span><span class="chip info">Confirmación</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        Trabajando con los primeros extractos llegamos a una conclusión equivocada que vale la pena
+        dejar asentada, porque cualquiera puede repetirla.
+      </p>
+      <p>
+        La base <code>db-bi-quiterqbi-kor</code> escribe <strong>un snapshot completo de toda la
+        historia cada día</strong>. Un extracto de tres meses de particiones devolvió 53,674 filas que
+        en realidad eran <strong>685 registros repetidos 78 veces</strong>, idénticos hasta la última
+        celda. Además esa base está congelada en octubre de 2025, lo que nos hizo pensar que el feed de
+        Quiter estaba detenido. No lo está: la vista vive en <code>db-bi-quiterqbi</code> y llega al día.
+      </p>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>Confirmar que <code>db-bi-quiterqbi</code> es la fuente vigente y <code>db-bi-quiterqbi-kor</code> es histórico congelado. Y si alguna consulta debe seguir usando la segunda, dejar documentado que siempre hay que fijar una partición.</p>
+      </div>
+    </div>
+  </article>
+
+  <h2>Oportunidad de optimización</h2>
+  <p class="section-note">No está mal, pero cuesta caro. Y arreglarlo cambiaría lo que la plataforma puede ofrecer.</p>
+
+  <article class="finding">
+    <div class="finding-head">
+      <span class="fid">H-8</span>
+      <h3>La vista no poda por fecha: toda consulta escanea el histórico completo</h3>
+      <span class="chips"><span class="chip warn">Media</span><span class="chip info">Optimización</span></span>
+    </div>
+    <div class="finding-body">
+      <p>
+        Ya conectamos a Athena con credenciales propias y medimos. Da igual cómo se acote la
+        consulta: el volumen escaneado y el tiempo son prácticamente los mismos.
+      </p>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>Consulta</th><th>Escaneado</th><th>Tiempo</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Hyundai, un solo mes (julio 2026)</td><td class="num">1,008 MB</td><td class="num">47 s</td></tr>
+            <tr><td>Hyundai, toda la historia</td><td class="num">1,245 MB</td><td class="num">38 s</td></tr>
+            <tr><td>Grupo completo, sin ningún filtro</td><td class="num">1,245 MB</td><td class="num">42 s</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Acotar a un mes ahorra 19%, no 97%.</strong> La causa está en la definición de la
+        vista: hace <code>UNION ALL</code> de las cuatro vistas de marca, cada una con
+        <code>SELECT DISTINCT</code>, y encima dos <code>LEFT JOIN</code>. Athena tiene que
+        materializar el conjunto completo antes de poder aplicar el <code>WHERE</code>, así que no
+        hay poda de particiones que sirva.
+      </p>
+      <p>
+        <strong>El costo económico es irrelevante</strong> —1.25 GB son unos 0.006 USD por consulta,
+        alrededor de dos dólares al año con una corrida diaria—. El problema son los
+        <strong>45 segundos</strong>: obligan a que la sincronización de nuestra plataforma sea
+        asíncrona, con barra de progreso, en lugar de una consulta directa. Ya lo resolvimos así de
+        nuestro lado, no los bloquea.
+      </p>
+      <p>
+        Lo señalamos porque probablemente <strong>no somos los únicos afectados</strong>. Si alguien más consulta
+        esta vista desde un tablero o un reporte, está pagando los mismos 45 segundos y el mismo
+        gigabyte cada vez.
+      </p>
+      <div class="ask">
+        <span class="ask-l">Lo que pedimos</span>
+        <p>¿Es viable materializar esta vista en una tabla, o particionarla por <code>fec_factura</code>? Bajaría el tiempo de 45 segundos a segundos y haría posible la consulta interactiva. No nos bloquea —es una mejora que rendiría para todo el que use la vista.</p>
+      </div>
+    </div>
+  </article>
+
+  <h2>Resumen de peticiones</h2>
+  <p class="section-note">Lo mismo de arriba, en una sola vista para la junta.</p>
+
+  <div class="tw">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Petición</th><th>Tipo</th><th>Prioridad</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">H-1</td>
+          <td>Recargar agosto y septiembre 2025 en la vista (169 líneas, $2.6 M)</td>
+          <td class="who">Corrección</td><td class="who">Alta</td>
+        </tr>
+        <tr>
+          <td class="mono">H-4</td>
+          <td>Exponer el destino del bono: precio, enganche, tasa, accesorios o seguro</td>
+          <td class="who">Información</td><td class="who">Alta</td>
+        </tr>
+        <tr>
+          <td class="mono">H-6</td>
+          <td>Confirmar el reparto entre las dos fuentes y los 9 VINs repetidos</td>
+          <td class="who">Confirmación</td><td class="who">Alta</td>
+        </tr>
+        <tr>
+          <td class="mono">H-2</td>
+          <td>Corregir <code>segmento_bi</code> y los dos joins de colaborador</td>
+          <td class="who">Corrección</td><td class="who">Media</td>
+        </tr>
+        <tr>
+          <td class="mono">H-5</td>
+          <td>Confirmar si existe un campo de versión separado del modelo</td>
+          <td class="who">Información</td><td class="who">Media</td>
+        </tr>
+        <tr>
+          <td class="mono">H-7</td>
+          <td>Confirmar cuál base es la vigente y documentar la regla de particiones</td>
+          <td class="who">Confirmación</td><td class="who">Media</td>
+        </tr>
+        <tr>
+          <td class="mono">H-8</td>
+          <td>Materializar o particionar la vista por <code>fec_factura</code> — hoy toda consulta escanea 1.25 GB en 45 s</td>
+          <td class="who">Optimización</td><td class="who">Media</td>
+        </tr>
+        <tr>
+          <td class="mono">H-3</td>
+          <td>Extender o eliminar el CTE <code>mes_cierre</code></td>
+          <td class="who">Corrección</td><td class="who">Baja</td>
+        </tr>
+        <tr>
+          <td class="mono">—</td>
+          <td>Credenciales de servicio en Athena para la plataforma, aparte del usuario nominal que ya tenemos</td>
+          <td class="who">Acceso</td><td class="who">Media</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Lo que ya quedó verificado</h2>
+  <div class="clear">
+    <h3>La vista sirve como fuente del proyecto</h3>
+    <p>
+      Ninguno de los ocho puntos anteriores nos detiene. Lo confirmamos sobre el export completo
+      y, después, consultando Athena directamente.
+    </p>
+  </div>
+  <ul>
+    <li><strong>La conexión desde nuestra plataforma funciona.</strong> Probamos el ciclo completo contra Athena —firma, ejecución, sondeo y lectura de resultados— con las credenciales que ya tenemos. La ingesta automatizada es viable.</li>
+    <li><strong>Los datos llegan al día.</strong> Cobertura continua de enero 2024 al 22 de agosto de 2026, salvo el hueco de H-1.</li>
+    <li><strong>El VIN está y está bien.</strong> 2,757 de 2,812 filas, las 2,757 con 17 caracteres exactos. Es la llave de cruce de todo el sistema.</li>
+    <li><strong>Las cancelaciones son limpias.</strong> <code>bandera_cancelacion</code> y <code>ud</code> (+1 / −1) permiten netear sin ambigüedad.</li>
+    <li><strong>Sí hay operaciones financiadas.</strong> 109 con financiera identificada, contra el 100% contado que veíamos en el extracto viejo.</li>
+    <li><strong>El motor de validación funciona.</strong> Contra el boletín de julio 2026: 86% de las unidades homologadas y 69% de los incentivos cuadran al peso. Las diferencias restantes son montos redondos y repetidos —$50,000, $25,000, $10,000 con IVA— que apuntan a incentivos adicionales sumados en una sola línea, no a errores de la vista.</li>
+  </ul>
+
+  <footer>
+    <span>Engine CX · Departamento de Desarrollo</span>
+    <span>Reclamación de Incentivos · PJ6082 · v2</span>
+  </footer>
+
+</div>

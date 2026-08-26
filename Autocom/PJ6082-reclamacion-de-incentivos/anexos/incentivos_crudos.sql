@@ -1,0 +1,1 @@
+select * from "db-bi-quiterqbi-kor".ftvenbi_pr where (upper(ftvenbi_pr.desc_concepto) LIKE '%INCENTIVO%')

@@ -13,7 +13,7 @@
 | Folio PRD | PJ6082 |
 | Fecha de generación | 25 de agosto de 2026 |
 | Estado | Borrador |
-| ID plan (BD) | *(pendiente de registro)* |
+| ID plan (BD) | 64 |
 | Modelo | claude-opus-5 — esfuerzo: alto |
 
 ---
@@ -401,12 +401,12 @@ AWS Athena (consola Autocom)                    Documentos de HMM
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Cimientos (P1)** | Repositorio y ramas, Next.js en Workers, Supabase, Zero Trust, spike de Athena | T-01 a T-05 | 3 – 5 días | |
-| **Fase 1 — Ingesta y catálogo (P1)** | Modelo de datos, Edge Function, sincronización, carga y parseo de documentos, aprobación del catálogo | T-06 a T-12 | 6 – 9 días | |
-| **Fase 2 — Motor de validación (P1)** | Neteo, homologación, panel de excepciones, validación de importe, barrido y duplicidad | T-13 a T-18 | 6 – 9 días | |
-| **Fase 3 — Presentación al negocio (P1)** | Conformidad, diferencias con comentarios, vista consolidada, exportación, bitácora | T-19 a T-23 | 5 – 7 días | |
-| **Fase 4 — Piloto de julio 2026 (P1)** | Corrida completa, sesión con la dirección comercial, ajustes | T-24 a T-26 | 2 – 4 días | |
-| **Fase 5 — Operación continua (P2)** | Notas de crédito, ingesta programada, alertas por calendario, ciclo de discrepancia, incentivos por regla | T-27 a T-31 | 7 – 11 días | |
+| **Fase 0 — Cimientos (P1)** | Repositorio y ramas, Next.js en Workers, Supabase, Zero Trust, spike de Athena | T-01 a T-05 | 3 – 5 días | 223 |
+| **Fase 1 — Ingesta y catálogo (P1)** | Modelo de datos, Edge Function, sincronización, carga y parseo de documentos, aprobación del catálogo | T-06 a T-12 | 6 – 9 días | 224 |
+| **Fase 2 — Motor de validación (P1)** | Neteo, homologación, panel de excepciones, validación de importe, barrido y duplicidad | T-13 a T-18 | 6 – 9 días | 225 |
+| **Fase 3 — Presentación al negocio (P1)** | Conformidad, diferencias con comentarios, vista consolidada, exportación, bitácora | T-19 a T-23 | 5 – 7 días | 226 |
+| **Fase 4 — Piloto de julio 2026 (P1)** | Corrida completa, sesión con la dirección comercial, ajustes | T-24 a T-26 | 2 – 4 días | 227 |
+| **Fase 5 — Operación continua (P2)** | Notas de crédito, ingesta programada, alertas por calendario, ciclo de discrepancia, incentivos por regla | T-27 a T-31 | 7 – 11 días | 228 |
 | **Total proyecto (P1+P2)** | | 31 tareas | ~29 – 45 días hábiles (≈ 6 – 9 semanas) | — |
 | **Solo P1 (MVP del piloto)** | Fases 0 a 4 | T-01 a T-26 | ~22 – 34 días hábiles (≈ 4.5 – 7 semanas) | — |
 

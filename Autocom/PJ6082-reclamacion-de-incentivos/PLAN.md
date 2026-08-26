@@ -300,36 +300,50 @@ AWS Athena (consola Autocom)                    Documentos de HMM
   - Periodos, detalle del periodo, resultados, oferta vigente y homologación
   - Criterio: la aplicación se navega sin explicación previa
 
-- [ ] **T-38** — Autohospedar Avenir Next
-  - Es la tipografía de web y aplicaciones del design system, pero es licenciada
-    y no se sirve desde un CDN público. Hoy se declara primero y el sistema
-    resuelve al fallback si no está instalada
-  - Los archivos viven en `assets/fonts/` del design system
+- [x] **T-38** — Autohospedar Avenir Next — **COMPLETADA**
+  - Los tres pesos (400, 500, 600) servidos desde el propio Worker, no desde un
+    CDN público: la tipografía es licenciada
+  - `font-display: swap` para que el texto se vea desde el primer pintado
   - Criterio: la tipografía se ve igual en cualquier máquina
 
-- [ ] **T-39** — Filtros por columna en las tablas
-  - El ejemplo de referencia los tiene y con volumen real hacen falta
+- [x] **T-39** — Filtros por columna en las tablas — **COMPLETADA**
+  - Componente `TablaFiltrable` con filtro por columna y contador de coincidencias
+  - Filtrado en el cliente: un periodo son ciento y pico operaciones, así que
+    traerlas todas responde al instante y evita una ida al servidor por tecla
+  - Aplicado a resultados y a la oferta vigente
   - Criterio: se puede filtrar por VIN, factura y modelo sin salir de la tabla
+
+- [x] **T-40** — Guía dentro de la aplicación — **COMPLETADA**
+  - Burbujas que explican qué hace cada sección, ancladas a los elementos reales
+    de cada pantalla y con el resto atenuado
+  - Arranca sola la primera vez que alguien entra a una pantalla; el botón «No
+    volver a mostrar» la apaga para siempre, y el botón de ayuda de la barra
+    superior la reabre cuando haga falta
+  - La preferencia vive en el navegador de cada persona, no en la base: es una
+    preferencia de quien mira, no un dato del negocio
+  - Un paso cuyo elemento no existe —porque el periodo aún no tiene documentos,
+    por ejemplo— se omite en lugar de dejar una burbuja huérfana
+  - Criterio: alguien que nunca ha visto la herramienta puede recorrerla sola
 
 ### Fase 6 — Operación continua (P2, posterior al piloto)
 
-- [ ] **T-40** — Notas de crédito (RF-10, RF-16, RF-17, RF-18) — **bloqueada**
+- [ ] **T-41** — Notas de crédito (RF-10, RF-16, RF-17, RF-18) — **bloqueada**
   - Depende de ubicar dónde viven las NC en Athena; el bloque 5 del guion de exploración es la vía
   - Criterio: cruce bidireccional NC ↔ incentivo por VIN con verificación de IVA
 
-- [ ] **T-41** — Ingesta programada con `pg_cron`
+- [ ] **T-42** — Ingesta programada con `pg_cron`
   - Sustituye la sincronización manual una vez probada
   - Criterio: corrida diaria con alerta ante fallo, retraso o volumen anómalo
 
-- [ ] **T-42** — Alertas ancladas al calendario de la marca (RF-34, RF-26)
+- [ ] **T-43** — Alertas ancladas al calendario de la marca (RF-34, RF-26)
   - Avisos derivados de las fechas de HMM, más notificación por correo
   - Criterio: la plataforma avisa antes del cierre de registro de VINs
 
-- [ ] **T-43** — Ciclo de vida de la discrepancia y escalamiento (RF-21, RF-22, RF-23)
+- [ ] **T-44** — Ciclo de vida de la discrepancia y escalamiento (RF-21, RF-22, RF-23)
   - Estatus, responsable, re-validación con cierre verificado y escalamiento por antigüedad
   - Criterio: una discrepancia corregida en Quiter se cierra sola en la corrida siguiente
 
-- [ ] **T-44** — Incentivos por regla porcentual (RF-06)
+- [ ] **T-45** — Incentivos por regla porcentual (RF-06)
   - Comunidad coreana al 5% sobre precio de lista
   - Criterio: el importe esperado se calcula y se valida como cualquier otro incentivo
 
@@ -470,13 +484,13 @@ AWS Athena (consola Autocom)                    Documentos de HMM
 | **Fase 2 — Motor de validación (P1)** | Neteo, homologación, panel de excepciones, validación de importe, barrido y duplicidad | T-15 a T-20 | 6 – 9 días | 225 |
 | **Fase 3 — Presentación al negocio (P1)** | Conformidad, diferencias con comentarios, vista consolidada, exportación, bitácora | T-21 a T-25 | 5 – 7 días | 226 |
 | **Fase 4 — Piloto de julio 2026 (P1)** | Corrida completa, sesión con la dirección comercial, ajustes | T-26 a T-28 | 2 – 4 días | 227 |
-| **Fase 5 — Operación continua (P2)** | Notas de crédito, ingesta programada, alertas por calendario, ciclo de discrepancia, incentivos por regla | T-40 a T-44 | 7 – 11 días | 228 |
-| **Total proyecto (P1+P2)** | | 39 tareas | ~34 – 52 días hábiles (≈ 7 – 10.5 semanas) | — |
-| **Solo P1 (MVP del piloto)** | Fases 0 a 5 | T-01 a T-28 y T-34 a T-39 | ~27 – 41 días hábiles (≈ 5.5 – 8 semanas) | — |
+| **Fase 5 — Operación continua (P2)** | Notas de crédito, ingesta programada, alertas por calendario, ciclo de discrepancia, incentivos por regla | T-41 a T-45 | 7 – 11 días | 228 |
+| **Total proyecto (P1+P2)** | | 40 tareas | ~35 – 53 días hábiles (≈ 7 – 11 semanas) | — |
+| **Solo P1 (MVP del piloto)** | Fases 0 a 5 | T-01 a T-28 y T-34 a T-40 | ~28 – 42 días hábiles (≈ 6 – 8.5 semanas) | — |
 
 > **Notas sobre la tabla:**
 > - El guardarraíl no es "Fase 0 + Fase 1" como en la plantilla estándar, porque el compromiso adquirido es un MVP presentable a la dirección comercial. Ese mínimo abarca las Fases 0 a 4.
-> - La Fase 6 es explícitamente posterior al piloto: su contenido puede cambiar según la retroalimentación recibida, y T-40 está bloqueada por una dependencia externa.
+> - La Fase 6 es explícitamente posterior al piloto: su contenido puede cambiar según la retroalimentación recibida, y T-41 está bloqueada por una dependencia externa.
 > - Los rangos suponen un desarrollador. Las Fases 2 y 3 son paralelizables entre sí una vez cerrada la Fase 1.
 
 > **Riesgo de deadline.** El PRD no fija fecha límite —la deja a este ejercicio de planeación—, pero el calendario de HMM sí impone fechas reales. Contra el 25 de agosto de 2026:

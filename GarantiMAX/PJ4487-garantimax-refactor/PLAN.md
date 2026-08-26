@@ -6,7 +6,7 @@
 | Campo | Detalle |
 |---|---|
 | PRD de origen | `enginecx_prd/GarantiMAX/PJ4487-garantimax-refactor/PRD.md` (+ anexos A1 arquitectura, A2 ADRs, A3 inventario) |
-| Repositorio | **Nuevo** — `garantiplusmexico/siga_alfa` (creado, vacío). Repo del sistema actual: `garantiplusmexico/garantiplus-dashboard` (lectura para extracción de reglas; escritura solo para migraciones aditivas) |
+| Repositorio | **Frontend:** `garantiplusmexico/siga_alfa` (nuevo). **Backend:** `garantiplusmexico/gp_3.0_siga_api`, servicio `Services/GarantiMax/` (nuevo, ADR-011). **Sistema actual:** `garantiplusmexico/garantiplus-dashboard` — solo lectura, es la fuente de las reglas de negocio |
 | Rama | `feature/PJ4487-garantimax-refactor-nucleo-asesor` (Fase 0) · una rama por fase con el mismo prefijo, todas desde `develop` |
 | Tipo | Proyecto nuevo (re-arquitectura sobre base de datos existente) |
 | Responsable | Javier Antonio Oropeza Camacho |
@@ -23,38 +23,46 @@
 
 ## 1. Resumen técnico
 
-Se **reconstruye desde cero la aplicación de terreno del Asesor Farmer** en un repositorio nuevo, sobre el **mismo esquema de datos en producción** (26 de las 128 tablas) y reutilizando las **6 Edge Functions** que la Fase 1 consume. No hay migración de datos: ambos sistemas leen y escriben la misma base durante toda la transición.
+Se **reconstruye desde cero la aplicación de terreno del Asesor Farmer** en un repositorio nuevo (`siga_alfa`, solo frontend) servida por un **servicio .NET nuevo** (`Services/GarantiMax/` en el monorepo `gp_3.0_siga_api`) con base de datos PostgreSQL propia. No hay migración de datos: **borrón y cuenta nueva** — la base arranca vacía y el sistema actual queda aislado (ADR-011).
 
-**Qué se crea.** Una SPA React 19 + TypeScript + Vite + Tailwind v4, organizada por **feature de dominio con capas internas** (ADR-001): `domain` · `application` · `ports` · `infrastructure` · `ui` dentro de cada feature (`identidad`, `visitas`, `tareas`, `agenda`, `bitacora`, `gastos`, `referencia`), más `app/` (composición y rutas), `shared/` (sistema de componentes, layouts, errores, sincronización, observabilidad), `infrastructure/` transversal y `config/`. El SDK de Supabase queda confinado a `infrastructure/`; ninguna vista consulta la base.
+> ⚠️ **Este plan se escribió contra Supabase y se corrigió el 26-08-2026.** Las secciones §5 a §9, los criterios de aceptación y las tareas afectadas están actualizados. Donde el texto describe el **sistema actual** (conteos de queries, módulos, funciones existentes) sigue siendo válido: es el punto de partida, no el destino.
+
+**Qué se crea.** Una SPA React 19 + TypeScript + Vite + Tailwind v4, organizada por **feature de dominio con capas internas** (ADR-001): `domain` · `application` · `ports` · `infrastructure` · `ui` dentro de cada feature (`identidad`, `visitas`, `tareas`, `agenda`, `bitacora`, `gastos`, `referencia`), más `app/` (composición y rutas), `shared/` (sistema de componentes, layouts, errores, sincronización, observabilidad), `infrastructure/` transversal y `config/`. El cliente HTTP de la API queda confinado a `infrastructure/api/`; ninguna vista habla con la red.
 
 **Qué se rediseña frente al sistema actual.** La navegación (de `useState<Tab>` en un `App.tsx` de 916 líneas a rutas reales con React Router), el acceso a datos (de 447 queries dentro de `.tsx` a repositorios por agregado detrás de casos de uso), la experiencia web/móvil (de dos aplicaciones a **un layout adaptativo** — ADR-007), la detección de PWA (de `if (isPWA)` distribuido a un único `DeviceContextProvider`), el manejo de errores (de improvisado a jerarquía tipificada) y el soporte offline (de parches en `App.tsx` a un **decorador de repositorio** — ADR-009).
 
-**Qué se elimina y no se traslada.** El tier legacy `CM/GTE/FARMER` (ADR-008: el sistema nuevo resuelve permisos **solo** contra la matriz `roles × capacidades`), las carpetas vacías `farmer/` y `bitacora/`, `MiDiaMovilPreview` y el parámetro `?midia`, y el drenaje de cola offline desde `App.tsx`.
+**Qué se elimina y no se traslada.** El tier legacy `CM/GTE/FARMER` y también la matriz `roles × capacidades` (ADR-011 supera a ADR-008: los permisos se resuelven contra los roles del JWT que emite la API), las carpetas vacías `farmer/` y `bitacora/`, `MiDiaMovilPreview` y el parámetro `?midia`, el drenaje de cola offline desde `App.tsx`, y el login de Google.
 
-**Stack.** React 19 + Vite 8 + TypeScript + Tailwind v4 (continuidad con el sistema actual, PRD §6) · **React Router** (navegación), **TanStack Query** (datos de servidor), **Zustand** acotado (estado de UI transversal) — ADR-006, aprobadas como decisión cerrada en la generación de este plan · Vitest (unitarias e integración) + **Playwright** (E2E, nuevo) · Supabase (Postgres con RLS, Auth, Storage, Edge Functions) · Sentry · Vercel.
+**Stack.** React 19 + Vite 8 + TypeScript + Tailwind v4 (continuidad con el sistema actual, PRD §6) · **React Router** (navegación), **TanStack Query** (datos de servidor), **Zustand** acotado (estado de UI transversal) — ADR-006, aprobadas como decisión cerrada en la generación de este plan · Vitest (unitarias e integración) + **Playwright** (E2E, nuevo) · Sentry · Vercel.
 
-> **Desviación declarada frente a `rules/stack.md` e `rules/infraestructura.md`.** El estándar Engine para backend nuevo es .NET Core 8 sobre ECS + Fargate, y para SPA estática, S3 + CloudFront. Aquí **no se construye backend** (ADR-004: acceso directo cliente→Supabase con RLS y lista cerrada de excepciones) y el hospedaje **se conserva en Vercel** porque el PRD deja explícitamente fuera de alcance el cambio de stack y de proveedor (§6). La decisión de plataforma —migrar o no al estándar corporativo— corresponde al análisis técnico en curso (PJ3896) y este proyecto la **habilita** encapsulando Supabase, no la ejecuta (ADR-002). Requiere visto bueno de TI; ver §9 y §12.
+**Stack del backend** (repo `gp_3.0_siga_api`, convenciones propias): .NET 8 · ASP.NET Core Web API · EF Core + Npgsql · PostgreSQL · JWT Bearer · Serilog · Swagger/Scalar · AWS ECS + Fargate. **Ojo:** en ese repositorio el código va **en inglés**, al contrario que aquí.
+
+> **Alineación con `rules/stack.md` e `rules/infraestructura.md`.** Tras ADR-011 el backend **sí** es el estándar Engine: .NET 8 sobre ECS + Fargate. La desviación que declaraba la v0.1 de este plan desaparece. Queda **una sola desviación**: el hospedaje del frontend se conserva en **Vercel** en lugar de S3 + CloudFront, por continuidad operativa y porque el PRD deja el cambio de proveedor de hospedaje fuera de alcance. Requiere visto bueno de TI; ver §9.
 
 ---
 
 ## 2. Prerequisitos
 
-- [ ] PRD validado por el responsable (PJ4487, v0.1) y anexos A1/A2/A3 leídos por quien ejecuta
+- [ ] PRD validado por el responsable (PJ4487, **v0.2** — incluye ADR-011) y anexos A1/A2/A3 leídos por quien ejecuta
 - [ ] **Repositorio nuevo `siga_alfa` creado** en la organización, con permisos para el responsable
-- [ ] Acceso de lectura al repositorio actual `garantiplusmexico/garantiplus-dashboard` (extracción de reglas) y de escritura para las migraciones aditivas
-- [ ] Credenciales del proyecto Supabase `jrykbalmnpymeyzdhsam` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) para desarrollo, QA y producción
+- [ ] Acceso de **lectura** al repositorio actual `garantiplusmexico/garantiplus-dashboard`: es la fuente para extraer las reglas de negocio (migraciones, funciones y políticas RLS). **No se escribe nada ahí**
+- [ ] Acceso de escritura al repositorio de la API `garantiplusmexico/gp_3.0_siga_api` y al entorno donde vive su base de datos
+- [ ] **Servicio `Services/GarantiMax/` creado** en el monorepo de la API, con su base de datos aprovisionada y su `DbContext` propio
+- [ ] `VITE_API_BASE_URL` definida para desarrollo, QA y producción (local: puerto 5006 por convención del repo de la API)
+- [ ] Usuario de prueba con rol de Asesor Farmer dado de alta en la base de la API, y **nombre exacto del rol** comunicado al frontend (pregunta abierta del PRD §14)
 - [ ] `VITE_SENTRY_DSN` disponible (proyecto Sentry nuevo o reutilizado)
 - [ ] Proyecto Vercel nuevo creado y dominio de transición decidido (ver §9)
 - [ ] `CLAUDE.md` presente en el repositorio nuevo (se genera en T-02; el del repo actual ya existe)
 - [ ] ADR-006 ratificado por TI (librerías) — **aprobado en la generación de este plan**
 - [ ] Disponibilidad confirmada de asesores reales para validaciones periódicas y para el piloto (supuesto del PRD §13)
-- [ ] Definido quién ejecuta y **firma** la auditoría de RLS de las 26 tablas (pregunta abierta del PRD §14)
+- [ ] Definido quién revisa y **firma** las reglas de autorización de los endpoints del servicio, sustituto de la auditoría de RLS (pregunta abierta del PRD §14)
+- [ ] Datos de prueba sembrados en las tablas de referencia (salas, vendedores de sala, clientes) para poder construir y probar — el script sale de T-18; la carga real la hace el responsable antes del piloto
 
 ---
 
 ## 3. Arquitectura del cambio
 
-Arquitectura aplicada: **Frontend + Backend separados** en la clasificación de `rules/arquitectura.md`, donde el "backend" es Supabase gestionado (Postgres con RLS + Auth + Storage + Edge Functions) y **no se construye un servicio propio**. La complejidad no justifica microservicios ni un BFF (ADR-004), y el dominio es único: el trabajo de terreno del asesor.
+Arquitectura aplicada: **Frontend + Backend separados** en la clasificación de `rules/arquitectura.md`. El backend es un **microservicio .NET propio** —`Services/GarantiMax/`— dentro de un monorepo que ya opera seis (ADR-011). El dominio es único: el trabajo de terreno del asesor, y por eso es **un** servicio y no varios.
 
 La regla que gobierna todo el diseño: **las dependencias apuntan hacia adentro**.
 
@@ -75,15 +83,15 @@ La regla que gobierna todo el diseño: **las dependencias apuntan hacia adentro*
               │ TypeScript puro        │  └──────────┬────────────┘
               └────────────────────────┘             │ implementado por
                                          ┌───────────▼───────────────┐
-   Infraestructura                       │ SupabaseXRepository       │
+   Infraestructura                       │ ApiXRepository            │
    (infrastructure/)                     │ XRepositoryOffline (deco) │
                                          │ Auth·Storage·Local·Sentry │
                                          └───────────┬───────────────┘
                                                      │
                               ┌──────────────────────┴──────────────┐
                               ▼                                     ▼
-              Supabase (Postgres+RLS · Auth ·                 IndexedDB
-              Storage · Edge Functions) · Sentry        (snapshot + cola offline)
+        Servicio .NET GarantiMax (REST · JWT ·               IndexedDB
+        PostgreSQL · S3) · Sentry                    (snapshot + cola offline)
 ```
 
 **Prueba de que el diseño se respeta:** si borrar `infrastructure/` rompe la compilación del dominio, el diseño está mal. Se verifica con reglas de linter que fallan la compilación (T-09), no con revisión manual.
@@ -97,7 +105,7 @@ src/
 ├─ features/       visitas/ tareas/ agenda/ bitacora/ gastos/ identidad/ referencia/
 │                    └─ cada uno: domain/ application/ ports/ infrastructure/ ui/
 ├─ shared/         ui/ · layouts/ · errors/ · sync/ · observability/
-├─ infrastructure/ supabase/ · auth/ · storage/ · realtime/ (solo contrato) · local/
+├─ infrastructure/ api/ · auth/ · storage/ · realtime/ (solo puerto) · local/
 └─ config/         variables de entorno tipadas y validadas al arrancar
 ```
 
@@ -107,6 +115,21 @@ src/
 
 > Convención: cada tarea es atómica, se prueba sola y se integra a `develop` por PR desde su rama de fase.
 > Las rutas de archivo son del **repositorio nuevo** salvo que se indique `[repo actual]`.
+
+> ### 🔀 Reordenamiento de la Fase 0 — 26-08-2026
+>
+> Con Supabase, las tareas de **extracción de reglas** (T-13 a T-16) podían ir al final de la Fase 0: las reglas ya estaban implementadas en la base y las funciones seguían ahí. Tras ADR-011 eso se invierte — **son el insumo sin el cual el servicio .NET no puede empezar**, así que pasan al frente junto con T-18 (esquema y siembra). El camino crítico del proyecto ya no es el frontend: es la especificación.
+>
+> **Orden de ejecución acordado**, distinto al de la numeración:
+>
+> 1. **Fundaciones baratas que desbloquean todo:** T-04, T-05, T-06, T-07 (configuración, errores, contratos transversales, contenedor). No dependen de las reglas.
+> 2. **Extracción de reglas:** T-13, T-14, T-15, T-16 — más la **extracción** de las reglas de autorización que estaba en T-67. La revisión firmada sigue en Fase 4; lo que se adelanta es leer las ~150 políticas RLS, porque cada endpoint las necesita el día que se escribe, no al final.
+> 3. **T-18** — esquema consolidado y script de siembra.
+> 4. **Servicio .NET:** bloque **T-S01 a T-S09** (abajo). Es trabajo nuevo que la v0.1 de este plan no contemplaba.
+> 5. **Resto de fundaciones del frontend:** T-08, T-09, T-10, T-11, T-12, T-19.
+> 6. **T-17** (línea base medida sobre el sistema actual) en cualquier momento: no bloquea a nadie.
+>
+> A partir de la Fase 1 se trabaja **por vertical**: para cada feature, endpoints del servicio y luego dominio, casos de uso y UI del frontend — así cada feature queda demostrable de punta a punta antes de pasar a la siguiente.
 
 ### Fase 0 — Fundaciones, guardarraíles y extracción de reglas
 
@@ -132,19 +155,19 @@ src/
 
 - [ ] **T-06** — Contratos transversales (ports), sin implementación
   - Archivos a crear/modificar: `src/shared/observability/MonitoringProvider.ts`, `src/infrastructure/auth/AuthProvider.ts`, `src/infrastructure/storage/StorageProvider.ts`, `src/infrastructure/local/LocalStore.ts`, `src/infrastructure/realtime/RealtimeProvider.ts`, `src/domain/shared/ClockProvider.ts`
-  - Criterio de completitud: los seis contratos compilan sin ninguna importación de Supabase; `RealtimeProvider` queda **documentado y sin implementación** (ADR-005), con comentario que registra sus futuros consumidores (War Room, Post-Venta, Call Center)
+  - Criterio de completitud: los seis contratos compilan sin ninguna importación de infraestructura; `RealtimeProvider` queda **declarado y sin implementación** (ADR-005 modificado por ADR-011: sin acoplamiento a proveedor), con comentario que registra sus futuros consumidores (War Room, Post-Venta, Call Center)
 
 - [ ] **T-07** — Contenedor de composición de dependencias
   - Archivos a crear/modificar: `src/app/container.ts`, `src/app/providers/ContainerProvider.tsx`, `src/app/container.test.ts`
   - Criterio de completitud: un único punto decide qué implementación satisface cada contrato; una prueba monta el contenedor completo con dobles y no toca la red
 
 - [ ] **T-08** — Implementaciones de infraestructura transversal
-  - Archivos a crear/modificar: `src/infrastructure/supabase/cliente.ts`, `src/infrastructure/supabase/errores.ts`, `src/infrastructure/auth/SupabaseAuthProvider.ts`, `src/infrastructure/storage/SupabaseStorageProvider.ts`, `src/infrastructure/local/IndexedDBLocalStore.ts`, `src/shared/observability/SentryMonitoringProvider.ts`, `src/domain/shared/RelojDelSistema.ts` + pruebas de cada uno
-  - Criterio de completitud: `errores.ts` traduce todo fallo de Supabase a las categorías de T-05 antes de salir de infraestructura; `IndexedDBLocalStore` se prueba sin navegador con doble de IndexedDB; el cliente de Supabase se instancia **una sola vez** y solo aquí
+  - Archivos a crear/modificar: `src/infrastructure/api/cliente.ts`, `src/infrastructure/api/errores.ts`, `src/infrastructure/auth/ApiAuthProvider.ts`, `src/infrastructure/storage/ApiStorageProvider.ts`, `src/infrastructure/local/IndexedDBLocalStore.ts`, `src/shared/observability/SentryMonitoringProvider.ts`, `src/domain/shared/RelojDelSistema.ts` + pruebas de cada uno
+  - Criterio de completitud: `errores.ts` traduce todo fallo HTTP —incluidos 401/403 y la caída de red— a las categorías de T-05 antes de salir de infraestructura; `IndexedDBLocalStore` se prueba sin navegador con doble de IndexedDB; el cliente HTTP se instancia **una sola vez** y solo aquí, y es el único lugar donde se adjunta el token
 
 - [ ] **T-09** — Reglas de linter arquitectónicas (los 5 guardarraíles automáticos de A1 §15)
   - Archivos a crear/modificar: `eslint.config.js`, `tools/eslint-rules/*.js` + pruebas de cada regla
-  - Criterio de completitud: fallan la compilación (1) importar el SDK de Supabase o llamar `.from()`/`.rpc()` desde `ui/`, (2) importar el SDK fuera de `infrastructure/`, (3) importar `ui/` o `infrastructure/` de otro feature, (4) usar `matchMedia` o `navigator.standalone` fuera del `DeviceContextProvider`, (5) importar cualquier dependencia externa desde `domain/`. Cada regla tiene una prueba con un caso que debe fallar y uno que debe pasar
+  - Criterio de completitud: fallan la compilación (1) importar el cliente HTTP o llamar `fetch` desde `ui/`, (2) hablar con la red fuera de `infrastructure/api/`, (3) importar `ui/` o `infrastructure/` de otro feature, (4) usar `matchMedia` o `navigator.standalone` fuera del `DeviceContextProvider`, (5) importar cualquier dependencia externa desde `domain/`. Cada regla tiene una prueba con un caso que debe fallar y uno que debe pasar
 
 - [ ] **T-10** — Script de métricas arquitectónicas y línea base
   - Archivos a crear/modificar: `tools/metricas-arquitectura.mjs`, `docs/linea-base.md`
@@ -170,42 +193,84 @@ src/
   - Archivos a crear/modificar: `docs/reglas/gastos.md` · fuentes `[repo actual] src/features/gastos/` (26 archivos, 8.779 líneas) y las RPCs `gasto_*` y `rendicion_*`
   - Criterio de completitud: catálogo equivalente, con la máquina de estados de rendición completa (incluidos rechazo y reenvío) y las reglas de la cola de boletas actual (`useSincronizarBoletas`, `idbStore.ts`)
 
-- [ ] **T-16** — Extracción de reglas: identidad, capacidades, "Ver como" y modo demo
+- [ ] **T-16** — Extracción de reglas: identidad, permisos, "Ver como" y modo demo
   - Archivos a crear/modificar: `docs/reglas/identidad.md` · fuentes `[repo actual] src/App.tsx`, `src/features/auth/`, `src/types/index.ts`, `demoGuard.ts` y las migraciones de `rol_capacidades` y `usuario_roles`
-  - Criterio de completitud: matriz de capacidades del AF verificada contra la base (`facturacion`, `salas`, `midia`, `cobertura`, `datos:operativo`); lista de todos los puntos donde el tier legacy decide algo, con la decisión de qué lo reemplaza; "Ver como" formulado como **regla de dominio**, no como guard de UI
+  - Criterio de completitud: qué puede hacer el AF expresado como **lista de decisiones de acceso**, no como matriz de capacidades — la matriz desaparece (ADR-011). Cada decisión mapeada al rol del JWT que la habilita. Las capacidades del sistema actual (`facturacion`, `salas`, `midia`, `cobertura`, `unoauno`, `config`) se leen como documentación de lo que el permiso significaba. Lista de todos los puntos donde el tier legacy decide algo, con qué lo reemplaza; "Ver como" formulado como **regla de dominio**, no como guard de UI
 
 - [ ] **T-17** — Línea base medida de las métricas de producto
   - Archivos a crear/modificar: `docs/linea-base.md`
   - Criterio de completitud: tiempo de apertura de Mi Día en el sistema actual (con y sin señal, en dispositivo y red representativos) e incidencias por asesor y por semana del último mes. Sin esto, RNF-06 y la métrica de incidencias del PRD §12 no son verificables
 
-- [ ] **T-18** — Migraciones aditivas en el repositorio actual: idempotencia y eventos de producto
-  - Archivos a crear/modificar: `[repo actual] supabase/migrations/NNNN_*.sql` (número asignado por `npm run migracion`, **nunca a mano**)
-  - Criterio de completitud: columna `idempotency_key text` nullable con índice único parcial en `visitas`, `lobbies`, `agenda_eventos`, `tarea_avances`, `bitacoras` y `gastos`; tabla nueva `eventos_producto` con RLS. **Todo aditivo y compatible hacia atrás** (RNF-19): el sistema actual sigue funcionando sin conocerlas, verificado ejecutándolo contra la base migrada
+- [ ] **T-18** — Especificación del esquema y del contrato de idempotencia para el servicio
+  - Archivos a crear/modificar: `docs/reglas/esquema-fase1.md` · fuentes: las migraciones, funciones y políticas del repo actual (solo lectura) · destino: el equipo que construye `Services/GarantiMax/`
+  - Criterio de completitud: tabla por tabla del alcance de Fase 1, sus campos con tipo y obligatoriedad, sus invariantes y su dueño; **clave de idempotencia con índice único parcial** exigida en visitas, lobbies, eventos de agenda, avances de tarea, bitácoras y gastos (RNF-09), más unicidad por asesor y día en bitácoras; columna de país donde haya dato operativo; claves de un solo tipo y FKs reales — **nada de transcribir el esquema viejo** (A3 §3). Incluye la tabla de eventos de producto del PRD §11. Se entrega como especificación, no como SQL: la implementación es del servicio
 
 - [ ] **T-19** — Sistema de componentes base adaptativo
   - Archivos a crear/modificar: `src/shared/ui/*` (botón, campo, selector, lista, tarjeta, hoja inferior, modal, estado vacío, cargando, error), `src/shared/ui/tokens.css`
   - Criterio de completitud: cada componente funciona en pantalla ancha y estrecha sin bifurcación en el consumidor; objetivos táctiles ≥ 44 px y contraste AA verificados (RNF-16, RNF-17); ninguno consulta `matchMedia`
 
+### Fase 0-B — Servicio .NET `GarantiMax` (bloque nuevo, ADR-011)
+
+> Trabajo que la v0.1 de este plan no contemplaba porque no había backend que construir. Vive en el repositorio `garantiplusmexico/gp_3.0_siga_api`, con **sus** convenciones: código en **inglés**, mensajes al usuario final en español, nada hardcodeado (`Options/` + `appsettings`), `LogRequestAsync` en cada endpoint, y **el desarrollador compila y arranca — el agente no ejecuta `dotnet build` ni `dotnet run` por su cuenta**.
+>
+> Entorno verificado en esta máquina el 26-08-2026: .NET SDK 8.0.418, PostgreSQL 16.3 escuchando en 5432, y las propiedades MSBuild `GPProjectBasePath` / `GPProjectsPath` resueltas por variables de entorno.
+
+- [ ] **T-S01** — Esqueleto del servicio y su rama
+  - Archivos a crear/modificar: `[repo api] Services/GarantiMax/{GarantiMax.csproj,Program.cs,appsettings.json,Dockerfile}`, entrada en `gp_3.0_siga_api.sln`, rama `feature/PJ4487-garantimax-nucleo-asesor` desde `develop`
+  - Criterio de completitud: el servicio arranca en el puerto **5006** con Swagger/Scalar; JWT Bearer configurado contra el mismo `JwtSettings` que el resto; Serilog y `LogsMonitorClient` registrados; un endpoint de salud responde y **exige token**
+
+- [ ] **T-S02** — `DbContext` propio y base de datos
+  - Archivos a crear/modificar: `Services/GarantiMax/Data/GarantiMaxDbContext.cs`, `Options/`, `appsettings.json`
+  - Criterio de completitud: contexto propio del servicio contra una base **separada** (`garantimax_db`), con su cadena en `appsettings` bindeada a `Options/`. **No se toca `garantiplus_dbContext`** ni `DataAccess`, congelado desde enero de 2025. La conexión se verifica contra la base local
+
+- [ ] **T-S03** — Modelo de datos de Fase 1 y migración inicial
+  - Archivos a crear/modificar: `Services/GarantiMax/Models/*`, migración EF inicial
+  - Criterio de completitud: implementa la especificación de T-18 — claves de un solo tipo y FKs reales, columna de país, clave de idempotencia con índice único parcial donde T-18 la exige, unicidad por asesor y día en bitácoras. **Nada transcrito del esquema viejo** (A3 §3.1). Los estados van como enums respaldados por restricción
+
+- [ ] **T-S04** — Siembra de datos de prueba
+  - Archivos a crear/modificar: script de siembra + `Services/GarantiMax/doc/siembra-de-pruebas.md`
+  - Criterio de completitud: catálogos de referencia (salas, vendedores de sala, clientes), un asesor de prueba ligado al usuario de prueba que ya existe, y un juego mínimo de datos que permita recorrer los cinco flujos críticos. Idempotente: se puede correr dos veces sin duplicar
+
+- [ ] **T-S05** — Autorización base y su documentación
+  - Archivos a crear/modificar: `Services/GarantiMax/{Interfaces,Services}/` para la resolución del asesor desde el token, `Services/GarantiMax/doc/README.md` + `doc/quien-puede-ver-que.md`
+  - Criterio de completitud: un helper único traduce el token al asesor y **todo endpoint lo usa** — nadie recibe un identificador de asesor por parámetro y confía en él. La regla «el asesor solo lee y escribe lo suyo» queda documentada con ejemplos que pasan y que no, según la convención `doc/` del repo. Es el sustituto de RLS y el punto donde un descuido es un hueco de seguridad, no un bug
+
+- [ ] **T-S06** — Endpoints de identidad y perfil
+  - Criterio de completitud: perfil del asesor, marca de bienvenida vista y de inducción. Los roles **no** se exponen por endpoint: viajan en el token
+
+- [ ] **T-S07** — Endpoints de terreno: Mi Día, visitas y lobbies
+  - Criterio de completitud: check-in, cierre, visita en curso, visitas abiertas y lobbies, con la clave de idempotencia respetada en la base. Los catálogos de referencia se exponen **solo en lectura** (RF-24)
+
+- [ ] **T-S08** — Endpoints de gestión: tareas, avances, agenda, cumpleaños y bitácora
+  - Criterio de completitud: reimplementa las reglas de `crear_tarea_sala`, `completar_tarea`, `set_tarea_completada`, `calificar_tarea`, `tarea_avance_crear`, `limite_habil`, `cumpleanos_vendedores` y `vendedor_por_nombre` extraídas en T-13 y T-14. Bitácora con unicidad por asesor y día
+
+- [ ] **T-S09** — Endpoints de gastos y rendiciones
+  - Criterio de completitud: la **máquina de estados completa** (`borrador → enviada → aprobada_jefe → aprobada_ops → pagada`, más `rechazada` y el contador de reenvíos) con las transiciones válidas garantizadas en el servicio, no en la UI. Es el bloque con más negocio del alcance. La aprobación y el pago quedan **bloqueados** para el rol del asesor
+
+> **Los endpoints con IA y los procesos programados** —lectura de boleta, transcripción, mejora de redacción, notificaciones y los dos periódicos— se construyen en la fase donde el frontend los consume (Fase 3 y Fase 4), no aquí. Su especificación son las Edge Functions actuales, y las credenciales de IA viven en `Options/`, nunca en el cliente.
+
+---
+
 ### Fase 1 — Núcleo verificable del asesor: identidad, shell, offline, Mi Día y visitas (P1)
 
 - [ ] **T-20** — Dominio de identidad
   - Archivos a crear/modificar: `src/domain/identidad/*.ts` + pruebas
-  - Criterio de completitud: `Usuario`, `Rol`, `Capacidad`; invariantes «las capacidades son la unión de las de todos sus roles» y «un usuario sin perfil no puede operar»; regla de identidad efectiva vs. real para "Ver como". Todas con prueba unitaria y **sin Supabase**
+  - Criterio de completitud: `Usuario` y `Rol` — ya no `Capacidad` (ADR-011); invariantes «los permisos del usuario son los de sus roles, resueltos una sola vez» y «un usuario sin perfil no puede operar»; regla de identidad efectiva vs. real para "Ver como". Todas con prueba unitaria y **sin backend**
 
-- [ ] **T-21** — Repositorios de identidad y capacidades
-  - Archivos a crear/modificar: `src/features/identidad/ports/UsuarioRepository.ts`, `CapacidadRepository.ts`, `src/features/identidad/infrastructure/Supabase*.ts` + pruebas de mapeo
-  - Criterio de completitud: leen `usuarios`, `usuario_roles`, `rol_capacidades`, `usuario_areas`, `asesores`, `areas` y las funciones `puede`, `app_rol`, `app_tiene_capacidad`, `mis_capacidades`; el dominio nunca ve una fila; errores del proveedor traducidos
+- [ ] **T-21** — Repositorios de identidad y perfil
+  - Archivos a crear/modificar: `src/features/identidad/ports/UsuarioRepository.ts`, `src/features/identidad/infrastructure/ApiUsuarioRepository.ts` + pruebas de mapeo
+  - Criterio de completitud: obtienen el perfil del asesor por endpoint y sus roles del JWT; el dominio nunca ve un DTO de transporte; errores HTTP traducidos a las categorías de T-05
 
 - [ ] **T-22** — Casos de uso de sesión
-  - Archivos a crear/modificar: `src/features/identidad/application/{IniciarSesion,CerrarSesion,ResolverSesionActual,ResolverCapacidades,MarcarBienvenidaVista}.ts` + pruebas con repositorios falsos
-  - Criterio de completitud: cada uno devuelve resultado tipificado y no lanza excepciones de infraestructura; la resolución de capacidades ocurre **una sola vez** y se cachea; si la matriz no carga es un error de infraestructura, **nunca** un permiso adivinado (ADR-008)
+  - Archivos a crear/modificar: `src/features/identidad/application/{IniciarSesion,CerrarSesion,ResolverSesionActual,ResolverPermisos,MarcarBienvenidaVista}.ts` + pruebas con repositorios falsos
+  - Criterio de completitud: cada uno devuelve resultado tipificado y no lanza excepciones de infraestructura; la resolución de permisos ocurre **una sola vez** a partir del token y se cachea; si el token no trae roles legibles es un error de infraestructura, **nunca** un permiso adivinado. `IniciarSesion` habla con el servicio `Authentication`; el token es lo único que el frontend persiste
 
 - [ ] **T-23** — Interfaz de autenticación
   - Archivos a crear/modificar: `src/features/identidad/ui/{LoginPage,SinPerfilPage}.tsx` y sus hooks de UI
   - Criterio de completitud: correo/contraseña y Google funcionando; la sesión persiste entre aperturas y se renueva sola; el caso "cuenta sin perfil" se informa y ofrece cerrar sesión (RF-01)
 
-- [ ] **T-24** — Autorización de rutas por capacidad
-  - Archivos a crear/modificar: `src/app/routes/guards.tsx`, `src/features/identidad/ui/useCapacidades.ts` + pruebas
+- [ ] **T-24** — Autorización de rutas por rol
+  - Archivos a crear/modificar: `src/app/routes/guards.tsx`, `src/features/identidad/ui/usePermisos.ts` + pruebas
   - Criterio de completitud: la UI recibe una decisión ya tomada; ningún componente consulta permisos por su cuenta (RF-02); **cero** referencias al tier `CM/GTE/FARMER` en todo el repositorio, verificado en CI
 
 - [ ] **T-25** — Proveedor único de contexto de dispositivo
@@ -245,12 +310,12 @@ src/
   - Criterio de completitud: `planificada → en_curso → cerrada | descartada`; **una visita en curso por asesor** como invariante del dominio (RF-06); una visita en curso exige sala, hora de inicio y ubicación; no se cierra sin registro de lo observado; un usuario impersonado no puede descartar. Cada regla de `docs/reglas/visitas.md` (T-13) tiene su prueba
 
 - [ ] **T-34** — `VisitaRepository` por agregado
-  - Archivos a crear/modificar: `src/features/visitas/ports/VisitaRepository.ts`, `src/features/visitas/infrastructure/SupabaseVisitaRepository.ts` + pruebas de mapeo
+  - Archivos a crear/modificar: `src/features/visitas/ports/VisitaRepository.ts`, `src/features/visitas/infrastructure/ApiVisitaRepository.ts` + pruebas de mapeo
   - Criterio de completitud: una sola interfaz cubre `visitas`, `visitas_abiertas` y `visitas_en_curso` (ADR-003); la interfaz habla en lenguaje de negocio (`obtenerVisitaEnCursoDe(asesor)`); el dominio no sabe que hay tres tablas
 
 - [ ] **T-35** — Casos de uso de visita
   - Archivos a crear/modificar: `src/features/visitas/application/{IniciarVisita,GuardarBorradorVisita,CerrarVisita,DescartarVisitaEnCurso,ObtenerVisitaEnCurso}.ts` + pruebas
-  - Criterio de completitud: `DescartarVisitaEnCurso` verifica identidad efectiva vs. real y limpia las tres capas (servidor, borrador local, marca de visita abierta) en orden, devolviendo resultado tipificado; todas las pruebas corren sin Supabase
+  - Criterio de completitud: `DescartarVisitaEnCurso` verifica identidad efectiva vs. real y limpia las tres capas (servidor, borrador local, marca de visita abierta) en orden, devolviendo resultado tipificado; todas las pruebas corren sin backend
 
 - [ ] **T-36** — Decorador offline de visitas
   - Archivos a crear/modificar: `src/features/visitas/infrastructure/VisitaRepositoryOffline.ts` + pruebas
@@ -376,15 +441,15 @@ src/
 
 - [ ] **T-65** — Pruebas de extremo a extremo de los cinco flujos críticos
   - Archivos a crear/modificar: `e2e/*.spec.ts`, `playwright.config.ts`, workflow de CI
-  - Criterio de completitud: en verde (1) inicio de sesión y resolución de capacidades, (2) visita completa check-in → captura → evidencia → cierre, (3) intento de segunda visita y descarte de la primera, (4) boleta sin señal con sincronización posterior sin duplicado, (5) bitácora con dictado y mejora (RNF-05)
+  - Criterio de completitud: en verde (1) inicio de sesión y resolución de permisos, (2) visita completa check-in → captura → evidencia → cierre, (3) intento de segunda visita y descarte de la primera, (4) boleta sin señal con sincronización posterior sin duplicado, (5) bitácora con dictado y mejora (RNF-05)
 
 - [ ] **T-66** — Pruebas de corte de red
   - Archivos a crear/modificar: `e2e/offline/*.spec.ts`, `docs/pruebas-offline.md`
   - Criterio de completitud: **0 operaciones perdidas y 0 duplicados** cortando la red en cada punto del ciclo de check-in, cierre de visita, avance de tarea, bitácora y boleta (RNF-08, RNF-09); incluye el escenario de tres horas sin señal
 
-- [ ] **T-67** — Auditoría de políticas RLS de las 26 tablas
-  - Archivos a crear/modificar: `docs/auditoria-rls.md`, `[repo actual] supabase/migrations/NNNN_*.sql` si hay correcciones
-  - Criterio de completitud: tabla por tabla, qué puede leer y escribir el asesor y con qué política lo garantiza; se porta y extiende la prueba `rlsLaxa.test.ts` del sistema actual; el modo demo queda **respaldado por RLS** y no solo por el guard del cliente; documento **firmado por TI** (A1 §15.11)
+- [ ] **T-67** — Revisión de las reglas de autorización del servicio
+  - Archivos a crear/modificar: `docs/autorizacion-fase1.md` y los documentos correspondientes en `[repo api] Services/GarantiMax/doc/`
+  - Criterio de completitud: endpoint por endpoint, qué puede leer y escribir el asesor y **cómo lo garantiza el servicio**. La fuente de la especificación son las ~150 políticas RLS del sistema actual, leídas tabla por tabla. El modo demo queda respaldado por el servicio y no solo por el guard del cliente. Documento **firmado por TI** (A1 §15.11). Agravante que hay que compensar con revisión humana: el repo de la API **no tiene proyectos de test**
 
 - [ ] **T-68** — Lista de paridad funcional
   - Archivos a crear/modificar: `docs/paridad.md`
@@ -410,39 +475,57 @@ src/
 
 ## 5. Cambios en base de datos
 
-Todos los cambios son **aditivos y compatibles hacia atrás** (RNF-19): el sistema actual sigue en producción para los demás roles y no debe enterarse. Se crean en el **repositorio actual** con `npm run migracion -- <descripción>` — el número **nunca se elige a mano** (hay 15 duplicados históricos entre 364 migraciones; el test `migracionesUnicas.test.ts` es la red).
+Los cambios ya **no** tocan la base del sistema actual: el servicio GarantiMAX tiene **base de datos propia y vacía** (ADR-011). Aquí se lista lo que hay que **crear** en ella. El modelo se diseña desde el dominio con claves de un solo tipo y FKs reales; **no se transcribe el esquema viejo**, que degradó sus claves por no poder migrar datos (A3 §3).
 
-| Tabla | Tipo de cambio | Descripción |
+**Cobertura mínima de Fase 1:** identidad y perfil del asesor · visitas, lobbies, visitas abiertas y en curso · agenda, saludos de cumpleaños y feriados · tareas, avances y comentarios · bitácoras · gastos, archivos, asignaciones, categorías, rendiciones y sus eventos · notificaciones · y los catálogos de referencia (salas, vendedores de sala, clientes). El inventario de campos y reglas de cada uno sale del sistema actual: PRD §10 y A3 §3.
+
+**Reglas transversales del modelo nuevo:**
+
+| Regla | Aplica a | Por qué |
 |---|---|---|
-| `visitas` | Modificación | Columna `idempotency_key text` nullable + índice único parcial. Garantiza **en la base** que un reintento de check-in o cierre no cree un duplicado (RNF-09) |
-| `lobbies` | Modificación | Ídem |
-| `agenda_eventos` | Modificación | Ídem |
-| `tarea_avances` | Modificación | Ídem |
-| `bitacoras` | Modificación | Ídem, además de la unicidad por asesor y día si no existe ya |
-| `gastos` | Modificación | Ídem — es el caso de mayor exposición: la boleta se encola con imagen y se reintenta |
-| `eventos_producto` | **Nueva** | Eventos de BI del PRD §11: fecha y hora, asesor, identificadores de negocio, resultado y motivo. RLS: el asesor inserta solo los suyos; lectura para los roles de análisis |
-| *(las 26 tablas de Fase 1)* | Revisión de políticas | La auditoría de RLS (T-67) puede producir **correcciones** de políticas. Toda corrección es una migración propia y se valida contra el sistema actual antes de aplicarse |
+| **Clave de idempotencia** (`idempotency_key` + índice único parcial) | visitas, lobbies, eventos de agenda, avances de tarea, bitácoras y gastos | Un reintento de check-in, cierre o subida de boleta **no puede** crear un duplicado. Se garantiza **en la base**, no en el código, porque la cola offline reintenta (RNF-09) |
+| **Unicidad por asesor y día** | bitácoras | Es una invariante del negocio, no una validación de formulario |
+| **Columna de país** | toda tabla con dato operativo | La primera entrega opera solo Chile, pero el país no se hereda implícito como en el sistema viejo (moneda `CLP` por defecto, RUT sin contexto) |
+| **Claves de un solo tipo y FKs reales** | todo el modelo | El esquema viejo usa `asesor_id text` («uuid en texto»), `sala_key` sin FK y vínculos blandos. Sin datos que conservar, esa deuda no se hereda |
+| **Tabla de eventos de producto** | nueva | Eventos de BI del PRD §11: fecha y hora, asesor, identificadores de negocio, resultado y motivo |
 
-> ⚠️ **No se rediseña el esquema.** Las 128 tablas, las 364 migraciones y las políticas existentes se conservan. Cualquier cambio que no sea aditivo queda **fuera de este plan** y exige volver al PRD.
+> ⚠️ **La base del sistema actual no se toca, ni con cambios aditivos.** Sus 128 tablas, 364 migraciones y políticas RLS se leen como **documentación de las reglas** —son la mejor fuente que existe— y nada más. Ver A3 §3 para las trampas del esquema viejo: tablas recreadas a media historia, `salas` abandonada y claves degradadas.
 
 ---
 
 ## 6. Endpoints nuevos o modificados
 
-**No se crean endpoints REST ni backend propio** (ADR-004). La aplicación consume directamente Supabase con RLS, más las Edge Functions ya existentes, que **se reutilizan tal como están** — no se reescriben en este proyecto.
+**Se crea un servicio REST propio**: `Services/GarantiMax/` en el monorepo `gp_3.0_siga_api` (ADR-011, que supera a ADR-004). Estructura estándar de ese repositorio —`Controllers/` · `Services/` · `Interfaces/` · `DTOs/{Feature}/{Requests,Responses}/` · `Models/` · `Options/` · `doc/` · `Program.cs` · `Dockerfile`— y puerto **5006** por convención (5001 Authentication, 5002 Contracts, 5003 Catalogs, 5004 Claims, 5005 Reports).
 
-| Método | Ruta | Descripción | Estado |
-|---|---|---|---|
-| POST | `functions/v1/leer-boleta` | Extracción de datos de la imagen de una boleta (credenciales de IA en servidor) | Existente, sin cambios |
-| POST | `functions/v1/transcribir-bitacora` | Dictado por voz de la bitácora | Existente, sin cambios |
-| POST | `functions/v1/mejorar-bitacora` | Mejora de redacción de la bitácora | Existente, sin cambios |
-| POST | `functions/v1/mejorar-redaccion` | Mejora de redacción de texto libre | Existente, sin cambios |
-| POST | `functions/v1/notificar` | Notificaciones al asesor | Existente, sin cambios |
-| — | `visitas-abiertas-cron` · `tareas-atrasadas-cron` | Procesos programados que alimentan las notificaciones | Existentes, sin cambios |
+Todos los endpoints exigen JWT válido. La autenticación **no se construye**: `Services/Authentication` ya emite el token con `Id`, `UserName`, nombre, correo y los roles como `ClaimTypes.Role`.
 
-**Funciones de base de datos que la Fase 1 consume** (todas detrás de repositorios, ninguna invocada desde la UI): `puede`, `app_rol`, `app_tiene_capacidad`, `mis_capacidades` · `crear_tarea_sala`, `completar_tarea`, `set_tarea_completada`, `calificar_tarea`, `tarea_avance_crear` · `gasto_crear`, `gasto_fusionar`, `rendicion_enviar`, `rendicion_aprobar_jefe`, `rendicion_aprobar_ops`, `rendicion_rechazar`, `rendicion_reenviar`, `rendicion_marcar_pagada` · `vendedor_por_nombre`, `vendedor_inactivo_por_nombre`, `cumpleanos_vendedores` · `limite_habil` · `marcar_bienvenida_vista`, `marcar_induccion` · `organigrama`.
+**Lo que había en Supabase y ahora hay que construir.** Estas siete piezas eran Edge Functions que el plan v0.1 daba por reutilizadas «tal como están». Su código actual es la especificación:
 
-> **Tope de PostgREST:** 1000 filas por resultado. Todo listado del asesor debe paginar o acotar por rango de fechas dentro del repositorio; el dominio nunca asume que recibió todo.
+| Origen | Qué hace | Nota |
+|---|---|---|
+| `leer-boleta` | Extrae datos de la imagen de una boleta con IA | Credenciales de IA en servidor. Devuelve también los campos de baja confianza, que la UI resalta |
+| `transcribir-bitacora` | Dictado por voz de la bitácora | |
+| `mejorar-bitacora` · `mejorar-redaccion` | Mejora de redacción | |
+| `notificar` | Avisos al asesor | |
+| `visitas-abiertas-cron` · `tareas-atrasadas-cron` | Procesos programados que alimentan las notificaciones | Sobre ECS + Fargate hay que decidir cómo se programan (pregunta abierta del PRD §14) |
+
+Y además: **almacenamiento de archivos** para evidencia de visitas y boletas, que Supabase Storage daba resuelto. Hay precedente en el ecosistema de la API — `Services/Claims/Services/S3Service.cs` y `Common/Storage` — así que el hueco es de contrato, no de tecnología.
+
+**Reglas que hoy son funciones de base de datos y pasan a ser lógica del servicio.** Son la especificación de los endpoints con negocio dentro. Al leerlas en el repo actual, tomar la **última** redefinición de cada una: varias tienen tres o cuatro versiones en el histórico (`rendicion_rechazar` y `app_rol`, cuatro cada una).
+
+| Grupo | Funciones | Qué encierra |
+|---|---|---|
+| Permisos | `puede`, `app_rol`, `app_tiene_capacidad`, `mis_capacidades` | **Ya no se portan**: los reemplazan los roles del JWT (ADR-011) |
+| Tareas | `crear_tarea_sala`, `completar_tarea`, `set_tarea_completada`, `calificar_tarea`, `tarea_avance_crear` | Ciclo de vida y calificación de una tarea |
+| Gastos y rendiciones | `gasto_crear`, `gasto_fusionar`, `rendicion_enviar`, `rendicion_aprobar_jefe`, `rendicion_aprobar_ops`, `rendicion_rechazar`, `rendicion_reenviar`, `rendicion_marcar_pagada` | **Máquina de estados completa**: `borrador → enviada → aprobada_jefe → aprobada_ops → pagada`, más `rechazada` y el contador de reenvíos. Es el bloque con más negocio del alcance |
+| Vendedores | `vendedor_por_nombre`, `vendedor_inactivo_por_nombre`, `cumpleanos_vendedores` | El vendedor de sala se identifica **por nombre**, no por id — de ahí estas funciones |
+| Calendario | `limite_habil` | Días hábiles y feriados |
+| Perfil | `marcar_bienvenida_vista`, `marcar_induccion` | |
+| Organización | `organigrama` | |
+
+**Las ~150 políticas RLS de las tablas de Fase 1 son la especificación de la autorización.** No se portan como mecanismo, se leen como requisito, y la regla resultante se documenta en `Services/GarantiMax/doc/` — un archivo por pregunta, según la convención del repo de la API.
+
+> **Paginación obligatoria.** El tope de 1000 filas de PostgREST desaparece, pero la regla que lo motivaba no: todo listado del asesor pagina o se acota por rango de fechas, y el contrato del endpoint lo declara. El dominio nunca asume que recibió todo.
 
 ---
 
@@ -450,35 +533,35 @@ Todos los cambios son **aditivos y compatibles hacia atrás** (RNF-19): el siste
 
 | Variable | Descripción | Ambiente |
 |---|---|---|
-| `VITE_SUPABASE_URL` | URL del proyecto Supabase (`jrykbalmnpymeyzdhsam`) | Desarrollo / QA / Producción |
-| `VITE_SUPABASE_ANON_KEY` | Clave anónima. **Pública por diseño**; su contención es RLS. Nunca la `service_role` en el cliente | Desarrollo / QA / Producción |
+| `VITE_API_BASE_URL` | URL base del servicio GarantiMAX. En local, puerto **5006** por convención del repo de la API | Desarrollo / QA / Producción |
 | `VITE_SENTRY_DSN` | Reporte de errores no controlados | QA / Producción (opcional en desarrollo) |
 | `VITE_ENTORNO` | Identifica el ambiente en Sentry y en los eventos de producto | Desarrollo / QA / Producción |
 
-Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si falta una, la aplicación no arranca. Ninguna credencial de proveedor externo (IA, correo, mensajería) existe en el cliente: viven dentro de las Edge Functions (RNF-11).
+Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si falta una, la aplicación no arranca. Ninguna credencial de proveedor externo (IA, correo, mensajería) ni de base de datos existe en el cliente: viven en el servicio .NET, en `appsettings` bindeado a una clase de `Options/` según la convención de ese repositorio (RNF-11). Lo único que el frontend guarda es el token de sesión del usuario.
 
 ---
 
 ## 8. Consideraciones de seguridad
 
-- **La autorización es del servidor.** RLS es la única defensa real; los controles de la interfaz son de usabilidad y **nunca** la única barrera (RNF-10). Con acceso directo desde el cliente y clave anónima pública, una política mal escrita en cualquiera de las 26 tablas expone el dato a cualquiera. Por eso la auditoría de RLS (T-67) es criterio de aceptación, no una tarea opcional.
-- **Lista cerrada de operaciones que obligatoriamente pasan por función de servidor** (ADR-004): (1) las que usan credenciales de un proveedor externo, (2) las que escriben algo que cruza la frontera del propio asesor —aprobaciones de rendición, notificaciones a terceros—, (3) las escrituras masivas o procesos programados, (4) aquellas cuya regla de autorización no puede expresarse íntegramente como política RLS. **Cualquier adición a esta lista requiere revisión de TI.**
-- **Secrets fuera del código** (`rules/coding-guidelines.md` §11): solo variables de entorno; las claves de IA permanecen dentro de las Edge Functions.
+- **La autorización es del servidor.** Cada endpoint valida el JWT y comprueba que el recurso pertenece a quien lo pide; los controles de la interfaz son de usabilidad y **nunca** la única barrera (RNF-10).
+- **El riesgo cambió de forma, no desapareció.** Antes: clave anónima pública sobre 128 tablas, con RLS como única defensa — una política mal escrita exponía el dato a cualquiera. Ahora: la clave pública desaparece, pero las ~150 reglas que RLS garantizaba hay que reescribirlas como código, **y el repo de la API no tiene proyectos de test**. Por eso la revisión de las reglas de autorización (T-67, reformulada) sigue siendo criterio de aceptación y no una tarea opcional.
+- **Cuatro condiciones que exigen cuidado especial en un endpoint** (heredadas de ADR-004, ahora como criterio de diseño): (1) usa credenciales de un proveedor externo, (2) escribe algo que cruza la frontera del propio asesor —aprobaciones de rendición, notificaciones a terceros—, (3) es escritura masiva o proceso programado, (4) su regla de autorización no es un simple «es dueño del recurso». Cada una de estas se documenta en `Services/GarantiMax/doc/`.
+- **Secrets fuera del código** (`rules/coding-guidelines.md` §11): en el frontend, solo variables de entorno; en el servicio, `appsettings` bindeado a `Options/` — nada hardcodeado, según la convención del repo de la API.
 - **"Ver como" (impersonación)** deja de ser un guard disperso por la UI y pasa a ser **regla de dominio** (T-20, T-35, T-38): un usuario impersonado no puede descartar el borrador del asesor. Ya hubo incidencias por esto en el sistema actual.
-- **Modo demo** respaldado por RLS y no solo por el guard del cliente (T-67).
+- **Modo demo** respaldado por el servicio y no solo por el guard del cliente (T-67).
 - **Inyección de prompt**: las funciones de IA reciben texto del usuario. Las pruebas del sistema actual se portan y se **extienden** a bitácora y lectura de boletas (T-53).
 - **Datos personales**: nunca se registran contenido de bitácoras, imágenes de boletas, ubicaciones exactas ni datos de contacto — solo identificadores (T-64). Los mensajes de error jamás exponen nombres de tabla, SQL, rutas internas ni el mensaje original del proveedor (T-05).
-- **Consultas parametrizadas**: no hay concatenación de SQL en el cliente; todo pasa por el SDK o por RPC.
+- **Sin SQL en el cliente**: el frontend no conoce tablas ni consultas. En el servicio, todo acceso pasa por EF Core; nada de concatenación de SQL.
 
 ---
 
 ## 9. Consideraciones de infraestructura
 
-- **No se crean recursos AWS.** No hay ECS, ni Fargate, ni RDS, ni S3 en este proyecto: la persistencia es el proyecto Supabase existente y el hospedaje es Vercel.
+- **Sí se crean recursos AWS**, y por eso el proyecto queda alineado con `rules/infraestructura.md`: el servicio `GarantiMax` se despliega en **ECS + Fargate** con su propio `Dockerfile`, contra una **base PostgreSQL propia**, con configuración por entorno en `Infrastructure/{local,qa,prod}/` del repo de la API. El almacenamiento de archivos usa S3, con precedente en `Services/Claims/Services/S3Service.cs`.
 - **Vercel**: proyecto nuevo para `siga_alfa`, framework Vite, SPA con reescrituras a `/index.html`, previews automáticas por PR. Costo marginal: un proyecto adicional dentro del plan vigente.
 - **Dominios (Cloudflare)**: durante el desarrollo y el piloto, la aplicación nueva vive en un subdominio de transición (propuesto: `app.garantimax.com`). **El día del corte** se decide entre apuntar `www.garantimax.com` a la aplicación nueva —dejando el sistema actual en un subdominio para el doble acceso de los demás roles— o mantener el subdominio y redirigir solo a los asesores. Es una pregunta abierta del PRD §14 y debe cerrarse antes de T-69.
-- **Convivencia**: ambas aplicaciones escriben la misma base de datos durante toda la transición. Las invariantes críticas se garantizan en la base (índices únicos de idempotencia, RPC), no solo en el código nuevo.
-- **Desviación del estándar Engine** (`rules/infraestructura.md`): el árbol de decisión llevaría una SPA a S3 + CloudFront y un backend nuevo a ECS + Fargate. Aquí no hay backend nuevo y el hospedaje se conserva en Vercel por continuidad operativa, porque el PRD deja el cambio de proveedor fuera de alcance. **Requiere visto bueno de TI**; migrar el hospedaje sería un proyecto propio y de bajo costo de cambio (A1 §13 lo clasifica como riesgo de lock-in bajo).
+- **Aislamiento, no convivencia**: los dos sistemas ya no comparten base de datos. Eso elimina el riesgo de invariantes divergentes y lo cambia por otro: **hay que poblar los catálogos** de referencia en la base nueva, porque sin ellos el asesor no puede registrar una visita. Las invariantes críticas se siguen garantizando en la base (índices únicos de idempotencia), no solo en el código.
+- **Desviación restante del estándar Engine** (`rules/infraestructura.md`): solo el hospedaje del **frontend**, que se conserva en Vercel en lugar de S3 + CloudFront, por continuidad operativa y porque el PRD deja el cambio de proveedor fuera de alcance. **Requiere visto bueno de TI**; migrarlo sería un proyecto propio y de bajo costo de cambio. El backend ya cumple el estándar: ECS + Fargate.
 
 ---
 
@@ -486,13 +569,13 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 
 **Arquitectónicos** — verificables automáticamente en CI:
 
-- [ ] Cero archivos de presentación importan el SDK de Supabase o ejecutan `.from()` / `.rpc()` (RNF-01; línea base actual: 447 en `.tsx`)
-- [ ] Cero archivos fuera de `infrastructure/` importan el SDK de Supabase (RNF-02; línea base actual: 157)
+- [ ] Cero archivos de presentación importan el cliente HTTP o llaman a `fetch` (RNF-01; línea base del sistema actual: 447 queries en `.tsx`)
+- [ ] Cero archivos fuera de `infrastructure/api/` hablan con la red (RNF-02; línea base del sistema actual: 157 archivos con el SDK)
 - [ ] El dominio compila sin ninguna dependencia externa
 - [ ] Ningún feature importa la `ui/` ni la `infrastructure/` de otro feature
 - [ ] Ningún componente accede a `matchMedia` ni a `navigator.standalone`
 - [ ] Cero referencias al tier legacy `CM` / `GTE` / `FARMER` en todo el repositorio
-- [ ] Las pruebas de dominio y de casos de uso corren **sin red ni instancia de Supabase** (RNF-03, meta 100 %)
+- [ ] Las pruebas de dominio y de casos de uso corren **sin red ni servicio levantado** (RNF-03, meta 100 %)
 - [ ] Una sola implementación de Mi Día para escritorio y móvil (de 2 a 1)
 
 **Funcionales:**
@@ -508,7 +591,7 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 
 **Operativos:**
 
-- [ ] Auditoría de políticas RLS de las 26 tablas, **firmada por TI** (T-67)
+- [ ] Revisión de las reglas de autorización de los endpoints, **firmada por TI** (T-67)
 - [ ] Procedimiento de reversión documentado y **ensayado en un simulacro real** (RNF-21)
 - [ ] Piloto completado con sus hallazgos resueltos o aceptados explícitamente
 - [ ] Doble acceso a Facturación, Salas y Cobertura habilitado y **con fecha de vencimiento declarada**
@@ -522,15 +605,16 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 | **Reglas de negocio invisibles** que solo existen dentro de un `useEffect` y no se descubren hasta que un asesor reporta una regresión | Alta | Alto | T-13…T-16 son entregable propio y bloqueante: catálogo de reglas antes de escribir dominio. Cada regla, una prueba (RNF-04). El piloto (T-71) es la última red |
 | **El corte único concentra el riesgo**: si falla, todos los asesores quedan afectados a la vez y en terreno | Media | Alto | Paridad firmada (T-68), reversión ensayada (T-70), piloto previo (T-71), corte en día de baja actividad (T-72). Antes del corte la decisión aún es reversible: se puede pasar a escalonado por país |
 | **Meses sin entrega visible** al usuario; un malentendido se descubre tarde | Alta | Medio | Validaciones periódicas con asesores reales sobre versiones internas desde el final de la Fase 1, sin esperar al corte. La Fase 1 (P1) está diseñada como corte vertical demostrable: identidad + shell + offline + Mi Día + visitas |
-| **RLS incompleta con clave anónima pública**: una política mal escrita expone el dato | Media | Alto | T-67 tabla por tabla, con firma de TI; se porta y extiende `rlsLaxa.test.ts`; el modo demo deja de depender del guard del cliente |
+| **Autorización mal traducida de RLS a código**: una regla omitida es un hueco de seguridad, y el repo de la API no tiene tests | Media | Alto | T-67 endpoint por endpoint, con las políticas del sistema actual como especificación y firma de TI; cada regla documentada en `Services/GarantiMax/doc/`; el modo demo deja de depender del guard del cliente |
 | **Duplicados al sincronizar** operaciones encoladas | Media | Alto | Idempotencia obligatoria en el dominio (T-29) **y garantizada en la base** con índice único (T-18); pruebas de corte de red (T-66) |
 | **Sobreingeniería**: capas, contratos y providers que no resuelven un problema real | Media | Medio | Cada abstracción declara en su ADR qué problema concreto resuelve. `RealtimeProvider` se queda en contrato sin implementación (ADR-005). Zustand solo cuando el estado cruza ramas del árbol |
-| **Convivencia sobre la misma base**: dos aplicaciones escribiendo las mismas tablas con invariantes distintas | Media | Alto | Las invariantes críticas se garantizan en la base, no solo en el código nuevo; todo cambio de esquema es aditivo (RNF-19); T-18 se valida ejecutando el sistema actual contra la base migrada |
+| **El backend no llega a tiempo**: el frontend depende de endpoints que otro equipo construye | Media | Alto | Los contratos de los puertos se fijan primero (T-06) y el frontend avanza contra dobles de prueba (RNF-03); los endpoints se priorizan siguiendo el orden de las fases. Es riesgo de calendario, no de corrección |
+| **Catálogos vacíos en la base nueva**: una visita es siempre a una sala, y sin migración no hay salas | Alta | Medio | **Para construir y probar, datos sembrados** (decisión del 26-08-2026): T-18 entrega el script de siembra junto con el esquema. La carga real la hace el responsable antes del piloto. Riesgo residual: el mecanismo de **actualización continua** de los catálogos en producción sigue sin definir, y su gestión es Fase 2 |
 | **La estimación se desborda**: la Fase 1 del PRD equivale a reconstruir 7 módulos y ~35 mil líneas del sistema actual | Alta | Alto | Fases con corte vertical y estimación por rango (§13). Si el calendario aprieta, el recorte es por fase completa (P2 o P3 siguen temporalmente en el sistema actual), **nunca** relajando los guardarraíles arquitectónicos: eso reproduce el problema que motiva el proyecto |
 | **Deriva del alcance hacia Fase 2** (la frontera entre "leer salas" y "gestionar salas" es delgada) | Alta | Medio | `ReferenciaRepository` **no expone ninguna escritura** (T-43); cualquier capacidad de gestión es Fase 2 por definición |
 | **Dependencia de una sola persona** que conoce el sistema actual | Media | Alto | Los catálogos de reglas (T-13…T-16) son documentación permanente y reducen la dependencia; se producen al inicio, no al final |
-| **Las Edge Functions son lock-in real** y quedan fuera de toda abstracción | Baja *(en Fase 1)* | Alto *(a futuro)* | Fase 1 consume 6 de 46 y las reutiliza tal cual. Se deja señalado como el mayor costo de una salida futura de Supabase; su análisis es un proyecto propio |
-| **Roles distintos del AF con capacidad `midia`** (10 roles) afectados por el corte sin haberlo planeado | Media | Medio | Verificar el uso real en producción antes de T-72 — pregunta abierta del PRD §14, se resuelve con una consulta de uso sobre la base |
+| **Las siete Edge Functions hay que rehacerlas** — incluida `leer-boleta`, que lleva IA dentro | Alta | Alto | Es el mayor aumento de alcance de ADR-011 y está declarado como tal. El código actual es la especificación; se priorizan por fase, no todas al principio. `leer-boleta` es la más cara y la que más valor da al asesor |
+| **Roles distintos del AF que hoy usan Mi Día** (10 tienen la capacidad) afectados por el corte sin haberlo planeado | Media | Medio | Verificar el uso real en producción antes de T-72 — pregunta abierta del PRD §14, se resuelve con una consulta de uso sobre la base del sistema actual |
 
 ---
 
@@ -538,7 +622,7 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 
 **Decisiones tomadas durante la generación de este plan** (cierran preguntas abiertas del PRD §14):
 
-1. **Repositorio propio nuevo** (`siga_alfa`). Consecuencias que el plan ya asume: CI, Vercel y variables de entorno se duplican; **las migraciones y las Edge Functions siguen viviendo en el repositorio actual** y desde ahí se operan (T-18, T-67). No dupliques `supabase/` en el repo nuevo: se convertiría en dos fuentes de verdad sobre la misma base.
+1. **Dos repositorios propios**: `siga_alfa` para el frontend y `Services/GarantiMax/` dentro de `gp_3.0_siga_api` para el backend (ADR-011). Consecuencias que el plan asume: CI, hospedaje y variables se manejan por separado; el frontend **no** contiene esquema, SQL ni carpeta `supabase/`; y las tareas que producen especificación para el servicio (T-18, T-67) entregan documentos, no código de backend. El repositorio del sistema actual es **solo lectura**: es la fuente de las reglas.
 2. **ADR-006 aprobado**: React Router, TanStack Query y Zustand entran como decisión cerrada (T-03). Regla que no se negocia: **la función que se le pasa a TanStack Query siempre invoca un caso de uso**, nunca un repositorio ni el SDK. Sin esa regla, Query se convierte en la nueva forma de meter queries en las vistas.
 3. **La evidencia de visitas se encola sin señal**, igual que las boletas (T-39). El PRD lo dejaba abierto; encolarla es coherente con RNF-08 ("ninguna operación del asesor se pierde") y con la cola que T-30 ya construye para imágenes. Si la operación decide que la evidencia exige conexión, se simplifica T-39 — no al revés.
 4. **Rama base `develop` del repositorio nuevo**, con la estructura Engine completa (`main`, `develop`, `pre-qa`, `qa`). El repositorio actual queda como está: normalizarlo obligaría a tocar un sistema en producción fuera de alcance.
@@ -548,22 +632,27 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 
 | Pregunta | Bloquea |
 |---|---|
-| ¿Cuáles de los 10 roles con capacidad `midia` entran al corte? | T-72 (y define si la matriz de capacidades necesita ajuste) |
+| ¿Cuáles de los 10 roles que hoy tienen la capacidad `midia` entran al corte? | T-72 (y define qué roles hay que dar de alta en la API) |
 | ¿El corte es simultáneo o escalonado por país (Chile / Perú / Argentina)? | T-71, T-72 |
 | ¿Qué pasa con `www.garantimax.com` el día del corte? | T-69 |
 | ¿Cuánto tiempo debe poder operar el asesor sin señal? | T-41 — define tamaño y caducidad del snapshot; hasta entonces se implementa con un valor configurable |
-| ¿Se elimina el tier `CM/GTE/FARMER` del sistema actual o solo se ignora? | Nada en este plan: el sistema nuevo simplemente no lo lee (ADR-008). La eliminación en el actual queda diferida |
+| ~~¿Se elimina el tier `CM/GTE/FARMER`?~~ | **Resuelto por ADR-011.** El sistema nuevo tiene identidad propia y no lee nada del actual. Deja de ser asunto de este proyecto |
+| ¿Cuál es el nombre exacto del rol del Asesor Farmer en la API? | T-22, T-24 — el frontend necesita el identificador para resolver permisos en un solo punto |
+| ~~¿Cómo se pueblan los catálogos?~~ | **Resuelto:** datos sembrados para construir y probar (T-18 entrega el script); carga real antes del piloto. Sigue abierto cómo se **actualizan** en producción — bloquea el cierre de Fase 2, no la Fase 1 |
+| ¿Quién construye `Services/GarantiMax/` y con qué calendario? | El corte (T-72). El frontend avanza contra dobles de prueba, pero sin endpoints no hay corte |
+| ¿Cómo se programan los procesos periódicos sobre ECS + Fargate? | T-62 (notificaciones) |
 | ¿Qué hace el asesor si necesita corregir un dato de un vendedor durante una visita? | T-43 — hoy el plan asume que lo reporta y se corrige en el sistema actual (Fase 2) |
-| ¿Quién ejecuta y firma la auditoría de RLS? | T-67 |
+| ¿Quién revisa y firma las reglas de autorización del servicio? | T-67 |
 
 **Detalles operativos que evitan errores conocidos:**
 
 - **Validación antes de pedir review:** `npx tsc -b` y `npm run build`. **No** `tsc --noEmit` — con `tsconfig` tipo "solution" no chequea nada. Tests con `npm test`, lint con `npm run lint`.
-- **Migraciones:** siempre `npm run migracion -- <descripción>` **en el repositorio actual**. El número lo asigna el script mirando también `origin/master`; elegirlo a ojo ya produjo 15 duplicados entre 364 migraciones.
-- **MCP de Supabase:** las lecturas se ejecutan libremente; **cualquier escritura** (INSERT/UPDATE/DELETE/DDL/migración) requiere OK explícito, mostrando antes qué hace, el SQL exacto y cuántas filas toca.
+- **La base del sistema actual es de solo lectura.** Nada de migraciones ahí. Si al leerla se ejecuta algo vía MCP, solo lecturas: **cualquier escritura** requiere OK explícito, mostrando antes qué hace, el SQL exacto y cuántas filas toca.
+- **Leer el histórico de migraciones tiene trampas.** Tres tablas centrales fueron destruidas y recreadas con diseño distinto (`visitas`, `bitacoras`, `sala_vendedores`), la tabla `salas` está abandonada, y hay 15 números de migración duplicados entre 364. Vale la **última** definición de cada objeto, verificada contra el uso real en el código. Detalle en A3 §3.
+- **No compiles ni arranques servicios del repo de la API por tu cuenta:** es regla explícita de ese repositorio. Se sugiere el comando y se espera.
 - **Versión:** no se edita a mano; la inyecta el build. Si el repositorio nuevo replica ese mecanismo, replica también la regla.
-- **Tope de PostgREST:** 1000 filas por resultado. Todo listado del asesor pagina o acota por fecha.
-- **Idioma:** `rules/coding-guidelines.md` exige código en inglés. El sistema actual y todo el dominio de este PRD están en español (`visitas`, `rendiciones`, `bitacoras`), y las tablas y RPCs también. **Recomendación:** conservar el español en los nombres del dominio —renombrarlos rompería la correspondencia con la base y con el lenguaje del negocio— y usar inglés para lo técnico transversal. Es una desviación consciente que conviene ratificar con TI antes de T-02, porque después es cara de revertir. **RATIFICADO (2026-08-25) por Javier Antonio Oropeza Camacho:** español en el dominio (entidades, casos de uso, invariantes, nombres de feature) e inglés en lo técnico transversal (`Repository`, `Provider`, `LocalStore`, errores, configuración, tooling). Se documenta en el `CLAUDE.md` del repositorio nuevo (T-02).
+- **Paginación:** el tope de PostgREST desaparece, la regla no. Todo listado del asesor pagina o acota por fecha, y el contrato del endpoint lo declara.
+- **Idioma:** ojo, hay **dos convenciones distintas** según el repositorio. En el repo de la API el código va en **inglés** (es su `CODING_GUIDELINES.md`), con los mensajes al usuario final en español. En `siga_alfa` rige lo ratificado abajo. `rules/coding-guidelines.md` exige código en inglés. El sistema actual y todo el dominio de este PRD están en español (`visitas`, `rendiciones`, `bitacoras`), y las tablas y RPCs también. **Recomendación:** conservar el español en los nombres del dominio —renombrarlos rompería la correspondencia con la base y con el lenguaje del negocio— y usar inglés para lo técnico transversal. Es una desviación consciente que conviene ratificar con TI antes de T-02, porque después es cara de revertir. **RATIFICADO (2026-08-25) por Javier Antonio Oropeza Camacho:** español en el dominio (entidades, casos de uso, invariantes, nombres de feature) e inglés en lo técnico transversal (`Repository`, `Provider`, `LocalStore`, errores, configuración, tooling). Se documenta en el `CLAUDE.md` del repositorio nuevo (T-02).
 
 ---
 
@@ -573,11 +662,11 @@ Estimación en **días hábiles**, para **un desarrollador a tiempo completo**. 
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Fundaciones, guardarraíles y extracción de reglas** | Repositorio con ramas Engine, andamiaje, librerías del ADR-006, configuración tipada, jerarquía de errores, contratos y providers, contenedor, 5 reglas de linter, métricas y CI, PWA, sistema de componentes, **catálogos de reglas del sistema actual**, línea base medida y migraciones aditivas | T-01 a T-19 | 30 – 40 días | 193 |
-| **Fase 1 — Núcleo verificable del asesor (P1)** | Identidad, sesión y capacidades sin tier legacy · shell adaptativo, rutas y bienvenida · motor offline completo (cola, idempotencia, decorador, estado observable) · Mi Día con snapshot · visitas con check-in, borrador, evidencia, aviso global y cierre · lobbies · catálogos de referencia en lectura | T-20 a T-43 | 40 – 52 días | 194 |
+| **Fase 0 — Fundaciones, guardarraíles y extracción de reglas** | Repositorio con ramas Engine, andamiaje, librerías del ADR-006, configuración tipada, jerarquía de errores, contratos y providers, contenedor, 5 reglas de linter, métricas y CI, PWA, sistema de componentes, **catálogos de reglas del sistema actual**, línea base medida y **especificación del esquema para el servicio** | T-01 a T-19 | 30 – 40 días | 193 |
+| **Fase 1 — Núcleo verificable del asesor (P1)** | Identidad, sesión y permisos por rol del JWT · shell adaptativo, rutas y bienvenida · motor offline completo (cola, idempotencia, decorador, estado observable) · Mi Día con snapshot · visitas con check-in, borrador, evidencia, aviso global y cierre · lobbies · catálogos de referencia en lectura | T-20 a T-43 | 40 – 52 días | 194 |
 | **Fase 2 — Gestión del asesor (P2)** | Tareas y avances · agenda y días hábiles · cumpleaños y saludos · bitácora diaria con dictado y mejora de redacción | T-44 a T-54 | 20 – 26 días | 195 |
 | **Fase 3 — Gastos y rendiciones (P3)** | Dominio de gasto y rendición · repositorios y RPCs · captura de boleta con lectura automática · decorador offline con imágenes · categorización y asignación · rendiciones y observación del flujo de aprobación | T-55 a T-61 | 20 – 27 días | 196 |
-| **Fase 4 — Notificaciones, verificación, auditoría y corte** | Notificaciones · eventos de BI · observabilidad y auditoría · E2E de los 5 flujos críticos · pruebas de corte de red · auditoría de RLS de las 26 tablas · lista de paridad · despliegue · reversión ensayada · piloto · corte único | T-62 a T-72 | 32 – 42 días | 197 |
+| **Fase 4 — Notificaciones, verificación, auditoría y corte** | Notificaciones · eventos de BI · observabilidad y auditoría · E2E de los 5 flujos críticos · pruebas de corte de red · revisión de la autorización de los endpoints · lista de paridad · despliegue · reversión ensayada · piloto · corte único | T-62 a T-72 | 32 – 42 días | 197 |
 | **Total proyecto (P1+P2+P3+cierre)** | | **72 tareas** | **~142 – 187 días hábiles (≈ 28 – 37 semanas)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-43 | **~70 – 92 días hábiles (≈ 14 – 19 semanas)** | — |
 

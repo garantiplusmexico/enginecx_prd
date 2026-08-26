@@ -4,13 +4,23 @@
 | --- | --- |
 | **Proyecto** | Reconstrucción de GarantiMAX — Fase 1: núcleo del Asesor Farmer |
 | **Área / empresa** | EngineCX |
-| **Versión** | v0.1 |
-| **Fecha** | 25-08-2026 |
+| **Versión** | v0.2 |
+| **Fecha** | 26-08-2026 (v0.1: 25-08-2026) |
 | **Autores** | Javier Antonio Oropeza Camacho |
 | **Revisión / liderazgo** | Aldo Álvarez — Director de TI |
-| **Tipo de proyecto** | Migración / re-arquitectura (reconstrucción de la aplicación sobre la base de datos existente) |
+| **Tipo de proyecto** | Re-plataforma / re-arquitectura (reconstrucción de la aplicación sobre un backend nuevo, sin migración de datos) |
 
 > **Anexos técnicos** (en `manager/anexos/`): [A1 — Arquitectura propuesta](anexos/A1-arquitectura.md) · [A2 — ADRs](anexos/A2-adrs.md) · [A3 — Inventario del sistema actual y clasificación por fases](anexos/A3-inventario.md)
+
+> ### ⚠️ Cambio de la v0.2 — 26-08-2026: se abandona Supabase
+>
+> Decisión del responsable, registrada en **[ADR-011](anexos/A2-adrs.md#adr-011--backend-propio-en-net-se-abandona-supabase)**. El backend deja de ser Supabase y pasa a un **servicio .NET propio** —`Services/GarantiMax/` en el monorepo `garantiplusmexico/gp_3.0_siga_api`— con base de datos PostgreSQL propia. Tres consecuencias que cambian la lectura de todo el documento:
+>
+> 1. **No hay migración de datos ni convivencia sobre una misma base.** Borrón y cuenta nueva: la base arranca vacía y el sistema actual queda aislado. Lo que antes era un riesgo de invariantes divergentes ahora es un problema de **poblar los catálogos** de referencia.
+> 2. **La autorización deja de ser RLS y pasa a ser código de servidor**, resuelta con los roles que el JWT de la API ya emite. Desaparece la matriz `roles × capacidades` (ADR-008) y desaparece con ella el riesgo de la clave anónima pública.
+> 3. **Las siete Edge Functions dejan de ser activos reutilizables y pasan a ser especificaciones** que hay que reimplementar como endpoints. Es el mayor aumento de alcance del cambio.
+>
+> **La §2 (contexto y situación actual) describe el sistema viejo y por eso sigue hablando de Supabase: es historia, no plan.** Todo lo demás está actualizado. ADR-002, ADR-004 y ADR-008 quedan superados; ADR-005 modificado; ADR-001, ADR-003, ADR-006, ADR-007, ADR-009 y ADR-010 **no cambian** — es la arquitectura de dependencias hacia adentro la que hizo que este cambio se pague solo en `infrastructure/`.
 
 ## 1. Resumen ejecutivo
 
@@ -18,9 +28,9 @@
 
 Este proyecto **reconstruye la aplicación** —no la base de datos, no el producto— empezando por el actor que más valor genera y más sufre la fricción: el **Asesor Farmer (AF)**, el vendedor de terreno que visita las salas, registra visitas, gestiona tareas, lleva su bitácora y rinde sus gastos desde el celular, muchas veces sin señal. La reconstrucción parte de una premisa dura: el sistema actual sirve para **descubrir qué hace el producto y qué reglas existen**, no como plantilla de cómo implementarlo. Todo requisito funcional se conserva; toda decisión técnica se vuelve a tomar.
 
-El MVP de este PRD es el **núcleo de terreno del asesor**: autenticación y perfil, Mi Día, visitas con check-in, tareas, agenda, bitácora diaria y gastos/boletas con rendición — una aplicación nueva construida sobre el **mismo esquema de datos en producción** (26 de las 128 tablas), con separación estricta entre presentación, casos de uso, dominio e infraestructura, y con Supabase encapsulado detrás de contratos que permitan sustituirlo sin reescribir el negocio. Quedan para fases posteriores Facturación, Salas, Cobertura, Incentivos y Solicitudes; y fuera de este PRD, los módulos que no pertenecen al asesor (Post-Venta, Hunter, Call Center, War Room, Portal, Mora, 1:1).
+El MVP de este PRD es el **núcleo de terreno del asesor**: autenticación y perfil, Mi Día, visitas con check-in, tareas, agenda, bitácora diaria y gastos/boletas con rendición — una aplicación nueva con separación estricta entre presentación, casos de uso, dominio e infraestructura, servida por un **servicio .NET propio** (`Services/GarantiMax/` en el monorepo `gp_3.0_siga_api`) con base de datos propia y sin migración de datos — borrón y cuenta nueva (ADR-011). El backend queda detrás de contratos que permiten sustituirlo sin reescribir el negocio. Quedan para fases posteriores Facturación, Salas, Cobertura, Incentivos y Solicitudes; y fuera de este PRD, los módulos que no pertenecen al asesor (Post-Venta, Hunter, Call Center, War Room, Portal, Mora, 1:1).
 
-El resultado esperado es que el asesor tenga una herramienta de terreno más rápida y confiable, y que TI recupere el control técnico del sistema: una base donde el negocio esté en un solo lugar, se pueda probar sin Supabase, y absorber un módulo nuevo no signifique tocar diez archivos que no tienen nada que ver.
+El resultado esperado es que el asesor tenga una herramienta de terreno más rápida y confiable, y que TI recupere el control técnico del sistema: una base donde el negocio esté en un solo lugar, se pueda probar sin backend, y absorber un módulo nuevo no signifique tocar diez archivos que no tienen nada que ver.
 
 **Descubrimiento del sistema actual** → **Diseño de arquitectura y ADRs** → **Construcción del núcleo del asesor** → **Validación con asesores en terreno** → **Corte único al nuevo sistema** → **Fases siguientes absorben el resto**
 
@@ -59,9 +69,9 @@ El sistema no está roto de cara al usuario: está bloqueado de cara al equipo. 
 
 ## 3. Objetivo del producto
 
-Reconstruir la aplicación de terreno del **Asesor Farmer** sobre una arquitectura con responsabilidades separadas —presentación, casos de uso, dominio e infraestructura— en la que las reglas de negocio tengan una única fuente de verdad, ninguna vista consulte la base de datos, y Supabase quede encapsulado detrás de contratos sustituibles. La reconstrucción se hace sobre el **esquema de datos existente en producción**, sin migración de datos.
+Reconstruir la aplicación de terreno del **Asesor Farmer** sobre una arquitectura con responsabilidades separadas —presentación, casos de uso, dominio e infraestructura— en la que las reglas de negocio tengan una única fuente de verdad, ninguna vista consulte la base de datos, y el backend quede encapsulado detrás de contratos sustituibles. El backend es un **servicio .NET propio con base de datos propia** (ADR-011): la base arranca vacía y **no hay migración de datos**. El esquema del sistema actual sirve como inventario de campos y de reglas, no como plantilla del modelo.
 
-El objetivo es verificable: al cierre de la Fase 1 el asesor debe poder ejecutar **todo su trabajo de terreno** en el nuevo sistema —Mi Día, visitas con check-in, tareas, agenda, bitácora y gastos, con soporte offline— con paridad funcional respecto al sistema actual; y el equipo debe poder ejecutar las pruebas del dominio y de los casos de uso **sin una instancia de Supabase**.
+El objetivo es verificable: al cierre de la Fase 1 el asesor debe poder ejecutar **todo su trabajo de terreno** en el nuevo sistema —Mi Día, visitas con check-in, tareas, agenda, bitácora y gastos, con soporte offline— con paridad funcional respecto al sistema actual; y el equipo debe poder ejecutar las pruebas del dominio y de los casos de uso **sin backend levantado**.
 
 ### 3.1 Estrategia de implementación por fases
 
@@ -92,7 +102,7 @@ El objetivo es verificable: al cierre de la Fase 1 el asesor debe poder ejecutar
 | **Funcionalidad** | **Descripción** |
 | --- | --- |
 | **Autenticación y sesión** | Inicio de sesión con correo/contraseña y Google. Resolución del perfil del usuario y sus roles. Manejo explícito del caso "cuenta sin perfil". Cierre de sesión. La sesión persiste y se renueva sin intervención del usuario. |
-| **Autorización por capacidades** | El acceso a cada módulo se resuelve contra la matriz `roles × capacidades` en base de datos, **no** contra el tier legacy. La resolución ocurre una sola vez, en un punto central, y el resultado se expone a la UI como una decisión ya tomada. |
+| **Autorización por roles del JWT** | El acceso a cada módulo se resuelve contra los **roles que el token de la API ya trae** como claims, **no** contra el tier legacy ni contra una matriz de capacidades propia (ADR-011 supera a ADR-008). La resolución ocurre una sola vez, en un punto central, y el resultado se expone a la UI como una decisión ya tomada. |
 | **Bienvenida y perfil** | Pantalla de bienvenida descartable por el usuario y persistente por perfil. Datos básicos del asesor y su asignación. |
 | **Mi Día** | Pantalla de entrada del asesor: qué tiene que hacer hoy —eventos de agenda, tareas pendientes, visitas planificadas, saludos de cumpleaños del día— con acceso directo a registrar cada cosa. Debe abrir y ser útil **sin señal**, a partir del último snapshot sincronizado. |
 | **Visitas con check-in** | Registro de una visita a una sala: apertura con check-in, cronómetro de duración, captura de lo observado, evidencia y cierre. Solo puede existir **una visita en curso por asesor**; el sistema lo impide y lo hace visible en cualquier pantalla. El borrador sobrevive al cierre de la app y a la falta de señal. |
@@ -106,17 +116,18 @@ El objetivo es verificable: al cierre de la Fase 1 el asesor debe poder ejecutar
 | **Modo offline** | Snapshot de Mi Día y cola de operaciones pendientes en almacenamiento local del dispositivo. La sincronización es explícita, observable por el usuario y resistente a fallos parciales. |
 | **Layout adaptativo** | Una sola aplicación cuya presentación se adapta a escritorio y móvil. La detección de instalación como PWA está centralizada en un único punto y **no** se consulta desde componentes. |
 
-**Principio rector del MVP.** La Fase 1 prioriza **paridad funcional con corrección arquitectónica**: el asesor no debe perder ninguna capacidad que hoy tenga en su trabajo de terreno, y ninguna regla de negocio debe quedar dentro de un componente. Lo que este MVP deliberadamente **no** decide todavía: qué librería concreta resuelve cada responsabilidad más allá de las ya fijadas (ver §14), cómo se implementa Realtime (se define el contrato, no la implementación), y si los roles con capacidad `midia` distintos del AF entran al corte.
+**Principio rector del MVP.** La Fase 1 prioriza **paridad funcional con corrección arquitectónica**: el asesor no debe perder ninguna capacidad que hoy tenga en su trabajo de terreno, y ninguna regla de negocio debe quedar dentro de un componente. Lo que este MVP deliberadamente **no** decide todavía: qué librería concreta resuelve cada responsabilidad más allá de las ya fijadas (ver §14), cómo se implementa Realtime (queda solo el puerto), y qué roles distintos del AF entran al corte.
 
 ## 6. Fuera de alcance
 
 - **Facturación, Salas, Cobertura, Incentivos y Solicitudes**: son módulos que el asesor usa, pero no forman parte de su trabajo de terreno. Van a Fase 2 y Fase 3. Durante la transición el asesor los sigue consultando en el sistema actual (doble acceso temporal).
 - **Post-Venta / Averías, Hunter, Call Center, War Room, Portal, Mora / Cobranza, 1:1, Productos, Resumen, Inducción**: pertenecen a otros roles. Siguen operando sin cambios en el sistema actual. Se consideran al diseñar los límites entre dominios, pero **no se construye nada** para ellos.
-- **Implementación de Realtime**: ningún módulo del asesor lo usa. Se define el contrato `RealtimeProvider` como decisión arquitectónica documentada; la implementación llega con el primer módulo que la necesite.
-- **Rediseño del esquema de base de datos**: se conserva el esquema en producción. Solo se admiten cambios aditivos y compatibles hacia atrás, porque el sistema actual sigue vivo para los demás roles.
-- **Migración de datos**: no hay. Ambos sistemas leen y escriben la misma base.
-- **Cambio de stack o de proveedor**: se conserva React + TypeScript y Supabase como implementación actual. La abstracción existe para permitir el cambio, no para ejecutarlo ahora.
-- **Backend propio / BFF**: no se construye. El acceso directo frontend→Supabase con RLS se conserva, con una lista cerrada de excepciones que deben pasar por función de servidor (ver §10).
+- **Implementación de Realtime**: ningún módulo del asesor lo usa. Queda declarado el puerto `RealtimeProvider` como decisión arquitectónica documentada; la implementación se decide cuando alguna funcionalidad la exija (ADR-005, modificado por ADR-011).
+- **Migración del histórico de terreno**: no hay. La base del servicio nuevo arranca vacía — borrón y cuenta nueva, decisión del responsable. Las visitas, bitácoras y gastos registrados en el sistema actual **no** se trasladan.
+- **Cualquier cambio en la base del sistema actual**: el servicio nuevo tiene su propia base. El esquema de Supabase se lee como documentación y no se toca, ni con cambios aditivos.
+- **Los módulos de otros roles dentro del servicio .NET**: `Services/GarantiMax/` cubre el alcance de Fase 1. Los módulos de Fase 2, Fase 3 y posteriores se agregan al mismo servicio cuando llegue su fase; no se anticipan endpoints.
+- **Multi-país operativo**: la primera entrega opera **solo Chile**. El país se modela como dato desde el día uno, pero Perú y Argentina no se ponen en marcha en Fase 1 — moneda, identificador fiscal y feriados por país quedan pendientes.
+- **Cambio del stack de frontend**: se conserva React + TypeScript.
 - **Rediseño visual del producto**: la reconstrucción es arquitectónica. La identidad visual y los flujos que el asesor ya conoce se conservan, salvo donde el layout adaptativo obligue a unificarlos.
 - **Importadores de Excel de SIGA**: son operación de CM/GTE, no del asesor. Permanecen en el sistema actual hasta Fase 2.
 - **Cronograma y estimaciones**: este PRD define qué y por qué. El plan de desarrollo se elabora aparte.
@@ -132,8 +143,8 @@ flowchart TD
   UC["Aplicación<br/>Casos de uso"]
   DOM["Dominio<br/>Entidades · reglas · invariantes"]
   PORT["Contratos<br/>Repositories · Providers"]
-  INFRA["Infraestructura<br/>Implementaciones Supabase"]
-  EXT[("Supabase<br/>Postgres · Auth · Storage · Edge Functions")]
+  INFRA["Infraestructura<br/>Cliente HTTP de la API"]
+  EXT[("Servicio .NET GarantiMax<br/>REST · JWT · PostgreSQL · archivos")]
   LOCAL[("Almacenamiento local<br/>snapshot + cola offline")]
 
   UI --> HOOK
@@ -148,7 +159,7 @@ flowchart TD
   UI -.prohibido.-x EXT
 ```
 
-La regla que sostiene todo el diseño es la dirección de las flechas: **las dependencias apuntan hacia adentro**. La presentación conoce los casos de uso; los casos de uso conocen el dominio y los contratos; solo la infraestructura conoce Supabase. Un componente que necesita datos pide un caso de uso, nunca una tabla. Esto es lo que hoy no existe: las 443 queries dentro de vistas son flechas que van directo de la esquina superior a la inferior, saltándose todo.
+La regla que sostiene todo el diseño es la dirección de las flechas: **las dependencias apuntan hacia adentro**. La presentación conoce los casos de uso; los casos de uso conocen el dominio y los contratos; solo la infraestructura conoce la API. Un componente que necesita datos pide un caso de uso, nunca un endpoint. Esto es lo que hoy no existe: las 443 queries dentro de vistas son flechas que van directo de la esquina superior a la inferior, saltándose todo.
 
 El corolario práctico: cuando cambie la forma de guardar una visita, se toca una implementación de repositorio. Cuando cambie la **regla** de que solo hay una visita en curso, se toca el dominio. Hoy ambas cosas viven en el mismo `useEffect`.
 
@@ -216,7 +227,7 @@ La detección del contexto —tamaño, instalación como PWA, capacidades del di
 | **ID** | **Requerimiento** | **Descripción** |
 | --- | --- | --- |
 | RF-01 | Inicio de sesión | El asesor inicia sesión con correo/contraseña o Google. La sesión persiste entre aperturas y se renueva sola. Si la cuenta existe pero no tiene perfil, el sistema lo informa y ofrece cerrar sesión. |
-| RF-02 | Resolución de permisos | El acceso a cada módulo se resuelve contra la matriz `roles × capacidades` en base de datos, en un único punto de la aplicación. Ningún componente consulta permisos por su cuenta. |
+| RF-02 | Resolución de permisos | El acceso a cada módulo se resuelve contra los roles del JWT que emite la API, en un único punto de la aplicación. Ningún componente consulta permisos por su cuenta. |
 | RF-03 | Mi Día | Muestra los eventos de agenda del día, tareas pendientes, visitas planificadas y cumpleaños de vendedores, con acceso directo a registrar cada uno. |
 | RF-04 | Mi Día sin señal | Mi Día abre y es utilizable sin conexión, a partir del último snapshot sincronizado, indicando la antigüedad de los datos. |
 | RF-05 | Check-in de visita | El asesor abre una visita con sala, hora y ubicación. Un cronómetro registra la duración. |
@@ -245,17 +256,17 @@ La detección del contexto —tamaño, instalación como PWA, capacidades del di
 
 | **ID** | **Requerimiento** | **Descripción** |
 | --- | --- | --- |
-| RNF-01 | Cero acceso a datos desde la vista | Ningún archivo bajo la capa de presentación puede importar el cliente de Supabase ni ejecutar `.from()` / `.rpc()`. Se verifica con una regla de linter que falla la compilación. Meta: **0 infracciones** (línea base actual: 443). |
-| RNF-02 | Frontera de proveedor medible | Las referencias al SDK de Supabase viven exclusivamente en la capa de infraestructura. Meta: **0 archivos** fuera de infraestructura importando el SDK (línea base actual: 152). |
-| RNF-03 | Dominio y casos de uso probables sin Supabase | La suite de pruebas de dominio y casos de uso se ejecuta sin instancia de Supabase, con dobles de prueba de los repositorios. Meta: **100 %** de esas pruebas sin red. |
+| RNF-01 | Cero acceso a datos desde la vista | Ningún archivo bajo la capa de presentación puede importar el cliente HTTP de la API ni llamar a `fetch` directo. Se verifica con una regla de linter que falla la compilación. Meta: **0 infracciones** (línea base del sistema actual: 443 queries en vistas). |
+| RNF-02 | Frontera de proveedor medible | Las referencias al cliente HTTP viven exclusivamente en `infrastructure/api/`. Meta: **0 archivos** fuera de infraestructura hablando con la red (línea base del sistema actual: 152 archivos importando el SDK). |
+| RNF-03 | Dominio y casos de uso probables sin backend | La suite de pruebas de dominio y casos de uso se ejecuta sin el servicio .NET levantado, con dobles de prueba de los repositorios. Meta: **100 %** de esas pruebas sin red. |
 | RNF-04 | Cobertura de reglas de negocio | Toda invariante del dominio identificada en Fase 1 tiene al menos una prueba unitaria que la verifica. |
 | RNF-05 | Pruebas E2E de flujos críticos | Existen pruebas de extremo a extremo para: inicio de sesión, visita completa con check-in y cierre, captura de boleta sin señal con sincronización posterior, y registro de bitácora. |
 | RNF-06 | Apertura de Mi Día | Mi Día es interactivo en **≤ 2 s** desde el arranque de la app con conexión móvil típica, y en **≤ 1 s** desde snapshot local sin conexión. |
 | RNF-07 | Respuesta a la acción del asesor | Toda acción del asesor produce retroalimentación visible en **≤ 200 ms**, aunque la operación de servidor siga en curso. |
 | RNF-08 | Resistencia a la pérdida de señal | Ninguna operación del asesor se pierde por falta de conexión: check-in, cierre de visita, avance de tarea, bitácora y boleta se encolan y se reintentan. Meta: **0 %** de pérdida en pruebas de corte de red. |
 | RNF-09 | No duplicación al sincronizar | El reintento de una operación encolada no puede crear un registro duplicado; cada operación lleva un identificador de idempotencia. |
-| RNF-10 | Autorización en el servidor | Toda restricción de acceso está garantizada por RLS en base de datos. Los controles de la interfaz son de usabilidad y **nunca** la única defensa. |
-| RNF-11 | Secretos fuera del cliente | Ninguna credencial de proveedor externo (IA, correo, mensajería) está presente en el cliente. Solo la clave anónima de Supabase, cuya exposición es esperada y contenida por RLS. |
+| RNF-10 | Autorización en el servidor | Toda restricción de acceso está garantizada en el servicio .NET: cada endpoint valida el JWT y que el recurso pertenezca al asesor que lo pide. Los controles de la interfaz son de usabilidad y **nunca** la única defensa. Las reglas que no se entienden leyendo el código se documentan en `Services/GarantiMax/doc/`. |
+| RNF-11 | Secretos fuera del cliente | Ninguna credencial de proveedor externo (IA, correo, mensajería) ni de base de datos está presente en el cliente. Lo único que el frontend guarda es el token de sesión del usuario. |
 | RNF-12 | Errores comprensibles | La interfaz recibe errores tipificados por categoría (dominio, aplicación, infraestructura, red, autenticación, autorización, validación) y nunca expone mensajes internos del proveedor ni datos sensibles. |
 | RNF-13 | Trazabilidad de operaciones críticas | Quedan registradas con actor, momento y resultado: apertura y cierre de visita, cambios de estado de rendición, envío de bitácora y fallos de sincronización. |
 | RNF-14 | Observabilidad de errores | Los errores no controlados se reportan a la plataforma de monitoreo con contexto suficiente para diagnosticar, y sin datos personales. |
@@ -263,7 +274,7 @@ La detección del contexto —tamaño, instalación como PWA, capacidades del di
 | RNF-16 | Uso en una mano | En pantalla estrecha, las acciones frecuentes del asesor están al alcance del pulgar y son operables con una sola mano. |
 | RNF-17 | Accesibilidad | Contraste mínimo AA, objetivos táctiles de al menos 44 px, navegación por teclado en escritorio y etiquetas accesibles en controles. |
 | RNF-18 | Compatibilidad | Navegadores móviles actuales (Chrome Android, Safari iOS) y de escritorio en sus dos últimas versiones mayores. |
-| RNF-19 | Compatibilidad de esquema | Todo cambio de base de datos durante la Fase 1 es aditivo y compatible con el sistema actual, que sigue en producción para los demás roles. |
+| RNF-19 | Aislamiento del sistema actual | El servicio nuevo no lee ni escribe la base del sistema actual. Ningún cambio de la Fase 1 puede afectar a los módulos que siguen en producción para los demás roles. |
 | RNF-20 | Tamaño de la carga inicial | Los módulos se cargan bajo demanda; la carga inicial no incluye código de funcionalidades que el asesor no usa. |
 | RNF-21 | Reversibilidad del corte | Existe un procedimiento documentado y probado para devolver a los asesores al sistema actual dentro de la misma jornada. |
 
@@ -271,19 +282,21 @@ La detección del contexto —tamaño, instalación como PWA, capacidades del di
 
 | **Integración / Fuente** | **Uso esperado** |
 | --- | --- |
-| **Supabase Postgres (RLS)** | Fuente de datos de la Fase 1. Lectura y escritura directa desde el cliente, contenida por RLS y encapsulada tras repositorios. **26 tablas** de las 128 existentes. |
-| **Supabase Auth** | Autenticación con correo/contraseña y Google; gestión y renovación de sesión. Encapsulada tras el contrato `AuthProvider`. |
-| **Supabase Storage** | Evidencia de visitas e imágenes de boletas. Encapsulado tras el contrato `StorageProvider`. |
-| **Edge Functions — `leer-boleta`** | Extracción de datos de la imagen de una boleta. Obligatoriamente en servidor: usa credenciales de IA. |
-| **Edge Functions — `transcribir-bitacora`, `mejorar-bitacora`, `mejorar-redaccion`** | Dictado por voz y mejora de redacción de la bitácora. Obligatoriamente en servidor por la misma razón. |
-| **Edge Functions — `notificar`, `tareas-atrasadas-cron`, `visitas-abiertas-cron`** | Notificaciones y recordatorios programados al asesor. |
-| **Supabase Realtime** | **No se usa en Fase 1.** Se define el contrato `RealtimeProvider`; no se implementa. |
+| **Servicio .NET `GarantiMax`** | Única fuente de datos de la Fase 1. `Services/GarantiMax/` en el monorepo `gp_3.0_siga_api`, con base PostgreSQL y `DbContext` propios. Endpoints REST encapsulados tras repositorios. |
+| **Servicio .NET `Authentication`** | Ya existe y **no se toca**. Emite el JWT con `Id`, `UserName`, nombre, correo y los roles como `ClaimTypes.Role`. Encapsulado tras el contrato `AuthProvider`. El login de Google del sistema actual **queda fuera de alcance**. |
+| **Almacenamiento de archivos del servicio** | Evidencia de visitas e imágenes de boletas. Endpoint propio de subida y lectura; encapsulado tras el contrato `StorageProvider`. Hay que construirlo: no existe hoy. |
+| **Endpoint de lectura de boleta (IA)** | Extracción de datos de la imagen de una boleta. Obligatoriamente en servidor: usa credenciales de IA. Reimplementa la Edge Function `leer-boleta`. |
+| **Endpoints de dictado y redacción** | Transcripción de voz y mejora de redacción de la bitácora. Reimplementan `transcribir-bitacora`, `mejorar-bitacora` y `mejorar-redaccion`. |
+| **Notificaciones y procesos programados** | Avisos al asesor, visitas sin cerrar y tareas atrasadas. Reimplementan `notificar`, `visitas-abiertas-cron` y `tareas-atrasadas-cron`. |
+| **Realtime** | **No se usa en Fase 1.** Queda declarado el puerto `RealtimeProvider`; no se implementa ni se acopla a un proveedor. |
 | **Sentry** | Reporte de errores no controlados en producción. Encapsulado tras el contrato de monitoreo. |
 | **Almacenamiento local del dispositivo** | Snapshot de Mi Día y cola de operaciones pendientes, incluidas imágenes. Encapsulado tras un contrato de almacenamiento local, sustituible. |
-| **Sistema actual de GarantiMAX** | Convive durante la transición. El asesor sigue accediendo a Facturación, Salas y Cobertura ahí hasta la Fase 2. Comparten la misma base de datos. |
+| **Sistema actual de GarantiMAX** | Convive durante la transición: el asesor sigue accediendo a Facturación, Salas y Cobertura ahí hasta la Fase 2. **Ya no comparten base de datos** — son dos sistemas independientes, y los catálogos de referencia que la Fase 1 necesita hay que poblarlos en la base nueva. |
 | **SIGA** | **Sin integración directa.** Los datos de contratos entran por importación manual de Excel, operada por CM/GTE, fuera del alcance de la Fase 1. |
 
 ### Datos mínimos para operar la Fase 1
+
+> **Lectura de esta lista tras ADR-011.** Estos nombres son el **inventario de campos y conceptos** heredado del sistema actual, no el modelo de la base nueva. El modelo .NET se diseña desde el dominio, con claves de un solo tipo y FKs reales, y **no transcribe** el esquema viejo — que degradó sus claves (`asesor_id text`, `sala_key` sin FK, vínculos blandos) por no poder migrar datos. Las trampas concretas del esquema viejo están en A3 §3.
 
 **Identidad y permisos:** `usuarios`, `roles`, `usuario_roles`, `rol_capacidades`, `usuario_areas`, `asesores`, `areas`.
 
@@ -297,13 +310,15 @@ La detección del contexto —tamaño, instalación como PWA, capacidades del di
 
 **Notificaciones:** `notificaciones`.
 
-**Referencia (solo lectura):** `salas`, `sala_vendedores`, `vendedores`, `clientes`.
+**Referencia (solo lectura):** el catálogo de salas —que en el sistema actual **no** es la tabla `salas`, abandonada, sino `salas_catalogo` más `salas_asignacion`, `salas_zona`, `salas_geo` y `salas_grupo`—, los vendedores de sala (identificados **por nombre**, no por id) y los clientes. Ver A3 §3.
 
-**Funciones de base de datos** que la Fase 1 consume y que deben quedar tras repositorios: resolución de capacidades (`puede`, `app_rol`, `app_tiene_capacidad`, `mis_capacidades`), tareas (`crear_tarea_sala`, `completar_tarea`, `set_tarea_completada`, `calificar_tarea`, `tarea_avance_crear`), gastos y rendiciones (`gasto_crear`, `gasto_fusionar`, `rendicion_enviar`, `rendicion_aprobar_jefe`, `rendicion_aprobar_ops`, `rendicion_rechazar`, `rendicion_reenviar`, `rendicion_marcar_pagada`), vendedores (`vendedor_por_nombre`, `vendedor_inactivo_por_nombre`, `cumpleanos_vendedores`), calendario (`limite_habil`), perfil (`marcar_bienvenida_vista`, `marcar_induccion`) y organización (`organigrama`).
+**Reglas hoy implementadas como funciones de base de datos**, que pasan a ser lógica del servicio .NET y quedan tras repositorios en el frontend. Son la **especificación de los endpoints** de Fase 1: resolución de permisos (`puede`, `app_rol`, `app_tiene_capacidad`, `mis_capacidades` — sustituidas por los roles del JWT), tareas (`crear_tarea_sala`, `completar_tarea`, `set_tarea_completada`, `calificar_tarea`, `tarea_avance_crear`), gastos y rendiciones (`gasto_crear`, `gasto_fusionar`, `rendicion_enviar`, `rendicion_aprobar_jefe`, `rendicion_aprobar_ops`, `rendicion_rechazar`, `rendicion_reenviar`, `rendicion_marcar_pagada`), vendedores (`vendedor_por_nombre`, `vendedor_inactivo_por_nombre`, `cumpleanos_vendedores`), calendario (`limite_habil`), perfil (`marcar_bienvenida_vista`, `marcar_induccion`) y organización (`organigrama`).
 
 ### Esquema de permisos
 
-La autorización es responsabilidad del **servidor**. Toda tabla que la Fase 1 toca debe tener políticas RLS que garanticen que el asesor solo lee y escribe lo suyo: sus visitas, sus tareas, su bitácora, sus gastos y las salas de su cartera. Los controles de la interfaz existen para no mostrar lo que no corresponde, nunca como mecanismo de protección.
+La autorización es responsabilidad del **servidor**. Cada endpoint que la Fase 1 consume debe garantizar que el asesor solo lee y escribe lo suyo: sus visitas, sus tareas, su bitácora, sus gastos y las salas de su cartera. Los controles de la interfaz existen para no mostrar lo que no corresponde, nunca como mecanismo de protección.
+
+Esto es un **cambio de mecanismo, no de requisito**: lo que hasta ahora garantizaban unas 150 políticas RLS sobre las tablas de Fase 1 ahora lo garantiza el servicio. Esas políticas siguen siendo la fuente a leer para saber **qué** hay que garantizar, y la regla resultante se documenta en `Services/GarantiMax/doc/`, un archivo por pregunta.
 
 **Puede leer:** su perfil y sus roles; sus visitas, lobbies, tareas, agenda, bitácoras, gastos y rendiciones; y los catálogos de referencia de su cartera (salas, vendedores, clientes asociados).
 
@@ -311,14 +326,12 @@ La autorización es responsabilidad del **servidor**. Toda tabla que la Fase 1 t
 
 **Queda bloqueado sin aprobación:** la aprobación y el pago de rendiciones (jefe y operaciones); la gestión de salas, vendedores y clientes; cualquier importación de datos; y la administración de usuarios, roles y capacidades.
 
-**Operaciones que obligatoriamente pasan por función de servidor** — la lista es cerrada y cualquier adición requiere revisión de TI:
+Ya **todo** pasa por el servidor: no queda acceso directo del cliente a ninguna base (ADR-011 supera a ADR-004). Las cuatro condiciones que antes obligaban a una función de servidor siguen sirviendo como criterio de diseño de los endpoints — señalan cuáles necesitan cuidado especial de autorización y de secretos:
 
-1. Cualquier operación que use credenciales de un proveedor externo (IA, correo, mensajería).
-2. Cualquier escritura que afecte a más de un usuario o cruce la frontera del propio asesor (aprobaciones de rendición, notificaciones a terceros).
-3. Cualquier escritura masiva o proceso programado.
-4. Cualquier operación cuya regla de autorización no pueda expresarse íntegramente como política RLS.
-
-Todo lo demás —lecturas y escrituras del asesor sobre sus propios datos— va directo desde el cliente, protegido por RLS.
+1. Operaciones que usan credenciales de un proveedor externo (IA, correo, mensajería).
+2. Escrituras que afectan a más de un usuario o cruzan la frontera del propio asesor (aprobaciones de rendición, notificaciones a terceros).
+3. Escrituras masivas o procesos programados.
+4. Operaciones cuya regla de autorización no es un simple "es dueño del recurso".
 
 ## 11. Eventos para BI
 
@@ -355,9 +368,9 @@ Cada evento registra como mínimo: fecha y hora, identificador del asesor, ident
 | **Métrica** | **Descripción** |
 | --- | --- |
 | **Queries dentro de vistas** | De 443 a 0. Se mide automáticamente con la regla de linter de RNF-01. Es la métrica que define el éxito arquitectónico del proyecto. |
-| **Archivos que importan el SDK de Supabase fuera de infraestructura** | De 152 a 0. |
+| **Archivos que hablan con la red fuera de infraestructura** | De 152 (línea base del sistema actual) a 0. |
 | **Duplicación entre experiencias web y móvil** | De 2 implementaciones de Mi Día a 1. Se mide como número de componentes de terreno con equivalente duplicado. |
-| **Pruebas ejecutables sin Supabase** | Porcentaje de la suite de dominio y casos de uso que corre sin red. Meta: 100 %. |
+| **Pruebas ejecutables sin backend** | Porcentaje de la suite de dominio y casos de uso que corre sin el servicio .NET levantado. Meta: 100 %. |
 | **Paridad funcional al corte** | Porcentaje de funcionalidades de terreno del sistema actual con equivalente verificado. Meta: 100 % antes del corte. |
 | **Operaciones perdidas por falta de señal** | Meta: 0 en las pruebas de corte de red y en el primer mes de producción. |
 | **Tiempo de apertura de Mi Día** | Línea base a medir sobre el sistema actual antes de empezar; meta según RNF-06. |
@@ -375,23 +388,25 @@ Cada evento registra como mínimo: fecha y hora, identificador del asesor, ident
 | **Meses sin entrega visible** | El corte único implica construir toda la Fase 1 antes de que un asesor la use. El proyecto pierde retroalimentación temprana y el riesgo de haber entendido mal algo se descubre tarde. **Mitigación:** validaciones periódicas con asesores reales sobre versiones internas, sin esperar al corte. |
 | **Pérdida de reglas de negocio no documentadas** | Hay reglas que hoy solo existen dentro de un `useEffect` y que nadie recuerda haber decidido (el aviso de visita en curso ligado al usuario real por "Ver como" es un ejemplo). Reescribir sin encontrarlas produce regresiones sutiles. **Mitigación:** extracción sistemática de reglas del código actual como paso previo, con registro en el dominio y prueba unitaria por cada una. |
 | **Doble acceso temporal que se vuelve permanente** | El asesor usando dos sistemas es aceptable por un tiempo acotado; si la Fase 2 se retrasa, se normaliza y el proyecto pierde su razón de ser. **Mitigación:** el doble acceso se declara con fecha de vencimiento y su cierre es criterio de aceptación de la Fase 2. |
-| **Convivencia sobre la misma base de datos** | Dos aplicaciones escribiendo las mismas tablas puede producir estados inconsistentes si una asume una invariante que la otra no respeta. **Mitigación:** las invariantes críticas se garantizan en la base (restricciones, RPC), no solo en la aplicación; y todo cambio de esquema es aditivo (RNF-19). |
+| **Dependencia de un backend que hay que construir en paralelo** | El frontend no puede avanzar más allá del dominio y los casos de uso si los endpoints no existen. Es el riesgo que **reemplaza** al de la convivencia sobre una misma base, y es de calendario, no de corrección. **Mitigación:** los contratos de los puertos se fijan primero y el frontend se desarrolla contra dobles de prueba (RNF-03), de modo que el orden de construcción no bloquee; y los endpoints se priorizan siguiendo el orden de las fases del plan. |
 | **Sobreingeniería** | El propio requerimiento advierte del riesgo: construir capas, interfaces y providers que no resuelven ningún problema real. Una arquitectura sobredimensionada para siete módulos es tan dañina como la actual. **Mitigación:** cada abstracción debe declarar en su ADR qué problema concreto resuelve; sin razón válida, no se agrega. |
 | **Deriva del alcance hacia Fase 2** | Las visitas son a salas y las tareas nacen de salas; la frontera entre "leer salas" y "gestionar salas" es delgada y tiende a moverse. **Mitigación:** la Fase 1 accede a los catálogos de referencia solo en lectura (RF-24); cualquier capacidad de gestión es Fase 2 por definición. |
 | **Dependencia de una sola persona** | El conocimiento del sistema actual está concentrado. Si esa persona no está disponible durante la extracción de reglas, el proyecto se detiene. **Mitigación:** el análisis técnico en curso y la documentación de reglas en el dominio reducen la dependencia. |
-| **La clave anónima expuesta con RLS incompleta** | Se conserva el acceso directo desde el cliente. Si una política RLS de las 26 tablas de Fase 1 está mal escrita, el dato queda accesible a cualquiera con la clave pública. **Mitigación:** auditoría de RLS tabla por tabla como criterio de aceptación, apoyada en las pruebas de política ya existentes en el repositorio actual. |
-| **Roles distintos del AF con capacidad `midia`** | Diez roles tienen hoy la capacidad `midia`. Si alguno de ellos usa Mi Día en producción, el corte los afecta sin haberlo planeado. **Mitigación:** verificar el uso real antes de definir el alcance del corte (§14). |
+| **Autorización reconstruida desde cero en el servicio** | Lo que garantizaban ~150 políticas RLS pasa a ser código de servidor. Una regla mal traducida es un hueco de seguridad, y a diferencia de RLS no hay una prueba que lo detecte: **el repo de la API no tiene proyectos de test**. **Mitigación:** las políticas del sistema actual se leen tabla por tabla como especificación antes de escribir cada endpoint; cada regla resultante se documenta en `Services/GarantiMax/doc/`; y la revisión de esas reglas es criterio de aceptación, no una tarea opcional. |
+| **Roles distintos del AF que hoy usan Mi Día** | Diez roles tienen hoy la capacidad `midia` en el sistema actual. Si alguno la usa en producción, el corte los afecta sin haberlo planeado. **Mitigación:** verificar el uso real antes de definir el alcance del corte (§14). |
+| **Los catálogos de referencia hay que poblarlos** | Sin migración de datos, la base nueva arranca sin salas, sin vendedores de sala y sin clientes — y una visita es siempre a una sala. El asesor no puede trabajar con catálogos vacíos. **Mitigación:** definir el mecanismo de carga inicial y de actualización de los catálogos antes de construir el módulo de visitas; es pregunta abierta de §14. |
 
 ### Supuestos
 
 | **Supuesto** | **Descripción** |
 | --- | --- |
-| Continuidad de stack | Se conserva React + TypeScript y Supabase. La abstracción existe para permitir un cambio futuro, no para ejecutarlo en este proyecto. |
-| Esquema de datos estable | El esquema en producción se conserva. Los cambios durante Fase 1 son aditivos y compatibles con el sistema actual. |
+| Continuidad del stack de frontend | Se conserva React + TypeScript. El backend **sí** cambia: pasa a .NET (ADR-011). |
+| La API .NET absorbe el backend | El monorepo `gp_3.0_siga_api` admite un servicio más con su propia base, y su autenticación ya resuelta (`Services/Authentication`) cubre las necesidades de identidad de la Fase 1. |
+| Base de datos nueva y vacía | La base del servicio GarantiMAX arranca sin datos. El histórico de terreno del sistema actual no se conserva — decisión del responsable. |
 | El sistema actual sigue operando | Los módulos de otros roles permanecen en producción sin cambios durante toda la Fase 1 y la transición. |
 | Alcance del vendedor | "El vendedor" del requerimiento es el **Asesor Farmer (AF)**, no el vendedor de sala del concesionario. |
 | Disponibilidad de asesores para validar | Habrá asesores reales disponibles para validar versiones internas y participar en el piloto previo al corte. |
-| Las Edge Functions actuales se reutilizan | Las funciones de servidor que la Fase 1 consume (`leer-boleta`, `transcribir-bitacora`, `mejorar-bitacora`, `mejorar-redaccion`, notificaciones) se conservan tal como están; no se reescriben en este proyecto. |
+| Las Edge Functions se reimplementan | Las siete funciones de servidor que la Fase 1 consumía (`leer-boleta`, `transcribir-bitacora`, `mejorar-bitacora`, `mejorar-redaccion`, `notificar` y los dos procesos programados) **se rehacen como endpoints .NET**. Su código actual es la especificación. Es el mayor aumento de alcance de ADR-011. |
 | El análisis técnico en curso alimenta este PRD | El PRD hermano de análisis técnico de GarantiMAX (PJ3896) entrega el inventario detallado y sus hallazgos se incorporarán a este documento cuando estén disponibles. |
 
 ## 14. Preguntas abiertas
@@ -401,12 +416,16 @@ Cada evento registra como mínimo: fecha y hora, identificador del asesor, ident
 | **Alcance del corte** | Diez roles además del AF tienen hoy la capacidad `midia` (GPV, JPV, AS, CC, GO, AO, HC, ON, HD, HI). ¿Cuáles de ellos usan realmente Mi Día en producción, y entran al corte de Fase 1 o permanecen en el sistema actual? |
 | **Alcance del corte** | ¿El corte es simultáneo para todos los asesores o escalonado por país (Chile / Perú / Argentina)? |
 | **Librerías** | El ADR-006 propone React Router (navegación), TanStack Query (datos de servidor) y Zustand acotado (estado de UI transversal). ¿TI las aprueba como decisión cerrada del PRD? |
-| **Repositorio** | ¿La aplicación nueva vive en un repositorio propio, en un workspace dentro del actual, o en una carpeta separada del mismo repositorio? Afecta al despliegue y a la coexistencia en Vercel. |
-| **Despliegue** | ¿Dónde y bajo qué dominio se despliega el sistema nuevo durante el desarrollo y tras el corte? ¿Qué pasa con `www.garantimax.com` el día del corte? |
+| ~~**Repositorio**~~ | **Resuelto (25-08-2026).** Repositorio propio: `garantiplusmexico/siga_alfa` para el frontend. El backend vive en `Services/GarantiMax/` del monorepo `garantiplusmexico/gp_3.0_siga_api` (ADR-011). |
+| **Despliegue** | ¿Dónde y bajo qué dominio se despliega el **frontend** durante el desarrollo y tras el corte? ¿Qué pasa con `www.garantimax.com` el día del corte? El backend sigue el estándar del repo de la API: AWS ECS + Fargate. |
 | **Offline** | ¿Cuál es el tiempo máximo que el asesor debe poder operar sin señal antes de exigir sincronización? Define el tamaño y la caducidad del snapshot. |
-| **Evidencia de visitas** | ¿Las fotos de evidencia deben poder capturarse y encolarse sin señal, igual que las boletas, o requieren conexión? Impacta directamente en el diseño de la cola offline. |
-| **Rol legacy** | ¿Se elimina el tier `CM/GTE/FARMER` en Fase 1 —lo que obliga a tocar el sistema actual— o el nuevo sistema simplemente lo ignora y la eliminación se difiere? |
+| **Evidencia de visitas** | ¿Las fotos de evidencia deben poder capturarse y encolarse sin señal, igual que las boletas, o requieren conexión? Impacta directamente en el diseño de la cola offline. Del lado del servicio hay precedente de almacenamiento en S3 (`Services/Claims/Services/S3Service.cs` y `Common/Storage`), así que el hueco es de contrato, no de tecnología. |
+| ~~**Rol legacy**~~ | **Resuelto por ADR-011.** No se toca el sistema actual: el sistema nuevo tiene identidad y roles propios, y el tier `CM/GTE/FARMER` no se reimplementa. Su eliminación del sistema actual deja de ser asunto de este proyecto. |
+| **Identificador de rol del asesor** | El JWT de la API trae roles como claims, y el identificador es nuevo respecto al sistema actual. ¿Qué roles concretos representan al Asesor Farmer, y quién los da de alta? El frontend necesita el nombre exacto para resolver permisos en un solo punto. |
 | **Datos de referencia** | ¿Qué ocurre si el asesor necesita corregir un dato de un vendedor de sala durante una visita, siendo que la gestión de Salas es Fase 2? |
 | **Métricas** | Falta establecer la línea base medida del tiempo de apertura de Mi Día y de las incidencias por asesor antes de iniciar la construcción. |
-| **Auditoría de RLS** | ¿Quién ejecuta y firma la auditoría de políticas RLS de las 26 tablas de Fase 1, y contra qué criterio? |
+| **Revisión de la autorización del servicio** | Sustituye a la auditoría de RLS, que ya no aplica. ¿Quién revisa y firma que cada endpoint del servicio GarantiMAX garantiza que el asesor solo toca lo suyo, y contra qué criterio? Agravante: el repo de la API **no tiene proyectos de test**. |
+| ~~**Carga inicial de los catálogos**~~ | **Resuelto (26-08-2026).** Para construir y probar se usan **datos de prueba sembrados** en las tablas nuevas; la carga real la hace el responsable cuando tenga el conocimiento de la base vieja. Deja de ser bloqueante para el módulo de visitas. Lo que **sigue abierto** es el mecanismo de **actualización continua** de los catálogos una vez en producción: hoy salas y vendedores se mantienen en el sistema actual, y su gestión es Fase 2. |
+| **Construcción del servicio .NET** | ¿Quién construye `Services/GarantiMax/` y con qué calendario respecto a las fases del plan? El frontend puede avanzar contra dobles de prueba, pero el corte depende de que los endpoints existan. |
+| **Procesos programados** | En Supabase eran dos cron (`visitas-abiertas-cron`, `tareas-atrasadas-cron`). Sobre AWS ECS + Fargate, ¿cómo se programan — tarea programada de ECS, EventBridge, otra cosa? |
 | **Equipo y calendario** | Este PRD no fija fechas ni tamaño de equipo. El plan de desarrollo y su cronograma se elaboran aparte. |

@@ -2,20 +2,22 @@
 
 > Complemento del PRD `manager/PRD.md` (Reconstrucción de GarantiMAX — Fase 1).
 > Cada ADR sigue el formato exigido por el requerimiento: **decisión · problema · alternativas · motivo · consecuencias · costo de cambio futuro**.
-> Versión v0.1 — 25-08-2026. Estado de todos: **propuesto**, pendiente de aprobación de TI.
+> Versión v0.2 — 26-08-2026. Estado por defecto: **propuesto**, pendiente de aprobación de TI.
+> **Cambio de la v0.2:** se abandona Supabase y el backend pasa a un servicio .NET propio (**ADR-011**). Eso supera a ADR-002, ADR-004 y ADR-008, y modifica ADR-005. Los ADR superados **no se borran**: quedan como registro de por qué se decidió lo que se decidió, con enlace a quien los sustituye.
 
 | # | Decisión | Estado |
 | --- | --- | --- |
 | [ADR-001](#adr-001--arquitectura-por-features-con-capas-internas) | Arquitectura por features con capas internas | Propuesto |
-| [ADR-002](#adr-002--se-conserva-supabase-encapsulado-tras-contratos) | Se conserva Supabase, encapsulado tras contratos | Propuesto |
+| [ADR-002](#adr-002--se-conserva-supabase-encapsulado-tras-contratos) | Se conserva Supabase, encapsulado tras contratos | **Superado** → ADR-011 |
 | [ADR-003](#adr-003--repositorios-por-agregado-no-por-tabla) | Repositorios por agregado, no por tabla | Propuesto |
-| [ADR-004](#adr-004--acceso-directo-frontendsupabase-con-lista-cerrada-de-excepciones) | Acceso directo frontend→Supabase con lista cerrada de excepciones | Propuesto |
-| [ADR-005](#adr-005--realtime-contrato-definido-implementación-diferida) | Realtime: contrato definido, implementación diferida | Propuesto |
+| [ADR-004](#adr-004--acceso-directo-frontendsupabase-con-lista-cerrada-de-excepciones) | Acceso directo frontend→Supabase con lista cerrada de excepciones | **Superado** → ADR-011 |
+| [ADR-005](#adr-005--realtime-contrato-definido-implementación-diferida) | Realtime: contrato definido, implementación diferida | Modificado por ADR-011 |
 | [ADR-006](#adr-006--navegación-datos-y-estado-como-tres-responsabilidades-separadas) | Navegación, datos y estado como tres responsabilidades separadas | Propuesto |
 | [ADR-007](#adr-007--layout-adaptativo-en-lugar-de-dos-aplicaciones) | Layout adaptativo en lugar de dos aplicaciones | Propuesto |
-| [ADR-008](#adr-008--autorización-por-capacidades-eliminando-el-tier-legacy) | Autorización por capacidades, eliminando el tier legacy | Propuesto |
+| [ADR-008](#adr-008--autorización-por-capacidades-eliminando-el-tier-legacy) | Autorización por capacidades, eliminando el tier legacy | **Superado** → ADR-011 |
 | [ADR-009](#adr-009--offline-como-decorador-de-repositorio-no-como-rama-en-la-ui) | Offline como decorador de repositorio, no como rama en la UI | Propuesto |
 | [ADR-010](#adr-010--reconstrucción-con-corte-único) | Reconstrucción con corte único | Propuesto |
+| [ADR-011](#adr-011--backend-propio-en-net-se-abandona-supabase) | **Backend propio en .NET: se abandona Supabase** | Propuesto |
 
 ---
 
@@ -39,6 +41,8 @@
 ---
 
 ## ADR-002 — Se conserva Supabase, encapsulado tras contratos
+
+> ⛔ **Superado por [ADR-011](#adr-011--backend-propio-en-net-se-abandona-supabase) el 26-08-2026.** Supabase se abandona; el backend pasa a un servicio .NET propio. Se conserva este registro porque su razonamiento —encapsular para volver reversible una decisión irreversible— es lo que hizo baratos el cambio, y porque la decisión pendiente que él mismo enuncia es la que ADR-011 resuelve.
 
 **Decisión.** Mantener Supabase como proveedor de datos, autenticación y almacenamiento, con su SDK confinado exclusivamente a la capa de infraestructura. El dominio y los casos de uso no conocen su existencia.
 
@@ -78,6 +82,8 @@
 
 ## ADR-004 — Acceso directo frontend→Supabase con lista cerrada de excepciones
 
+> ⛔ **Superado por [ADR-011](#adr-011--backend-propio-en-net-se-abandona-supabase) el 26-08-2026.** Ya no hay acceso directo del frontend a ninguna base: todo pasa por endpoints del servicio .NET. Las cuatro condiciones que aquí obligaban al servidor siguen siendo útiles como criterio de diseño de esos endpoints.
+
 **Decisión.** Conservar el acceso directo desde el cliente a Supabase, protegido por RLS, para lecturas y escrituras del asesor sobre sus propios datos. Definir una **lista cerrada** de operaciones que obligatoriamente pasan por función de servidor. No construir un backend intermedio.
 
 **Problema.** Hoy **todo** va directo con la clave anónima. Eso es correcto para los datos del propio asesor —RLS lo protege— pero deja la pregunta abierta de qué operaciones no deberían ir así, y el requerimiento exige responderla explícitamente.
@@ -96,6 +102,8 @@
 ---
 
 ## ADR-005 — Realtime: contrato definido, implementación diferida
+
+> ✏️ **Modificado por [ADR-011](#adr-011--backend-propio-en-net-se-abandona-supabase) el 26-08-2026.** La decisión de fondo no cambia —Realtime se difiere—, pero el contrato deja de estar modelado sobre `postgres_changes` de Supabase. Queda el puerto; la implementación se decide cuando una funcionalidad la exija.
 
 **Decisión.** Definir el contrato `RealtimeProvider` como decisión arquitectónica documentada, y **no implementarlo en Fase 1**.
 
@@ -165,6 +173,8 @@ Los datos: Realtime aparece en **9 archivos** —War Room, Post-Venta y Call Cen
 
 ## ADR-008 — Autorización por capacidades, eliminando el tier legacy
 
+> ⛔ **Superado por [ADR-011](#adr-011--backend-propio-en-net-se-abandona-supabase) el 26-08-2026.** La matriz `roles × capacidades` vivía en la base de Supabase. La autorización pasa a resolverse con los roles que el JWT de la API ya emite. Lo que **sí** sobrevive intacto es el principio: el tier legacy `CM/GTE/FARMER` no se reimplementa, y la resolución de permisos ocurre una sola vez en un punto central, no dispersa en las vistas.
+
 **Decisión.** El sistema nuevo resuelve permisos **exclusivamente** contra la matriz `roles × capacidades`. El tier `CM/GTE/FARMER` se ignora por completo. La resolución ocurre una vez, en un punto central, y la UI recibe una decisión ya tomada.
 
 **Problema.** Conviven dos sistemas. El actual —13 roles reales en `usuarios.rol_principal`, roles funcionales en `usuario_roles`, capacidades en `rol_capacidades`— y el anterior de tres niveles, que el propio código documenta como *"plumbing para módulos legacy"*. El resultado es que `App.tsx` contiene expresiones como `usuario.rol === 'CM' || ve('postventa', false)`: dos sistemas decidiendo lo mismo, con fallbacks que nadie puede razonar completos.
@@ -225,3 +235,33 @@ Los datos: Realtime aparece en **9 archivos** —War Room, Post-Venta y Call Cen
 El doble acceso temporal a Facturación, Salas y Cobertura se declara **con fecha de vencimiento**, y su cierre es criterio de aceptación de la Fase 2 — para que la convivencia no se normalice.
 
 **Costo de cambio futuro.** Alto una vez ejecutado el corte: volver atrás significa la reversión de emergencia, no un cambio de estrategia. Por eso el procedimiento de reversión se prueba antes, no se improvisa después. Antes del corte la decisión sí es reversible: si durante la construcción aparece evidencia de que el riesgo es inasumible, todavía se puede pasar a un corte escalonado por país o por grupo de asesores.
+
+---
+
+## ADR-011 — Backend propio en .NET: se abandona Supabase
+
+**Decisión.** Sustituir Supabase por un **servicio .NET dedicado** dentro del monorepo `garantiplusmexico/gp_3.0_siga_api` (`Services/GarantiMax/`), con **base de datos PostgreSQL propia** y `DbContext` propio del servicio. El frontend no habla con ninguna base de datos: consume endpoints REST autenticados con el JWT que ya emite `Services/Authentication`. Supera a **ADR-002** (conservar Supabase), **ADR-004** (acceso directo frontend→base) y **ADR-008** (matriz `roles × capacidades`); modifica **ADR-005** (Realtime).
+
+**Problema.** ADR-002 dejó la puerta abierta con estas palabras: *"hay una decisión pendiente sobre migrar al estándar corporativo .NET 8 que este proyecto no puede ni debe resolver"*. La decisión se tomó fuera del proyecto. Existe ya una API .NET 8 con autenticación, roles y JWT resueltos, y es el estándar corporativo. Sostener Supabase significaría mantener un segundo backend, una segunda autenticación y un segundo modelo de permisos para un solo actor.
+
+**Alternativas consideradas.**
+- **Conservar Supabase en Fase 1 y migrar después.** Es ADR-002. Se descarta porque el corte único ya obliga a construir el núcleo completo antes de que un asesor lo use: pagar esa construcción dos veces —primero contra Supabase, luego contra .NET— no compra retroalimentación ni reduce riesgo.
+- **Servicio .NET reutilizando el `garantiplus_dbContext` existente.** Descartada: `DataAccess` está congelado desde enero de 2025 (*"se dejará de agregar lógica a este repositorio"*), y mezclaría el dominio de terreno del asesor con el core de SIGA.
+- **Servicio .NET con base y contexto propios** (elegido).
+
+**Motivo.** La arquitectura ya estaba construida para esto: el cambio se paga **solo en `infrastructure/`**, porque el dominio, los casos de uso y los puertos no se tocan. Es exactamente la propiedad que ADR-002 compró, y es la primera vez que se cobra. Tres ganancias que no eran objetivo del proyecto y llegan de regalo: (1) desaparece el riesgo de seguridad principal —clave anónima pública con RLS como única defensa sobre 128 tablas—, porque la autorización pasa a ser de servidor; (2) desaparece la convivencia de dos aplicaciones escribiendo la misma base, y con ella el riesgo de invariantes divergentes; (3) el frontend deja de tener un SDK de proveedor que confinar.
+
+**Consecuencias.**
+
+1. **Borrón y cuenta nueva de datos.** No hay migración: la base nueva arranca vacía. Decisión del responsable, tomada con conocimiento de que el histórico de terreno del sistema actual no se conserva.
+2. **Las 7 Edge Functions dejan de ser activos reutilizables y pasan a ser especificaciones.** `leer-boleta` (lectura de la imagen de la boleta con IA), `transcribir-bitacora`, `mejorar-bitacora`, `mejorar-redaccion`, `notificar` y los dos procesos programados (`visitas-abiertas-cron`, `tareas-atrasadas-cron`) se reimplementan como endpoints .NET. **Es el mayor aumento de alcance del cambio**: el PLAN las daba por reutilizadas *"tal como están"*.
+3. **Las ~150 políticas RLS de Fase 1 dejan de existir como mecanismo y sobreviven como requisito.** La autorización se implementa en el servicio y se documenta en `Services/GarantiMax/doc/`, siguiendo la convención de un documento por pregunta del repo de la API.
+4. **La autorización se resuelve con los roles del JWT.** Desaparece la matriz `roles × capacidades` (ADR-008): el token ya trae los roles como claims (`ClaimTypes.Role`) y el frontend consume una decisión ya tomada. El identificador de rol es nuevo; el frontend se ajusta a él.
+5. **Realtime queda sin implementación y sin contrato acoplado a un proveedor** (modifica ADR-005): el puerto existe, la implementación se decide cuando alguna funcionalidad la exija. Fase 1 no la necesita.
+6. **El país es un dato del modelo desde el día uno.** La primera entrega opera **solo Chile**, pero las tablas llevan país. El sistema viejo tenía Chile implícito —moneda `CLP` por defecto, RUT en gastos y vendedores— y esa deuda no se hereda.
+7. **El modelo relacional se rehace, no se transcribe.** El esquema vivo del sistema actual degradó sus claves porque no podía migrar datos: `asesor_id text` comentado como *"uuid en texto"*, `sala_key text` sin FK, y en `agenda_eventos` un `visita_id` comentado como *"vínculo blando (visitas usa otro esquema de id)"*. Sin datos que conservar, el modelo .NET nace con claves de un solo tipo y FKs reales. Trampas del esquema viejo: A3 §3.
+8. **Se pierde lo que Supabase daba gratis y hay que construirlo**: almacenamiento de archivos (evidencia de visita y boletas, hoy en buckets privados), y la sincronización de la cola offline, que ya no drena contra un SDK sino contra endpoints propios. **ADR-009 no cambia**: offline como decorador de repositorio sigue siendo la implementación correcta.
+9. **El despliegue del backend pasa a AWS ECS + Fargate**, el estándar del repo de la API, con `Dockerfile` por servicio y configuración por entorno en `Infrastructure/{local,qa,prod}/`. Esto alinea el proyecto con `rules/infraestructura.md`, del que A1 §13 declaraba una desviación.
+10. **No hay proyectos de test en el repo de la API.** Las pruebas del dominio y de los casos de uso siguen viviendo en `siga_alfa` y siguen corriendo sin backend, tal como exige el objetivo del PRD. La verificación del servicio .NET es un hueco que hay que cerrar aparte, y no lo cubre este proyecto.
+
+**Costo de cambio futuro.** Bajo hacia adelante: el frontend ya está detrás de puertos y el servicio .NET es un microservicio más en un monorepo que ya tiene seis. Alto hacia atrás: volver a Supabase exigiría reconstruir la autorización como RLS y volver a portar los endpoints. No se contempla.

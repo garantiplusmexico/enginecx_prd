@@ -2,7 +2,11 @@
 
 > Complemento del PRD `manager/PRD.md` (Reconstrucción de GarantiMAX — Fase 1).
 > Levantamiento factual sobre el repositorio `garantiplus-dashboard`, rama de trabajo local, **25-08-2026**.
-> Versión v0.1. Este anexo se actualizará con los hallazgos del PRD hermano de análisis técnico (PJ3896) cuando esté disponible.
+> Versión v0.2 — 26-08-2026. Este anexo se actualizará con los hallazgos del PRD hermano de análisis técnico (PJ3896) cuando esté disponible.
+
+> ### ⚠️ Cómo leer este anexo tras ADR-011
+>
+> Este documento describe el **sistema actual** y sigue siendo válido en todo lo que mide. Lo que cambió es su **función**: ya no es el inventario de lo que se conserva, sino la **especificación de las reglas que hay que reimplementar** en el servicio .NET. La v0.2 agrega la §3.1 con las trampas del esquema, verificadas contra el código, y corrige tres errores de la v0.1.
 
 ---
 
@@ -78,23 +82,52 @@ Clasificación según el requerimiento: **Fase 1** (núcleo de terreno del aseso
 
 Autenticación y sesión · Resolución de capacidades · Bienvenida y perfil · **Mi Día** · Visitas con check-in, cronómetro, evidencia y cierre · Aviso de visita en curso · Borrador persistente · Lobbies y otros eventos · Tareas, avances, calificación y cierre · Agenda y días hábiles · Saludos de cumpleaños · Bitácora diaria con dictado y mejora de redacción · Gastos, boletas con lectura automática, categorización, asignación y rendiciones · Notificaciones al asesor · Modo offline con cola y sincronización observable · Layout adaptativo.
 
-### Huella de datos — 26 de 128 tablas
+### Huella de datos — 33 de 128 tablas
 
 | Grupo | Tablas |
 | --- | --- |
-| Identidad y permisos | `usuarios`, `roles`, `usuario_roles`, `rol_capacidades`, `usuario_areas`, `asesores`, `areas` |
+| Identidad y permisos | `usuarios`, `roles`, `capacidades`, `usuario_roles`, `rol_capacidades`, `usuario_areas`, `asesores`, `areas` — **corrección v0.2:** faltaba `capacidades`, sin la cual `rol_capacidades` no tiene sentido. Las 6 capacidades sembradas son `facturacion`, `salas`, `midia`, `cobertura`, `unoauno`, `config`. En el sistema nuevo este grupo entero lo sustituyen los roles del JWT (ADR-011) |
 | Terreno | `visitas`, `visitas_abiertas`, `visitas_en_curso`, `lobbies`, `agenda_eventos`, `saludos_cumpleanos`, `feriados` |
 | Tareas y planes | `plan_tareas`, `tarea_avances`, `tarea_comentarios`, `planes_accion`, `proyectos`, `proyecto_operadores` |
 | Bitácora | `bitacoras` |
 | Gastos | `gastos`, `gasto_archivos`, `gasto_asignaciones`, `gasto_categorias`, `rendiciones`, `rendicion_eventos` |
 | Notificaciones | `notificaciones` |
-| Referencia (solo lectura) | `salas`, `sala_vendedores`, `vendedores`, `clientes` |
+| Referencia (solo lectura) | `salas_catalogo`, `salas_asignacion`, `salas_zona`, `salas_geo`, `salas_grupo`, `sala_vendedores`, `vendedores`, `clientes` — **corrección v0.2:** la v0.1 listaba `salas`, que **el código no consulta ni una vez**. Ver §3.1 |
+
+### 3.1 Trampas del esquema actual — leer antes de modelar la base nueva
+
+> Añadido en la v0.2. Verificado sobre las 364 migraciones y contrastado con el uso real en el código del sistema actual. **Quien construya el modelo .NET debe leer esto primero:** el histórico de migraciones miente si se lee de arriba abajo.
+
+**1. Tres tablas centrales fueron destruidas y recreadas con diseño distinto.** `visitas`, `bitacoras` y `sala_vendedores` tienen un `drop table ... cascade` y un segundo `CREATE`. Vale la **segunda** definición más sus `ALTER` posteriores. El caso de `visitas`:
+
+| | v1 (`0001_esquema`) | v2 — la viva (`0043_visitas`) |
+| --- | --- | --- |
+| PK | `id uuid` | `id bigint generated always as identity` |
+| Sala | `sala_id uuid` con FK a `salas` | `sala_key text`, sin FK |
+| Asesor | `asesor_id uuid` con FK a `asesores` | `asesor_id text` |
+| Campos | decálogo, minuta, ánimo | + `termometro`, `acuerdos_previos`, `nuevos_acuerdos`, `decalogo_nota`, `ventas` |
+
+Más `check_in`, `check_out`, `lat`, `lng`, `fotos` (`0063`) y `cliente_uuid` (`0084`). Confirmado por el uso: `sala_key` aparece **270 veces** en el código, `termometro` 29, `cliente_uuid` 23.
+
+**2. La tabla `salas` está abandonada.** El código ejecuta `.from('salas')` **cero veces**. El catálogo real es `salas_catalogo` (PK `sala_key text`), con `salas_asignacion` para saber qué asesor tiene qué sala, más `salas_zona`, `salas_geo` y `salas_grupo`. Hay 15 tablas `salas*` en total y `sala_key` aparece en 87 migraciones: **la identidad de una sala es `sala_key`, no un uuid.**
+
+**3. El vendedor de sala se identifica por nombre.** `sala_vendedores` v2 usa `vendedor text` con el comentario *"nombre del vendedor (identidad SIGA)"*. De ahí que existan las funciones `vendedor_por_nombre` y `vendedor_inactivo_por_nombre`.
+
+**4. Las claves están degradadas de forma sistemática.** No es un descuido aislado: `asesor_id text` comentado como *"uuid en texto; texto flexible"* en `visitas`, `lobbies`, `plan_tareas` y `saludos_cumpleanos`; `sala_key text` sin FK en todas ellas; y en `agenda_eventos` un `visita_id bigint` comentado como *"vínculo blando (visitas usa otro esquema de id)"*. La causa es no haber podido migrar datos. **Sin datos que conservar, esta deuda no se hereda:** el modelo nuevo lleva claves de un solo tipo y FKs reales.
+
+**5. El orden de aplicación no es reconstruible solo por nombre.** Hay **15 números de migración duplicados** entre 364. Y no existe ningún dump consolidado del esquema en el repositorio.
+
+**6. Chile está implícito.** `gastos.moneda` tiene `default 'CLP'`, y hay `rut_proveedor` en gastos y `rut` en vendedores sin contexto de país. El modelo nuevo lleva el país explícito desde el día uno, aunque la primera entrega opere solo Chile.
+
+**Lo bueno.** El DDL es SQL plano y **bien comentado con la intención de negocio** —`campos_dudosos text[]` viene con *"Campos donde la IA dudó (confianza < 0.8) → se resaltan en el editor"*—, no hay tipos ni dominios propios, los estados son `text` con `CHECK (... in (...))` que se traducen directo a enums, y el acoplamiento a Supabase Auth es casi nulo: **2** referencias a `auth.users` en 364 migraciones y **cero** `default auth.uid()`.
+
+---
 
 ### Edge Functions que consume — 6 de 46
 
 `leer-boleta` · `transcribir-bitacora` · `mejorar-bitacora` · `mejorar-redaccion` · `notificar` · y los procesos programados `tareas-atrasadas-cron` y `visitas-abiertas-cron`.
 
-Se **reutilizan tal como están**: no se reescriben en este proyecto.
+**Corrección v0.2 (ADR-011): ya no se reutilizan.** Supabase se abandona, así que estas siete piezas hay que **rehacerlas como endpoints .NET**. Su código actual es la especificación, y `leer-boleta` —que lleva IA dentro— es la más cara. Es el mayor aumento de alcance del cambio de backend.
 
 ### Dependencias con módulos fuera de alcance
 
@@ -154,7 +187,7 @@ No hay jerarquía de errores. Los fallos de Supabase llegan a la UI con su forma
 
 ### 4.10 Riesgos de seguridad a verificar
 
-- **La clave anónima es pública por diseño y RLS es la única defensa.** Una política mal escrita en cualquiera de las 128 tablas expone el dato. El repositorio ya contiene una prueba (`rlsLaxa.test.ts`) que detecta políticas demasiado permisivas — señal de que el riesgo se conoce, pero exige auditoría formal para las 26 tablas de Fase 1.
+- **La clave anónima es pública por diseño y RLS es la única defensa.** Una política mal escrita en cualquiera de las 128 tablas expone el dato. El repositorio ya contiene una prueba (`rlsLaxa.test.ts`) que detecta políticas demasiado permisivas — señal de que el riesgo se conoce. **Este riesgo desaparece en el sistema nuevo** (ADR-011: no hay clave pública en el navegador), pero se convierte en otro: las ~150 reglas que RLS garantizaba hay que reescribirlas como código de servidor, y el repo de la API no tiene proyectos de test.
 - **El modo demo se implementa como guard del cliente** (`demoGuard.ts` envolviendo el cliente de Supabase). Es una protección de frontend: debe estar respaldada por RLS, no depender de ella.
 - **"Ver como" (impersonación)** cruza la frontera de identidad y hoy se maneja con guards distribuidos por la UI, con comentarios en el código que documentan incidencias ya ocurridas. Necesita ser una regla de dominio, no una defensa dispersa.
 - **Inyección de prompt** ya está contemplada (`promptInjeccion.test.ts`), lo que confirma que las funciones de IA reciben texto del usuario. Debe conservarse y extenderse a la bitácora y a la lectura de boletas.
@@ -166,11 +199,11 @@ No hay jerarquía de errores. Los fallos de Supabase llegan a la UI con su forma
 
 | Categoría | Contenido |
 | --- | --- |
-| **Se conserva sin tocar** | Esquema de base de datos (128 tablas, 364 migraciones) · Políticas RLS (se auditan, no se reescriben) · Las 46 Edge Functions · Los datos en producción · Sentry · El despliegue del sistema actual |
+| **Se conserva sin tocar** | Todo el sistema actual: esquema (128 tablas, 364 migraciones), políticas RLS, las 46 Edge Functions, los datos y su despliegue. **Se conserva porque no se toca, no porque se reutilice** — el sistema nuevo tiene su propia base y sus propios endpoints (ADR-011). Del stack solo continúa Sentry. |
 | **Se reimplementa** | La capa de aplicación de los 7 módulos de Fase 1, extrayendo reglas del código actual sin copiarlo |
 | **Se rediseña** | Navegación · Acceso a datos · Experiencia web/móvil · Detección de PWA · Manejo de errores · Soporte offline · Resolución de permisos |
 | **Se elimina** | Tier legacy · Carpetas vacías `farmer/` y `bitacora/` · `MiDiaMovilPreview` y `?midia` · `if (isPWA)` distribuido · Las 443 queries en vistas · Drenaje de cola desde `App.tsx` |
-| **No se migra** | Ningún dato. Ambos sistemas operan sobre la misma base. |
+| **No se migra** | Ningún dato, y ya no por compartir base sino porque **la base nueva arranca vacía**: borrón y cuenta nueva. Consecuencia que hay que resolver: los catálogos de referencia (salas, vendedores de sala, clientes) hay que **poblarlos**, porque una visita es siempre a una sala. |
 
 ---
 

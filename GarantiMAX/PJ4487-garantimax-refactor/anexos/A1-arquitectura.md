@@ -10,7 +10,9 @@
 
 Una sola frase gobierna todas las decisiones de este anexo:
 
-> **Las dependencias apuntan hacia adentro.** La presentación conoce los casos de uso; los casos de uso conocen el dominio y los contratos; solo la infraestructura conoce Supabase.
+> **Las dependencias apuntan hacia adentro.** La presentación conoce los casos de uso; los casos de uso conocen el dominio y los contratos; solo la infraestructura conoce el backend.
+
+> ⚠️ **Corregido el 26-08-2026 por [ADR-011](A2-adrs.md#adr-011--backend-propio-en-net-se-abandona-supabase).** El backend deja de ser Supabase y pasa a un servicio .NET propio con base de datos propia. **La arquitectura de este anexo no cambia** — es la que hace que el cambio se pague solo en `infrastructure/`. Lo que cambia son los nombres de las implementaciones, la §9 (Realtime), la §13 (lock-in) y la §14 (migración). Donde el texto describe el **sistema actual** sigue siendo válido: es el punto de partida.
 
 Y una sola prueba la verifica: si borrar la carpeta de infraestructura rompe la compilación del dominio, el diseño está mal.
 
@@ -42,7 +44,7 @@ flowchart TD
     PR["Providers"]
   end
   subgraph I["Infraestructura (adaptadores)"]
-    SB["Implementaciones Supabase"]
+    SB["Implementaciones contra la API"]
     LC["Almacenamiento local / cola offline"]
     MN["Monitoreo"]
   end
@@ -51,16 +53,16 @@ flowchart TD
   A --> D
   A --> C
   C -.-> I
-  I --> EXT[("Supabase · Storage · Edge Functions · Sentry · IndexedDB")]
+  I --> EXT[("Servicio .NET GarantiMax · S3 · Sentry · IndexedDB")]
 ```
 
 | Capa | Responsabilidad | Prohibiciones |
 | --- | --- | --- |
-| **Presentación** | Renderizar, capturar interacción, componer, y sostener estado **estrictamente de UI** (qué modal está abierto, qué pestaña está activa, texto de un campo antes de enviarlo). | No consulta datos. No importa el SDK de Supabase. No contiene reglas de negocio. No conoce en qué tabla vive nada. |
+| **Presentación** | Renderizar, capturar interacción, componer, y sostener estado **estrictamente de UI** (qué modal está abierto, qué pestaña está activa, texto de un campo antes de enviarlo). | No consulta datos. No importa el cliente HTTP. No contiene reglas de negocio. No conoce en qué tabla ni en qué endpoint vive nada. |
 | **Aplicación** | Coordinar una operación completa del usuario: orquestar dominio y repositorios, decidir si algo se ejecuta o se encola, y traducir fallos de infraestructura a errores tipificados. | No renderiza. No sabe de React. No conoce el proveedor de datos. |
-| **Dominio** | Entidades, reglas, invariantes y transiciones de estado. Es la única fuente de verdad del negocio. | No conoce React, ni Supabase, ni la red, ni el almacenamiento. Sin dependencias externas: TypeScript puro. |
+| **Dominio** | Entidades, reglas, invariantes y transiciones de estado. Es la única fuente de verdad del negocio. | No conoce React, ni la API, ni la red, ni el almacenamiento. Sin dependencias externas: TypeScript puro. |
 | **Contratos** | Interfaces que el dominio y la aplicación necesitan del mundo exterior. | No contienen implementación. |
-| **Infraestructura** | Implementar los contratos contra proveedores reales. Es el **único** lugar donde aparece `supabase`. | No contiene reglas de negocio. No decide flujo. |
+| **Infraestructura** | Implementar los contratos contra proveedores reales. Es el **único** lugar donde aparece el cliente HTTP. | No contiene reglas de negocio. No decide flujo. |
 
 ### El caso de la regla que hoy vive en la UI
 
@@ -72,7 +74,7 @@ En el diseño nuevo se reparte así:
 - **Aplicación** — el caso de uso `DescartarVisitaEnCurso`, que verifica identidad efectiva vs. real, borra las tres capas (servidor, borrador local, marca de visita abierta) en orden y devuelve un resultado tipificado.
 - **Presentación** — un aviso que muestra el estado y ofrece dos acciones.
 
-Y una prueba unitaria, sin Supabase, que verifica que un usuario impersonado no puede descartar.
+Y una prueba unitaria, sin backend, que verifica que un usuario impersonado no puede descartar.
 
 ---
 
@@ -93,7 +95,7 @@ src/
 │  └─ App.tsx                 # Sin lógica: monta providers y router
 │
 ├─ domain/                    # Dominio compartido entre features. TypeScript puro.
-│  ├─ identidad/              # Usuario, Rol, Capacidad, reglas de autorización
+│  ├─ identidad/              # Usuario, Rol, reglas de autorización
 │  ├─ agenda/                 # Evento, día hábil, feriado
 │  └─ shared/                 # Objetos de valor comunes (Dinero, RangoFechas, Ubicacion)
 │
@@ -102,13 +104,13 @@ src/
 │  │  ├─ domain/              # Visita, EstadoVisita, invariantes, transiciones
 │  │  ├─ application/         # IniciarVisita, CerrarVisita, DescartarVisitaEnCurso…
 │  │  ├─ ports/               # VisitaRepository (interfaz)
-│  │  ├─ infrastructure/      # SupabaseVisitaRepository, VisitaRepositoryOffline
+│  │  ├─ infrastructure/      # ApiVisitaRepository, VisitaRepositoryOffline
 │  │  └─ ui/                  # Pantallas, componentes y hooks de UI del feature
 │  ├─ tareas/                 # misma estructura
 │  ├─ agenda/
 │  ├─ bitacora/
 │  ├─ gastos/
-│  ├─ identidad/              # Sesión, perfil, capacidades
+│  ├─ identidad/              # Sesión, perfil, roles
 │  └─ referencia/             # Catálogos de solo lectura: salas, vendedores, clientes
 │
 ├─ shared/
@@ -119,9 +121,9 @@ src/
 │  └─ observability/          # Contrato de monitoreo y su implementación
 │
 ├─ infrastructure/            # Infraestructura transversal, no de un feature
-│  ├─ supabase/               # Cliente, mapeadores, manejo de errores del proveedor
-│  ├─ auth/                   # SupabaseAuthProvider
-│  ├─ storage/                # SupabaseStorageProvider
+│  ├─ api/                    # Cliente HTTP, mapeadores, manejo de errores de la API
+│  ├─ auth/                   # ApiAuthProvider
+│  ├─ storage/                # ApiStorageProvider
 │  ├─ realtime/               # (contrato definido; sin implementación en Fase 1)
 │  └─ local/                  # IndexedDBLocalStore
 │
@@ -153,7 +155,7 @@ El sistema actual las confunde en una sola: `useState` dentro de `App.tsx`. Se s
 | Responsabilidad | Herramienta propuesta | Por qué |
 | --- | --- | --- |
 | **Navegación** | **React Router** | Hoy no hay rutas: la navegación es `useState<Tab>`, sin URL, sin historial, sin enlaces compartibles y sin carga bajo demanda real por pantalla. Es el estándar del ecosistema y no impone estructura al resto. |
-| **Datos de servidor** | **TanStack Query** | Resuelve exactamente el problema que hoy se repite 926 veces a mano: caché, deduplicación, invalidación, reintentos, estado de carga y error, y refetch al recuperar el foco. Se consume **desde los hooks de UI, invocando casos de uso** — nunca llamando a Supabase directamente. |
+| **Datos de servidor** | **TanStack Query** | Resuelve exactamente el problema que hoy se repite 926 veces a mano: caché, deduplicación, invalidación, reintentos, estado de carga y error, y refetch al recuperar el foco. Se consume **desde los hooks de UI, invocando casos de uso** — nunca llamando al cliente HTTP directamente. |
 | **Estado de UI transversal** | **Zustand**, solo donde haga falta | Para lo poco que debe ser global y no es dato de servidor: estado de la cola de sincronización, aviso de visita en curso, preferencias de vista. Se usa **solo cuando el estado cruza ramas del árbol**; para lo local, `useState` basta. |
 | **Estado de UI local** | `useState` / `useReducer` | Modales, campos, pestañas. No sale del componente. |
 
@@ -177,7 +179,7 @@ Los de Fase 1, por feature:
 
 | Feature | Casos de uso |
 | --- | --- |
-| **Identidad** | `IniciarSesion`, `CerrarSesion`, `ResolverSesionActual`, `ResolverCapacidades`, `MarcarBienvenidaVista` |
+| **Identidad** | `IniciarSesion`, `CerrarSesion`, `ResolverSesionActual`, `ResolverPermisos`, `MarcarBienvenidaVista` |
 | **Mi Día** | `ObtenerMiDia`, `SincronizarMiDia` |
 | **Visitas** | `IniciarVisita`, `GuardarBorradorVisita`, `CerrarVisita`, `DescartarVisitaEnCurso`, `ObtenerVisitaEnCurso`, `RegistrarLobby`, `RegistrarOtroEvento`, `ObtenerHistorialDeSala` |
 | **Tareas** | `CrearTarea`, `RegistrarAvance`, `CompletarTarea`, `CalificarTarea`, `ListarMisTareas` |
@@ -196,7 +198,7 @@ Los casos de uso de aprobación de rendición existen en el catálogo porque el 
 
 | Entidad | Invariantes y transiciones |
 | --- | --- |
-| **Usuario / Asesor** | Un usuario tiene un rol principal y cero o más roles funcionales. Sus capacidades son la unión de las capacidades de todos sus roles. Un usuario sin perfil no puede operar. |
+| **Usuario / Asesor** | Un usuario tiene uno o más roles, que llegan en el token de la API. Sus permisos son los de sus roles, resueltos **una sola vez** al abrir sesión. Un usuario sin perfil no puede operar. |
 | **Visita** | `planificada → en_curso → cerrada` \| `descartada`. Un asesor tiene como máximo **una** visita en curso. Una visita en curso exige sala, hora de inicio y ubicación. No se cierra sin el registro de lo observado. |
 | **Lobby / Otro evento** | Comparte el ciclo de la visita pero sin exigir sala. |
 | **Tarea** | `abierta → en_progreso → completada` \| `cancelada`. Una tarea completada admite calificación. Los avances son inmutables una vez registrados. |
@@ -219,11 +221,11 @@ Un repositorio por **agregado del dominio**, no por tabla. `VisitaRepository` pu
 ```
 features/visitas/ports/VisitaRepository.ts        ← interfaz, sin implementación
 features/visitas/infrastructure/
-  ├─ SupabaseVisitaRepository.ts                  ← implementación actual
+  ├─ ApiVisitaRepository.ts                       ← implementación actual
   └─ VisitaRepositoryOffline.ts                   ← decorador: encola si no hay señal
 ```
 
-Repositorios de Fase 1: `UsuarioRepository`, `CapacidadRepository`, `VisitaRepository`, `TareaRepository`, `AgendaRepository`, `BitacoraRepository`, `GastoRepository`, `RendicionRepository`, `NotificacionRepository`, `ReferenciaRepository`.
+Repositorios de Fase 1: `UsuarioRepository`, `VisitaRepository`, `TareaRepository`, `AgendaRepository`, `BitacoraRepository`, `GastoRepository`, `RendicionRepository`, `NotificacionRepository`, `ReferenciaRepository`.
 
 **Reglas:**
 
@@ -232,7 +234,7 @@ Repositorios de Fase 1: `UsuarioRepository`, `CapacidadRepository`, `VisitaRepos
 3. Los errores del proveedor se traducen a errores de infraestructura tipificados antes de salir.
 4. El soporte offline es un **decorador** sobre el repositorio, no una rama `if (online)` dentro de él.
 
-**Lo que NO se abstrae, y por qué.** No se define un contrato para las Edge Functions específicas del producto (`leer-boleta`, `mejorar-bitacora`): son lógica propia, no un proveedor sustituible. Se invocan desde infraestructura, pero sin interfaz intermedia — una abstracción ahí no resolvería ningún problema real.
+**Lo que NO se abstrae, y por qué.** No se define un contrato para los endpoints de lógica propia del producto (lectura de boleta, mejora de redacción): son negocio nuestro, no un proveedor sustituible. Se invocan desde infraestructura, pero sin interfaz intermedia — una abstracción ahí no resolvería ningún problema real.
 
 ---
 
@@ -240,8 +242,8 @@ Repositorios de Fase 1: `UsuarioRepository`, `CapacidadRepository`, `VisitaRepos
 
 | Contrato | Implementación Fase 1 | Justificación de la abstracción |
 | --- | --- | --- |
-| `AuthProvider` | `SupabaseAuthProvider` | Auth es la dependencia más entrelazada con Supabase y la más probable de cambiar si se migra al estándar corporativo. |
-| `StorageProvider` | `SupabaseStorageProvider` | Evidencia y boletas. Sustituir por almacenamiento propio o S3 es un escenario real ya contemplado. |
+| `AuthProvider` | `ApiAuthProvider` | Habla con `Services/Authentication`, que ya existe. El token es lo único que el frontend persiste. |
+| `StorageProvider` | `ApiStorageProvider` | Evidencia y boletas, contra el endpoint de archivos del servicio (S3 por detrás). |
 | `LocalStore` | `IndexedDBLocalStore` | El almacenamiento local hoy es una implementación a mano (`idbStore.ts`). Abstraerlo permite probar la cola offline sin navegador. |
 | `MonitoringProvider` | `SentryMonitoringProvider` | Evita que el SDK de monitoreo se esparza por el código, como ya ocurre con `reportarError`. |
 | `RealtimeProvider` | **Ninguna en Fase 1** | Contrato definido, implementación diferida. Ver §9. |
@@ -285,7 +287,7 @@ Jerarquía tipificada, con traducción en un solo sentido — de adentro hacia a
 
 **Reglas:**
 
-1. La infraestructura **traduce**: ningún error de Supabase cruza hacia la aplicación con su forma original.
+1. La infraestructura **traduce**: ningún error HTTP —ni un 401, ni un 500, ni una caída de red— cruza hacia la aplicación con su forma original.
 2. La aplicación **decide**: un `NetworkError` en una operación encolable no es un error para el usuario, es un encolamiento.
 3. La presentación **muestra**: nunca inspecciona códigos de proveedor para decidir qué decir.
 4. Ningún mensaje al usuario contiene nombres de tabla, SQL, rutas internas ni datos de otros usuarios.
@@ -310,7 +312,7 @@ Jerarquía tipificada, con traducción en un solo sentido — de adentro hacia a
 
 ## 12. Estrategia de pruebas
 
-| Nivel | Qué cubre | Con qué | Sin Supabase |
+| Nivel | Qué cubre | Con qué | Sin backend |
 | --- | --- | --- | --- |
 | **Dominio** | Invariantes y transiciones de estado. Toda regla identificada tiene su prueba. | Vitest | Sí — no hay nada que simular |
 | **Casos de uso** | Orquestación, decisión de encolar, traducción de errores | Vitest + repositorios falsos en memoria | Sí |
@@ -321,7 +323,7 @@ Jerarquía tipificada, con traducción en un solo sentido — de adentro hacia a
 
 **Flujos críticos con pruebas E2E obligatorias (RNF-05):**
 
-1. Inicio de sesión y resolución de capacidades.
+1. Inicio de sesión y resolución de permisos.
 2. Visita completa: check-in → captura → evidencia → cierre.
 3. Visita en curso: intento de abrir una segunda y descarte de la primera.
 4. Boleta sin señal: captura offline → reconexión → sincronización sin duplicado.
@@ -335,19 +337,21 @@ Jerarquía tipificada, con traducción en un solo sentido — de adentro hacia a
 
 ## 13. Matriz de proveedores y vendor lock-in
 
-| Capacidad | Proveedor actual | Abstracción propuesta | Riesgo de lock-in hoy | Impacto de reemplazo tras la reconstrucción |
+> **Esta matriz se cobró.** Se escribió para dimensionar una salida *hipotética* de Supabase. La salida ocurrió (ADR-011), y sus predicciones se pueden contrastar con lo que realmente costó: acertó en que el dominio y los casos de uso no se tocan, en que la autorización es la parte cara, y en que las funciones de servidor eran la dependencia más difícil de romper. La tabla queda reescrita con el proveedor nuevo.
+
+| Capacidad | Proveedor actual | Abstracción | Riesgo de lock-in hoy | Impacto de un reemplazo futuro |
 | --- | --- | --- | --- | --- |
-| **Base de datos** | Supabase Postgres + RLS | Repositorios por agregado | **Alto** — 926 llamadas en 152 archivos, 443 dentro de vistas | **Medio.** Reescribir 10 implementaciones de repositorio. El dominio y los casos de uso no se tocan. La autorización sí: RLS no es portable y habría que reconstruirla en la nueva plataforma. |
-| **Autenticación** | Supabase Auth | `AuthProvider` | **Medio** — concentrado, pero acoplado a la sesión del cliente de datos | **Bajo.** Una implementación nueva. La migración de credenciales de usuarios es el costo real, no el código. |
-| **Almacenamiento de archivos** | Supabase Storage | `StorageProvider` | **Bajo** — pocos puntos de uso | **Bajo.** Una implementación nueva más la migración de los archivos existentes. |
-| **Realtime** | Supabase Realtime | `RealtimeProvider` (contrato, sin implementación en Fase 1) | **Bajo** — 9 archivos, ninguno en Fase 1 | **Bajo.** No hay nada que reemplazar en Fase 1. Para War Room, Post-Venta y Call Center se implementaría contra el contrato. |
-| **Funciones de servidor** | Supabase Edge Functions (46) | Sin abstracción intermedia (decisión deliberada) | **Alto** — lógica de producto atada al entorno de ejecución del proveedor | **Alto.** Es la dependencia más cara de romper: hay que portar el código, no solo cambiar un adaptador. Fase 1 consume 6 de las 46. |
+| **Base de datos** | PostgreSQL propio, tras el servicio .NET | Repositorios por agregado | **Bajo** — el frontend no conoce tablas | **Bajo.** El frontend ya no depende del motor; cambiarlo es asunto del servicio. |
+| **Autenticación** | `Services/Authentication` (JWT) | `AuthProvider` | **Bajo** — una implementación, un token | **Bajo.** Una implementación nueva. |
+| **Almacenamiento de archivos** | Endpoint del servicio, S3 por detrás | `StorageProvider` | **Bajo** — pocos puntos de uso | **Bajo.** Una implementación nueva. |
+| **Realtime** | Ninguno | `RealtimeProvider` (puerto, sin implementación) | **Ninguno** — no se usa en Fase 1 | **Bajo.** No hay nada que reemplazar. Para War Room, Post-Venta y Call Center se implementaría contra el puerto. |
+| **Funciones de servidor** | Endpoints del propio servicio | Sin abstracción intermedia (decisión deliberada) | **Ninguno** — el código es nuestro y corre en nuestra infraestructura | **N/A.** Este era el lock-in principal y desapareció: la lógica ya no vive en el entorno de un proveedor. |
 | **Hospedaje** | Vercel | Ninguna | **Bajo** — es una SPA estática con reescrituras | **Bajo.** |
 | **Monitoreo de errores** | Sentry | `MonitoringProvider` | **Bajo** | **Bajo.** |
 | **Almacenamiento local** | IndexedDB (implementación propia) | `LocalStore` | **Bajo** — API estándar del navegador | **Bajo.** La abstracción existe para poder probar, no para cambiar de proveedor. |
-| **IA (lectura de boletas, redacción)** | Anthropic / Groq, dentro de Edge Functions | Ninguna desde el cliente — el cliente solo invoca la función | **Bajo desde el cliente**, medio dentro de las funciones | **Bajo para la aplicación.** El cambio ocurre dentro de la Edge Function. |
+| **IA (lectura de boletas, redacción)** | Anthropic / Groq, dentro de los endpoints del servicio | Ninguna desde el cliente — el cliente solo invoca el endpoint | **Bajo desde el cliente**, medio dentro del servicio | **Bajo para la aplicación.** El cambio ocurre dentro del endpoint. |
 
-**Dependencia crítica identificada:** las **Edge Functions**. Son el punto donde el producto tiene lógica propia corriendo dentro del entorno del proveedor. Ninguna abstracción del lado del cliente lo resuelve: si algún día hay que salir de Supabase, ese código hay que portarlo. Este PRD no lo aborda —Fase 1 consume solo 6 de las 46 y las reutiliza tal cual— pero lo deja explícitamente señalado como el mayor costo de una salida futura.
+**Dependencia crítica identificada, y cobrada.** La v0.1 de este anexo señaló las **Edge Functions** como el mayor costo de una salida futura: lógica propia corriendo en el entorno del proveedor, que ninguna abstracción del cliente protege. Fue exactamente así. Rehacer las siete que la Fase 1 consumía es el mayor aumento de alcance de ADR-011. Las 39 restantes pertenecen a módulos de otros roles, siguen corriendo en Supabase, y cada fase posterior tendrá que portar las suyas.
 
 ---
 
@@ -355,13 +359,13 @@ Jerarquía tipificada, con traducción en un solo sentido — de adentro hacia a
 
 | Categoría | Qué |
 | --- | --- |
-| **Se conserva** | El esquema de base de datos completo. Las 6 Edge Functions que consume la Fase 1. Las políticas RLS (auditadas, no reescritas). Los datos: no hay migración. |
+| **Se conserva** | Nada de la infraestructura anterior. El esquema, las funciones y las políticas RLS del sistema actual se conservan como **documentación de las reglas** —es la mejor fuente que existe— no como código. Los datos no se migran: la base nueva arranca vacía. |
 | **Se reimplementa** | Toda la capa de aplicación de los siete módulos de Fase 1: Mi Día, visitas, lobbies, tareas, agenda, saludos, bitácora y gastos. Sin copiar código: se extraen las reglas y se reconstruye. |
 | **Se rediseña** | La navegación (de `useState<Tab>` a rutas). El acceso a datos (de query en vista a repositorio). La experiencia web/móvil (de dos apps a layout adaptativo). La detección de PWA (de distribuida a centralizada). El manejo de errores (de improvisado a tipificado). El soporte offline (de parche distribuido a decisión del caso de uso). |
 | **Se elimina — deuda que NO se traslada** | El tier legacy `CM/GTE/FARMER`. Las carpetas vacías `farmer/` y `bitacora/`. `MiDiaMovilPreview` y el parámetro `?midia`. El `if (isPWA)` distribuido. `IncentivosView` incrustado dentro de `SalasView` (se resuelve en Fase 2). Las 443 queries en vistas. El drenaje de cola offline desde `App.tsx`. |
 | **Datos a migrar** | **Ninguno.** Ambos sistemas operan sobre la misma base. |
-| **Integraciones que se mantienen** | Supabase (datos, auth, storage, funciones), Sentry, y las Edge Functions de IA y notificaciones. |
-| **Qué se simplifica** | La resolución de permisos: un solo sistema de capacidades, sin tier paralelo. La entrada a la aplicación: una sola, adaptativa. El acceso a datos: un patrón, no 152 variantes. |
+| **Integraciones que se mantienen** | Sentry. Los proveedores de IA se conservan, movidos a endpoints del servicio propio. |
+| **Qué se simplifica** | La resolución de permisos: los roles del token, sin tier paralelo y sin matriz propia. La entrada a la aplicación: una sola, adaptativa. El acceso a datos: un patrón, no 152 variantes. La seguridad: desaparece la clave pública en el navegador. |
 
 ### Riesgos de migración
 
@@ -376,12 +380,12 @@ Jerarquía tipificada, con traducción en un solo sentido — de adentro hacia a
 
 **Arquitectónicos** — verificables automáticamente:
 
-1. Cero archivos de presentación importan el SDK de Supabase o ejecutan `.from()` / `.rpc()`. Regla de linter que falla la compilación.
-2. Cero archivos fuera de `infrastructure/` importan el SDK de Supabase.
+1. Cero archivos de presentación importan el cliente HTTP o llaman a `fetch`. Regla de linter que falla la compilación.
+2. Cero archivos fuera de `infrastructure/api/` hablan con la red.
 3. El dominio compila sin ninguna dependencia externa.
 4. Ningún feature importa la `ui/` o la `infrastructure/` de otro feature.
 5. Ningún componente accede a `matchMedia` ni a `navigator.standalone`.
-6. Las pruebas de dominio y casos de uso corren sin red ni instancia de Supabase.
+6. Las pruebas de dominio y casos de uso corren sin red ni servicio levantado.
 
 **Funcionales:**
 
@@ -392,7 +396,7 @@ Jerarquía tipificada, con traducción en un solo sentido — de adentro hacia a
 
 **Operativos:**
 
-11. Auditoría de políticas RLS de las 26 tablas de Fase 1, firmada por TI.
+11. Revisión de las reglas de autorización de los endpoints de Fase 1, firmada por TI, con las políticas RLS del sistema actual como especificación.
 12. Procedimiento de reversión documentado y probado en un ensayo real.
 13. Piloto con un grupo reducido de asesores completado, con sus hallazgos resueltos o aceptados explícitamente.
 
@@ -405,5 +409,5 @@ Jerarquía tipificada, con traducción en un solo sentido — de adentro hacia a
 - **Facturación entra en dos piezas.** La consulta del asesor (Fase 2) y los importadores de Excel de CM/GTE (Fase 3 o posterior): son responsabilidades distintas que hoy comparten módulo.
 - **Realtime entra con War Room.** Es el primer consumidor real. Ahí se implementa el contrato, y ahí se decide si Post-Venta y Call Center comparten implementación o necesitan otra.
 - **Eliminar el tier legacy cuando el sistema actual se apague.** Mientras conviva, quitarlo obliga a tocar código fuera de alcance.
-- **Las Edge Functions merecen su propio análisis.** 46 funciones con lógica de producto dentro del entorno del proveedor son la dependencia más cara de una salida futura. Dimensionarlas no es urgente, pero sí necesario antes de cualquier decisión de plataforma.
+- **Las 39 Edge Functions restantes merecen su propio análisis.** La Fase 1 rehace las 7 que consumía; las demás pertenecen a módulos de otros roles y siguen corriendo en Supabase. Cada fase posterior tendrá que portar las suyas, y dimensionarlas es un proyecto propio.
 - **No adelantar dominios.** `customers`, `contracts`, `documents` y `notifications` aparecen en el requerimiento como ejemplos de organización, no como encargo. Se crean cuando llegue el módulo que los necesite.

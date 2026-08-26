@@ -1,7 +1,8 @@
 # Plan de Desarrollo — Reclamación de Incentivos (MVP Fase 1)
 
 > Generado por Claude Code a partir del PRD v0.3.
-> Actualizado el 26 de agosto de 2026: Fase 1 reordenada y tareas renumeradas.
+> Actualizado el 26 de agosto de 2026: Fase 1 reordenada, tareas renumeradas y
+> Fase 5 agregada para la identidad visual.
 > Este documento es el punto de partida para la ejecución. El programador lo valida y refina antes de ejecutar.
 
 | Campo | Detalle |
@@ -266,25 +267,69 @@ AWS Athena (consola Autocom)                    Documentos de HMM
   - Nuevas entradas de catálogo, correcciones de homologación y ajustes de reglas que salgan de la sesión
   - Criterio: se recorre el periodo de nuevo y el porcentaje de conformidad sube de forma explicable
 
-### Fase 5 — Operación continua (P2, posterior al piloto)
+### Fase 5 — Identidad visual (P1)
 
-- [ ] **T-29** — Notas de crédito (RF-10, RF-16, RF-17, RF-18) — **bloqueada**
+> **Agregada el 26 de agosto de 2026.** El plan original tenía una Fase 3
+> llamada "Presentación al negocio", pero estaba escrita en términos de *qué*
+> mostrar, no de *cómo se ve*. Al recorrer el MVP terminado quedó claro que la
+> interfaz austera dificulta navegarlo, y que eso pesa doble en una demo con la
+> dirección comercial. Se incorpora como fase propia en lugar de disolverla en
+> ajustes sueltos.
+
+- [x] **T-34** — Importar el design system de Engine CX — **COMPLETADA**
+  - Proyecto `Engine CX Design System` leído desde Claude Design
+  - Tokens de color, tipografía y radios traducidos a `src/app/globals.css`
+  - Las siete reglas de marca quedan asentadas en el propio archivo, para que
+    quien edite después sepa qué no puede romper
+  - Criterio: los tokens del producto salen del design system, no de valores sueltos
+
+- [x] **T-35** — Armazón de aplicación — **COMPLETADA**
+  - Barra lateral oscura con el lockup familiar en blanco (regla 1), navegación
+    por secciones y franja del degradado oficial (regla 2)
+  - Barra superior con identidad y rol de la sesión
+  - Criterio: la sección activa se marca sola; el logo no se deforma
+
+- [x] **T-36** — Biblioteca de componentes — **COMPLETADA**
+  - Encabezado con icono, tarjeta con acciones, botón en píldora, etiqueta de
+    estatus, aviso, métrica y tabla
+  - Las reglas de marca se cumplen dentro del componente para que las pantallas
+    no tengan que acordarse
+  - Criterio: ninguna pantalla define estilos de marca por su cuenta
+
+- [x] **T-37** — Rediseño de las cinco pantallas — **COMPLETADA**
+  - Periodos, detalle del periodo, resultados, oferta vigente y homologación
+  - Criterio: la aplicación se navega sin explicación previa
+
+- [ ] **T-38** — Autohospedar Avenir Next
+  - Es la tipografía de web y aplicaciones del design system, pero es licenciada
+    y no se sirve desde un CDN público. Hoy se declara primero y el sistema
+    resuelve al fallback si no está instalada
+  - Los archivos viven en `assets/fonts/` del design system
+  - Criterio: la tipografía se ve igual en cualquier máquina
+
+- [ ] **T-39** — Filtros por columna en las tablas
+  - El ejemplo de referencia los tiene y con volumen real hacen falta
+  - Criterio: se puede filtrar por VIN, factura y modelo sin salir de la tabla
+
+### Fase 6 — Operación continua (P2, posterior al piloto)
+
+- [ ] **T-40** — Notas de crédito (RF-10, RF-16, RF-17, RF-18) — **bloqueada**
   - Depende de ubicar dónde viven las NC en Athena; el bloque 5 del guion de exploración es la vía
   - Criterio: cruce bidireccional NC ↔ incentivo por VIN con verificación de IVA
 
-- [ ] **T-30** — Ingesta programada con `pg_cron`
+- [ ] **T-41** — Ingesta programada con `pg_cron`
   - Sustituye la sincronización manual una vez probada
   - Criterio: corrida diaria con alerta ante fallo, retraso o volumen anómalo
 
-- [ ] **T-31** — Alertas ancladas al calendario de la marca (RF-34, RF-26)
+- [ ] **T-42** — Alertas ancladas al calendario de la marca (RF-34, RF-26)
   - Avisos derivados de las fechas de HMM, más notificación por correo
   - Criterio: la plataforma avisa antes del cierre de registro de VINs
 
-- [ ] **T-32** — Ciclo de vida de la discrepancia y escalamiento (RF-21, RF-22, RF-23)
+- [ ] **T-43** — Ciclo de vida de la discrepancia y escalamiento (RF-21, RF-22, RF-23)
   - Estatus, responsable, re-validación con cierre verificado y escalamiento por antigüedad
   - Criterio: una discrepancia corregida en Quiter se cierra sola en la corrida siguiente
 
-- [ ] **T-33** — Incentivos por regla porcentual (RF-06)
+- [ ] **T-44** — Incentivos por regla porcentual (RF-06)
   - Comunidad coreana al 5% sobre precio de lista
   - Criterio: el importe esperado se calcula y se valida como cualquier otro incentivo
 
@@ -425,13 +470,13 @@ AWS Athena (consola Autocom)                    Documentos de HMM
 | **Fase 2 — Motor de validación (P1)** | Neteo, homologación, panel de excepciones, validación de importe, barrido y duplicidad | T-15 a T-20 | 6 – 9 días | 225 |
 | **Fase 3 — Presentación al negocio (P1)** | Conformidad, diferencias con comentarios, vista consolidada, exportación, bitácora | T-21 a T-25 | 5 – 7 días | 226 |
 | **Fase 4 — Piloto de julio 2026 (P1)** | Corrida completa, sesión con la dirección comercial, ajustes | T-26 a T-28 | 2 – 4 días | 227 |
-| **Fase 5 — Operación continua (P2)** | Notas de crédito, ingesta programada, alertas por calendario, ciclo de discrepancia, incentivos por regla | T-29 a T-33 | 7 – 11 días | 228 |
-| **Total proyecto (P1+P2)** | | 33 tareas | ~31 – 47 días hábiles (≈ 6 – 9.5 semanas) | — |
-| **Solo P1 (MVP del piloto)** | Fases 0 a 4 | T-01 a T-28 | ~24 – 36 días hábiles (≈ 5 – 7 semanas) | — |
+| **Fase 5 — Operación continua (P2)** | Notas de crédito, ingesta programada, alertas por calendario, ciclo de discrepancia, incentivos por regla | T-40 a T-44 | 7 – 11 días | 228 |
+| **Total proyecto (P1+P2)** | | 39 tareas | ~34 – 52 días hábiles (≈ 7 – 10.5 semanas) | — |
+| **Solo P1 (MVP del piloto)** | Fases 0 a 5 | T-01 a T-28 y T-34 a T-39 | ~27 – 41 días hábiles (≈ 5.5 – 8 semanas) | — |
 
 > **Notas sobre la tabla:**
 > - El guardarraíl no es "Fase 0 + Fase 1" como en la plantilla estándar, porque el compromiso adquirido es un MVP presentable a la dirección comercial. Ese mínimo abarca las Fases 0 a 4.
-> - La Fase 5 es explícitamente posterior al piloto: su contenido puede cambiar según la retroalimentación recibida, y T-29 está bloqueada por una dependencia externa.
+> - La Fase 6 es explícitamente posterior al piloto: su contenido puede cambiar según la retroalimentación recibida, y T-40 está bloqueada por una dependencia externa.
 > - Los rangos suponen un desarrollador. Las Fases 2 y 3 son paralelizables entre sí una vez cerrada la Fase 1.
 
 > **Riesgo de deadline.** El PRD no fija fecha límite —la deja a este ejercicio de planeación—, pero el calendario de HMM sí impone fechas reales. Contra el 25 de agosto de 2026:

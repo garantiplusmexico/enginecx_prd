@@ -14,7 +14,7 @@
 | Responsable | Aldo Álvarez |
 | Folio PRD | PJ6082 |
 | Fecha de generación | 25 de agosto de 2026 |
-| Estado | En ejecución — Fase 0 |
+| Estado | En ejecución — Fases 0 a 3 y 5 cerradas; Fase 4 bloqueada |
 | ID plan (BD) | 64 |
 | Modelo | claude-opus-5 — esfuerzo: alto |
 
@@ -106,24 +106,24 @@ AWS Athena (consola Autocom)                    Documentos de HMM
 
 ### Fase 0 — Cimientos (P1)
 
-- [ ] **T-01** — Crear repositorio, ramas y documentación base
+- [x] **T-01** — Crear repositorio, ramas y documentación base — **COMPLETADA 26-ago-2026**
   - Crear `garantiplusmexico/reclamacion-incentivos` (privado) y `aldoalvarez-engine/reclamacion-incentivos` (backup)
   - Ramas obligatorias por `rules/version-control.md`: `main`, `develop`, `pre-qa`, `qa`
   - Remotos: `origin` → garantiplusmexico, `backup` → cuenta personal
   - Ejecutar `/init` para generar `CLAUDE.md`
   - Criterio: `git push origin develop` y `git push backup develop` funcionan; `CLAUDE.md` existe
 
-- [ ] **T-02** — Andamiaje de Next.js sobre Cloudflare Workers
+- [x] **T-02** — Andamiaje de Next.js sobre Cloudflare Workers — **COMPLETADA 26-ago-2026**
   - `create-next-app` con App Router y TypeScript; adaptador `@opennextjs/cloudflare`; `wrangler.toml`
   - Despliegue de una página mínima a una liga de Cloudflare
   - Criterio: la liga responde en producción con el despliegue automatizado desde `develop`
 
-- [ ] **T-03** — Proyecto Supabase y esquema inicial
+- [x] **T-03** — Proyecto Supabase y esquema inicial — **COMPLETADA 26-ago-2026**
   - Crear proyecto; configurar migraciones versionadas en el repositorio
   - Tablas de arranque: `periodo`, `corrida_ingesta`, `bitacora`
   - Criterio: `supabase db push` aplica el esquema desde cero en un proyecto limpio
 
-- [ ] **T-04** — Control de acceso de doble capa
+- [x] **T-04** — Control de acceso de doble capa — **COMPLETADA 26-ago-2026**
   - Cloudflare Zero Trust delante de la liga, con política de acceso por correo
   - Supabase Auth dentro de la aplicación, con roles `admin`, `catalogo`, `operacion`, `consulta` (RNF-03)
   - RLS activo en todas las tablas de negocio
@@ -139,52 +139,52 @@ AWS Athena (consola Autocom)                    Documentos de HMM
 
 > **Reordenada en v0.3.** El orden sigue el recorrido del usuario: primero existe la oferta contra la cual auditar, después se traen las transacciones. La ingesta pasó del inicio al final de la fase.
 
-- [ ] **T-06** — Modelo de datos completo
+- [x] **T-06** — Modelo de datos completo — **COMPLETADA 26-ago-2026**
   - `periodo`, `documento_oferta`, `catalogo_incentivo`, `venta`, `linea_incentivo`, `homologacion_version`, `resultado_validacion`, `comentario`, `alerta_duplicidad`, `corrida_ingesta`, `bitacora`
   - Llaves naturales que permitan reprocesar sin duplicar (RNF-06): `referencia` para la venta, `(periodo, modelo, version, variante)` para el catálogo
   - `periodo` gobierna todo y guarda su estado: documentos cargados, catálogo aprobado, última sincronización, última validación (RF-39)
   - Criterio: las migraciones aplican limpio y los índices cubren las consultas del tablero
 
-- [ ] **T-07** — Selección del periodo y su estado (RF-39, F30)
+- [x] **T-07** — Selección del periodo y su estado (RF-39, F30) — **COMPLETADA 26-ago-2026**
   - Selector de mes que gobierna catálogo, ventas y alcance del motor; periodo definido por **fecha de factura**, del día 1 al último
   - Cada periodo muestra qué le falta para poder cerrarse
   - Criterio: se crea el periodo de julio 2026 y su estado refleja que no tiene documentos ni catálogo
 
-- [ ] **T-08** — Carga de documentos de oferta comercial (RF-01)
+- [x] **T-08** — Carga de documentos de oferta comercial (RF-01) — **COMPLETADA 26-ago-2026**
   - Subida de boletín, anexo, actualizaciones y documentos de programas a Supabase Storage privado
   - Asociación a periodo y tipo de documento; el original se conserva íntegro como evidencia
   - Criterio: el boletín y el anexo de julio 2026 quedan cargados y descargables desde la aplicación
 
-- [ ] **T-09** — Parser determinista del anexo (RF-35)
+- [x] **T-09** — Parser determinista del anexo (RF-35) — **COMPLETADA 26-ago-2026**
   - Extracción estructurada de las dos tablas, con arrastre del modelo en celdas combinadas
   - Verificación de consistencia: `round(aportación_con_IVA / 1.16) = aportación_sin_IVA`, tolerancia ±1 peso
   - Si falla en cualquier renglón, el documento se marca para revisión y no se aprueba solo
   - Criterio: las 54 filas del anexo de julio 2026 se extraen completas y pasan la verificación
 
-- [ ] **T-10** — Interpretación del cuerpo del boletín con IA (RF-02)
+- [x] **T-10** — Interpretación del cuerpo del boletín con IA (RF-02) — **COMPLETADA 26-ago-2026**
   - OpenAI sobre el texto del boletín: bonos aditivos fuera de tabla, destinos permitidos del bono, programas vigentes de boletines anteriores y calendario de reclamo
   - Salida estructurada y marcada como propuesta, nunca aplicada sola (RNF-05)
   - Criterio: del SA-40-26 se obtienen el bono N Line de $5,000, los tres programas referenciados y las seis fechas del calendario
 
-- [ ] **T-11** — Revisión y aprobación del catálogo (RF-04)
+- [x] **T-11** — Revisión y aprobación del catálogo (RF-04) — **COMPLETADA 26-ago-2026**
   - Pantalla que muestra lo extraído campo por campo, permite corregir y exige aprobación explícita
   - El catálogo aprobado queda versionado por vigencia; una actualización sucede a la anterior sin borrarla (RF-05)
   - Criterio: el catálogo de julio 2026 queda vigente y auditable, con registro de quién lo aprobó
 
-- [ ] **T-12** — Consulta de la oferta comercial vigente (RF-36, F29)
+- [x] **T-12** — Consulta de la oferta comercial vigente (RF-36, F29) — **COMPLETADA 26-ago-2026**
   - Apartado permanente, navegable por periodo, con el vigente por omisión
   - Por modelo y versión: bono flexible, reparto marca/dealer, ambas variantes del anexo con y sin IVA, enlace al documento original y fecha de aprobación
   - Cuando el periodo tenga actualizaciones, señalar qué cambió y desde cuándo
   - Criterio: se consulta la oferta de julio 2026 sin abrir el PDF, y los importes coinciden con el anexo
 
-- [ ] **T-13** — Ingesta desde Athena (RF-09, RF-38)
+- [x] **T-13** — Ingesta desde Athena (RF-09, RF-38) — **COMPLETADA 26-ago-2026**
   - Edge Function que consulta la vista con **refresco completo del histórico**, no incremental: el spike probó que acotar a un mes ahorra 19%, no 97%
   - `ClientRequestToken` derivado del periodo y la corrida, no aleatorio, para que los reintentos no dupliquen consultas
   - Asíncrona en tres pasos: lanzar y persistir el `QueryExecutionId`, sondear, materializar
   - Upsert idempotente por `referencia`; registro de cada corrida con volumen, duración y resultado (RNF-08)
   - Criterio: dos corridas seguidas dejan el mismo número de filas
 
-- [ ] **T-14** — Sincronización desde la interfaz (RF-37, RF-38)
+- [x] **T-14** — Sincronización desde la interfaz (RF-37, RF-38) — **COMPLETADA 26-ago-2026**
   - Botón "Sincronizar" con avance visible; se permite en cualquier momento, con o sin catálogo aprobado
   - **La validación queda bloqueada** mientras el periodo no tenga catálogo aprobado, indicando qué falta
   - Historial de corridas y aviso visible del último corte (RNF-07)
@@ -195,71 +195,71 @@ AWS Athena (consola Autocom)                    Documentos de HMM
 
 > Las tareas de esta fase se implementan como **módulos puros de TypeScript**, sin acceso a red ni a base de datos, con pruebas unitarias sobre casos reales extraídos del histórico. Es la parte portable del sistema.
 
-- [ ] **T-15** — Neteo de cancelaciones y refacturación (RF-31)
+- [x] **T-15** — Neteo de cancelaciones y refacturación (RF-31) — **COMPLETADA 26-ago-2026**
   - Reconocimiento por `bandera_cancelacion`, importe negativo espejo, `ud = -1` y referencia a la operación original
   - Neteo por unidad antes de validar
   - Criterio: las 16 cancelaciones de julio 2026 no generan discrepancia; caso de prueba con la unidad de tres movimientos que netea a un solo incentivo
 
-- [ ] **T-16** — Homologación automática de modelo y versión (RF-08)
+- [x] **T-16** — Homologación automática de modelo y versión (RF-08) — **COMPLETADA 26-ago-2026**
   - Derivación de modelo y versión del texto único de Quiter; normalización de transmisión (`TA`→`AT`, `TM`→`MT`), colapso de espacios y descarte de sufijos descriptivos
   - Distinción de híbridos y de submodelos (`CRETA` contra `CRETA GRAND`, `GRAND I10 HB` contra `SD`)
   - Criterio: ≥86% de las operaciones de julio 2026 homologadas automáticamente, verificado contra el resultado del prototipo
 
-- [ ] **T-17** — Panel de excepciones de homologación (F28)
+- [x] **T-17** — Panel de excepciones de homologación (F28) — **COMPLETADA 26-ago-2026**
   - Lista de trabajo con el texto original, las versiones candidatas del periodo y selección del usuario
   - Campo de comentarios obligatorio cuando ninguna candidata aplique
   - Cada resolución se persiste y se reutiliza en periodos posteriores
   - Criterio: las 18 operaciones no homologadas de julio 2026 se resuelven desde el panel y no reaparecen al reprocesar
 
-- [ ] **T-18** — Motor de validación de importe (RF-11, RF-12, RF-33)
+- [x] **T-18** — Motor de validación de importe (RF-11, RF-12, RF-33) — **COMPLETADA 26-ago-2026**
   - Búsqueda en el catálogo vigente **a la fecha de factura** por modelo, versión y año
   - Comparación contra la aportación de la marca sin IVA con tolerancia de ±1 peso
   - Toda diferencia se calcula y se guarda también expresada con IVA
   - Discrepancia bidireccional: por arriba y por abajo
   - Criterio: sobre julio 2026 reproduce el resultado del prototipo (56 conformes de 81 evaluables) y las diferencias coinciden con los montos redondos ya identificados
 
-- [ ] **T-19** — Barrido de ventas sin incentivo aplicado (RF-15)
+- [x] **T-19** — Barrido de ventas sin incentivo aplicado (RF-15) — **COMPLETADA 26-ago-2026**
   - Evaluación del total de ventas del periodo, no solo las que traen incentivo
   - Cuantificación del monto de aportación no reclamado por unidad, modelo y agregado
   - Criterio: reproduce las 25 operaciones por $910,550 detectadas en julio 2026
 
-- [ ] **T-20** — Alerta de duplicidad por VIN (RF-32)
+- [x] **T-20** — Alerta de duplicidad por VIN (RF-32) — **COMPLETADA 26-ago-2026**
   - Detección de VINs con más de una venta activa acumulando más de un incentivo
   - Presentación de ambas operaciones lado a lado con la explicación de la sospecha; **sin resolución automática**
   - Criterio: los 9 VINs identificados en el histórico aparecen como alerta con su detalle
 
 ### Fase 3 — Presentación al negocio (P1)
 
-- [ ] **T-21** — Reporte de conformidad (RF-29)
+- [x] **T-21** — Reporte de conformidad (RF-29) — **COMPLETADA 27-ago-2026**
   - Detalle por unidad de lo que sí cuadra, con incentivo esperado, capturado y el documento que lo respalda
   - Criterio: exportable y contrastable contra el detalle de rebates de contabilidad
 
-- [ ] **T-22** — Tablero de diferencias con comentarios (RF-30, RF-33)
+- [x] **T-22** — Tablero de diferencias con comentarios (RF-30, RF-33) — **COMPLETADA 27-ago-2026**
   - Cada caso con diferencia sin IVA y con IVA, agrupable por monto para que los patrones salten a la vista
   - Campo de comentarios libre, atribuible y con sello de tiempo, **sin exigir cierre ni justificación**
   - Los comentarios se exportan en conjunto
   - Criterio: Laura puede comentar los 18 casos de +$25,000 en bloque y el comentario queda trazado
 
-- [ ] **T-23** — Vista consolidada del periodo (RF-25)
+- [x] **T-23** — Vista consolidada del periodo (RF-25) — **COMPLETADA 27-ago-2026**
   - Una sola pantalla con las ventas del periodo, su incentivo, su estatus de validación y su comentario
   - Sustituye funcionalmente la hoja de Google Drive
   - Criterio: cubre las 131 operaciones de julio 2026 sin captura manual
 
-- [ ] **T-24** — Exportación del periodo (RF-24)
+- [x] **T-24** — Exportación del periodo (RF-24) — **COMPLETADA 27-ago-2026**
   - Excel y PDF con el detalle por VIN, el total a recuperar y el listado de pendientes
   - Criterio: el archivo abre en Excel con las columnas del control actual
 
-- [ ] **T-25** — Bitácora de auditoría (RF-27, RNF-04)
+- [x] **T-25** — Bitácora de auditoría (RF-27, RNF-04) — **COMPLETADA 27-ago-2026**
   - Registro inmutable de cargas, aprobaciones, corridas, homologaciones resueltas y comentarios
   - Criterio: toda validación es reconstruible: qué catálogo, qué corrida, qué persona
 
 ### Fase 4 — Piloto de julio 2026 (P1)
 
-- [ ] **T-26** — Corrida completa del periodo
+- [x] **T-26** — Corrida completa del periodo — **COMPLETADA 27-ago-2026**
   - Catálogo de julio 2026 aprobado, periodo sincronizado, validación ejecutada punta a punta
   - Criterio: los cuatro reportes (conformidad, diferencias, excepciones, ventas sin incentivo) cuadran con el prototipo
 
-- [ ] **T-27** — Sesión de retroalimentación con la dirección comercial
+- [ ] **T-27** — Sesión de retroalimentación con la dirección comercial — **BLOQUEADA: falta el correo de Laura Hernández para darla de alta en Cloudflare Access**
   - Presentación a Laura Hernández; captura de comentarios dentro de la propia herramienta
   - Criterio: cada diferencia sin explicar queda comentada por el negocio
 

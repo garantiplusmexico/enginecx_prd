@@ -135,9 +135,9 @@ Más `check_in`, `check_out`, `lat`, `lng`, `fotos` (`0063`) y `cliente_uuid` (`
 | --- | --- | --- |
 | Visitas → **Salas** | Una visita es siempre a una sala | Lectura del catálogo. Sin capacidad de gestión (RF-24). |
 | Saludos → **Vendedores de sala** | El cumpleaños es de un vendedor del concesionario | Lectura del catálogo y de la función `cumpleanos_vendedores`. |
-| Tareas → **Salas / Planes de acción** | Una tarea puede originarse en una sala o en un plan | Se conserva el vínculo como referencia; la gestión de planes es Fase 3. |
+| Tareas → **Salas / Planes de acción** | Una tarea puede originarse en una sala o en un plan | Se conserva el vínculo como referencia; la gestión de planes es Fase 3. ⚠️ **Misma advertencia que rendiciones:** asignar y calificar son del mandante, así que durante la transición el asesor solo verá las tareas que él mismo cree. |
 | Gastos → **Proyectos** | Un gasto puede asignarse a un proyecto | Lectura del catálogo de proyectos. |
-| Rendiciones → **GC / GO / AO** | La aprobación la ejecutan otros roles | En Fase 1 el asesor **observa** el estado de su rendición; la aprobación sigue operándose en el sistema actual. |
+| Rendiciones → **GC / GO / AO** | La aprobación la ejecutan otros roles | ⚠️ **Corregido el 27-08-2026.** Esta fila decía «la aprobación sigue operándose en el sistema actual», y eso solo era cierto compartiendo la base de Supabase. Con bases separadas (ADR-011) una rendición creada en el sistema nuevo es **invisible** para el actual. Decisión: el flujo de aprobación se queda en su fase normal (la del CM) y **no se adelanta**; durante el desarrollo las transiciones se hacen directo en la base. Queda abierto qué pasa entre el corte y esa fase — ver `gastos.md` §6. |
 | Asesor → **Facturación / Cobertura** | El asesor las consulta, pero no son trabajo de terreno | **Doble acceso temporal** al sistema actual hasta la Fase 2. |
 | Todo → **Matriz de capacidades** | Compartida con el sistema actual | Ambos leen la misma matriz; sin divergencia posible. |
 

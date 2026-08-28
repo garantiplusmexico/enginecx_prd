@@ -13,8 +13,8 @@
 | Responsable | Alexis Salvador Herrera Garcia |
 | Folio PRD | `PJ3074` |
 | Fecha de generación | 2026-08-28 |
-| Estado | Validado |
-| ID plan (BD) | `65` |
+| Estado | ✅ Completado (2026-08-28) |
+| ID plan (BD) | `65` — estatus `Finalizado` |
 
 ---
 

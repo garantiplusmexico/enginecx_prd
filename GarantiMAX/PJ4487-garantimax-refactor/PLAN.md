@@ -253,24 +253,28 @@ src/
 
 ### Fase 1 — Núcleo verificable del asesor: identidad, shell, offline, Mi Día y visitas (P1)
 
-- [ ] **T-20** — Dominio de identidad
-  - Archivos a crear/modificar: `src/domain/identidad/*.ts` + pruebas
+- [x] **T-20** — Dominio de identidad
+  - Archivos creados: `src/domain/identity/{User,OperatingIdentity,Access,AdvisorProfile}.ts` + pruebas
   - Criterio de completitud: `Usuario` y `Rol` — ya no `Capacidad` (ADR-011); invariantes «los permisos del usuario son los de sus roles, resueltos una sola vez» y «un usuario sin perfil no puede operar»; regla de identidad efectiva vs. real para "Ver como". Todas con prueba unitaria y **sin backend**
 
-- [ ] **T-21** — Repositorios de identidad y perfil
-  - Archivos a crear/modificar: `src/features/identidad/ports/UsuarioRepository.ts`, `src/features/identidad/infrastructure/ApiUsuarioRepository.ts` + pruebas de mapeo
+- [x] **T-21** — Repositorio del perfil *(uno, no dos: ver corrección abajo)*
+  - Archivos creados: `src/features/identity/ports/ProfileRepository.ts`, `src/features/identity/infrastructure/ApiProfileRepository.ts` + pruebas de mapeo
+  - **Corrección del 28-08:** es **un** repositorio y no dos. El usuario y sus roles no se piden a ningún endpoint —viajan en el token— y el servicio se niega a exponerlos otra vez por el perfil, porque serían dos fuentes para el mismo hecho y solo una está firmada. Un `UserRepository` envolviendo al `AuthProvider` sería una capa que no traduce nada
   - Criterio de completitud: obtienen el perfil del asesor por endpoint y sus roles del JWT; el dominio nunca ve un DTO de transporte; errores HTTP traducidos a las categorías de T-05
 
-- [ ] **T-22** — Casos de uso de sesión
-  - Archivos a crear/modificar: `src/features/identidad/application/{IniciarSesion,CerrarSesion,ResolverSesionActual,ResolverPermisos,MarcarBienvenidaVista}.ts` + pruebas con repositorios falsos
+- [x] **T-22** — Casos de uso de sesión
+  - Archivos creados: `src/features/identity/application/{SignIn,SignOut,ResolveCurrentSession,DismissWelcome,DismissInduction}.ts` + pruebas con repositorios falsos
   - Criterio de completitud: cada uno devuelve resultado tipificado y no lanza excepciones de infraestructura; la resolución de permisos ocurre **una sola vez** a partir del token y se cachea; si el token no trae roles legibles es un error de infraestructura, **nunca** un permiso adivinado. `IniciarSesion` habla con el servicio `Authentication`; el token es lo único que el frontend persiste
 
-- [ ] **T-23** — Interfaz de autenticación
-  - Archivos a crear/modificar: `src/features/identidad/ui/{LoginPage,SinPerfilPage}.tsx` y sus hooks de UI
+- [x] **T-23** — Interfaz de autenticación
+  - Archivos creados: `src/features/identity/ui/{LoginPage,NoProfilePage,SessionUnavailablePage,ProfilePage,SessionProvider}.tsx` y sus hooks
+  - **Dos correcciones del 28-08.** (1) ~~y Google~~: el login de Google quedó fuera de todo alcance por decisión del responsable el 26-08 (identidad.md I-41), así que no hay botón ni librería. (2) ~~se renueva sola~~: **no puede** — `Services/Authentication` emite un `refreshToken` pero no expone ningún endpoint para canjearlo. Con la expiración por defecto (60 minutos) el asesor vuelve a entrar a media jornada, y eso exige señal. Queda como decisión pendiente del responsable
+  - Y una pantalla que el PLAN no preveía: **«no pudimos comprobar tu sesión»**, para cuando el token es bueno y lo que falló fue preguntar por el perfil. Sin ella ese caso se confunde con «no tienes perfil», que es justo el error del sistema actual
   - Criterio de completitud: correo/contraseña y Google funcionando; la sesión persiste entre aperturas y se renueva sola; el caso "cuenta sin perfil" se informa y ofrece cerrar sesión (RF-01)
 
-- [ ] **T-24** — Autorización de rutas por rol
-  - Archivos a crear/modificar: `src/app/routes/guards.tsx`, `src/features/identidad/ui/usePermisos.ts` + pruebas
+- [x] **T-24** — Autorización de rutas por rol
+  - Archivos creados: `src/app/routes/guards.tsx`, `src/features/identity/ui/{usePermissions.ts,sessionDestination.ts}` + pruebas
+  - **La sesión se resolvió como compuerta, no como redirección a `/entrar`:** no tener sesión no es un lugar de la aplicación, es un estado, y redirigir cambia la URL — con eso se pierde a dónde iba el asesor, salvo que alguien se acuerde de guardarla y restaurarla. La métrica del tier legacy es la quinta de `tools/metricas-arquitectura.mjs`, y busca el tier *usado como dato*: nombrarlo en un comentario para explicar por qué ya no está no cuenta como infracción
   - Criterio de completitud: la UI recibe una decisión ya tomada; ningún componente consulta permisos por su cuenta (RF-02); **cero** referencias al tier `CM/GTE/FARMER` en todo el repositorio, verificado en CI
 
 - [ ] **T-25** — Proveedor único de contexto de dispositivo

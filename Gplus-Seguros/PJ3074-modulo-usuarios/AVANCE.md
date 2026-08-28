@@ -13,14 +13,16 @@
 | Modelo / esfuerzo | claude-opus-5 — esfuerzo: alto |
 | Fecha de inicio | 2026-08-28 |
 | Última actualización | 2026-08-28 |
-| Estado general | 🟡 En progreso — 22 de 24 tareas completadas; T-13 y T-24 bloqueadas por despliegue a QA |
+| Fecha de cierre | 2026-08-28 |
+| Estado general | ✅ Completado — 24 de 24 tareas. Cerrado por el responsable el 2026-08-28 |
 
 ---
 
 ## Resumen de estado
 
-**Todo el código está escrito, compilado, linteado y subido.** Backend y frontend quedaron en
-`feature/ModuloUsuarios` en sus respectivos repos.
+**Desarrollo terminado y cerrado.** Todo el código quedó escrito, compilado, linteado, subido e
+integrado: el responsable confirmó el 2026-08-28 que ya hizo los merges de `feature/ModuloUsuarios`
+a las ramas correspondientes en `gp_seguros` y `frontend-omega`.
 
 El plan cubre **dos módulos**: el listado de usuarios (fases 0 a 3) y el listado de empresas
 (fases 4 y 5, agregadas el 2026-08-28 a petición del responsable sobre la misma rama).
@@ -29,10 +31,13 @@ El plan cubre **dos módulos**: el listado de usuarios (fases 0 a 3) y el listad
 `v2.2 → v2.3`; `clientes` `v2.1 → v2.2`; y **el gateway** `v2.1 → v2.2`, éste último sí, porque la
 Fase 4 agregó dos endpoints y con ello cambió `krakend.json`.
 
-**Pendientes: T-13 y T-24**, ambas de validación manual contra QA. No son ejecutables desde aquí:
-requieren el código desplegado (lo que ocurre al hacer push a la rama `qa`, vía el flujo de PRs que
-es responsabilidad del programador) y validación en navegador. Las fases 3 y 5 quedan `Bloqueadas`
-por esa dependencia externa, y el plan sigue `En curso` hasta que se validen.
+**T-13 y T-24 las cerró el responsable.** Ambas eran de validación manual contra QA y no eran
+ejecutables desde Claude Code: requerían el código desplegado y validación en navegador. El
+responsable las dio por terminadas el 2026-08-28 junto con el plan completo; las fases 3 y 5
+pasaron de `Bloqueado` a `Completado` por esa decisión, no por una verificación automatizada.
+
+Durante la ejecución sí se detectó y corrigió un defecto real contra QA, a partir de los logs de
+ECS: el `500` de `/empresas/listado/cnt` al filtrar por aseguradora (commit `caf4f06a`).
 
 **Lo que sí se verificó, y cómo:**
 
@@ -182,10 +187,10 @@ JSON** todos los campos que el listado ya exponía (`id`, `userName`, `nombre`, 
 | **Fase 0 — Contrato de API y validación** | 230 | T-01 a T-02 | 0.5 – 1 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
 | **Fase 1 — Backend `auth`** | 231 | T-03 a T-06 | 1 – 2 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
 | **Fase 2 — Frontend `frontend-omega`** | 232 | T-07 a T-12 | 1.5 – 2.5 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
-| **Fase 3 — Integración y entrega** | 233 | T-13 a T-15 | 1 – 1.5 | 2026-08-28 | | <1 | 1 | 🔴 Bloqueada (T-13) |
+| **Fase 3 — Integración y entrega** | 233 | T-13 a T-15 | 1 – 1.5 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
 | **Fase 4 — Backend: listado de empresas** | 234 | T-16 a T-20 | 1.5 – 2 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
-| **Fase 5 — Frontend: columna de aseguradoras** | 235 | T-21 a T-24 | 1 – 2 | 2026-08-28 | | <1 | 1 | 🔴 Bloqueada (T-24) |
-| **Total proyecto** | — | 24 tareas | ~6.5 – 11 | 2026-08-28 | | <1 | 2 | 🟡 En progreso |
+| **Fase 5 — Frontend: columna de aseguradoras** | 235 | T-21 a T-24 | 1 – 2 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
+| **Total proyecto** | — | 24 tareas | ~6.5 – 11 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
 | **Núcleo mínimo entregable** | — | T-01 a T-08 | ~2 – 3.5 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
 
 > **Nota sobre los días ejecutados:** la ejecución fue asistida por IA y tomó bastante menos de un
@@ -210,7 +215,9 @@ JSON** todos los campos que el listado ya exponía (`id`, `userName`, `nombre`, 
 | T-10 | Convertir Bloqueado en filtro booleano | Claude Code | 2026-08-28 | Pasa de `lockoutEnd` (fecha) a `bloqueado` (bool) |
 | T-11 | *(Opcional)* Columna Activo | Claude Code | 2026-08-28 | **Implementada y luego retirada.** Ver "Decisiones" |
 | T-12 | Lint del frontend | Claude Code | 2026-08-28 | `Usuarios.vue` limpio |
-| T-14 | Verificar que el gateway no requiere cambios | Claude Code | 2026-08-28 | Verificado estáticamente; falta la prueba real contra QA |
+| T-13 | Prueba de integración manual E2E contra QA | Alexis Salvador Herrera Garcia | 2026-08-28 | Cerrada por el responsable |
+| T-14 | Verificar que el gateway no requiere cambios | Claude Code | 2026-08-28 | Verificado estáticamente |
+| T-24 | Filtro select sobre la columna Aseguradoras, y lint | Claude Code / responsable | 2026-08-28 | Lint limpio. El `500` del conteo se detectó en QA y se corrigió (`caf4f06a`); validación final cerrada por el responsable |
 | T-15 | Commits en ambos repos y entrega | Claude Code | 2026-08-28 | Ambas ramas publicadas |
 | T-16 | Crear el DTO de listado de empresas | Claude Code | 2026-08-28 | `empresa_listadoDTO.cs`, con `aseguradoras` como `List<int>` |
 | T-17 | Endpoint de listado y su conteo | Claude Code | 2026-08-28 | `GET /empresas/listado` y `/listado/cnt`; conserva la autorización por rol |
@@ -237,32 +244,8 @@ JSON** todos los campos que el listado ya exponía (`id`, `userName`, `nombre`, 
 
 ## Tareas bloqueadas 🔴
 
-| ID | Tarea | Motivo del bloqueo | Quién debe resolverlo |
-|---|---|---|---|
-| T-13 | Prueba de integración manual E2E contra QA (8 escenarios) | Requiere el código desplegado en QA y validación manual en navegador. El despliegue se dispara al hacer push a la rama `qa`, y los PRs son responsabilidad del programador, no de Claude | Alexis Salvador Herrera Garcia |
-| T-24 | Validar en QA el filtro por aseguradora del listado de empresas | Mismo bloqueo que T-13. El código está completo y linteado, pero el `any()` de OData sobre la colección de ids sólo se puede confirmar contra el servicio corriendo | Alexis Salvador Herrera Garcia |
-
-**Matriz que falta ejecutar (§4, T-13 del plan):**
-
-| Escenario | Verificación |
-|---|---|
-| Filtro por cada columna, uno a uno | Resultados correctos y `/cnt` consistente con el listado |
-| Dos y tres filtros combinados | El backend recibe `filter=… and … and …` y responde coherente |
-| Filtro + cambio de página | El filtro persiste al paginar |
-| Filtro + `$orderby` por Rol | Orden correcto, ascendente y descendente |
-| Botón "limpiar todos los filtros" | Vuelve al listado completo |
-| Navegar a otra pantalla de listado y volver | Sin arrastre de filtros |
-| Usuario sin rol asignado (si existe) | La celda Rol queda vacía, sin romper la fila |
-| Clic en fila → edición | Sigue navegando con el `id` correcto y `Usuario.vue` carga el rol |
-
-**Además, correr en QA el SQL que quedó pendiente de T-02:**
-
-```sql
-SELECT "UserId", count(*) AS roles
-FROM "AspNetUserRoles"
-GROUP BY "UserId"
-HAVING count(*) > 1;
-```
+*(ninguna — T-13 y T-24 estuvieron bloqueadas por la dependencia de QA y las cerró el
+responsable el 2026-08-28 al dar por terminado el desarrollo)*
 
 ---
 
@@ -346,41 +329,47 @@ HAVING count(*) > 1;
 
 ---
 
-## Notas para quien retome el trabajo
+## Cierre
 
-**Por dónde continuar:** desplegar a QA y ejecutar la matriz de T-13 (arriba, en "Tareas
-bloqueadas"). Ese es el único trabajo restante.
+**Desarrollo terminado el 2026-08-28**, por decisión del responsable. Plan `65` (`PJ3074`) en
+estatus `Finalizado` en la base de datos de PM, con sus 6 fases en `Completado`.
 
-**Orden de despliegue — importante.** Backend y frontend deben llegar a QA juntos, o el backend
-primero. Si el frontend sube solo, la columna Rol aparece vacía y el filtro por rol devuelve 400,
-porque el DTO todavía no existe del otro lado.
+El responsable confirmó que ya realizó los merges de `feature/ModuloUsuarios` a las ramas
+correspondientes en `gp_seguros` y `frontend-omega`.
 
-**Ruta de integración** (manual, del programador — Claude no crea PRs):
+### Qué quedó entregado
 
-```
-feature/ModuloUsuarios → pre-qa (merge local, en ambos repos)
-pre-qa → qa (PR; la CI rechaza cualquier PR a qa que no venga de pre-qa)
-```
+| Módulo | Entregable |
+|---|---|
+| Listado de usuarios | Columna Rol y filtro por cada columna (Usuario, Nombre, Rol, Último ingreso, Bloqueado), resueltos con la proyección plana `usuario_listadoDTO` |
+| Listado de empresas | Endpoint nuevo `GET /empresas/listado` que elimina la carga de 9 `Include`, más la columna Aseguradoras con filtro por catálogo |
+| Gateway | Dos rutas nuevas en `krakend.json` (402 → 404 endpoints) |
+| Versionado | frontend `1.1.30`; `auth` `v2.3`; `clientes` `v2.2`; `api_gateway` `v2.2` |
 
-**Contexto clave:** el corazón del cambio es `ConsultaListadoUsuarios()` en
-`UsuariosController.cs`. Aplana el rol para que el filtro, el orden y el conteo puedan operar sobre
-un campo escalar. Si alguien agrega un campo al listado, hay que agregarlo ahí y en
-`usuario_listadoDTO` — el conteo lo hereda solo.
+### Defecto encontrado y corregido durante la ejecución
 
-**Trampa conocida:** el estado de filtros de `operacion-generica` es un singleton global compartido
-entre vistas. El mixin `PlantillaListado` lo limpia en `mounted`, pero es la causa clásica de
-"filtros que se arrastran de otra pantalla" si alguien agrega una vista sin el mixin.
+`GET /empresas/listado/cnt` devolvía `500` al filtrar por aseguradora, mientras el listado con el
+mismo filtro respondía `200`. Diagnosticado con los logs de ECS en QA: `ApplyTo` sin
+`ODataQuerySettings` usa `HandleNullPropagation.Default`, no reconoce a EF Core como origen y
+envuelve el filtro en una guarda de nulos que EF no sabe traducir sobre una colección con `any()`.
+Corregido en `caf4f06a` pasando `HandleNullPropagationOption.False`.
 
-**Deuda detectada, fuera de alcance, no tocada:**
+### Deuda que queda abierta, fuera del alcance de este plan
 
-- `format_fecha` en `Usuarios.vue` devuelve `"Fecha no válida"` cuando `lastAccessDate` es nulo, es
-  decir para todo usuario que nunca ha entrado. Es preexistente y ahora es más visible porque la
-  columna se volvió filtrable. Un `if (!value) return '—'` lo arregla.
-- `continuarFetch` en `Usuarios.vue` despacha a `listUsuarios` → `state.usuarios`, que **ninguna
-  vista lee**. Es código muerto.
-- `GET /Usuarios` no declara política de rate limiting.
-- `UsuariosController.cs` (581 líneas) y `Usuario.vue` (583) exceden el límite de 200 líneas de las
-  guidelines. Deuda preexistente; el plan prohíbe refactorizar sin petición explícita.
+- **`PlantillaListado.fetchData` no protege `responses.data`.** `realizar_consulta` se traga los
+  errores y devuelve `undefined`, así que cualquier `500` en cualquier `/cnt` del sistema aparece
+  como `Cannot read properties of undefined` en consola en vez de un mensaje al usuario. Es un
+  componente compartido por todos los listados; se decidió no tocarlo aquí.
+- **Choque de versión del gateway con `pre-qa`.** Esta entrega dejó el gateway en `v2.2`, pero
+  `pre-qa` ya tenía `v2.3`. Debe resolverse al integrar, o se desplegaría bajo un tag ya usado en
+  ECR y quedaría corriendo la imagen vieja.
+- **El flag `activa` de `aseguradora_empresa` no se filtra.** La columna muestra todas las
+  aseguradoras relacionadas, activas o no. Cambiarlo es una línea: `.Where(a => a.activa == 1)`.
+- **`format_fecha` en `Usuarios.vue`** devuelve `"Fecha no válida"` para todo usuario que nunca ha
+  entrado. Preexistente, ahora más visible porque la columna se volvió filtrable.
+- **Descarga a Excel de los listados.** Se analizó su viabilidad sin tocar el backend (paginando
+  con `$skip`/`$top` y armando el archivo en el cliente). Queda como trabajo aparte, pendiente de
+  conocer el volumen real de registros.
 
 ---
 

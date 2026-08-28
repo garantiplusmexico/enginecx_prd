@@ -105,6 +105,40 @@ desplegaría lo mismo con otro número. Si más adelante se agrega un endpoint, 
 `Usuario.vue`, que depende de `aspnetuserroles[0].roleId`), `v1/usuarios/users_name` (lo consumen
 Cotizaciones, Pólizas y Pólizas Externas), `reset-password` y `reset-password-request`.
 
+### Diferencia campo por campo, y quién usaba cada uno
+
+Buscar por URL no basta: al pasar de la entidad al DTO hay propiedades que la respuesta anterior sí
+traía y la nueva ya no. Éstas son, con la verificación de uso en todo `frontend-omega`:
+
+| Campo | Antes | Ahora | ¿Quién lo usaba? |
+|---|---|---|---|
+| `id`, `userName`, `nombre`, `lastAccessDate`, `lockoutEnd` | ✅ | ✅ | Se conservan con el mismo nombre JSON |
+| `lockoutEnabled` (bool) | ✅ | ❌ **eliminado** | **Nadie.** Cero coincidencias en todo `src/` |
+| `aspnetuserroles` | `[]` (vacío) | ❌ eliminado | Sólo `Usuario.vue:326`, y lee del endpoint **de detalle** `v1/usuarios/{id}`, que no se tocó |
+| `usuarios_grupo` | `[]` (vacío) | ❌ eliminado | Sólo `Usuario.vue:327`, mismo endpoint de detalle |
+| `usuarios_empresa` | `[]` (vacío) | ❌ eliminado | Sólo `Usuario.vue:331`, mismo endpoint de detalle |
+| `usuarios_sucursal` | `[]` (vacío) | ❌ eliminado | Sólo `Usuario.vue:346`, mismo endpoint de detalle |
+| `id_rol`, `rol`, `bloqueado`, `activo` | ❌ | ✅ **nuevos** | Aditivos; no rompen nada |
+
+**Por qué las cuatro colecciones son seguras:** las cuatro lecturas viven en
+`Usuario.vue → prepara_modificacion()`, que construye su URL como
+`'v1/usuarios/' + this.$route.params.id` — es el endpoint de **detalle**, no la colección. Ese
+endpoint sigue devolviendo la entidad `aspnetusers` y sigue haciendo `Include` de esas cuatro
+navegaciones. Importa porque el código hace `.length` y `[0]` sin guarda: si esos datos hubieran
+venido de la colección, ahora reventaría con *cannot read properties of undefined*.
+
+**Consumidores de los items del listado, uno por uno:**
+
+| Consumidor | Qué lee | Estado |
+|---|---|---|
+| `TablaOmega` — celdas | `item[Header.value]` para cada header | Los 5 headers (`userName`, `nombre`, `rol`, `lastAccessDate`, `bloqueado`) existen en el DTO |
+| `TablaOmega` — clic en fila | `e[permissions.editar.id]`, con `id: 'id'` | El DTO expone `Id` → serializa como `id` |
+| `Usuarios.vue` — `continuarFetch` | Despacha `datos` a `listUsuarios` → `state.usuarios` | Escritura a estado muerto: la única coincidencia de `state.usuarios` en todo `src/` es la mutación que lo escribe. Nadie lo lee |
+
+**Conclusión: ningún consumidor del frontend se rompe.** El único campo que desapareció de verdad
+—`lockoutEnabled`— no se usa en ninguna parte, y las cuatro colecciones que desaparecieron sólo se
+leen desde el endpoint de detalle, que quedó intacto.
+
 **Límites de esta verificación — lo que no cubre:**
 
 - `gh search code` indexa **sólo la rama por defecto** de cada repo. Un consumidor que viva en una

@@ -50,6 +50,7 @@ hasta que se valide.
 | Componente | Qué es | Dónde vive | Cambio |
 |---|---|---|---|
 | Frontend | Versión de producto que se muestra en la UI | `.env.local`, `.env.qa`, `.env.production` (`VUE_APP_VERSION`) | `1.1.29 → 1.1.30` |
+| `auth` — **build** | **Construye la imagen Docker y la sube a ECR con ese tag** | `Services/auth/build.ps1` (`$version_nueva`, `$version_anterior`) | `v2.2 → v2.3` |
 | `auth` — telemetría | `serviceVersion` que reporta OpenTelemetry | `Services/auth/Program.cs` | `1.1 → 1.2` |
 | `auth` — despliegue QA | Tag de la imagen de ECR con la que arranca el contenedor | `Infrastructure/qa/Authentication-task-definition.json` | `v2.2 → v2.3` |
 | `auth` — despliegue QA | `ImageVersion` que el script usa al desplegar | `Infrastructure/qa/deploy-services-v2.ps1` | `v2.2 → v2.3` |
@@ -57,9 +58,23 @@ hasta que se valide.
 | `auth` — despliegue prod | `ImageVersion` del script | `Infrastructure/prod/deploy-services-v2.ps1` | `v2.2 → v2.3` |
 | API Gateway | Tag de la imagen `gp_seguros_api_gateway` | `Infrastructure/{qa,prod}/ApiGateway-task-definition.json` y sus scripts | **Sin cambio** — ver abajo |
 
-**Por qué el tag y el `ImageVersion` se cambian juntos:** la función `Update-ImageVersion` de
-`deploy-services-v2.ps1` reescribe el tag de la task definition en tiempo de despliegue con el valor
-de `ImageVersion`. Cambiar sólo el JSON no sirve — el script lo sobreescribiría con el valor viejo.
+**La cadena tiene cinco eslabones y todos deben coincidir.** `build.ps1` es el que compila, arma la
+imagen y la sube a ECR con el tag de `$version_nueva`: si se omite, las task definitions apuntan a
+un tag que **nunca se construyó** y el despliegue falla al no encontrar la imagen. Y el tag de la
+task definition va siempre en pareja con el `ImageVersion` del script, porque `Update-ImageVersion`
+reescribe el JSON en tiempo de despliegue — cambiar sólo el JSON no sirve, el script lo pisa con el
+valor viejo.
+
+Estado final de la cadena de `gp_seguros_auth`, verificado:
+
+```
+Services/auth/build.ps1                                   v2.3   (construye y sube a ECR)
+Infrastructure/qa/Authentication-task-definition.json     v2.3
+Infrastructure/qa/deploy-services-v2.ps1                  v2.3
+Infrastructure/prod/Authentication-task-definition.json   v2.3
+Infrastructure/prod/deploy-services-v2.ps1                v2.3
+Services/auth/Program.cs   serviceVersion                 1.2    (telemetría, línea aparte)
+```
 
 **Por qué el gateway no sube de versión:** este trabajo **no agrega ningún endpoint**.
 `GET /api/v1/usuarios`, `/usuarios/cnt` y `/roles` ya estaban ruteados, y `krakend.json` no se
@@ -208,6 +223,7 @@ HAVING count(*) > 1;
 | `Services/auth/Models/DTO/usuario_listadoDTO.cs` | Creado | T-03 |
 | `Services/auth/Controllers/UsuariosController.cs` | Modificado | T-04, T-05 |
 | `Services/auth/Program.cs` | Modificado (`serviceVersion` 1.1 → 1.2) | Versionado |
+| `Services/auth/build.ps1` | Modificado (`$version_nueva v2.2 → v2.3`) | Versionado |
 | `Infrastructure/qa/Authentication-task-definition.json` | Modificado (imagen `v2.2 → v2.3`) | Versionado |
 | `Infrastructure/qa/deploy-services-v2.ps1` | Modificado (`ImageVersion v2.2 → v2.3`) | Versionado |
 | `Infrastructure/prod/Authentication-task-definition.json` | Modificado (imagen `v2.2 → v2.3`) | Versionado |
@@ -241,6 +257,7 @@ HAVING count(*) > 1;
 | gp_seguros | `5f4ee303` | `[modulo-usuarios] Restaurar CLAUDE.md en la rama de trabajo` | 2026-08-28 |
 | gp_seguros | `2cbde63d` | `[modulo-usuarios] Fase 1 - Proyeccion plana del listado de usuarios con rol` | 2026-08-28 |
 | gp_seguros | `299ac36f` | `[modulo-usuarios] Subir version de despliegue del servicio auth a v2.3` | 2026-08-28 |
+| gp_seguros | `526a55af` | `[modulo-usuarios] Subir version en el build del servicio auth (v2.2 -> v2.3)` | 2026-08-28 |
 | frontend-omega | `c522ce8` | `[modulo-usuarios] Agregar CLAUDE.md al repositorio` | 2026-08-28 |
 | frontend-omega | `fd4d815` | `[modulo-usuarios] Fase 2 - Columna de rol y filtros por columna en el listado` | 2026-08-28 |
 | frontend-omega | `247bf2f` | `[modulo-usuarios] Fase 3 - Retirar la columna Activo del listado (T-11)` | 2026-08-28 |

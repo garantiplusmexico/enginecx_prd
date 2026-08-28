@@ -277,7 +277,7 @@ src/
   - **La sesión se resolvió como compuerta, no como redirección a `/entrar`:** no tener sesión no es un lugar de la aplicación, es un estado, y redirigir cambia la URL — con eso se pierde a dónde iba el asesor, salvo que alguien se acuerde de guardarla y restaurarla. La métrica del tier legacy es la quinta de `tools/metricas-arquitectura.mjs`, y busca el tier *usado como dato*: nombrarlo en un comentario para explicar por qué ya no está no cuenta como infracción
   - Criterio de completitud: la UI recibe una decisión ya tomada; ningún componente consulta permisos por su cuenta (RF-02); **cero** referencias al tier `CM/GTE/FARMER` en todo el repositorio, verificado en CI
 
-- [ ] **T-25** — Proveedor único de contexto de dispositivo
+- [x] **T-25** — Proveedor único de contexto de dispositivo
   - Archivos a crear/modificar: `src/app/providers/DeviceContextProvider.tsx` + pruebas
   - Criterio de completitud: resuelve en un solo lugar tamaño de pantalla, instalación como PWA, cámara, geolocalización y estado de conexión, y **expone una decisión, no datos crudos**; la regla de linter (T-09.4) impide cualquier acceso directo desde componentes
 
@@ -293,13 +293,16 @@ src/
   - Archivos a crear/modificar: `src/features/identidad/ui/BienvenidaPage.tsx` y el caso de uso `MarcarBienvenidaVista` (RPC `marcar_bienvenida_vista`)
   - Criterio de completitud: pantalla descartable por el usuario y persistente por perfil; muestra datos básicos del asesor y su asignación
 
-- [ ] **T-29** — Dominio de operación encolada
+- [x] **T-29** — Dominio de operación encolada
   - Archivos a crear/modificar: `src/domain/shared/OperacionEncolada.ts` + pruebas
-  - Criterio de completitud: estados `pendiente → sincronizando → completada | fallida`; identificador de idempotencia obligatorio; política de reintentos con espera creciente hasta un tope y luego acción manual, **única para toda la aplicación**; todo probado con `ClockProvider` simulado
+  - Criterio de completitud: estados `pending → syncing → completed | failed`; identificador de idempotencia obligatorio; política de reintentos con espera creciente hasta un tope y luego acción manual, **única para toda la aplicación**; todo probado con `ClockProvider` simulado
+  - **Se cerró la pregunta abierta de `visitas.md` V-36** («el tope de 12 intentos no tiene justificación escrita: pueden agotarse en minutos o durar días»). Con la espera creciente elegida —5 s duplicándose hasta un techo de 5 min— doce intentos **no pueden** durar menos de media hora, así que el número implica un piso de tiempo. Hay una prueba que lo fija
+  - **`failed` no descarta la operación**, a diferencia del sistema actual: allí el ítem se borraba y su contenido se mandaba a monitoreo, de modo que el trabajo del asesor sobrevivía solo en un panel de errores
 
-- [ ] **T-30** — Cola offline sobre `LocalStore`
+- [x] **T-30** — Cola offline sobre `LocalStore`
   - Archivos a crear/modificar: `src/shared/sync/ColaOffline.ts`, `src/infrastructure/local/IndexedDBLocalStore.ts` (extensión para blobs) + pruebas
   - Criterio de completitud: persiste operaciones **con sus imágenes**, conserva el orden, sobrevive al cierre de la aplicación y se prueba sin navegador
+  - **El orden hubo que construirlo:** IndexedDB recorre por clave y las nuestras son UUID, cuyo orden alfabético es arbitrario. Cada registro lleva número de secuencia, actualizar conserva el suyo, y el contador se siembra al abrir con el mayor de la base — sin eso, al reabrir la aplicación lo de hoy se ordenaría antes de lo que quedó pendiente de ayer
 
 - [ ] **T-31** — Decorador offline genérico y casos de uso de sincronización
   - Archivos a crear/modificar: `src/shared/sync/conOffline.ts`, `src/shared/sync/application/{EncolarOperacion,DrenarCola,ReintentarOperacion,ObtenerEstadoDeSincronizacion}.ts` + pruebas

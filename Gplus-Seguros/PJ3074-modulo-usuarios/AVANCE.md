@@ -13,7 +13,7 @@
 | Modelo / esfuerzo | claude-opus-5 — esfuerzo: alto |
 | Fecha de inicio | 2026-08-28 |
 | Última actualización | 2026-08-28 |
-| Estado general | 🟡 En progreso — 14 de 15 tareas completadas; T-13 bloqueada por despliegue a QA |
+| Estado general | 🟡 En progreso — 22 de 24 tareas completadas; T-13 y T-24 bloqueadas por despliegue a QA |
 
 ---
 
@@ -22,15 +22,17 @@
 **Todo el código está escrito, compilado, linteado y subido.** Backend y frontend quedaron en
 `feature/ModuloUsuarios` en sus respectivos repos.
 
-**Versionado completo (ver la sección "Versionado"):** frontend `1.1.29 → 1.1.30`; servicio `auth`
-`serviceVersion 1.1 → 1.2` **y** imagen de despliegue `v2.2 → v2.3` en QA y prod. El gateway no se
-versiona porque no se le agregó ningún endpoint.
+El plan cubre **dos módulos**: el listado de usuarios (fases 0 a 3) y el listado de empresas
+(fases 4 y 5, agregadas el 2026-08-28 a petición del responsable sobre la misma rama).
 
-**Lo único pendiente es T-13**, la matriz de pruebas manuales extremo a extremo contra QA. No es
-ejecutable desde aquí: requiere que el código esté desplegado en QA (lo que ocurre al hacer push a
-la rama `qa`, vía el flujo de PRs que es responsabilidad del programador) y validación manual en
-navegador. La Fase 3 queda `Bloqueada` por esa dependencia externa, y el plan sigue `En curso`
-hasta que se valide.
+**Versionado completo (ver la sección "Versionado"):** frontend `1.1.29 → 1.1.30`; `auth`
+`v2.2 → v2.3`; `clientes` `v2.1 → v2.2`; y **el gateway** `v2.1 → v2.2`, éste último sí, porque la
+Fase 4 agregó dos endpoints y con ello cambió `krakend.json`.
+
+**Pendientes: T-13 y T-24**, ambas de validación manual contra QA. No son ejecutables desde aquí:
+requieren el código desplegado (lo que ocurre al hacer push a la rama `qa`, vía el flujo de PRs que
+es responsabilidad del programador) y validación en navegador. Las fases 3 y 5 quedan `Bloqueadas`
+por esa dependencia externa, y el plan sigue `En curso` hasta que se validen.
 
 **Lo que sí se verificó, y cómo:**
 
@@ -49,14 +51,28 @@ hasta que se valide.
 
 | Componente | Qué es | Dónde vive | Cambio |
 |---|---|---|---|
-| Frontend | Versión de producto que se muestra en la UI | `.env.local`, `.env.qa`, `.env.production` (`VUE_APP_VERSION`) | `1.1.29 → 1.1.30` |
+| Frontend | Versión de producto que se muestra en la UI | `.env.local`, `.env.qa`, `.env.production` (`VUE_APP_VERSION`) | `1.1.29 → 1.1.30` (una sola vez para toda la entrega) |
 | `auth` — **build** | **Construye la imagen Docker y la sube a ECR con ese tag** | `Services/auth/build.ps1` (`$version_nueva`, `$version_anterior`) | `v2.2 → v2.3` |
 | `auth` — telemetría | `serviceVersion` que reporta OpenTelemetry | `Services/auth/Program.cs` | `1.1 → 1.2` |
 | `auth` — despliegue QA | Tag de la imagen de ECR con la que arranca el contenedor | `Infrastructure/qa/Authentication-task-definition.json` | `v2.2 → v2.3` |
 | `auth` — despliegue QA | `ImageVersion` que el script usa al desplegar | `Infrastructure/qa/deploy-services-v2.ps1` | `v2.2 → v2.3` |
 | `auth` — despliegue prod | Tag de la imagen de ECR | `Infrastructure/prod/Authentication-task-definition.json` | `v2.2 → v2.3` |
 | `auth` — despliegue prod | `ImageVersion` del script | `Infrastructure/prod/deploy-services-v2.ps1` | `v2.2 → v2.3` |
-| API Gateway | Tag de la imagen `gp_seguros_api_gateway` | `Infrastructure/{qa,prod}/ApiGateway-task-definition.json` y sus scripts | **Sin cambio** — ver abajo |
+| `clientes` — build | Construye la imagen y la sube a ECR | `Services/clientes/build.ps1` | `v2.1 → v2.2` |
+| `clientes` — telemetría | `serviceVersion` de OpenTelemetry | `Services/clientes/Program.cs` | `1.0 → 1.1` |
+| `clientes` — despliegue | Tag e `ImageVersion` en QA y prod | `Infrastructure/{qa,prod}/Clients-task-definition.json` y `deploy-services-v2.ps1` | `→ v2.2` |
+| API Gateway — build | Construye la imagen y la sube a ECR | `Services/apigateway/build.ps1` | `v2.1 → v2.2` |
+| API Gateway — despliegue | Tag e `ImageVersion` en QA y prod | `Infrastructure/{qa,prod}/ApiGateway-task-definition.json` y `deploy-services-v2.ps1` | `→ v2.2` |
+
+> **El gateway sí subió de versión en la Fase 4**, a diferencia de las fases 1 a 3. La razón es la
+> regla, no la excepción: en las fases 1–3 no se agregó ningún endpoint y `krakend.json` no cambió,
+> así que la imagen habría sido idéntica. En la Fase 4 sí se agregaron dos rutas nuevas, el archivo
+> cambió y por lo tanto la imagen cambia de contenido y debe reconstruirse y redesplegarse.
+>
+> Se aprovechó para alinear los tags obsoletos de las task definitions, que traían `v1.0` (clients)
+> y `v0.97` (gateway) mientras los scripts de despliegue ya usaban `v2.1`. Como `Update-ImageVersion`
+> reescribe el JSON al desplegar, esos valores estaban muertos y sólo confundían a quien leyera el
+> archivo.
 
 **La cadena tiene cinco eslabones y todos deben coincidir.** `build.ps1` es el que compila, arma la
 imagen y la sube a ECR con el tag de `$version_nueva`: si se omite, las task definitions apuntan a
@@ -76,11 +92,16 @@ Infrastructure/prod/deploy-services-v2.ps1                v2.3
 Services/auth/Program.cs   serviceVersion                 1.2    (telemetría, línea aparte)
 ```
 
-**Por qué el gateway no sube de versión:** este trabajo **no agrega ningún endpoint**.
-`GET /api/v1/usuarios`, `/usuarios/cnt` y `/roles` ya estaban ruteados, y `krakend.json` no se
-modificó. La imagen `gp_seguros_api_gateway` tendría contenido idéntico, así que subirle el tag
-desplegaría lo mismo con otro número. Si más adelante se agrega un endpoint, sí hay que tocar
-`krakend.json` y subir su versión en los cuatro lugares equivalentes.
+**Cuándo sube el gateway y cuándo no.** Sube si y sólo si `krakend.json` cambia, porque es lo que
+cambia el contenido de su imagen. En las fases 1 a 3 (listado de usuarios) no se agregó ningún
+endpoint —`/usuarios`, `/usuarios/cnt` y `/roles` ya estaban ruteados— así que no subió. En la
+Fase 4 se agregaron dos rutas para el listado de empresas, y por eso sí subió a `v2.2`.
+
+**Cuántas veces sube cada componente.** Una sola vez por entrega, no una por fase. El frontend
+subió a `1.1.30` en la Fase 2 y ese número cubre también la Fase 5; un segundo bump a `1.1.31` se
+introdujo por error y se revirtió en el commit `f7ad67a`. `clientes` y el gateway sí subieron en la
+Fase 4 porque era su primer bump de la entrega, y además es obligatorio: desplegar contenido nuevo
+bajo un tag que ya existe en ECR dejaría corriendo la imagen vieja.
 
 > `Services/auth/publish/` está en `.gitignore`. La imagen la construye y la sube el programador;
 > el repo sólo declara con qué tag se desplegará.
@@ -162,7 +183,9 @@ JSON** todos los campos que el listado ya exponía (`id`, `userName`, `nombre`, 
 | **Fase 1 — Backend `auth`** | 231 | T-03 a T-06 | 1 – 2 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
 | **Fase 2 — Frontend `frontend-omega`** | 232 | T-07 a T-12 | 1.5 – 2.5 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
 | **Fase 3 — Integración y entrega** | 233 | T-13 a T-15 | 1 – 1.5 | 2026-08-28 | | <1 | 1 | 🔴 Bloqueada (T-13) |
-| **Total proyecto** | — | 15 tareas | ~4 – 7 | 2026-08-28 | | <1 | 1 | 🟡 En progreso |
+| **Fase 4 — Backend: listado de empresas** | 234 | T-16 a T-20 | 1.5 – 2 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
+| **Fase 5 — Frontend: columna de aseguradoras** | 235 | T-21 a T-24 | 1 – 2 | 2026-08-28 | | <1 | 1 | 🔴 Bloqueada (T-24) |
+| **Total proyecto** | — | 24 tareas | ~6.5 – 11 | 2026-08-28 | | <1 | 2 | 🟡 En progreso |
 | **Núcleo mínimo entregable** | — | T-01 a T-08 | ~2 – 3.5 | 2026-08-28 | 2026-08-28 | <1 | 0 | ✅ Completada |
 
 > **Nota sobre los días ejecutados:** la ejecución fue asistida por IA y tomó bastante menos de un
@@ -188,7 +211,15 @@ JSON** todos los campos que el listado ya exponía (`id`, `userName`, `nombre`, 
 | T-11 | *(Opcional)* Columna Activo | Claude Code | 2026-08-28 | **Implementada y luego retirada.** Ver "Decisiones" |
 | T-12 | Lint del frontend | Claude Code | 2026-08-28 | `Usuarios.vue` limpio |
 | T-14 | Verificar que el gateway no requiere cambios | Claude Code | 2026-08-28 | Verificado estáticamente; falta la prueba real contra QA |
-| T-15 | Commits en ambos repos y entrega | Claude Code | 2026-08-28 | 5 commits, ambas ramas publicadas |
+| T-15 | Commits en ambos repos y entrega | Claude Code | 2026-08-28 | Ambas ramas publicadas |
+| T-16 | Crear el DTO de listado de empresas | Claude Code | 2026-08-28 | `empresa_listadoDTO.cs`, con `aseguradoras` como `List<int>` |
+| T-17 | Endpoint de listado y su conteo | Claude Code | 2026-08-28 | `GET /empresas/listado` y `/listado/cnt`; conserva la autorización por rol |
+| T-18 | Registrar las rutas en el gateway | Claude Code | 2026-08-28 | +2 endpoints en `krakend.json` (402 → 404), JSON válido |
+| T-19 | Versionado de `clientes` y del gateway | Claude Code | 2026-08-28 | Ambos a `v2.2` en sus 5 lugares |
+| T-20 | Compilar y verificar la traducción a SQL | Claude Code | 2026-08-28 | Build limpio; `LIMIT` antes del join y filtro como subconsulta correlacionada |
+| T-21 | Apuntar el listado al endpoint nuevo | Claude Code | 2026-08-28 | `v1/empresas/listado` |
+| T-22 | Cargar el catálogo de aseguradoras | Claude Code | 2026-08-28 | `mounted()` contra `v1/aseguradoras` |
+| T-23 | Agregar la columna Aseguradoras | Claude Code | 2026-08-28 | Ids resueltos a `nombre_comercial`; degrada a `#id` |
 
 ---
 
@@ -209,6 +240,7 @@ JSON** todos los campos que el listado ya exponía (`id`, `userName`, `nombre`, 
 | ID | Tarea | Motivo del bloqueo | Quién debe resolverlo |
 |---|---|---|---|
 | T-13 | Prueba de integración manual E2E contra QA (8 escenarios) | Requiere el código desplegado en QA y validación manual en navegador. El despliegue se dispara al hacer push a la rama `qa`, y los PRs son responsabilidad del programador, no de Claude | Alexis Salvador Herrera Garcia |
+| T-24 | Validar en QA el filtro por aseguradora del listado de empresas | Mismo bloqueo que T-13. El código está completo y linteado, pero el `any()` de OData sobre la colección de ids sólo se puede confirmar contra el servicio corriendo | Alexis Salvador Herrera Garcia |
 
 **Matriz que falta ejecutar (§4, T-13 del plan):**
 
@@ -243,6 +275,11 @@ HAVING count(*) > 1;
 | **Verificación de traducción a SQL sin conexión a BD** | El riesgo técnico #3 del plan era que EF cayera en evaluación en cliente y trajera la tabla completa. `ToQueryString()` genera el SQL sin abrir conexión | Confirmado que todo baja a SQL: el filtro por rol a `WHERE lower((subconsulta correlacionada)) LIKE '%…%'`, `bloqueado` a `LockoutEnd IS NOT NULL`, el orden a `ORDER BY (subconsulta)` y la paginación a `LIMIT/OFFSET`. El riesgo #3 queda cerrado |
 | **T-11 (columna Activo) se implementó y después se retiró** | Al verificar la Fase 3 se encontró que `aspnetusers.activo` se escribe en un único punto del servicio (`UsuariosController.cs:230`, al crear el usuario, siempre `1`) y ninguna ruta lo modifica — `UpdateById` no lo toca | La columna habría mostrado "Si" para todos y su filtro no discriminaría nada. Se retiró del frontend con un comentario que explica por qué. El campo `activo` **se conserva en el DTO**: no cuesta nada y deja la columna a un header de distancia si el backend implementa baja de usuarios |
 | **`CLAUDE.md` se comiteó en ambos repos** | Es prerequisito del flujo de Engine. En `gp_seguros` existía sólo en la rama hermana `feature/productos-adicionales-garantia-siga` (aún sin mergear) y en `frontend-omega` estaba sin trackear | Contenido idéntico al de la rama hermana, por lo que no genera conflicto al integrar. Commits separados para no mezclarlo con la feature |
+| **El listado de empresas se resolvió con un endpoint nuevo, no modificando el existente** | `GET /empresas` tiene **13 consumidores** en `frontend-omega` (cotizaciones, pólizas, órdenes de pago, sucursales, usuarios, login…), varios de los cuales sí dependen del grafo completo | Se creó `GET /empresas/listado`. Es el caso opuesto al del listado de usuarios, donde el único consumidor era la propia vista y sí se pudo cambiar el contrato en sitio |
+| **Causa raíz de la lentitud del listado de empresas** | Diagnóstico sobre `EmpresasController.Get()` | Carga **nueve `Include`, siete de ellos de colecciones**, sin `QuerySplitting`. EF Core lo resuelve como un único `JOIN` que multiplica filas —explosión cartesiana— y después serializa el grafo completo por empresa, para pintar 8 columnas escalares. El endpoint nuevo baja a **dos `LEFT JOIN`** con el `LIMIT` aplicado en una subconsulta **antes** del join, de modo que la paginación cuenta empresas y no filas explotadas |
+| **Las aseguradoras viajan como ids, no como nombres** | Decisión del responsable. `aseguradora_empresa` sólo tiene `id_empresa`, `id_aseguradora` y `activa`, y **no** tiene navegación a `aseguradora` | Evita agregar una propiedad de navegación al modelo EF. El frontend resuelve el `nombre_comercial` contra el catálogo `v1/aseguradoras`. El filtro se expresa como `aseguradoras/any(a: a eq {id})`, que EF traduce a `WHERE {id} IN (SELECT …)` correlacionado |
+| **`activa` de `aseguradora_empresa` no se filtra — pendiente de confirmar** | La pregunta quedó sin respuesta explícita; se tomó la lectura literal de "configuradas" = filas de la tabla de relación | La columna muestra **todas** las aseguradoras relacionadas, activas o no. Si se quieren sólo las activas, es agregar `.Where(a => a.activa == 1)` en la proyección: una línea |
+| **La columna Grupo dejó de usar `transformarGrupo`** | El endpoint viejo devolvía `grupo` como objeto y la función leía `item.grupo.nombre`; el DTO nuevo lo entrega aplanado como string | De haberla dejado conectada, la columna Grupo habría mostrado `-` en **todas** las filas, porque `"texto".nombre` es `undefined`. Es el tipo de rotura silenciosa que no da error |
 | **Ejecución en `claude-opus-5` en lugar de familia Sonnet** | El workflow pide Sonnet, pero la sesión corre en Opus 5 y el cambio de modelo no es posible desde dentro. El responsable autorizó continuar | Sólo afecta la trazabilidad registrada en los commits |
 | **Versionado: frontend patch, backend menor** | La convención real del frontend en sus últimos 8 releases es patch sobre `VUE_APP_VERSION`. El backend usa `serviceVersion` de dos partes (`1.0`, `1.1`, `2.2`) y esto es una feature | Frontend `1.1.29 → 1.1.30` en los tres `.env`; `auth` `1.1 → 1.2` |
 
@@ -258,6 +295,13 @@ HAVING count(*) > 1;
 | `Services/auth/Controllers/UsuariosController.cs` | Modificado | T-04, T-05 |
 | `Services/auth/Program.cs` | Modificado (`serviceVersion` 1.1 → 1.2) | Versionado |
 | `Services/auth/build.ps1` | Modificado (`$version_nueva v2.2 → v2.3`) | Versionado |
+| `Services/clientes/Models/DTO/empresa_listadoDTO.cs` | Creado | T-16 |
+| `Services/clientes/Controllers/EmpresasController.cs` | Modificado | T-17 |
+| `Services/apigateway/krakend.json` | Modificado (+2 endpoints) | T-18 |
+| `Services/clientes/build.ps1`, `Services/clientes/Program.cs` | Modificados (versionado `clientes`) | T-19 |
+| `Services/apigateway/build.ps1` | Modificado (versionado gateway) | T-19 |
+| `Infrastructure/{qa,prod}/Clients-task-definition.json` | Modificados (`→ v2.2`) | T-19 |
+| `Infrastructure/{qa,prod}/ApiGateway-task-definition.json` | Modificados (`→ v2.2`) | T-19 |
 | `Infrastructure/qa/Authentication-task-definition.json` | Modificado (imagen `v2.2 → v2.3`) | Versionado |
 | `Infrastructure/qa/deploy-services-v2.ps1` | Modificado (`ImageVersion v2.2 → v2.3`) | Versionado |
 | `Infrastructure/prod/Authentication-task-definition.json` | Modificado (imagen `v2.2 → v2.3`) | Versionado |
@@ -269,13 +313,15 @@ HAVING count(*) > 1;
 | Archivo | Tipo de cambio | Tarea relacionada |
 |---|---|---|
 | `src/views/seguridad/usuarios/Usuarios.vue` | Modificado | T-07 a T-11 |
+| `src/views/configuracion/empresas/Empresas.vue` | Modificado | T-21 a T-24 |
 | `.env.local`, `.env.qa`, `.env.production` | Modificados (`VUE_APP_VERSION` 1.1.29 → 1.1.30) | Versionado |
 | `CLAUDE.md` | Agregado al repo | Prerequisito del flujo |
 
 ### Sin cambios (confirmado)
 
-- `Services/apigateway/krakend.json` — `input_query_strings: ["*"]` ya propaga los filtros nuevos.
-  Al no agregarse endpoints, tampoco sube de versión la imagen del gateway.
+- `Services/apigateway/krakend.json` — para el listado de usuarios no requirió cambios. **Sí se modificó
+  en la Fase 4** para rutear los dos endpoints nuevos de empresas, y por eso el gateway sí subió de
+  versión en esa fase.
 - Base de datos — no hay migración ni cambio de esquema.
 - `Services/auth/Controllers/AuthenticationController.cs`, `RolesController.cs` — intactos.
 - `v1/usuarios/{id}` y `v1/usuarios/users_name` — intactos, según el análisis de impacto de la §6.
@@ -292,6 +338,8 @@ HAVING count(*) > 1;
 | gp_seguros | `2cbde63d` | `[modulo-usuarios] Fase 1 - Proyeccion plana del listado de usuarios con rol` | 2026-08-28 |
 | gp_seguros | `299ac36f` | `[modulo-usuarios] Subir version de despliegue del servicio auth a v2.3` | 2026-08-28 |
 | gp_seguros | `526a55af` | `[modulo-usuarios] Subir version en el build del servicio auth (v2.2 -> v2.3)` | 2026-08-28 |
+| gp_seguros | `9365385d` | `[modulo-usuarios] Fase 4 - Endpoint plano para el listado de empresas` | 2026-08-28 |
+| frontend-omega | `1743518` | `[modulo-usuarios] Fase 5 - Columna de aseguradoras filtrable en el listado de empresas` | 2026-08-28 |
 | frontend-omega | `c522ce8` | `[modulo-usuarios] Agregar CLAUDE.md al repositorio` | 2026-08-28 |
 | frontend-omega | `fd4d815` | `[modulo-usuarios] Fase 2 - Columna de rol y filtros por columna en el listado` | 2026-08-28 |
 | frontend-omega | `247bf2f` | `[modulo-usuarios] Fase 3 - Retirar la columna Activo del listado (T-11)` | 2026-08-28 |

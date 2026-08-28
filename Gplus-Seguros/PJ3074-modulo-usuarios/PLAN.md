@@ -286,6 +286,94 @@ la paginación siguen ocurriendo en la base de datos, no en memoria.
     `feature/ModuloUsuarios → pre-qa` (merge local) → PR `pre-qa → qa`.
   - Criterio de completitud: ambas ramas pusheadas y el responsable notificado.
 
+### Fase 4 — Backend: endpoint de listado de empresas (`gp_seguros/Services/clientes`)
+
+> **Alcance agregado el 2026-08-28**, a petición del responsable, sobre la misma rama
+> `feature/ModuloUsuarios`. Es otro módulo (Empresas), pero comparte exactamente el mismo patrón
+> técnico que el listado de usuarios: proyección plana a DTO para poder filtrar y contar.
+
+**El problema.** `GET /empresas` carga con **nueve `Include`, siete de ellos de colecciones**
+(`sucursales`, `sucursales.oficinas`, `paquetes`, `frecuencias_pago`, `plazos`, `aseguradoras`,
+`empresas_beneficiario_preferente` y su anidado), sin `QuerySplitting` configurado. EF Core resuelve
+eso como un único `JOIN` que multiplica filas — explosión cartesiana — y después serializa el grafo
+completo por cada empresa, todo para pintar 8 columnas escalares. De ahí la lentitud.
+
+**Por qué un endpoint nuevo y no modificar el existente.** `v1/empresas` tiene **13 consumidores**
+en `frontend-omega` (cotizaciones, pólizas, órdenes de pago, sucursales, usuarios, login…), varios
+de los cuales sí dependen del grafo completo. Cambiarle el contrato sería exactamente el riesgo que
+en el listado de usuarios no existía.
+
+**Decisión sobre las aseguradoras (del responsable).** El DTO devuelve **los ids** de las
+aseguradoras configuradas, no sus nombres. El frontend consulta el catálogo `v1/aseguradoras` y
+resuelve el `nombre_comercial` por id. Esto evita agregar una propiedad de navegación a
+`aseguradora_empresa`, que hoy sólo tiene `id_empresa`, `id_aseguradora` y `activa`, y no apunta a
+`aseguradora`.
+
+- [ ] **T-16** — Crear el DTO de listado de empresas
+  - Archivos a crear: `Services/clientes/Models/DTO/empresa_listadoDTO.cs`
+  - Campos: `id_empresa`, `rfc`, `razon_social`, `nombre_comercial`, `descripcion`,
+    `venta_tradicional`, `venta_financiera`, `grupo` (nombre, aplanado) y
+    `aseguradoras` (`List<int>` con los ids).
+  - Criterio de completitud: la clase compila y no expone ninguna colección de entidades.
+
+- [ ] **T-17** — Crear el endpoint de listado y su conteo
+  - Archivos a modificar: `Services/clientes/Controllers/EmpresasController.cs`
+  - `GET /empresas/listado` y `GET /empresas/listado/cnt`, ambos sobre una proyección compartida.
+  - **Conservar la autorización por rol tal cual está hoy:** `Administrador General`, `Auditor` y
+    `Cobranza` ven todas las empresas; el resto sólo las de `udata.ids_empresas` de su claim.
+  - **No tocar** `GET /empresas` ni `GET /empresas/cnt` ni `GET /empresas/{id}`.
+  - Criterio de completitud: el endpoint responde el listado plano y el conteo acepta los mismos
+    filtros.
+
+- [ ] **T-18** — Registrar las rutas nuevas en el gateway
+  - Archivos a modificar: `Services/apigateway/krakend.json`
+  - Dos entradas nuevas: `/api/v1/empresas/listado` y `/api/v1/empresas/listado/cnt`, copiando la
+    forma de las de `/api/v1/empresas` (`input_query_strings: ["*"]`, `encoding: no-op`,
+    circuit breaker, host `gp_omega_clients`).
+  - Validar el JSON después de editarlo:
+    ```bash
+    node -e "JSON.parse(require('fs').readFileSync('Services/apigateway/krakend.json','utf8')); console.log('JSON VALIDO')"
+    ```
+  - Criterio de completitud: JSON válido y las dos rutas resuelven al backend correcto.
+
+- [ ] **T-19** — Versionado de `clientes` y del gateway
+  - **Ambos** suben de versión: `clientes` porque cambia su código, y el gateway porque cambia
+    `krakend.json` y por lo tanto el contenido de su imagen.
+  - Cinco lugares por servicio: `build.ps1`, las dos task definitions (QA y prod) y el
+    `ImageVersion` de los dos `deploy-services-v2.ps1`. Más el `serviceVersion` de
+    `Services/clientes/Program.cs`.
+  - Criterio de completitud: los cinco puntos de cada servicio coinciden en el mismo número.
+
+- [ ] **T-20** — Compilar y verificar la traducción a SQL
+  - `dotnet build` en `Services/clientes` y verificación con `ToQueryString` de que la proyección y
+    el filtro por aseguradora bajan a SQL.
+  - Criterio de completitud: build limpio; el `LIMIT` se aplica antes del join y el filtro genera
+    una subconsulta correlacionada, no evaluación en cliente.
+
+### Fase 5 — Frontend: columna de aseguradoras filtrable (`frontend-omega`)
+
+- [ ] **T-21** — Apuntar el listado al endpoint nuevo
+  - Archivos a modificar: `src/views/configuracion/empresas/Empresas.vue`
+  - `servicio` y `servicioConteo` pasan a `v1/empresas/listado`.
+  - Criterio de completitud: el listado carga con los mismos datos y notoriamente más rápido.
+
+- [ ] **T-22** — Cargar el catálogo de aseguradoras
+  - `mounted()` que consulte `v1/aseguradoras` y arme el mapa `id_aseguradora → nombre_comercial`.
+  - Criterio de completitud: el mapa queda disponible antes de pintar la columna.
+
+- [ ] **T-23** — Agregar la columna Aseguradoras
+  - `transformarValor` que convierta la lista de ids en nombres comerciales separados por coma.
+  - Criterio de completitud: cada empresa muestra sus aseguradoras por nombre; una empresa sin
+    aseguradoras muestra `-` sin romper la fila.
+
+- [ ] **T-24** — Filtro select sobre la columna Aseguradoras, y lint
+  - El constructor de filtros del frontend no sabe generar `any()` de OData, así que se usa el
+    escape hatch `Header.usarFiltro` de `TablaOmega` junto con
+    `operacion_generica.construir_filtro_libre`, para emitir
+    `aseguradoras/any(a: a eq {id})`.
+  - Criterio de completitud: elegir una aseguradora filtra correctamente, el conteo concuerda, y
+    limpiar el filtro restaura el listado. `npm run lint` sin errores nuevos.
+
 ---
 
 ## 5. Cambios en base de datos
@@ -469,7 +557,9 @@ El despliegue usa los pipelines existentes, que se disparan **por push, no manua
 | **Fase 1 — Backend `auth`** | DTO de listado, proyección en `Get` y `GetCount`, build y pruebas OData | T-03 a T-06 | 1 – 2 días | 231 |
 | **Fase 2 — Frontend `frontend-omega`** | Catálogo de roles, columna Rol, filtros por columna, Bloqueado booleano, lint | T-07 a T-12 | 1.5 – 2.5 días | 232 |
 | **Fase 3 — Integración y entrega** | Matriz de pruebas E2E en QA, verificación del gateway, commits y push | T-13 a T-15 | 1 – 1.5 días | 233 |
-| **Total proyecto** | | 15 tareas | **~4 – 7 días hábiles** (≈ 1 – 1.5 semanas) | — |
+| **Fase 4 — Backend: listado de empresas** | DTO plano, endpoint nuevo + `cnt`, ruteo en krakend, versionado de `clientes` y gateway | T-16 a T-20 | 1.5 – 2 días | 234 |
+| **Fase 5 — Frontend: columna de aseguradoras** | Endpoint nuevo, catálogo de aseguradoras, columna y filtro select | T-21 a T-24 | 1 – 2 días | 235 |
+| **Total proyecto** | | 24 tareas | **~6.5 – 11 días hábiles** (≈ 1.5 – 2 semanas) | — |
 | **Núcleo mínimo entregable** | Fase 0 + Fase 1 + T-08 (columna Rol) | T-01 a T-08 | ~2 – 3.5 días hábiles | — |
 
 > **Notas sobre la tabla:**

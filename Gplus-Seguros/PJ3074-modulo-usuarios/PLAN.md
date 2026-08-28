@@ -364,6 +364,15 @@ serializan** en el listado, porque `Get()` no hace `Include`.
 Ninguna. No hay servicios AWS nuevos, ni cambios en ECS, RDS, S3, Cloudflare o Route 53, ni impacto
 en costos.
 
+> **Corrección posterior a la generación del plan.** El plan omitió el versionado de despliegue. La
+> versión con la que el servicio `auth` realmente se despliega **no** es el `serviceVersion` de
+> `Program.cs` —esa es sólo la etiqueta que reporta OpenTelemetry— sino el tag de la imagen de ECR,
+> que vive en cuatro archivos: el `image` de
+> `Infrastructure/{qa,prod}/Authentication-task-definition.json` y el `ImageVersion` de
+> `Infrastructure/{qa,prod}/deploy-services-v2.ps1`. Los cuatro se actualizaron a `v2.3` durante la
+> ejecución. El detalle completo, incluido por qué el gateway **no** cambia de versión, está en la
+> sección **Versionado** del `AVANCE.md`.
+
 El despliegue usa los pipelines existentes, que se disparan **por push, no manualmente**:
 
 | Repo | Rama | Destino |

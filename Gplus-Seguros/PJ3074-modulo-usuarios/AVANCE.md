@@ -20,8 +20,11 @@
 ## Resumen de estado
 
 **Todo el código está escrito, compilado, linteado y subido.** Backend y frontend quedaron en
-`feature/ModuloUsuarios` en sus respectivos repos. Versiones subidas: frontend `1.1.29 → 1.1.30`,
-servicio `auth` `1.1 → 1.2`.
+`feature/ModuloUsuarios` en sus respectivos repos.
+
+**Versionado completo (ver la sección "Versionado"):** frontend `1.1.29 → 1.1.30`; servicio `auth`
+`serviceVersion 1.1 → 1.2` **y** imagen de despliegue `v2.2 → v2.3` en QA y prod. El gateway no se
+versiona porque no se le agregó ningún endpoint.
 
 **Lo único pendiente es T-13**, la matriz de pruebas manuales extremo a extremo contra QA. No es
 ejecutable desde aquí: requiere que el código esté desplegado en QA (lo que ocurre al hacer push a
@@ -38,6 +41,67 @@ hasta que se valide.
 | El frontend pasa lint | `npx eslint Usuarios.vue` | Limpio |
 | El gateway no requiere cambios | Lectura y parseo de `krakend.json` | `input_query_strings: ["*"]` en ambos endpoints; JSON válido (402 endpoints) |
 | Cardinalidad usuario↔rol | Auditoría del modelo EF y de todas las rutas de escritura de roles | Es invariante de aplicación, **no** del esquema — ver "Decisiones" |
+| Que el cambio de contrato no rompa a ningún consumidor | Búsqueda de código en toda la organización de GitHub + auditoría del gateway | Un único consumidor, y es la vista que se actualizó — ver "Análisis de impacto" |
+
+---
+
+## Versionado
+
+| Componente | Qué es | Dónde vive | Cambio |
+|---|---|---|---|
+| Frontend | Versión de producto que se muestra en la UI | `.env.local`, `.env.qa`, `.env.production` (`VUE_APP_VERSION`) | `1.1.29 → 1.1.30` |
+| `auth` — telemetría | `serviceVersion` que reporta OpenTelemetry | `Services/auth/Program.cs` | `1.1 → 1.2` |
+| `auth` — despliegue QA | Tag de la imagen de ECR con la que arranca el contenedor | `Infrastructure/qa/Authentication-task-definition.json` | `v2.2 → v2.3` |
+| `auth` — despliegue QA | `ImageVersion` que el script usa al desplegar | `Infrastructure/qa/deploy-services-v2.ps1` | `v2.2 → v2.3` |
+| `auth` — despliegue prod | Tag de la imagen de ECR | `Infrastructure/prod/Authentication-task-definition.json` | `v2.2 → v2.3` |
+| `auth` — despliegue prod | `ImageVersion` del script | `Infrastructure/prod/deploy-services-v2.ps1` | `v2.2 → v2.3` |
+| API Gateway | Tag de la imagen `gp_seguros_api_gateway` | `Infrastructure/{qa,prod}/ApiGateway-task-definition.json` y sus scripts | **Sin cambio** — ver abajo |
+
+**Por qué el tag y el `ImageVersion` se cambian juntos:** la función `Update-ImageVersion` de
+`deploy-services-v2.ps1` reescribe el tag de la task definition en tiempo de despliegue con el valor
+de `ImageVersion`. Cambiar sólo el JSON no sirve — el script lo sobreescribiría con el valor viejo.
+
+**Por qué el gateway no sube de versión:** este trabajo **no agrega ningún endpoint**.
+`GET /api/v1/usuarios`, `/usuarios/cnt` y `/roles` ya estaban ruteados, y `krakend.json` no se
+modificó. La imagen `gp_seguros_api_gateway` tendría contenido idéntico, así que subirle el tag
+desplegaría lo mismo con otro número. Si más adelante se agrega un endpoint, sí hay que tocar
+`krakend.json` y subir su versión en los cuatro lugares equivalentes.
+
+> `Services/auth/publish/` está en `.gitignore`. La imagen la construye y la sube el programador;
+> el repo sólo declara con qué tag se desplegará.
+
+---
+
+## Análisis de impacto — quién consume el endpoint modificado
+
+`GET v1/usuarios` cambió de contrato (de la entidad `aspnetusers` a `usuario_listadoDTO`) y
+`GET v1/usuarios/cnt` cambió el tipo de sus `ODataQueryOptions`. Verificación de que no rompe a nadie:
+
+| Verificación | Alcance | Resultado |
+|---|---|---|
+| Búsqueda de código en la organización de GitHub (`gh search code`) | Los ~60 repos de `garantiplusmexico` | El **único** consumidor de la colección es `frontend-omega/src/views/seguridad/usuarios/Usuarios.vue`, que es justamente la vista actualizada |
+| Endpoints del gateway que agreguen `/usuarios` junto a otros backends | `krakend.json` completo (402 endpoints) | Ninguno. Los 8 endpoints `/usuarios*` tienen **un solo backend** cada uno; no hay agregación que mezcle este payload con otro |
+| Acoplamiento a campos en el gateway (`allow`, `deny`, `mapping`, `group`, `target`) | Los 8 endpoints `/usuarios*` | Ninguno. Todos son `encoding: no-op` / `output_encoding: no-op` — passthrough puro de bytes; el gateway ni siquiera parsea el JSON |
+| Llamadas internas entre microservicios | Todo `Services/**/*.cs` de `gp_seguros` | Ninguna. Ningún servicio llama a `/usuarios` por HTTP |
+| Quién apunta al host interno `gp_omega_authentication` | Organización completa | Sólo `krakend.json` y el `docker-compose.yml` de desarrollo local |
+| Construcción dinámica de la URL (concatenación en vez de literal) | `frontend-omega/src` | Las 4 concatenaciones existentes apuntan a `users_name` o `reset-password`, no a la colección |
+
+**Endpoints vecinos que deliberadamente no se tocaron:** `v1/usuarios/{id}` (lo consume
+`Usuario.vue`, que depende de `aspnetuserroles[0].roleId`), `v1/usuarios/users_name` (lo consumen
+Cotizaciones, Pólizas y Pólizas Externas), `reset-password` y `reset-password-request`.
+
+**Límites de esta verificación — lo que no cubre:**
+
+- `gh search code` indexa **sólo la rama por defecto** de cada repo. Un consumidor que viva en una
+  rama sin mergear no aparecería.
+- No cubre consumidores **fuera de GitHub**: flujos de N8N (VPS de Hostinger), colecciones de
+  Postman, integraciones de terceros o cualquier cliente que pegue directo contra la API.
+
+Si existiera un consumidor así, el impacto sería acotado: el DTO **conserva con el mismo nombre
+JSON** todos los campos que el listado ya exponía (`id`, `userName`, `nombre`, `lastAccessDate`,
+`lockoutEnd`). Lo único que desaparece son las colecciones de navegación (`aspnetuserroles`,
+`usuarios_empresa`, `usuarios_sucursal`, `usuarios_grupo`), que **ya venían vacías** porque el
+`Get()` original nunca hacía `Include`.
 
 ---
 
@@ -144,6 +208,10 @@ HAVING count(*) > 1;
 | `Services/auth/Models/DTO/usuario_listadoDTO.cs` | Creado | T-03 |
 | `Services/auth/Controllers/UsuariosController.cs` | Modificado | T-04, T-05 |
 | `Services/auth/Program.cs` | Modificado (`serviceVersion` 1.1 → 1.2) | Versionado |
+| `Infrastructure/qa/Authentication-task-definition.json` | Modificado (imagen `v2.2 → v2.3`) | Versionado |
+| `Infrastructure/qa/deploy-services-v2.ps1` | Modificado (`ImageVersion v2.2 → v2.3`) | Versionado |
+| `Infrastructure/prod/Authentication-task-definition.json` | Modificado (imagen `v2.2 → v2.3`) | Versionado |
+| `Infrastructure/prod/deploy-services-v2.ps1` | Modificado (`ImageVersion v2.2 → v2.3`) | Versionado |
 | `CLAUDE.md` | Restaurado desde la rama hermana | Prerequisito del flujo |
 
 ### `frontend-omega` (rama `feature/ModuloUsuarios`)
@@ -157,6 +225,7 @@ HAVING count(*) > 1;
 ### Sin cambios (confirmado)
 
 - `Services/apigateway/krakend.json` — `input_query_strings: ["*"]` ya propaga los filtros nuevos.
+  Al no agregarse endpoints, tampoco sube de versión la imagen del gateway.
 - Base de datos — no hay migración ni cambio de esquema.
 - `Services/auth/Controllers/AuthenticationController.cs`, `RolesController.cs` — intactos.
 - `v1/usuarios/{id}` y `v1/usuarios/users_name` — intactos, según el análisis de impacto de la §6.
@@ -171,6 +240,7 @@ HAVING count(*) > 1;
 | enginecx_prd | `4659cab` | `[modulo-usuarios] AVANCE.md inicial - arranque de ejecucion` | 2026-08-28 |
 | gp_seguros | `5f4ee303` | `[modulo-usuarios] Restaurar CLAUDE.md en la rama de trabajo` | 2026-08-28 |
 | gp_seguros | `2cbde63d` | `[modulo-usuarios] Fase 1 - Proyeccion plana del listado de usuarios con rol` | 2026-08-28 |
+| gp_seguros | `299ac36f` | `[modulo-usuarios] Subir version de despliegue del servicio auth a v2.3` | 2026-08-28 |
 | frontend-omega | `c522ce8` | `[modulo-usuarios] Agregar CLAUDE.md al repositorio` | 2026-08-28 |
 | frontend-omega | `fd4d815` | `[modulo-usuarios] Fase 2 - Columna de rol y filtros por columna en el listado` | 2026-08-28 |
 | frontend-omega | `247bf2f` | `[modulo-usuarios] Fase 3 - Retirar la columna Activo del listado (T-11)` | 2026-08-28 |

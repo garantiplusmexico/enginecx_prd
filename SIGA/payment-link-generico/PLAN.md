@@ -61,8 +61,8 @@ cambios de infraestructura, sin secrets nuevos.
 - [x] Rama `develop` existe y está al día
 - [x] Análisis de acoplamiento a BMW completado (ver §3)
 - [x] Responsable confirmado: Juan Carlos Castellanos Solis
-- [ ] Confirmar si `payment-method` también se generaliza (Fase 5, §12 punto 3)
-- [ ] Confirmar la regla de MSI cuando un contrato tiene varias pólizas (§12 punto 2)
+- [x] Confirmado (31-ago): Omega **solo necesita el link**. `payment-method` queda fuera de alcance (§12 punto 3)
+- [x] Confirmado (31-ago): en SIGA un contrato es **siempre 1:1 con su póliza**; la convención del código es `First()` (§12 punto 2)
 - [ ] Ambiente de QA arriba para validar (ojo: QA se apaga a las 19:00)
 - [ ] Distribuidor y usuario de Omega dados de alta en QA (T-017) para probar el caso multi-proyecto
 
@@ -186,6 +186,11 @@ puerta a ningún rol nuevo. Esto debe verificarse en la Fase 0 antes de apoyarse
   - Archivos a crear/modificar: `Services/Contracts/Services/PaymentLinkService.cs`
   - Reemplaza el `INNER JOIN bmw_registro` por `contrato → poliza → producto_proyecto`, tomando el
     proyecto de `distribuidor.id_proyecto`, y conservando el filtro `COALESCE(pp.pago_pasarela,0) = 1`.
+  - **Un contrato es 1:1 con su póliza** (confirmado por el responsable el 31-ago; la relación
+    `contrato.poliza` es una colección, pero en SIGA siempre trae un elemento y la convención del
+    código es `First()`). Por lo tanto la consulta resuelve **una sola fila**, igual que hoy: se
+    conserva el `LIMIT 1` y **no** se implementa ninguna agregación (ni mínimo, ni máximo) sobre
+    varias pólizas. Ver §12 punto 2.
   - Criterio de completitud: para un contrato BMW de contado devuelve **el mismo `max_msi`** que
     devuelve hoy la versión que pasa por `bmw_registro`. Se compara contra al menos 3 contratos reales.
 
@@ -256,14 +261,14 @@ puerta a ningún rol nuevo. Esto debe verificarse en la Fase 0 antes de apoyarse
   - Incluye redesplegar **ApiGateway** en ambos ambientes por el cambio de `krakend.json`.
   - Criterio de completitud: ruta genérica viva en PROD y flujo BMW de contado sin regresión.
 
-### Fase 5 — `payment-method` genérico (P2, condicionada)
+### Fase 5 — `payment-method` genérico — ❌ DESCARTADA (31-ago-2026)
 
-> Solo si se confirma que Omega lo necesita (§12 punto 3). Se documenta para dejar el camino
-> trazado; no se implementa junto con P1.
-
-- [ ] **T-16** — Replicar el mismo patrón para `POST .../contracts/{contractId}/payment-method`.
-  - Archivos: `BmwController.cs` (línea ~1486), `ContractsController.cs`, `krakend.json`
-  - Criterio de completitud: mismos criterios que T-08 a T-13, aplicados a `SetPaymentMethod`.
+> **Fuera de alcance.** El responsable confirmó el 31-ago que **Omega solo necesita el link de
+> pago**. `payment-method` no se generaliza y se queda tal cual en `BmwController`.
+>
+> Se deja escrito por si en el futuro otro proyecto sí lo pide: sería replicar el mismo patrón de
+> las Fases 1 a 4 sobre `POST .../contracts/{contractId}/payment-method` (`BmwController.cs`
+> línea ~1486), y costaría 1 – 2 días hábiles adicionales. **No es trabajo de este plan.**
 
 ---
 
@@ -281,7 +286,7 @@ lectura sobre tablas existentes.
 |---|---|---|---|
 | POST | `/contracts/api/Contracts/v1/CreatePaymentLink/{contractId}` | Genera el link de pago de cualquier contrato en el scope del usuario. Genérico para todos los proyectos. | **Nuevo** |
 | POST | `/contracts/api/Bmw/v1/{projectId}/contracts/{contractId}/payment-link` | Pasa a ser wrapper del genérico. **Ruta, request, response y códigos sin cambio.** | Modificado (interno) |
-| POST | `/contracts/api/Contracts/v1/SetPaymentMethod/{contractId}` | Fija medio de pago. Solo si se aprueba la Fase 5. | Nuevo (P2, condicional) |
+| POST | `/contracts/api/Bmw/v1/{projectId}/contracts/{contractId}/payment-method` | **Sin cambio.** Se queda en `BmwController` — Omega solo necesita el link (confirmado 31-ago). | Sin tocar |
 
 ---
 
@@ -346,7 +351,7 @@ Sin secrets nuevos. Las credenciales de OpenPay siguen viviendo donde ya viven, 
 | # | Riesgo | Prob. | Impacto | Mitigación |
 |---|---|---|---|---|
 | R-1 | `ICanAccessBmw` e `ICanCreateContract` no resultan tener los mismos roles y el cambio le quita acceso a alguien | Baja | Alto | **T-02 lo verifica antes de escribir código.** Si difieren, se detiene y se define una policy propia (`ICanCreatePaymentLink`) con la unión de roles |
-| R-2 | La resolución genérica de MSI devuelve un tope distinto al de `bmw_registro` y cambia los meses ofrecidos al cliente | Media | Alto | T-06 compara contra contratos reales antes de conectar nada. Un contrato con varias pólizas es el caso a definir (§12 punto 2) |
+| R-2 | La resolución genérica de MSI devuelve un tope distinto al de `bmw_registro` y cambia los meses ofrecidos al cliente | **Baja** | Alto | Bajó de Media a Baja el 31-ago: al ser el contrato 1:1 con su póliza, la consulta nueva resuelve la misma fila única que la vieja, solo llegando por otro camino. T-06 lo verifica igual contra contratos reales |
 | R-3 | Se despliega `Contracts` sin `ApiGateway` y la ruta nueva da 404 | Media | Medio | Está escrito como parte de T-15 y en §9. Es un error conocido y recurrente del repositorio |
 | R-4 | El wrapper deja de validar el `projectId` de la ruta y relaja el 403 actual | Media | Alto | T-11 lo cubre explícitamente y T-13 lo verifica contra el baseline |
 | R-5 | Cambia el texto de algún mensaje de error y la landing —que hace matching por texto— deja de reaccionar bien | Media | Medio | El baseline de T-01 guarda los mensajes **textuales**; T-13 los compara uno a uno |
@@ -358,23 +363,38 @@ Sin secrets nuevos. Las credenciales de OpenPay siguen viviendo donde ya viven, 
 ## 12. Notas para el programador
 
 1. **Este plan no tiene PRD.** Se generó por decisión explícita del responsable para desbloquear a
-   Omega. Si el trabajo crece más allá de lo aquí descrito —sobre todo si entra la Fase 5 o la
-   cancelación de cargos en OpenPay— conviene levantar el PRD formal y asignarle folio. La carpeta
+   Omega. Si el trabajo crece más allá de lo aquí descrito —si algún día se retoma
+   `payment-method` o entra la cancelación de cargos en OpenPay— conviene levantar el PRD formal y
+   asignarle folio. La carpeta
    se llamó `payment-link-generico` sin folio `PJ####` a propósito, siguiendo el precedente de
    `Go Virtual/atenea-go-virtual` y `Gplus-Seguros/omega-endpoint-cotizaciones-error`.
 
-2. **Decisión pendiente — MSI con varias pólizas.** Hoy BMW resuelve el tope tomando el
-   `bmw_registro` más reciente (`ORDER BY r.id_registro DESC LIMIT 1`), lo que funciona porque un
-   registro BMW equivale a una póliza. Un contrato genérico puede tener **varias pólizas con
-   productos distintos y topes de MSI distintos**. Hay que definir la regla antes de T-06:
-   ¿el `max_msi` más alto, el más bajo, o el de la póliza de mayor importe? Recomendación: **el más
-   bajo**, porque es el único que no ofrece al cliente una mensualidad que algún producto del
-   contrato no soporta. Confirmarlo antes de codificar.
+2. **RESUELTO (31-ago) — MSI y la relación contrato/póliza.** En SIGA **un contrato es siempre 1:1
+   con su póliza**. `contrato.poliza` está modelada como colección, pero nunca trae más de un
+   elemento y la convención establecida del código es resolverla con `First()` — así lo hace ya el
+   propio `BmwPaymentService` en `ApplyPagoBeneficiarioAsync` y `ApplyOrdenDePagoAsync`
+   (`contract.poliza?.FirstOrDefault()`). Por lo tanto **no hay que decidir ninguna regla de
+   agregación**: la consulta genérica resuelve una fila única, igual que la de `bmw_registro`, solo
+   que llegando por `poliza` en vez de por el registro BMW. No implementar mínimos ni máximos: sería
+   complejidad especulativa sobre un caso que no existe.
 
-3. **Decisión pendiente — `payment-method`.** El flujo de contado de BMW no solo pide el link:
-   también fija el medio con `POST .../payment-method` (`BmwController` línea 1486). Falta saber si
-   Omega necesita las dos cosas o solo el link. Si necesita ambas, la Fase 5 deja de ser opcional y
-   el plan crece entre 1 y 2 días.
+   *Respaldo en datos (consultado el 31-ago):* de 381,109 pólizas hay **0** contratos con más de un
+   producto y **1** solo con más de una póliza — y ese uno es basura, no un caso de negocio: el
+   contrato **57227** tiene 148,385 pólizas colgadas, con fechas de inicio de 1905 a 2026, 148,385
+   vehículos distintos, cero beneficiarios y $657 M de total. Es un id-basurero al que quedaron
+   apuntando pólizas huérfanas de alguna carga vieja. No afecta a este plan, pero conviene saberlo
+   si algún reporte agrupa por contrato.
+
+3. **RESUELTO (31-ago) — `payment-method` queda fuera de alcance.** El flujo de contado de BMW,
+   además del link, fija el medio con `POST .../payment-method` (`BmwController` línea 1486). El
+   responsable confirmó que **Omega solo necesita el link**, así que ese endpoint no se generaliza y
+   se queda como está. La Fase 5 se descarta y el plan queda en **7 – 12 días hábiles**.
+
+   Para referencia, qué hace ese endpoint y por qué Omega no lo necesita: recibe
+   `{"method":"openpay"}` o `{"method":"orden_pago"}`, solo escribe `contrato.medio_pago` y devuelve
+   `{"medioPago":"Pago beneficiario"}` o `{"medioPago":"Orden de pago"}`. Sirve para dejar que el
+   cliente **elija** entre pagar en línea o con referencia bancaria. Omega cobra siempre por
+   pasarela, así que no tiene nada que elegir.
 
 4. **`GetContractPaymentInfo` es la plantilla.** No inventar formato de error, de ruta ni de
    logging: copiar el de esa acción. Ya está en PROD, ya lo consume la landing BMW y ya resolvió el
@@ -405,27 +425,28 @@ Sin secrets nuevos. Las credenciales de OpenPay siguen viviendo donde ya viven, 
 | **Fase 2 — Endpoint genérico (P1)** | Acción en `ContractsController`, policy, rate limit, ruta en KrakenD | T-08 a T-09 | 1 – 2 días | 238 |
 | **Fase 3 — BMW como wrapper (P1)** | Delegación, validación de `projectId`, verificación de la landing | T-10 a T-12 | 1 – 2 días | 239 |
 | **Fase 4 — Validación y despliegue (P1)** | Regresión contra baseline, prueba con Omega, deploy QA + PROD | T-13 a T-15 | 2 – 3 días | 240 |
-| **Fase 5 — `payment-method` genérico (P2)** | Mismo patrón para `SetPaymentMethod` | T-16 | 1 – 2 días | 241 |
-| **Total proyecto (P1+P2)** | | 16 tareas | ~8 – 14 días hábiles (≈ 2 – 3 semanas) | — |
-| **Solo P1 (mínimo que desbloquea a Omega)** | Fase 0 + Fase 1 + Fase 2 + Fase 3 + Fase 4 | T-01 a T-15 | ~7 – 12 días hábiles (≈ 1.5 – 2.5 semanas) | — |
+| ~~Fase 5 — `payment-method` genérico~~ | ❌ **DESCARTADA (31-ago)**: Omega solo necesita el link | — | — | 241 |
+| **Total proyecto** | Fase 0 a Fase 4 — todo es P1 | 15 tareas | ~7 – 12 días hábiles (≈ 1.5 – 2.5 semanas) | — |
 
 > **Notas sobre la tabla:**
 > - Las Fases 0 y 4 concentran 3 – 5 días de los 7 – 12 de P1. **No son relleno:** son el costo de
 >   tocar un endpoint productivo que mueve dinero, y son lo que hace que "no romper nada" sea
 >   verificable en vez de una intención.
-> - Los rangos salen de la complejidad real de cada tarea. La Fase 1 es la más ancha porque T-06
->   (resolución de MSI) depende de una decisión de negocio todavía abierta (§12 punto 2).
-> - La columna **ID (BD)** la llena el flujo al registrar el plan; no editarla a mano.
+> - Los rangos salen de la complejidad real de cada tarea. Tras cerrarse las dos decisiones
+>   abiertas el 31-ago, ya **no queda ninguna dependencia de negocio**: el plan es ejecutable de
+>   punta a punta.
+> - La columna **ID (BD)** la llena el flujo al registrar el plan; no editarla a mano. La fase 241
+>   se conserva en la BD marcada como `Cancelado` para dejar rastro de que se evaluó y se descartó.
 
 > **Riesgo de deadline:** no hay fecha límite comprometida, porque no hay PRD que la fije. El
-> disparador real es Omega, que está esperando. Si esa espera aprieta, el recorte correcto es
-> **dejar la Fase 5 fuera** (`payment-method`) y entregar solo P1: el link de pago genérico
-> desbloquea a Omega en ~7 – 12 días hábiles. Lo que **no** se debe recortar son las Fases 0 y 4:
-> quitarlas ahorra ~3 – 5 días a cambio de exponer a producción un flujo de cobro sin red de
-> seguridad, y el propio antecedente de PJ9124 ya documenta una reversión previa por exactamente
-> ese tipo de prisa. Un segundo desarrollador aportaría poco: las fases son secuenciales y
-> dependen unas de otras; a lo sumo podría paralelizar la Fase 0 con la Fase 1, comprimiendo
-> ~15%.
+> disparador real es Omega, que está esperando. El recorte de alcance previsto —dejar fuera
+> `payment-method`— **ya se aplicó** al descartarse la Fase 5, así que el plan ya está en su
+> mínimo razonable: 15 tareas, ~7 – 12 días hábiles. Lo que **no** se debe recortar de aquí son las
+> Fases 0 y 4: quitarlas ahorra ~3 – 5 días a cambio de exponer a producción un flujo de cobro sin
+> red de seguridad, y el propio antecedente de PJ9124 ya documenta una reversión previa por
+> exactamente ese tipo de prisa. Un segundo desarrollador aportaría poco: las fases son
+> secuenciales y dependen unas de otras; a lo sumo podría paralelizar la Fase 0 con la Fase 1,
+> comprimiendo ~15%.
 
 ---
 

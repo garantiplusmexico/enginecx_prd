@@ -288,13 +288,19 @@ src/
   - Los iconos de la navegación inferior esperan a T-19: uno inventado por destino se adivina mal y hay que aprenderlo igual
   - Las rutas cuelgan de una **ruta de layout** que envuelve, en orden, la compuerta de sesión y el armazón
 
-- [ ] **T-27** — Mapa de rutas con carga bajo demanda
+- [x] **T-27** — Mapa de rutas con carga bajo demanda
   - Archivos a crear/modificar: `src/app/routes/*.tsx`
   - Criterio de completitud: cada pantalla tiene URL propia, navegable, compartible y con historial funcional (RF-23); cada ruta carga su código bajo demanda y la carga inicial no incluye módulos que el asesor no usa (RNF-20), verificado con el análisis del bundle en CI
+  - **Escribir `React.lazy` no basta, y esto se descubrió aquí:** el troceado se perdió en el primer intento porque el barril `features/identity/ui/index.ts` reexportaba la pantalla, y ese barril se importa desde caminos que se cargan al arrancar. Vite lo avisa (`INEFFECTIVE_DYNAMIC_IMPORT`) entre decenas de líneas de salida. Ahora **las pantallas que son destino de ruta no se exportan por el barril** y `tools/analiza-bundle.mjs` lo verifica en CI sobre el manifiesto del build
+  - Techo de la carga inicial: **150 KB comprimidos** (hoy 107, casi todo React + Router + Query). Holgado a propósito: un margen que salta cada semana se sube sin mirar
+  - Se corrigió de paso el paso de build de CI, que no tenía `VITE_AUTH_BASE_URL` desde que T-08 la hizo obligatoria — habría fallado en el primer PR
 
-- [ ] **T-28** — Bienvenida y perfil
+- [x] **T-28** — Bienvenida y perfil
   - Archivos a crear/modificar: `src/features/identidad/ui/BienvenidaPage.tsx` y el caso de uso `MarcarBienvenidaVista` (RPC `marcar_bienvenida_vista`)
   - Criterio de completitud: pantalla descartable por el usuario y persistente por perfil; muestra datos básicos del asesor y su asignación
+  - **Mientras está pendiente, cualquier ruta lleva a ella**, y va fuera del armazón: si se pudiera saltar navegando a otra parte dejaría de cumplir su único propósito, y una barra de navegación solo ofrecería botones que devuelven aquí
+  - Al descartarla se **actualiza la sesión en caché** con el perfil que devuelve el caso de uso, en vez de volver a pedirla: sin señal la marca queda encolada, y volver a preguntar dejaría al asesor mirando la bienvenida otra vez. Si el servicio no pudo guardarla, no se da por descartada
+  - **La cartera de salas no se muestra:** el endpoint de perfil no la trae —viaja en los catálogos de referencia (T-33)— y una lista inventada en la bienvenida es la peor primera impresión posible
 
 - [x] **T-29** — Dominio de operación encolada
   - Archivos a crear/modificar: `src/domain/shared/OperacionEncolada.ts` + pruebas

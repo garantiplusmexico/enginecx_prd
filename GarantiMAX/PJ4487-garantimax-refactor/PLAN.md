@@ -304,9 +304,12 @@ src/
   - Criterio de completitud: persiste operaciones **con sus imágenes**, conserva el orden, sobrevive al cierre de la aplicación y se prueba sin navegador
   - **El orden hubo que construirlo:** IndexedDB recorre por clave y las nuestras son UUID, cuyo orden alfabético es arbitrario. Cada registro lleva número de secuencia, actualizar conserva el suyo, y el contador se siembra al abrir con el mayor de la base — sin eso, al reabrir la aplicación lo de hoy se ordenaría antes de lo que quedó pendiente de ayer
 
-- [ ] **T-31** — Decorador offline genérico y casos de uso de sincronización
+- [x] **T-31** — Decorador offline genérico y casos de uso de sincronización
   - Archivos a crear/modificar: `src/shared/sync/conOffline.ts`, `src/shared/sync/application/{EncolarOperacion,DrenarCola,ReintentarOperacion,ObtenerEstadoDeSincronizacion}.ts` + pruebas
   - Criterio de completitud: el decorador implementa la misma interfaz del repositorio (ADR-009); **ningún caso de uso contiene `if (online)`**; un `NetworkError` en una operación encolable se traduce en encolamiento y no en error visible (A1 §10, regla 2); el drenaje **no vive en el árbol de componentes** ni depende de qué pantalla esté montada
+  - **Tres decisiones que el criterio no anticipaba.** (1) Solo se declara encolable un método que devuelve `Promise<void>`, y el tipo lo obliga: cuando la operación se encola no hay resultado que devolver, y un valor de relleno es como nacen los «guardado con éxito» sobre datos que nunca se guardaron. (2) Se encola también el `ProviderError` (408, 429, 5xx), extendiendo la regla 2 a propósito — un 502 pasajero no debe costar la visita escrita, y reintentar es seguro porque la clave primaria es la clave de idempotencia. (3) Si la **cola** no pudo guardar, la operación falla en vez de devolver silencio: el mensaje de `NetworkError` promete que se guardó
+  - **El drenaje se detiene en el primer fallo.** El orden de la cola es el orden en que el asesor hizo las cosas y hay operaciones que dependen de otras; seguir haría que el cierre llegue al servidor antes que la apertura
+  - **Se cerró un hueco de `identidad.md` I-30 que no estaba implementado:** la cola vive en el dispositivo y el dispositivo se comparte, así que cada operación lleva ahora el **usuario real** como dueño y la cola solo muestra lo suyo. Sin eso, el trabajo pendiente de un asesor lo habría enviado la sesión del siguiente con el token del siguiente
 
 - [ ] **T-32** — Estado de sincronización observable
   - Archivos a crear/modificar: `src/shared/sync/store.ts` (Zustand), `src/shared/ui/IndicadorSincronizacion.tsx`

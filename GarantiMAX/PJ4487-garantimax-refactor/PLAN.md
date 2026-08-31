@@ -238,8 +238,12 @@ src/
 - [ ] **T-S06** — Endpoints de identidad y perfil
   - Criterio de completitud: perfil del asesor, marca de bienvenida vista y de inducción. Los roles **no** se exponen por endpoint: viajan en el token
 
-- [ ] **T-S07** — Endpoints de terreno: Mi Día, visitas y lobbies
+- [x] **T-S07** — Endpoints de terreno: Mi Día, visitas y lobbies
   - Criterio de completitud: check-in, cierre, visita en curso, visitas abiertas y lobbies, con la clave de idempotencia respetada en la base. Los catálogos de referencia se exponen **solo en lectura** (RF-24)
+  - **La clave primaria por asesor no bastaba.** Con una fila por asesor, un `PUT` de otra visita habría sobrescrito la abierta sin error y sin aviso, perdiendo su borrador; ahora responde **409 nombrando la sala abierta**. Es la invariante V-04 del lado del servidor, que hoy vive en la UI como un `disabled`
+  - **No hay bandera `overwrite`:** se deduce del `VisitId`. Una bandera que el cliente debe poner bien es una bandera que algún día estará mal, y el síntoma sería el asesor recibiendo cinco veces el mismo recordatorio (V-23)
+  - **Mi Día es una sola respuesta** —visita en curso, agenda resuelta, bitácora y cumpleaños— porque es exactamente lo que se guarda como snapshot offline (V-40): cinco endpoints serían cinco oportunidades de quedarse con medio día. **El día va en la ruta y es obligatorio:** el servicio conoce el país del asesor, no su zona horaria, y resolver «hoy» en UTC adelanta el día a las 21:00 en Santiago
+  - Documentado en `Services/GarantiMax/doc/una-visita-en-curso.md`
 
 - [ ] **T-S08** — Endpoints de gestión: tareas, avances, agenda, cumpleaños y bitácora
   - Criterio de completitud: reimplementa las reglas de `crear_tarea_sala`, `completar_tarea`, `set_tarea_completada`, `calificar_tarea`, `tarea_avance_crear`, `limite_habil`, `cumpleanos_vendedores` y `vendedor_por_nombre` extraídas en T-13 y T-14. Bitácora con unicidad por asesor y día

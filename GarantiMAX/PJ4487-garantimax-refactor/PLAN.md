@@ -281,9 +281,12 @@ src/
   - Archivos a crear/modificar: `src/app/providers/DeviceContextProvider.tsx` + pruebas
   - Criterio de completitud: resuelve en un solo lugar tamaño de pantalla, instalación como PWA, cámara, geolocalización y estado de conexión, y **expone una decisión, no datos crudos**; la regla de linter (T-09.4) impide cualquier acceso directo desde componentes
 
-- [ ] **T-26** — Layout adaptativo y app shell
+- [x] **T-26** — Layout adaptativo y app shell
   - Archivos a crear/modificar: `src/shared/layouts/{LayoutAdaptativo,NavegacionLateral,NavegacionInferior,AppShell}.tsx`
   - Criterio de completitud: pantalla ancha con navegación lateral y densidad alta; estrecha con navegación inferior, una tarea por pantalla y acciones al alcance del pulgar; **mismas rutas y mismo estado en ambos** (RF-22, RNF-16)
+  - **«Mismas rutas» dejó de ser una aspiración:** la navegación es un **dato** que las dos presentaciones reciben, así que ninguna puede inventarse un destino, y hay pruebas que comparan los dos layouts y exigen los mismos enlaces y el mismo contenido. Si alguien le agrega una pantalla a uno solo, fallan
+  - Los iconos de la navegación inferior esperan a T-19: uno inventado por destino se adivina mal y hay que aprenderlo igual
+  - Las rutas cuelgan de una **ruta de layout** que envuelve, en orden, la compuerta de sesión y el armazón
 
 - [ ] **T-27** — Mapa de rutas con carga bajo demanda
   - Archivos a crear/modificar: `src/app/routes/*.tsx`
@@ -311,9 +314,12 @@ src/
   - **El drenaje se detiene en el primer fallo.** El orden de la cola es el orden en que el asesor hizo las cosas y hay operaciones que dependen de otras; seguir haría que el cierre llegue al servidor antes que la apertura
   - **Se cerró un hueco de `identidad.md` I-30 que no estaba implementado:** la cola vive en el dispositivo y el dispositivo se comparte, así que cada operación lleva ahora el **usuario real** como dueño y la cola solo muestra lo suyo. Sin eso, el trabajo pendiente de un asesor lo habría enviado la sesión del siguiente con el token del siguiente
 
-- [ ] **T-32** — Estado de sincronización observable
+- [x] **T-32** — Estado de sincronización observable
   - Archivos a crear/modificar: `src/shared/sync/store.ts` (Zustand), `src/shared/ui/IndicadorSincronizacion.tsx`
   - Criterio de completitud: el asesor ve pendiente / en curso / fallida y puede reintentar manualmente desde cualquier pantalla (RF-21)
+  - **La cola se volvió observable** (`onChange`) en lugar de encuestarla: encuestar cada segundo gasta batería en un teléfono que el asesor lleva todo el día y encima llega tarde — entre encuesta y encuesta el indicador miente
+  - **Tres estados y ninguno más.** Sin nada pendiente el indicador **no se muestra**: un aviso permanente que casi siempre dice «todo bien» deja de leerse. Pendiente o enviando, aviso discreto — trabajar sin señal es lo normal en terreno. Agotado, aviso con botón, y lo primero que dice es que **nada se perdió**
+  - `retryFailedOperations` es un caso de uso y no un bucle dentro del manejador del botón: «qué significa reintentar» es una decisión de aplicación
 
 - [ ] **T-33** — Dominio de visita
   - Archivos a crear/modificar: `src/features/visitas/domain/*.ts` + pruebas

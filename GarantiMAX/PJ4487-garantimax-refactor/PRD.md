@@ -369,7 +369,7 @@ Cada evento registra como mínimo: fecha y hora, identificador del asesor, ident
 | --- | --- |
 | **Queries dentro de vistas** | De 443 a 0. Se mide automáticamente con la regla de linter de RNF-01. Es la métrica que define el éxito arquitectónico del proyecto. |
 | **Archivos que hablan con la red fuera de infraestructura** | De 152 (línea base del sistema actual) a 0. |
-| **Duplicación entre experiencias web y móvil** | De 2 implementaciones de Mi Día a 1. Se mide como número de componentes de terreno con equivalente duplicado. |
+| **Duplicación entre experiencias web y móvil** | De 2 implementaciones de Mi Día a 1. Se mide como número de componentes de terreno con equivalente duplicado. **Cumplida para Mi Día el 31-08-2026:** una sola pantalla, con el armazón resolviendo ancho y estrecho. |
 | **Pruebas ejecutables sin backend** | Porcentaje de la suite de dominio y casos de uso que corre sin el servicio .NET levantado. Meta: 100 %. |
 | **Paridad funcional al corte** | Porcentaje de funcionalidades de terreno del sistema actual con equivalente verificado. Meta: 100 % antes del corte. |
 | **Operaciones perdidas por falta de señal** | Meta: 0 en las pruebas de corte de red y en el primer mes de producción. |
@@ -418,7 +418,7 @@ Cada evento registra como mínimo: fecha y hora, identificador del asesor, ident
 | **Librerías** | El ADR-006 propone React Router (navegación), TanStack Query (datos de servidor) y Zustand acotado (estado de UI transversal). ¿TI las aprueba como decisión cerrada del PRD? |
 | ~~**Repositorio**~~ | **Resuelto (25-08-2026).** Repositorio propio: `garantiplusmexico/siga_alfa` para el frontend. El backend vive en `Services/GarantiMax/` del monorepo `garantiplusmexico/gp_3.0_siga_api` (ADR-011). |
 | **Despliegue** | ¿Dónde y bajo qué dominio se despliega el **frontend** durante el desarrollo y tras el corte? ¿Qué pasa con `www.garantimax.com` el día del corte? El backend sigue el estándar del repo de la API: AWS ECS + Fargate. |
-| **Offline** | ¿Cuál es el tiempo máximo que el asesor debe poder operar sin señal antes de exigir sincronización? Define el tamaño y la caducidad del snapshot. |
+| ~~**Offline**~~ | **Resuelto en construcción (31-08-2026), sujeto a confirmación de la operación.** El snapshot de Mi Día **vale el día que guarda** y solo para el asesor que lo guardó: no hay plazo en minutos. Un plazo corto dejaría al asesor sin nada a media mañana en una sala sin cobertura, y uno largo le mostraría el día de ayer como si fuera hoy. Las operaciones que él produce **no caducan**: la cola las conserva hasta enviarlas (RNF-08). |
 | **Evidencia de visitas** | ¿Las fotos de evidencia deben poder capturarse y encolarse sin señal, igual que las boletas, o requieren conexión? Impacta directamente en el diseño de la cola offline. Del lado del servicio hay precedente de almacenamiento en S3 (`Services/Claims/Services/S3Service.cs` y `Common/Storage`), así que el hueco es de contrato, no de tecnología. |
 | ~~**Rol legacy**~~ | **Resuelto por ADR-011.** No se toca el sistema actual: el sistema nuevo tiene identidad y roles propios, y el tier `CM/GTE/FARMER` no se reimplementa. Su eliminación del sistema actual deja de ser asunto de este proyecto. |
 | **Identificador de rol del asesor** | El JWT de la API trae roles como claims, y el identificador es nuevo respecto al sistema actual. ¿Qué roles concretos representan al Asesor Farmer, y quién los da de alta? El frontend necesita el nombre exacto para resolver permisos en un solo punto. |

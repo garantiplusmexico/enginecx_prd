@@ -331,21 +331,30 @@ src/
   - **Tres estados y ninguno más.** Sin nada pendiente el indicador **no se muestra**: un aviso permanente que casi siempre dice «todo bien» deja de leerse. Pendiente o enviando, aviso discreto — trabajar sin señal es lo normal en terreno. Agotado, aviso con botón, y lo primero que dice es que **nada se perdió**
   - `retryFailedOperations` es un caso de uso y no un bucle dentro del manejador del botón: «qué significa reintentar» es una decisión de aplicación
 
-- [ ] **T-33** — Dominio de visita
+- [x] **T-33** — Dominio de visita
   - Archivos a crear/modificar: `src/features/visitas/domain/*.ts` + pruebas
-  - Criterio de completitud: `planificada → en_curso → cerrada | descartada`; **una visita en curso por asesor** como invariante del dominio (RF-06); una visita en curso exige sala, hora de inicio y ubicación; no se cierra sin registro de lo observado; un usuario impersonado no puede descartar. Cada regla de `docs/reglas/visitas.md` (T-13) tiene su prueba
+  - Criterio de completitud: `planificada → en_curso → cerrada | descartada`; **una visita en curso por asesor** como invariante del dominio (RF-06); ~~una visita en curso exige sala, hora de inicio y ubicación~~; no se cierra sin registro de lo observado; un usuario impersonado no puede descartar. Cada regla de `docs/reglas/visitas.md` (T-13) tiene su prueba
+  - **Dos correcciones al criterio, siguiendo en ambos casos la regla levantada del sistema actual, que es la que tiene el motivo escrito.** (1) La **ubicación no es obligatoria**: V-20 dice lo contrario y explica por qué — bloquear la visita por un permiso denegado deja al asesor sin poder trabajar. (2) «No se cierra sin registro de lo observado» se implementó con el umbral **deliberadamente más bajo posible** —un punto del decálogo respondido, un comentario o un acuerdo—; el sistema actual no exige nada de eso, y un umbral alto es lo que el asesor sortea con datos falsos para cerrar una visita que sí hizo
+  - El decálogo se portó del `decalogo.ts` original: **las diez claves siguen en español** porque son contrato de datos con historia (V-24), y hay una prueba que las fija letra por letra
 
-- [ ] **T-34** — `VisitaRepository` por agregado
+- [x] **T-34** — `VisitaRepository` por agregado
   - Archivos a crear/modificar: `src/features/visitas/ports/VisitaRepository.ts`, `src/features/visitas/infrastructure/ApiVisitaRepository.ts` + pruebas de mapeo
-  - Criterio de completitud: una sola interfaz cubre `visitas`, `visitas_abiertas` y `visitas_en_curso` (ADR-003); la interfaz habla en lenguaje de negocio (`obtenerVisitaEnCursoDe(asesor)`); el dominio no sabe que hay tres tablas
+  - Criterio de completitud: una sola interfaz cubre `visitas`, `visitas_abiertas` y `visitas_en_curso` (ADR-003) —dos tablas tras unificarlas en T-S03—; la interfaz habla en lenguaje de negocio; el dominio no sabe cuántas tablas hay
+  - **Ningún método recibe el asesor**, al contrario de lo que sugería la firma del criterio: ningún endpoint acepta un id de asesor, lo resuelve del token (I-01). Un parámetro que no se usa sugiere que se puede pedir la visita de otro, que es justo lo que el servicio rechaza
+  - **Los enums viajan como números** —ningún servicio del monorepo registra `JsonStringEnumConverter`— y el contrato quedó **fijado por una prueba** en vez de deducido: agregar un valor en medio del enum de C# corre todos los de abajo
 
-- [ ] **T-35** — Casos de uso de visita
+- [x] **T-35** — Casos de uso de visita
   - Archivos a crear/modificar: `src/features/visitas/application/{IniciarVisita,GuardarBorradorVisita,CerrarVisita,DescartarVisitaEnCurso,ObtenerVisitaEnCurso}.ts` + pruebas
-  - Criterio de completitud: `DescartarVisitaEnCurso` verifica identidad efectiva vs. real y limpia las tres capas (servidor, borrador local, marca de visita abierta) en orden, devolviendo resultado tipificado; todas las pruebas corren sin backend
+  - Criterio de completitud: `DiscardOpenVisit` verifica identidad efectiva vs. real y limpia las capas **en orden** —servidor con `await` y después el teléfono—, devolviendo resultado tipificado; todas las pruebas corren sin backend. Son dos capas y no tres: `visitas_abiertas` se unificó con el borrador en T-S03
+  - **Qué se espera y qué es best-effort** es la decisión central del tramo: el teléfono siempre se espera —si falla, se avisa antes de empezar la visita, no al cerrarla—; el servidor es best-effort en check-in y autoguardado (V-15); **cerrar no es best-effort**
+  - **Si no se pudo saber si hay una visita abierta, no se abre otra:** fallar cerrado cuesta un intento, fallar abierto cuesta la visita que el asesor tenía a medias
+  - Un error real que destapó una prueba: `toOutcome` solo reconocía las reglas del dominio de visitas, así que descartar con «Ver como» activo —que lo prohíbe `OperatingIdentity`— caía en «no pudimos hacerlo, inténtalo de nuevo», un mensaje falso para una regla que no se salta reintentando
 
-- [ ] **T-36** — Decorador offline de visitas
+- [x] **T-36** — Decorador offline de visitas
   - Archivos a crear/modificar: `src/features/visitas/infrastructure/VisitaRepositoryOffline.ts` + pruebas
   - Criterio de completitud: check-in, guardado de borrador y cierre se encolan sin señal con idempotencia; el borrador sobrevive al cierre de la app y a la falta de señal (RF-07); reintentar no duplica la visita (RNF-09)
+  - **Son 40 líneas**, y eso es el resultado de T-31: se declara qué es encolable y con qué clave, nada más. En el sistema actual el soporte offline de visitas son ~500 líneas propias y las boletas tienen otras tantas distintas para el mismo problema
+  - **El prefijo de la clave del borrador no es cosmético:** sin él, autoguardado y cierre de la misma visita compartirían clave en la cola y el segundo pisaría al primero. Con él, cincuenta autoguardados se colapsan en una sola operación y gana el último
 
 - [ ] **T-37** — Interfaz de visita
   - Archivos a crear/modificar: `src/features/visitas/ui/{CheckInPage,VisitaEnCursoPage,CierreVisitaPage}.tsx` + hooks de UI

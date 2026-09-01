@@ -378,9 +378,13 @@ src/
   - Archivos a crear/modificar: `src/features/visitas/infrastructure/EvidenciaVisita.ts` (usa `StorageProvider`) y la UI de captura
   - Criterio de completitud: captura desde cámara, subida a Storage y **encolado sin señal igual que las boletas** (decisión tomada en este plan; ver §12); ninguna imagen se pierde en las pruebas de corte de red
 
-- [ ] **T-40** — Lobbies y otros eventos
-  - Archivos a crear/modificar: `src/features/visitas/domain/Lobby.ts`, `src/features/visitas/application/{RegistrarLobby,RegistrarOtroEvento}.ts`, `ui/` + pruebas
+- [x] **T-40** — Lobbies y otros eventos
+  - Archivos creados: `src/features/visits/domain/Lobby.ts`, `ports/LobbyRepository.ts`, `infrastructure/{ApiLobbyRepository,offlineLobbyRepository}.ts`, `application/SaveLobby.ts`, `ui/{LobbyPage,LobbyHistoryPage}.tsx`, `app/routes/LobbyRoutes.tsx` + pruebas
   - Criterio de completitud: comparten el ciclo de la visita **sin exigir sala**; tienen detalle e historial propios (RF-09)
+  - **No hay `RegistrarOtroEvento`.** El PLAN lo pedía aparte y no existe: sería el mismo agregado con otro nombre. Lo que el sistema actual llama «otro evento» es un lobby sin sala, y eso ya se registra — un caso de uso más habría sido simetría por simetría
+  - **Y no hay `OpenLobby`.** Un lobby no tiene ciclo abierto: no hay check-in, ni cronómetro, ni borrador, porque se anota **después** de que ocurrió. Por eso su pantalla sí tiene botón de guardar, al contrario que la de la visita: no hay nada que salvar de una llamada entrante cuando el asesor no está en medio del evento
+  - **El costo vacío es `null` y no cero** (V-50), y la distinción se mantiene en las cinco capas: el campo, el dominio, el repositorio, el viaje por IndexedDB y la línea del historial —«Sin costo registrado» y «$0» son dos frases—. Colapsarla en la pantalla habría deshecho al final lo que todo lo demás se molesta en mantener
+  - El decorador offline son **40 líneas y una sola operación**, con el id del lobby como clave: reintentar no crea un segundo lobby (V-48, RNF-09)
 
 - [x] **T-41** — Casos de uso de Mi Día y snapshot
   - Archivos creados: `src/features/visits/application/GetMyDay.ts`, `src/features/visits/{ports/MyDayRepository,infrastructure/ApiMyDayRepository}.ts`, `src/shared/sync/Snapshot.ts` + pruebas

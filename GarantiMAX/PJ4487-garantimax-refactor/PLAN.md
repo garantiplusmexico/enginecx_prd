@@ -205,9 +205,12 @@ src/
   - Archivos a crear/modificar: `docs/reglas/esquema-fase1.md` · fuentes: las migraciones, funciones y políticas del repo actual (solo lectura) · destino: el equipo que construye `Services/GarantiMax/`
   - Criterio de completitud: tabla por tabla del alcance de Fase 1, sus campos con tipo y obligatoriedad, sus invariantes y su dueño; **clave de idempotencia con índice único parcial** exigida en visitas, lobbies, eventos de agenda, avances de tarea, bitácoras y gastos (RNF-09), más unicidad por asesor y día en bitácoras; columna de país donde haya dato operativo; claves de un solo tipo y FKs reales — **nada de transcribir el esquema viejo** (A3 §3). Incluye la tabla de eventos de producto del PRD §11. Se entrega como especificación, no como SQL: la implementación es del servicio
 
-- [ ] **T-19** — Sistema de componentes base adaptativo
+- [x] **T-19** — Sistema de componentes base adaptativo
   - Archivos a crear/modificar: `src/shared/ui/*` (botón, campo, selector, lista, tarjeta, hoja inferior, modal, estado vacío, cargando, error), `src/shared/ui/tokens.css`
   - Criterio de completitud: cada componente funciona en pantalla ancha y estrecha sin bifurcación en el consumidor; objetivos táctiles ≥ 44 px y contraste AA verificados (RNF-16, RNF-17); ninguno consulta `matchMedia`
+  - **La hoja inferior y el modal son el mismo componente**, sobre `<dialog>` nativo: la diferencia es una clase `sm:` que resuelve el navegador. El nativo trae foco atrapado, Escape y página inerte — reimplementarlos a mano es de los errores de accesibilidad más comunes
+  - Los colores llevan **su ratio de contraste anotado**: `muted` es slate-600 y no el slate-400 habitual para texto secundario, porque slate-400 sobre blanco da 2.8:1 y no cumple AA
+  - **La lista exige decir qué se ve cuando está vacía.** La mitad de las listas del sistema actual no dicen nada, y el asesor no sabe si no hay visitas o si la consulta falló
 
 ### Fase 0-B — Servicio .NET `GarantiMax` (bloque nuevo, ADR-011)
 
@@ -356,13 +359,19 @@ src/
   - **Son 40 líneas**, y eso es el resultado de T-31: se declara qué es encolable y con qué clave, nada más. En el sistema actual el soporte offline de visitas son ~500 líneas propias y las boletas tienen otras tantas distintas para el mismo problema
   - **El prefijo de la clave del borrador no es cosmético:** sin él, autoguardado y cierre de la misma visita compartirían clave en la cola y el segundo pisaría al primero. Con él, cincuenta autoguardados se colapsan en una sola operación y gana el último
 
-- [ ] **T-37** — Interfaz de visita
+- [x] **T-37** — Interfaz de visita
   - Archivos a crear/modificar: `src/features/visitas/ui/{CheckInPage,VisitaEnCursoPage,CierreVisitaPage}.tsx` + hooks de UI
   - Criterio de completitud: check-in con sala, hora y ubicación; cronómetro de duración; captura de lo observado; cierre (RF-05, RF-08); toda acción produce retroalimentación visible en ≤ 200 ms aunque la operación siga en curso (RNF-07)
+  - **El check-in pide dos cosas: sala y tipo.** El asesor está de pie en la puerta con el teléfono en una mano; cada campo de más ahí es un minuto que no está saludando al jefe de sala. La hora es la del toque y la ubicación no se espera (V-20)
+  - **No hay botón de guardar:** autoguardado con 700 ms de espera (V-12) más un guardado de emergencia en `visibilitychange` (V-13), que es lo que salva el trabajo cuando entra una llamada
+  - **El cronómetro vive aislado** (V-22): dentro del formulario, los diez puntos del decálogo se redibujarían cada segundo
+  - **Lo que falta y hay que decirlo:** las interacciones por vendedor y las ventas de la visita, que necesitan el catálogo de vendedores por sala y son dos formularios en sí mismos
 
-- [ ] **T-38** — Aviso global de visita en curso
+- [x] **T-38** — Aviso global de visita en curso
   - Archivos a crear/modificar: `src/features/visitas/ui/AvisoVisitaEnCurso.tsx` y su estado transversal
   - Criterio de completitud: visible desde cualquier pantalla con las opciones continuar o descartar; **de solo lectura con "Ver como" activo**; la regla vive en el dominio y el aviso solo la refleja (RF-06)
+  - A las tres horas escala **con el mismo umbral que el correo del servicio** (V-07): con dos números, el asesor vería una cosa en la pantalla y leería otra en su bandeja
+  - Ocultar el botón de descartar **no es la defensa**: el caso de uso lo comprueba otra vez y el servicio también. Es no ofrecer lo que va a ser rechazado
 
 - [ ] **T-39** — Evidencia de visita
   - Archivos a crear/modificar: `src/features/visitas/infrastructure/EvidenciaVisita.ts` (usa `StorageProvider`) y la UI de captura
@@ -380,7 +389,7 @@ src/
   - Archivos a crear/modificar: `src/features/visitas/ui/MiDiaPage.tsx` + componentes
   - Criterio de completitud: una sola implementación para escritorio y móvil (la métrica del PRD §12: de 2 a 1); acceso directo a registrar cada cosa; interactivo en ≤ 2 s con conexión y ≤ 1 s desde snapshot (RNF-06), medido contra la línea base de T-17
 
-- [ ] **T-43** — Catálogos de referencia en solo lectura
+- [~] **T-43** — Catálogos de referencia en solo lectura *(parcial: salas, vendedores y feriados)*
   - Archivos a crear/modificar: `src/features/referencia/{ports,infrastructure,application}/*` + pruebas
   - Criterio de completitud: lectura de `salas`, `sala_vendedores`, `vendedores`, `clientes`, `proyectos`, `feriados` y del historial de sala; **ninguna operación de escritura expuesta** (RF-24); la frontera con Fase 2 queda declarada en el propio contrato
 

@@ -374,9 +374,13 @@ src/
   - A las tres horas escala **con el mismo umbral que el correo del servicio** (V-07): con dos números, el asesor vería una cosa en la pantalla y leería otra en su bandeja
   - Ocultar el botón de descartar **no es la defensa**: el caso de uso lo comprueba otra vez y el servicio también. Es no ofrecer lo que va a ser rechazado
 
-- [ ] **T-39** — Evidencia de visita
-  - Archivos a crear/modificar: `src/features/visitas/infrastructure/EvidenciaVisita.ts` (usa `StorageProvider`) y la UI de captura
-  - Criterio de completitud: captura desde cámara, subida a Storage y **encolado sin señal igual que las boletas** (decisión tomada en este plan; ver §12); ninguna imagen se pierde en las pruebas de corte de red
+- [~] **T-39** — Evidencia de visita *(parcial: falta la captura; el almacenamiento está listo salvo el bucket)*
+  - Archivos creados: en la API, `Controllers/FilesController.cs`, `Interfaces/IFileStorage.cs`, `Services/S3FileStorage.cs`, `Options/FileStorageOptions.cs`, `doc/donde-viven-las-fotos.md`; en el frontend, `src/infrastructure/storage/ApiStorageProvider.ts` + pruebas
+  - Criterio de completitud: captura desde cámara, subida a Storage y **encolado sin señal igual que las boletas**; ninguna imagen se pierde en las pruebas de corte de red
+  - **Decidido el 31-08-2026: los blobs van a S3.** El bucket todavía no existe, así que el código está escrito y lo único que falta es crearlo y llenar la sección `FileStorage`. El servicio **arranca sin eso configurado a propósito**: validarlo al arrancar dejaría caído el servicio entero por una funcionalidad que nadie puede usar aún, así que los endpoints responden 503 con un mensaje utilizable —«registra la visita sin evidencia»— y el resto sigue trabajando
+  - **La clave la propone el cliente y el servidor la acota.** `{prefix}/{advisorId}/{scope}/{path}`: el `path` es un uuid del teléfono y la subida sobreescribe (V-31), pero el asesor y el ámbito los pone el servidor desde el token. Por eso no hay consulta de «¿este archivo es mío?»: un archivo que no subió no tiene una clave que pueda nombrar
+  - **Se corrigió el contrato `StorageProvider`**, que decía que la ruta la decide el servicio. Estaba mal: con una ruta del servidor, cada reintento de la cola habría creado un objeto nuevo y la fila se habría quedado apuntando al primero, el resto huérfano y pagándose en la factura de S3
+  - **Falta**: la captura desde la cámara, la compresión (V-30) y el encolado del blob (V-31)
 
 - [x] **T-40** — Lobbies y otros eventos
   - Archivos creados: `src/features/visits/domain/Lobby.ts`, `ports/LobbyRepository.ts`, `infrastructure/{ApiLobbyRepository,offlineLobbyRepository}.ts`, `application/SaveLobby.ts`, `ui/{LobbyPage,LobbyHistoryPage}.tsx`, `app/routes/LobbyRoutes.tsx` + pruebas

@@ -381,13 +381,22 @@ src/
   - Archivos a crear/modificar: `src/features/visitas/domain/Lobby.ts`, `src/features/visitas/application/{RegistrarLobby,RegistrarOtroEvento}.ts`, `ui/` + pruebas
   - Criterio de completitud: comparten el ciclo de la visita **sin exigir sala**; tienen detalle e historial propios (RF-09)
 
-- [ ] **T-41** — Casos de uso de Mi Día y snapshot
-  - Archivos a crear/modificar: `src/features/visitas/application/{ObtenerMiDia,SincronizarMiDia}.ts`, `src/shared/sync/Snapshot.ts` + pruebas
+- [x] **T-41** — Casos de uso de Mi Día y snapshot
+  - Archivos creados: `src/features/visits/application/GetMyDay.ts`, `src/features/visits/{ports/MyDayRepository,infrastructure/ApiMyDayRepository}.ts`, `src/shared/sync/Snapshot.ts` + pruebas
   - Criterio de completitud: compone agenda del día, tareas pendientes, visitas planificadas y cumpleaños; el snapshot se persiste con su marca de tiempo y **caducidad explícita**; sin conexión devuelve el último snapshot indicando su antigüedad (RF-03, RF-04)
+  - **Una petición y no cinco.** `GET /api/MyDay/2026-08-31` devuelve el día entero porque lo que devuelve es exactamente lo que se guarda como snapshot: cinco endpoints serían cinco oportunidades de quedarse con medio día —la agenda de hoy con los cumpleaños de ayer—. El día va en la ruta porque **identifica** al recurso; lo que se acota se acota con OData, y OData filtra colecciones
+  - **Desviación deliberada — la caducidad es el día, no un plazo.** El plan pedía una caducidad explícita en minutos u horas. Se implementó por **fecha y dueño**: el snapshot solo se devuelve si es del día que se pide y del asesor que lo guardó. Un plazo en minutos daría dos comportamientos peores: uno corto deja al asesor sin nada a media mañana en una sala sin señal, y uno largo permitiría mostrar el día de ayer como si fuera hoy. El día es la unidad real del dato
+  - **No hay `SincronizarMiDia`.** No hace falta un caso de uso aparte: Mi Día es lectura, y quien lo refresca es la consulta al volver el foco (V-44). Lo que se sincroniza son las operaciones del asesor, y de eso ya se encarga la cola de T-30
+  - **El snapshot se borra al cerrar sesión y la cola no** (V-42): el teléfono de terreno se comparte, pero perder trabajo sin enviar es mucho peor que guardar datos de más. `createSignOut` recibe un `forget` opcional que `main.tsx` conecta al borrado
 
-- [ ] **T-42** — Interfaz de Mi Día
-  - Archivos a crear/modificar: `src/features/visitas/ui/MiDiaPage.tsx` + componentes
+- [x] **T-42** — Interfaz de Mi Día
+  - Archivos creados: `src/features/visits/ui/MyDayPage.tsx`, `src/app/routes/MyDayRoute.tsx` + pruebas
   - Criterio de completitud: una sola implementación para escritorio y móvil (la métrica del PRD §12: de 2 a 1); acceso directo a registrar cada cosa; interactivo en ≤ 2 s con conexión y ≤ 1 s desde snapshot (RNF-06), medido contra la línea base de T-17
+  - **De dos implementaciones a una, cumplida.** En el sistema actual la pantalla existe dos veces —`MiDiaMovil.tsx` con 972 líneas y su equivalente de escritorio— y cada arreglo hay que hacerlo dos veces. Aquí lo que cambia entre ancho y estrecho lo resuelve el armazón de T-26; la pantalla no sabe en cuál está
+  - **Lo guardado pinta primero, la red corrige después.** Sin eso, el asesor con señal lenta mira una pantalla vacía sabiendo que su agenda está ahí, en su teléfono. Y el snapshot que llega tarde **no pisa lo fresco**: el almacén puede tardar más que la red, y retroceder la pantalla a datos viejos delante del asesor sería peor que no pintarlos
+  - **Dice de cuándo son los datos** (V-43): «Sin señal. Estos son los datos guardados a las 08:40». Enseñar la agenda de las ocho como si fuera de ahora es cómo se llega tarde a una cita que se movió
+  - `/` deja de redirigir al perfil y **es** Mi Día; la navegación queda Mi día / Visitar / Mi perfil
+  - **Falta la medición contra la línea base de T-17**, que sigue sin tomarse. El trozo de la pantalla pesa 4.3 KB y no viaja en la carga inicial, pero eso es tamaño, no tiempo en un teléfono de terreno
 
 - [~] **T-43** — Catálogos de referencia en solo lectura *(parcial: salas, vendedores y feriados)*
   - Archivos a crear/modificar: `src/features/referencia/{ports,infrastructure,application}/*` + pruebas
@@ -679,7 +688,7 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 | ¿Cuáles de los 10 roles que hoy tienen la capacidad `midia` entran al corte? | T-72 (y define qué roles hay que dar de alta en la API) |
 | ¿El corte es simultáneo o escalonado por país (Chile / Perú / Argentina)? | T-71, T-72 |
 | ¿Qué pasa con `www.garantimax.com` el día del corte? | T-69 |
-| ¿Cuánto tiempo debe poder operar el asesor sin señal? | T-41 — define tamaño y caducidad del snapshot; hasta entonces se implementa con un valor configurable |
+| ~~¿Cuánto tiempo debe poder operar el asesor sin señal?~~ | **Resuelto en T-41:** el snapshot de Mi Día vale **el día que guarda**, no un plazo. Un plazo corto deja al asesor sin nada a media mañana en una sala sin señal; uno largo permitiría mostrarle el día de ayer. Las operaciones que él produce no caducan: la cola las guarda hasta enviarlas |
 | ~~¿Se elimina el tier `CM/GTE/FARMER`?~~ | **Resuelto por ADR-011.** El sistema nuevo tiene identidad propia y no lee nada del actual. Deja de ser asunto de este proyecto |
 | ¿Cuál es el nombre exacto del rol del Asesor Farmer en la API? | T-22, T-24 — el frontend necesita el identificador para resolver permisos en un solo punto |
 | ~~¿Cómo se pueblan los catálogos?~~ | **Resuelto:** datos sembrados para construir y probar (T-18 entrega el script); carga real antes del piloto. Sigue abierto cómo se **actualizan** en producción — bloquea el cierre de Fase 2, no la Fase 1 |

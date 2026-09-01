@@ -161,7 +161,7 @@ src/
   - Archivos a crear/modificar: `src/app/container.ts`, `src/app/providers/ContainerProvider.tsx`, `src/app/container.test.ts`
   - Criterio de completitud: un único punto decide qué implementación satisface cada contrato; una prueba monta el contenedor completo con dobles y no toca la red
 
-- [~] **T-08** — Implementaciones de infraestructura transversal *(parcial: falta `SentryMonitoringProvider`)*
+- [x] **T-08** — Implementaciones de infraestructura transversal
   - Archivos a crear/modificar: `src/infrastructure/api/cliente.ts`, `src/infrastructure/api/errores.ts`, `src/infrastructure/auth/ApiAuthProvider.ts`, `src/infrastructure/storage/ApiStorageProvider.ts`, `src/infrastructure/local/IndexedDBLocalStore.ts`, `src/shared/observability/SentryMonitoringProvider.ts`, `src/domain/shared/RelojDelSistema.ts` + pruebas de cada uno
   - Criterio de completitud: `errores.ts` traduce todo fallo HTTP —incluidos 401/403 y la caída de red— a las categorías de T-05 antes de salir de infraestructura; `IndexedDBLocalStore` se prueba sin navegador con doble de IndexedDB; el cliente HTTP se instancia **una sola vez** y solo aquí, y es el único lugar donde se adjunta el token
 

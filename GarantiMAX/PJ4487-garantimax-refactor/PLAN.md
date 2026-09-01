@@ -177,9 +177,13 @@ src/
   - Archivos a crear/modificar: `.github/workflows/ci.yml`
   - Criterio de completitud: en cada PR corren `npx tsc -b`, `npm run lint` (incluye T-09), `npm test` y `npm run build`, más el script de T-10; un PR que viole un guardarraíl no puede mergearse
 
-- [ ] **T-12** — PWA instalable con shell offline
-  - Archivos a crear/modificar: `vite.config.ts` (vite-plugin-pwa), `public/` (manifiesto e iconos), `src/app/providers/ActualizacionProvider.tsx`
+- [x] **T-12** — PWA instalable con shell offline
+  - Archivos creados: `vite.config.ts` (vite-plugin-pwa), `src/app/pwa/{manifest.ts,UpdateProvider.tsx,registerServiceWorker.ts}`, `tools/genera-iconos.mjs`, `public/` (cinco iconos) + pruebas
   - Criterio de completitud: la aplicación se instala en Android e iOS, su shell carga sin conexión (RNF-15) y avisa cuando hay versión nueva
+  - **El service worker precachea el armazón y NO los datos.** De los datos se encargan los snapshots y la cola, que saben de quién son y cuándo caducan; un service worker cacheando respuestas de la API sería una tercera copia con reglas propias. `/api/` queda **excluido** del fallback de navegación: sin eso, una petición sin señal devolvería el index cacheado y el cliente HTTP intentaría parsear HTML como JSON
+  - **Avisa, no actualiza solo** (`registerType: 'prompt'`): aplicar una versión nueva recarga la página, y el asesor puede estar a media visita. El aviso vive por fuera de todo el árbol —no depende de la sesión ni de la ruta— y el registro real está detrás de un puerto de dos funciones, así que se prueba sin empaquetador
+  - **Los iconos se generan** con `tools/genera-iconos.mjs`, sin dependencias: PNG a mano con `zlib`. Sin generador, el día que cambie el color de marca alguien actualiza dos de cinco. La variante *maskable* lleva más aire porque Android recorta al lanzador
+  - `analiza-bundle.mjs` **falla en CI** si el build no emite el manifiesto, el service worker o los cuatro iconos, o si el service worker deja de precachear el index — comprobado quitando cada cosa. Lo que **no** se prueba aquí es que el shell sirva sin conexión de verdad: eso pide un navegador y va en T-66
 
 - [x] **T-13** — Extracción de reglas del sistema actual: Mi Día, visitas y lobbies
   - Archivos a crear/modificar: `docs/reglas/visitas.md` · fuentes `[repo actual] src/features/visitas/` (70 archivos, 14.245 líneas) y `src/App.tsx`

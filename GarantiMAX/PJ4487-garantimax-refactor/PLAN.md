@@ -407,9 +407,12 @@ src/
   - `/` deja de redirigir al perfil y **es** Mi Día; la navegación queda Mi día / Visitar / Mi perfil
   - **Falta la medición contra la línea base de T-17**, que sigue sin tomarse. El trozo de la pantalla pesa 4.3 KB y no viaja en la carga inicial, pero eso es tamaño, no tiempo en un teléfono de terreno
 
-- [~] **T-43** — Catálogos de referencia en solo lectura *(parcial: salas, vendedores y feriados)*
+- [x] **T-43** — Catálogos de referencia en solo lectura
   - Archivos a crear/modificar: `src/features/referencia/{ports,infrastructure,application}/*` + pruebas
   - Criterio de completitud: lectura de `salas`, `sala_vendedores`, `vendedores`, `clientes`, `proyectos`, `feriados` y del historial de sala; **ninguna operación de escritura expuesta** (RF-24); la frontera con Fase 2 queda declarada en el propio contrato
+  - **Clientes y proyectos quedaron con contrato y sin pantalla, a propósito.** Sus consumidores son de fases posteriores —un proyecto se elige al cargar un gasto o una tarea; un cliente es dato informativo de la sala, que ya viaja con `customerName`—. Construir una pantalla que nadie pidió sería adivinar; dejar el contrato probado es lo que esta tarea existe para dejar
+  - **El «historial de sala» es el historial de visitas filtrado**, no una lectura aparte: el repositorio ya sabía filtrar por sala. La sala elegida vive en la URL (`?sala=`) para poder volver, compartir y recargar (RF-23), y hay **dos estados vacíos distintos** —«no tienes visitas» y «no tienes visitas en esta sala»— porque con uno solo, quien filtra por una sala nueva creería que perdió su historial
+  - **La prueba que enumera los métodos del repositorio hizo su trabajo:** al agregar `customers` y `projects` falló y obligó a justificarlos. Los cinco siguen siendo lecturas
 
 ### Fase 2 — Gestión del asesor: tareas, agenda, cumpleaños y bitácora (P2)
 

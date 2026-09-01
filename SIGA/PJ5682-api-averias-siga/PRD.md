@@ -1,747 +1,280 @@
-# PRD - API de Averías de SIGA: las 11 capacidades imprescindibles
+# PRD - Estatus de falta de evidencia y medición de tiempos por responsable
 
 | **Campo** | **Detalle** |
 | --- | --- |
-| **Proyecto** | API de Averías de SIGA — capacidades imprescindibles para automatizar el ciclo de dictamen |
-| **Área / empresa** | EngineCX (sistema afectado: SIGA; alcance: Garantiplus México) |
-| **Versión** | v1.0 — final para revisión |
-| **Fecha** | 2026-08-27 |
+| **Proyecto** | Averías de SIGA — estatus de falta de evidencia y bitácora de tiempos por responsable |
+| **Área / empresa** | EngineCX (sistema afectado: SIGA; alcance operativo: Garantiplus México, replicable a Colombia y Chile) |
+| **Versión** | v1.0 |
+| **Fecha** | 2026-09-01 |
 | **Autores** | Omar André Lara Saldaña (omar.lara@enginecx.com) |
-| **Dirigido a** | Alexis Salvador Herrera García — Equipo de desarrollo de la API de SIGA |
+| **Revisión / liderazgo** | David Simancas Estrada — Controller / Analista Técnico Regional de Averías LATAM, solicitante del cambio |
+| **Dirigido a** | Alexis Salvador Herrera García — Equipo de desarrollo de SIGA |
 | **Tipo de proyecto** | Feature web/API |
-| **Documento hermano** | `PRD_EXTRAS.md` — las otras 25 solicitudes, que **mejoran** el sistema pero no lo bloquean |
-| **Origen** | `Desarrollos_internos/PJ1544-copiloto-averias/PRD.md` v0.2 — el desarrollo que consume estas capacidades |
+| **Origen** | Sesión del 2026-08-31 con el equipo de Averías (David Simancas, Miguel Ángel Rodríguez, Eduardo Álvarez) |
+| **Documento hermano** | `Desarrollos_internos/PJ1544-copiloto-averias/PRD.md` — el Copiloto de Averías, que consume estos datos |
 
-> **Qué pide este documento y qué no.** Pide **once capacidades**. Son las únicas sin las cuales el Copiloto de Averías **no puede funcionar**: no es que funcione peor, es que no hay forma de construirlo. Todo lo demás que se identificó al analizar la API —otras 25 mejoras— está en `PRD_EXTRAS.md`, separado a propósito para que esta lista se pueda leer y decidir de una sentada.
->
-> **Todo lo que aquí se afirma sobre la API está verificado** contra los OpenAPI publicados en `qa-siga-api.garantiplus.com`, capturados el 2026-08-26. La especificación está generada desde el código —los esquemas incluyen artefactos de reflexión de .NET—, así que **"no está en el spec" equivale a "no está en los controladores"**.
->
-> **Los nombres son una propuesta, no una imposición.** Rutas, campos y códigos se ofrecen como forma concreta para facilitar la conversación; la nomenclatura es del equipo que mantiene la API. Lo que no es negociable son las **reglas de integridad** del §2.3, porque de ellas depende que el sistema no pueda causar daño.
+> **Nota sobre versiones anteriores.** Este documento **sustituye por completo** al PRD de la API de Averías de SIGA que ocupaba esta carpeta —las once capacidades y las veinticinco mejoras del `PRD_EXTRAS.md`, fechados el 2026-08-27—, que quedan retirados. Aquel documento pedía la superficie completa que el Copiloto necesitará a lo largo de sus cinco etapas; este pide **una sola cosa**, la que el área de averías identificó como precondición de todo lo demás. Lo retirado sigue disponible en el historial del repositorio y se volverá a levantar, acotado, cuando el Copiloto llegue a su etapa 2.
 
 ## 1. Resumen ejecutivo
 
-EngineCX está construyendo el **Copiloto de Averías**: una automatización que, cuando SIGA asigna una avería a un técnico, reúne el expediente, dictamina la procedencia contra el condicionado del contrato y le entrega al técnico el veredicto razonado y el documento de resolución ya capturado.
+Hoy una avería en `Validación` significa dos cosas distintas que el sistema no distingue: **que el técnico no la ha trabajado** y **que el técnico ya la trabajó y está esperando evidencia del distribuidor**. Son situaciones opuestas en cuanto a quién debe actuar, y sin embargo ocupan el mismo estatus y consumen el mismo reloj.
 
-**La primera etapa no necesita nada de este documento y ya puede arrancar.** La lectura que la API expone hoy —contratos por VIN, detalle del vehículo, texto del certificado, averías y evidencia descargable— alcanza para dictaminar y documentar. Se dice de entrada porque importa: **no estamos bloqueados esperando esto**. Lo que este documento desbloquea es el cierre del ciclo.
+La consecuencia es que **el indicador de tiempo de respuesta del área técnica no mide lo que dice medir**. David Simancas lo describió con un caso concreto: *"Miguel contesta a los 5 minutos pidiendo una foto más, y a él no le contestan hasta dentro de dos días, tres días, y ahí a él ya le afectó. A pesar de que no es culpa de él. Y al distribuidor pues tampoco lo medimos."*
 
-**Las once solicitudes, y qué desbloquea cada bloque:**
+Este PRD pide **cuatro cosas**, todas alrededor del mismo hueco:
 
-| Bloque | Solicitudes | Qué permite |
-| --- | --- | --- |
-| **Resolver una avería** | **G21**, **G15**, **G23** | Que el sistema marque `No procede garantía` con su motivo y deje constancia de quién decidió. Hoy el técnico entra a la plataforma a marcarlo a mano |
-| **Hacerlo con seguridad** | **G03**, **G04**, **G22** | Un rol acotado que solo pueda resolver; reintentos que no dupliquen; y un tipo de documento donde adjuntar la resolución |
-| **Consultar sin ambigüedad** | **G06**, **G16** | Que una consulta mal formada falle en lugar de devolver vacío; y saber qué pieza se reclama, que es la base del dictamen |
-| **Deliberar el caso favorable** | **G26**, **G27**, **G28** | Verificar que el presupuesto cuadre y respete los límites del contrato, y aceptar registrando quién autorizó y qué |
+1. Un **estatus de falta de evidencia** que el técnico pueda aplicar cuando devuelve la avería al distribuidor por documentación incompleta.
+2. Una **bitácora de cambios de estatus** que registre cada transición con su fecha, su hora y quién la hizo.
+3. Un **reloj por responsable**, que pause el compromiso de respuesta del área técnica mientras el caso espera al distribuidor e impute ese tiempo a quien corresponde.
+4. La **exposición de esos tiempos** para consulta y reporte, que es lo que convierte el dato en una herramienta de gestión.
 
-**Por qué vale la pena.** En México, entre enero y julio de 2026 entraron **1 582 averías y 604 (38.2%) terminaron en `No procede garantía`**. De esos rechazos, **330 (54.6%)** responden a cuatro causales verificables contra el texto del contrato: intervalo de mantenimiento excedido 29.1%, componente excluido 15.7%, fuga excluida 6.8% y sin vigencia 3.0%. Es **una de cada cinco averías del país**, y hoy cada una se trabaja completa: crear, descargar información, generar la resolución, teclear los datos, enviar.
-
-**Dos notas para que la lectura sea justa.** Primera: **seis de las once probablemente no requieren desarrollo nuevo.** G06 es corregir la documentación; G22 es confirmar un identificador que la propia descripción del servicio sugiere que ya existe; G16 y G26 piden exponer datos que **ya están en la base**, porque el tablero del área los consume. Segunda: **ninguna solicitud es un ultimátum.** Cada una dice explícitamente qué pasa si se pospone, para que se pueda priorizar con criterio.
+**Por qué ahora.** Es un cambio que el área intentó antes y nunca se desarrolló —*"es algo que hemos intentado cambiar, no se ha desarrollado"*— y que hoy bloquea dos frentes a la vez: la medición honesta del desempeño, y la automatización del ciclo de averías que EngineCX está construyendo. David fue explícito sobre el orden: *"ese estatus no lo hemos desarrollado y creo que es muy importante hacerlo antes de que podamos continuar con estos flujos"*.
 
 ## 2. Contexto y problema
 
-### 2.1 El proceso que se quiere automatizar
+### Cómo se comporta hoy una avería que espera evidencia
 
-1. El cliente lleva el vehículo a la agencia. En más del 90% de los casos llega **sin llamar antes**.
-2. **La agencia registra la avería en SIGA** y sube evidencia. La plataforma exige al menos un documento en cada uno de tres tipos —evidencias, presupuesto, fotos de odómetro— antes de dejarla avanzar.
-3. SIGA **asigna la avería a un técnico** por round-robin y **le envía un correo** con el asunto `Asignación de avería {folio} / Vin {VIN}`. **Ese correo trae solo folio y VIN**: es la única llave con la que arranca la automatización.
-4. La agencia pasa la avería a **`Validación`**. Ahí arranca el compromiso contractual de **48 horas hábiles** —cláusula 10 del certificado— y solo entonces el técnico puede trabajarla.
-5. El técnico descarga el certificado, revisa la evidencia y **dictamina `Aceptada` o `No procede garantía`**. Es el único tramo de estatus que el área técnica puede mover.
-6. Redacta la **resolución** en un formato de Word externo a la plataforma, tecleando a mano folio, contrato, fecha, marca, modelo y datos de la unidad **que ya están en pantalla**, y la sube al expediente. Ese documento tiene **valor legal**: la agencia se lo entrega al cliente.
-7. Si fue aceptada, la agencia mueve `Taller` → `Solucionada` y se procesa el pago.
+1. La agencia registra la avería y la pasa a **`Validación`**. Ahí arranca el compromiso de respuesta de **48 horas hábiles** del área técnica.
+2. El técnico la revisa y encuentra que la evidencia no alcanza para dictaminar. Según el propio equipo, esto ocurre en la enorme mayoría de los casos: *"yo creo que el 5% de las averías ya con lo que mandan se puede evaluar"*.
+3. El técnico solicita al distribuidor lo que falta —el escaneo de la transmisión, el estado del aceite, la factura del servicio—, normalmente por correo o por teléfono.
+4. **La avería no se mueve.** David: *"a pesar de que Miguel pida más evidencia o pida algo adicional, la avería sigue en validación. De ahí la avería no se mueve."*
+5. El distribuidor responde cuando responde. Pueden ser horas o pueden ser días.
+6. Todo ese tiempo se contabiliza como tiempo de respuesta del área técnica.
 
-### 2.2 Las cinco etapas y qué bloquea cada una
+### Los cuatro efectos del hueco
 
-| Et. | Qué automatiza el Copiloto | Escritura en SIGA | Solicitudes que la desbloquean |
-| :-: | --- | --- | --- |
-| **1** | Reúne el expediente, dictamina, redacta la resolución de improcedencia y entrega la plantilla capturada en todos los casos | **Ninguna** | **Ninguna bloqueante.** G11–G20 la mejoran |
-| **2** | Sube la resolución y marca `No procede garantía` | Documento + estatus, solo improcedencias | **G21** ⛔, **G23** ⛔, **G03** ⛔, **G04** ⛔, **G06** ⛔, G22, G24, G25, G36 |
-| **3** | Valida cobertura, verifica que el presupuesto cuadre, propone autorizar; el técnico aprueba caso por caso | `Aceptada`, solo tras aprobación humana | **G26** ⛔, **G27** ⛔, **G28** ⛔, G29 |
-| **4** | El humano revisa un expediente ya armado en lugar de construirlo | Igual que la etapa 3 | G30, G31, G32, G35 |
-| **5** | Colombia y Chile operados desde México | Igual, por país | **G33** ⛔, G34 |
+- **El indicador del técnico está inflado y no es defendible.** Mide la suma de su trabajo y de la espera ajena, sin forma de separarlos. Un técnico que responde en cinco minutos y otro que responde en dos días pueden verse idénticos en el tablero.
+- **El distribuidor no se mide en absoluto.** *"El distribuidor pues tampoco lo medimos. Y también es importante empezar a medir a ellos: oye, este distribuidor siempre me dura en contestar 15 horas, 20 horas; este distribuidor contesta muy rápido."*
+- **La responsabilidad no está asignada.** Mientras el caso se ve igual esté esperando a quien esté esperando, nada empuja al distribuidor a responder. David lo planteó como el segundo beneficio del cambio: *"cargamos la obligación y la responsabilidad hacia la agencia"*.
+- **El equipo comercial no tiene con qué actuar.** El dato de qué distribuidores responden tarde existe en la práctica, pero no en el sistema: *"esto ayuda a que hoy el equipo comercial diga: tenemos estos 15 distribuidores que no dan seguimiento en tiempo, visítalos y ajústalos. De ahí salen muchas cosas."*
 
-### 2.3 Tres reglas de integridad que la forma de los endpoints debe garantizar
+### Por qué es una precondición y no una mejora
 
-No son preferencias de diseño: son restricciones que el Copiloto tiene que poder cumplir, y **la forma del endpoint decide si son cumplibles o si dependen de que el cliente se porte bien**. Se piden verificadas del lado del servidor.
+El área de averías y EngineCX están construyendo el **Copiloto de Averías**, que sigue cada expediente y determina cuándo hay evidencia suficiente para dictaminar. Ese sistema necesita saber **desde cuándo un caso está esperando y a quién**. Puede aproximarlo con su propio registro de eventos, y así está diseñado para no quedarse bloqueado, pero la aproximación no es fuente de verdad ni sirve para medir a nadie oficialmente. Mientras el dato no viva en SIGA, cualquier métrica de tiempos que se publique es una estimación de un tercero.
 
-| Regla | Por qué | Qué implica para el endpoint |
-| --- | --- | --- |
-| **Ningún rechazo sin resolución adjunta** | Es el antipatrón que ya existe hoy: cuando un distribuidor captura solo refacciones no cubiertas, la plataforma rechaza y cierra la avería **sin cargar resolución ni información alguna**, y cuando la agencia reclama nadie sabe qué contestar | El endpoint de resolución debe **exigir la referencia al documento** y rechazar la operación si no existe. **G21** |
-| **Ninguna autorización sin un humano identificado** | Un rechazo mal fundado se reclama y se corrige; una autorización mal fundada se paga. El Copiloto nunca autoriza por sí mismo | El endpoint de aceptación debe **exigir un campo de atribución de la persona que aprobó**, distinto de la identidad que llama. **G23**, **G28** |
-| **Ningún fallo silencioso** | Un filtro con el nombre de propiedad equivocado hoy devuelve **una lista vacía con HTTP 200**, indistinguible de "no hay resultados" | Nomenclatura documentada y consistente, y error explícito ante propiedad desconocida. **G06** |
+### Distinciones que conviene fijar antes de diseñar
 
-### 2.4 Estado actual verificado
+| Concepto | Significado |
+| --- | --- |
+| **Estatus vs. bitácora** | El **estatus** dice dónde está el caso ahora. La **bitácora** dice por dónde pasó y cuándo. Son dos entregables distintos y el segundo es el que habilita la medición: un estatus sin historia no permite calcular ninguna duración. |
+| **El reloj no se detiene, se reparte** | El caso sigue corriendo en tiempo natural. Lo que cambia es **a quién se le imputa** cada tramo. Nada desaparece del cómputo total. |
+| **Falta de evidencia ≠ rechazo** | Es un estado de espera dentro del ciclo normal, no una resolución. La avería no se cierra, no se dictamina y puede volver a `Validación` en cuanto llegue lo que falta. |
+| **Quién lo mueve** | Al estatus de falta de evidencia **entra el técnico**, porque es quien determina que la evidencia no alcanza. De él **se sale por acción del distribuidor** —cargar el documento— o por decisión del técnico. |
+| **Devolver no es castigar** | El propósito declarado es medir y agilizar, no penalizar al distribuidor. La comunicación que acompañe al cambio de estatus debe reflejarlo. |
 
-**Cuatro microservicios**, y solo cuatro: `authentication`, `catalogs`, `contracts`, `claims`. Se probaron y descartaron quince nombres más —`payments`, `reports`, `notifications`, `documents`, `users`, `sales`, `policies`, `vehicles`, `workshops`, `dealers`, `audit`, `files`, `storage`, `integrations`, `webhooks`—, todos 404.
+## 3. Objetivo del producto
 
-**Ausencias confirmadas por conteo exhaustivo de cadenas sobre el JSON completo del spec de `claims`:**
+**Que SIGA sepa, en cada momento, si una avería está esperando al área técnica o al distribuidor, y conserve el historial suficiente para medir cuánto tiempo esperó a cada uno.**
 
-| Cadena | Ocurrencias | Conclusión |
-| --- | :-: | --- |
-| `reason` | **0** | No existe el motivo de rechazo en ninguna entidad |
-| `history` | **0** | No existe historial de estatus |
-| `followup`, `comment`, `seguimiento`, `observacion` | **0** | El seguimiento de la avería no está expuesto, aunque la plataforma lo tiene en la interfaz y notifica por correo |
-| `labor`, refacciones | **0** | No hay mano de obra ni refacciones |
-| `budget` | **1** | Solo en la prosa descriptiva del servicio; no hay endpoint |
-| `odomet` | 9 | **Todas en incidencias.** Ninguna en `ClaimResponse` |
+De ese objetivo se derivan tres usos concretos: medir con honestidad el tiempo de respuesta del área técnica, medir por primera vez el tiempo de respuesta de cada distribuidor, y darle al equipo comercial una base de datos —no de anécdotas— para conversar con los distribuidores que responden tarde.
 
-**Lo que la API sí entrega hoy, y que hace posible la etapa 1:** contrato filtrable por VIN, detalle completo del vehículo, **texto extraído del certificado** (`GetContractPdfDataById`), avería con su descripción y estatus, y listado y descarga de la evidencia cargada.
-
-### 2.5 Coherencia con el propósito declarado del propio servicio
-
-Estas solicitudes no introducen un caso de uso ajeno: **completan lo que la documentación del servicio ya promete.**
-
-- La descripción de `claims` dice que permite *"register claims, upload supporting documentation, and **monitor claim status**"*, ofrece *"Document management for claims (budgets, **resolutions**, photographic/video evidence)"* y *"**Claims tracking and reporting** with flexible filtering"*, con *"Multi-role access control (workshops, **technicians**, **coordinators**, administrators)"*. Sin embargo no expone escritura de estatus, ni historial, ni motivo, ni presupuesto.
-- La API **ya está diseñada contemplando un agente automatizado**: `ConvertToClaim` documenta *"Human action — the agent never converts automatically"*, y `CreateIssueRequest.odometer` dice *"Already converted to a number by the conversational agent (from text, photo, or voice note)"*. El consumidor que este PRD representa ya estaba previsto.
-- **Multi-país ya es el plan declarado**: *"Multi-country support (currently MEX, expandable to other markets)"*. La etapa 5 se apoya en esa intención, no la inventa.
-
-## 3. Objetivo
-
-Exponer las once capacidades que permiten al Copiloto cerrar el ciclo de dictamen —marcar el resultado y registrarlo con su sustento— sin intervención manual de captura, conservando en manos de una persona toda decisión con efecto económico.
-
-### 3.1 Fases de entrega sugeridas
-
-| Fase | Solicitudes | Desbloquea |
-| --- | --- | --- |
-| **A — Confirmaciones** | **G06**, **G22** | Casi sin desarrollo: corregir la documentación de OData y confirmar el tipo de documento de resolución. Elimina el riesgo de fallo silencioso y verifica que se puede adjuntar la resolución |
-| **B — Datos del dictamen** | **G15**, **G16** | El catálogo normalizado de motivos y el componente reclamado. Ambos existen en la base |
-| **C — Resolución** | **G21**, **G23**, **G03**, **G04** | **Etapa 2 del Copiloto:** el ciclo del rechazo se cierra solo |
-| **D — Caso favorable** | **G26**, **G27**, **G28** | **Etapa 3 del Copiloto:** el 61.8% de los casos que hoy se documentan a mano |
+**Lo que este PRD no busca.** No busca automatizar el dictamen, no busca modificar el flujo de resolución de averías y no busca cambiar quién decide qué. Solo pide que el sistema pueda representar un estado que hoy existe en la operación y no en la plataforma.
 
 ## 4. Usuarios y actores
 
-| Actor | Rol frente a la API |
+| **Usuario / Actor** | **Rol en el proceso** |
 | --- | --- |
-| **Orquestador (n8n)** | Consumidor principal. Autentica como identidad de servicio, lee el expediente y ejecuta las escrituras acotadas de su etapa |
-| **Agente de cobertura** | Solo lectura, a través del orquestador. Consume el condicionado y la evidencia. Nunca llama a la API directamente |
-| **Agente de presupuesto** | Aparece en la etapa 3. Solo lectura. Consume el presupuesto desglosado y los límites del contrato |
-| **Técnico de averías** | No consume la API. Es quien **aprueba** las autorizaciones, y su identidad debe viajar en la escritura correspondiente |
-| **Identidad de servicio** | El sujeto que autentica. Hoy solo existe login de persona con usuario y contraseña |
-| **Equipo de desarrollo de SIGA** | Destinatario de este documento |
+| **Técnico de averías** | Usuario principal. Determina que la evidencia no alcanza y aplica el estatus. En México son **Miguel Ángel Rodríguez** y **Eduardo Álvarez**. Es también el principal beneficiado: su indicador de tiempo deja de cargar la espera ajena. |
+| **Distribuidor / agencia** | Quien sube la evidencia faltante y, a partir de este cambio, **sujeto de medición**. Su tiempo de respuesta pasa a ser un dato del sistema. |
+| **Responsable de Averías LATAM** | **David Simancas.** Solicitante del cambio y consumidor principal del reporte de tiempos. Define los umbrales de lo que se considera respuesta tardía. |
+| **Equipo comercial** | Consumidor final de la métrica por distribuidor. La usa para priorizar visitas y conversaciones con la red. |
+| **Equipo de desarrollo de SIGA** | Único que puede implementar el estatus, la bitácora y su exposición. |
+| **Sistema — Copiloto de Averías** | Consumidor por API. Usa el estatus y la bitácora para saber desde cuándo espera cada caso y para reportarlo al equipo cada mañana. |
 
-## 5. Las once solicitudes
+## 5. Alcance MVP y funcionalidades
 
-Todas son **⛔ bloqueantes** salvo **G22**, que es una confirmación de la que depende una regla de integridad. Cada una sigue la misma estructura: el paso del proceso que la necesita, por qué, **el estado actual verificado**, el contrato propuesto, los criterios de aceptación y la consecuencia de no atenderla.
-
-### 5.1 Resolver una avería
-
-#### G21 · Resolver una avería — etapa 2 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** paso 5. Es el dictamen: pasar de `Validación` a `Aceptada` o a `No procede garantía`.
-
-**Por qué es necesario.** Es **el bloqueo principal de todo el proyecto**. Sin esta capacidad el Copiloto puede reunir el expediente, dictaminar y redactar la resolución, pero un técnico tiene que entrar a la plataforma a marcar el resultado a mano. En México eso son **604 expedientes al año** solo del lado del rechazo, de los cuales **330 tienen causal verificable** contra el texto del contrato.
-
-**Estado actual verificado.** No existe ninguna vía de escritura sobre el estatus de una avería. `ClaimResponse.statusId` aparece únicamente como campo de respuesta. El único `status` escribible del servicio es `UpdateIssueRequest.status`, que opera sobre **incidencias**, una entidad distinta. La cadena `reason` no aparece **ninguna vez** en el spec completo, así que tampoco existe dónde registrar el motivo.
-
-**Lo que se pide**
-
-- **Método y ruta:** `PATCH /api/Claims/v1/ResolveClaim/{claimId}`
-
-  Un solo endpoint para los dos desenlaces, porque es una sola transición de negocio y el área técnica solo puede mover ese tramo. Si el equipo prefiere dos rutas separadas, la semántica y las reglas de integridad son las mismas.
-
-- **Cabeceras:** `Idempotency-Key` obligatoria (**G04**).
-
-- **Petición:**
-
-  | Campo | Tipo | Obligatorio | Notas |
-  | --- | --- | :-: | --- |
-  | `targetStatusId` | int | **sí** | Solo se aceptan los de `Aceptada` y `No procede garantía`, del catálogo de **G14** |
-  | `rejectionReasonId` | int | **condicional** | **Obligatorio** cuando el destino es `No procede garantía`. Del catálogo de **G15** |
-  | `resolutionDocumentId` | int | **sí** | Documento ya cargado en el expediente vía `UploadClaimDocument`. **Regla de integridad** |
-  | `comment` | string | **sí** | Sustento del dictamen, en texto libre. Es lo que hoy se escribe en el seguimiento |
-  | `approvedBy` | string | **condicional** | **Obligatorio** cuando el destino es `Aceptada` (**G23**). Identificador de la persona que aprobó |
-
-- **Respuesta 200:**
-
-  ```json
-  {
-    "claimId": 3246,
-    "previousStatus": "Validación",
-    "status": "No procede garantía",
-    "rejectionReason": "Intervalo de Mantenimiento Excedido",
-    "resolutionDocumentId": 91733,
-    "resolvedAt": "2026-08-27T10:14:22-06:00",
-    "resolvedBy": "svc-copiloto-averias",
-    "approvedBy": null,
-    "alreadyResolved": false
-  }
-  ```
-
-  `alreadyResolved: true` cuando la llamada se repite con la misma `Idempotency-Key`, devolviendo el resultado original sin volver a aplicarlo.
-
-- **Errores — cada uno distinguible, ninguno silencioso:**
-
-  | Código | Cuándo |
-  | --- | --- |
-  | `400` | Cuerpo mal formado o `targetStatusId` fuera de los dos permitidos |
-  | `401` | Sin token válido |
-  | `403` | La identidad no tiene el permiso de resolución |
-  | `404` | La avería no existe |
-  | `409` | La avería **no está en `Validación`**. El cuerpo debe indicar el estatus actual |
-  | `422` | Falta `rejectionReasonId` al rechazar, falta `approvedBy` al aceptar, o `resolutionDocumentId` no existe o no pertenece a esa avería |
-
-- **Permisos:** rol de área técnica —técnico o coordinador— y el rol de servicio de **G03**. Explícitamente **no** los roles de taller ni de distribuidor.
-
-- **Idempotencia:** obligatoria por `Idempotency-Key`. Un reintento por timeout **no debe** producir una segunda resolución.
-
-- **Efectos colaterales esperados:** la misma notificación por correo que la plataforma ya emite hoy cuando el técnico dictamina, y una entrada de auditoría (**G25**). El Copiloto **no** quiere sustituir esas notificaciones: quiere que sigan ocurriendo igual que cuando dictamina una persona.
-
-**Criterios de aceptación**
-
-1. Resolver una avería en `Validación` con todos los campos válidos devuelve `200` y el estatus queda cambiado en la plataforma.
-2. Resolver con destino `No procede garantía` **sin** `rejectionReasonId` devuelve `422` y **no** cambia nada.
-3. Resolver **sin** `resolutionDocumentId` válido devuelve `422` y **no** cambia nada. *(Esta es la regla que evita el rechazo sin resolución.)*
-4. Resolver con destino `Aceptada` **sin** `approvedBy` devuelve `422` y **no** cambia nada.
-5. Resolver una avería que ya está en `Aceptada`, `Cerrada` o `Taller` devuelve `409` e indica el estatus actual.
-6. Repetir la llamada con la misma `Idempotency-Key` devuelve `200` con `alreadyResolved: true` y **no** produce un segundo cambio ni una segunda notificación.
-7. Un token con rol de taller o distribuidor recibe `403`.
-8. Tras la operación, la avería consultada por `GetClaims` refleja el nuevo estatus **y** el motivo.
-
-**Si no se atiende.** La etapa 2 no existe. El Copiloto queda en modo solo-propuesta: dictamina, redacta y avisa, pero el técnico entra a marcar a mano. Se conserva el valor del análisis y de la captura, y se pierde el cierre del ciclo. **La etapa 3 también queda bloqueada**, porque depende de la misma capacidad del lado de la aceptación (**G28**).
-
-#### G15 · Catálogo normalizado de motivos de rechazo — etapa 2 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** paso 5, el dictamen de improcedencia.
-
-**Por qué es necesario.** Resolver una avería como improcedente exige **registrar por qué**, y ese motivo tiene que ser un valor de catálogo y no texto libre: es lo que alimenta el tablero del área, lo que permite medir el desempeño del sistema por causal, y lo que sustenta la resolución que se entrega al cliente. Hoy no existe dónde ponerlo (`reason`: **0 ocurrencias** en el spec) y los valores que la operación usa están **sin normalizar**.
-
-**Estado actual verificado.** El área maneja **56 valores distintos** con duplicados semánticos y variantes de mayúsculas entre países. Cuatro formas del mismo motivo conviven: `Componente excluido`, `COMPONENTE EXCLUIDO DE COBERTURA`, `Elemento excluido`, `Elemento excluido de cobertura`. Otras: `Intervalo de Mantenimiento Excedido` frente a `Mantenimiento excedido`; `Daño por uso o degradación` frente a `DESGASTE NATURAL DE PIEZAS` y `Elemento de desgaste`. Hay incluso un `Sin motivo especificado` con volumen real.
-
-**Lo que se pide**
-
-- **Método y ruta:** `GET /api/Claims/v1/GetRejectionReasons`
-- **Respuesta 200:** catálogo **normalizado y deduplicado**, con identificador estable, y con la cláusula del condicionado que lo sustenta cuando aplique.
-
-  ```json
-  [
-    { "reasonId": 12, "code": "MANTENIMIENTO_EXCEDIDO",
-      "label": "Intervalo de mantenimiento excedido",
-      "clauseRef": "9", "countries": ["MEX", "COL", "CHL"], "active": true,
-      "aliases": ["Mantenimiento excedido", "Elemento de mantenimientos"] }
-  ]
-  ```
-
-  El campo `aliases` permite **migrar el histórico** sin perder los expedientes ya cerrados con la nomenclatura vieja.
-
-- **Y el campo donde usarlo:** `rejectionReasonId` en la petición de **G21** y en la respuesta de la avería.
-
-**Criterios de aceptación**
-
-1. El catálogo no contiene dos entradas con el mismo significado.
-2. Cada motivo tiene identificador estable e independiente de su etiqueta.
-3. Los motivos aplicables a cada país vienen marcados.
-4. Resolver una avería con un `reasonId` del catálogo lo deja registrado y consultable.
-5. Los valores históricos quedan mapeados a un motivo normalizado.
-
-**Si no se atiende.** El Copiloto no puede registrar el motivo, así que la resolución llega al expediente sin causal estructurada — exactamente lo que hoy hace el auto-rechazo de la plataforma y el §2.3 prohíbe. Y sin catálogo estable **no hay forma de medir la exactitud del sistema por causal**, que es el criterio con el que se decide encender o apagar el automatismo.
-
-#### G23 · Atribución de la decisión, persistida y consultable — etapa 2 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** pasos 5 y 6.
-
-**Por qué es necesario.** Cuando el Copiloto resuelve una avería intervienen **dos sujetos distintos**: la identidad de servicio que ejecuta la llamada, y —en las autorizaciones— la persona que aprobó. Confundirlos rompe las dos cosas que sostienen el diseño: la auditoría, porque no se sabe quién decidió; y la regla de que ninguna autorización existe sin un humano identificado.
-
-Que **G21** y **G28** acepten un campo `approvedBy` no es suficiente: el dato tiene que **quedar guardado y poder consultarse después**. Un campo que se acepta y se descarta da una falsa sensación de trazabilidad, que es peor que no tenerla.
-
-**Estado actual verificado.** `ClaimResponse` trae `registeredBy` —quién registró la avería— pero ningún campo de quién la resolvió ni de quién aprobó. Al no existir escritura de estatus, tampoco existe el concepto.
-
-**Lo que se pide**
-
-- **Persistir, en la avería:** `resolvedBy` (la identidad que ejecutó), `resolvedAt`, y `approvedBy` (la persona que aprobó, cuando aplique).
-- **Exponerlos** en la respuesta de la avería y en el historial de **G13**.
-- **Distinguir los dos sujetos.** Se propone que la respuesta indique el tipo de actor:
-
-  ```json
-  {
-    "resolvedBy":   { "id": "svc-copiloto-averias", "type": "service" },
-    "approvedBy":   { "id": "eduardo.alvarez@garantiplus.mx", "type": "user" },
-    "resolvedAt":   "2026-08-27T10:14:22-06:00"
-  }
-  ```
-
-- **Validación:** `approvedBy` debe corresponder a un usuario existente con rol de área técnica. Un valor arbitrario debe devolver `422`, no aceptarse.
-
-**Criterios de aceptación**
-
-1. Tras resolver una avería, se puede consultar qué identidad la ejecutó y cuándo.
-2. En una aceptación, se puede consultar qué persona aprobó.
-3. La identidad de servicio y la persona aparecen como campos separados, nunca fusionados.
-4. Un `approvedBy` que no corresponde a un usuario con rol técnico devuelve `422`.
-
-**Si no se atiende.** No se puede demostrar que una autorización tuvo aprobación humana. Dado que el principio rector del proyecto es precisamente ese, **la etapa 3 no debería encenderse sin esta capacidad**, y la etapa 2 pierde la trazabilidad que el área necesita para auditar.
-
-### 5.2 Hacerlo con seguridad
-
-#### G03 · Rol de servicio con privilegio mínimo — etapa 2 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** paso 5, la escritura del dictamen.
-
-**Por qué es necesario.** El orquestador debe poder resolver una avería y **nada más**. No debe poder crear contratos, ni cancelar, ni cerrar, ni tocar pagos, ni mover estatus que el área técnica no mueve. Sin un rol acotado, la única alternativa es darle un rol amplio existente, lo que convierte cualquier error del sistema en un riesgo desproporcionado.
-
-**Estado actual verificado.** Los roles se pueden leer pero no crear ni asignar. La documentación del servicio menciona *"Multi-role access control (workshops, technicians, coordinators, administrators)"*, así que el modelo existe; lo que falta es un rol para consumidores automatizados y la vía de asignarlo.
-
-**Lo que se pide**
-
-Un rol —nómbrenlo como corresponda a su nomenclatura— con exactamente estos permisos:
-
-| Puede | No puede |
+| **Funcionalidad** | **Descripción** |
 | --- | --- |
-| Leer contratos, vehículos y el condicionado | Crear, modificar ni cancelar contratos |
-| Leer averías, sus documentos y su seguimiento | Convertir incidencias en averías |
-| Descargar evidencia | Modificar ni borrar evidencia existente |
-| Subir documentos de tipo resolución | Subir otros tipos de documento |
-| Resolver una avería en `Validación` → `Aceptada` / `No procede garantía` | Mover cualquier otro estatus. Cerrar ni cancelar |
-| — | Tocar pagos, importes ni la pasarela |
-
-Y un mecanismo para asignarlo: basta que el equipo de SIGA pueda hacerlo a petición, documentando el procedimiento. **No se pide un endpoint de administración de roles.**
-
-**Criterios de aceptación**
-
-1. Existe un rol asignable a la identidad de servicio con los permisos de la columna izquierda.
-2. Con ese rol, un intento de cerrar, cancelar o convertir devuelve `403`.
-3. Con ese rol, un intento de subir un documento de tipo distinto a resolución devuelve `403`.
-4. El procedimiento para asignarlo está documentado y no requiere intervención en base de datos.
-
-**Si no se atiende.** La etapa 2 no puede pasar a producción con un nivel de riesgo aceptable. Se podría operar con un rol amplio en un entorno controlado, pero no es defendible sobre datos reales.
-
-#### G04 · Idempotencia en las escrituras — etapa 2 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** pasos 5 y 6, toda escritura.
-
-**Por qué es necesario.** Un orquestador reintenta. Si una llamada de resolución sufre un timeout de red **después** de que el servidor la aplicó, el reintento produciría un segundo cambio de estatus, una segunda notificación al taller y un segundo documento en el expediente. En un proceso cuyo entregable tiene valor legal, eso no es un detalle: es un expediente corrupto que alguien tiene que limpiar a mano.
-
-**Estado actual verificado.** Ningún endpoint de escritura documenta cabecera de idempotencia. `UploadClaimDocument`, `CreateClaim`, `CreateIssue` y `ConvertToClaim` no la mencionan.
-
-**Lo que se pide**
-
-- **Cabecera:** `Idempotency-Key`, obligatoria en toda escritura de las etapas 2 a 4. El cliente genera un valor único y estable por operación lógica —en nuestro caso, derivado del folio de la avería y del tipo de operación—.
-- **Comportamiento:** la primera llamada con una clave se ejecuta y su resultado se guarda. Una llamada posterior **con la misma clave y el mismo cuerpo** devuelve el resultado original sin volver a ejecutar, y lo señala en la respuesta (`alreadyResolved`, `alreadyUploaded`, según el endpoint). Con la misma clave y **cuerpo distinto** devuelve `409`.
-- **Ventana de retención:** mínimo 24 horas. Se pide documentarla.
-- **Alcance:** `ResolveClaim` (**G21**), `UploadClaimDocument`, la aceptación (**G28**) y el seguimiento (**G30**).
-
-**Criterios de aceptación**
-
-1. Repetir una resolución con la misma clave y el mismo cuerpo devuelve `200` con la marca de repetición, y el expediente no cambia por segunda vez.
-2. Repetir con la misma clave y cuerpo distinto devuelve `409`.
-3. La operación repetida **no** dispara una segunda notificación al taller.
-4. Subir el mismo documento con la misma clave no lo duplica en el expediente.
-5. La ventana de retención está documentada.
-
-**Si no se atiende.** No se puede reintentar con seguridad. La alternativa —consultar el estado antes de cada reintento— deja una condición de carrera abierta y no resuelve el caso de la notificación duplicada. **Un timeout se volvería un incidente manual cada vez.**
-
-#### G22 · Tipo de documento "Resolución" — etapa 2 · ⚠ degrada
-
-**Paso del proceso que lo necesita:** paso 6. Es cómo el documento llega al expediente.
-
-**Por qué es necesario.** La regla de integridad *ningún rechazo sin resolución adjunta* (§2.3) exige que el Copiloto pueda **cargar la resolución antes de marcar el estatus**. `UploadClaimDocument` existe y acepta un `documentType`, pero hay que confirmar que existe un tipo para la resolución y cuál es su identificador. Si no existiera, **la etapa 2 quedaría bloqueada**: no por falta del endpoint de escritura, sino por no tener dónde poner el sustento.
-
-**Estado actual verificado.** `UploadClaimDocument` acepta `file`, `claimId` y `documentType`, este último *"as either the ID of the document type or the document type name"*. `GetDocumentType` devuelve el catálogo. La descripción del servicio menciona *"Document management for claims (budgets, **resolutions**, photographic/video evidence)"*, lo que sugiere fuertemente que el tipo ya existe. **Pendiente de confirmar en runtime** (§14, V3).
-
-**Lo que se pide**
-
-1. **Confirmar por escrito** el `documentTypeId` que corresponde a la resolución, y si hay tipos distintos para resolución de aceptación y de rechazo.
-2. Si no existe, **darlo de alta** en el catálogo.
-3. Confirmar los límites aplicables: el endpoint declara **10 MB** y acepta PDF, JPG, PNG, DOC, DOCX y vídeo. Conviene confirmar que DOCX está admitido, porque el técnico necesita poder editar el documento antes de subirlo.
-4. Si un tipo de documento admite **una sola instancia por avería**, decirlo: cambia si una segunda carga reemplaza o duplica.
-
-**Criterios de aceptación**
-
-1. Está documentado el identificador del tipo de documento de resolución.
-2. Cargar un DOCX de ese tipo sobre una avería devuelve `200` y el documento aparece en `GetClaimDocuments` con ese tipo.
-3. Está documentado si una segunda carga del mismo tipo reemplaza o añade.
-
-**Si no se atiende.** Si el tipo existe pero no se confirma, se descubre por prueba y error. Si **no** existe, la regla de integridad no se puede cumplir y la etapa 2 no debe encenderse.
-
-### 5.3 Consultar sin ambigüedad
-
-#### G06 · Nomenclatura OData consistente y documentada — etapa 1 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** pasos 3 y 5. Es cómo se localiza la avería y su evidencia.
-
-**Por qué es necesario.** Un filtro OData con un nombre de propiedad equivocado **no da error: devuelve una lista vacía con HTTP 200**, indistinguible de "no hay resultados". Es el fallo silencioso más barato de provocar y el más difícil de detectar, y hoy el propio contrato de la API no permite saber cuál es el nombre correcto.
-
-**Estado actual verificado.** El spec se contradice consigo mismo:
-
-| Dónde | Nombres que usa |
-| --- | --- |
-| Ejemplo de `GetClaims` | `IdAveria`, `ContractId`, `VinOrPlate`, `Description`, `CreationDate` |
-| Esquema `ClaimResponse` | `claimId`, `contractId`, `description`, `creationDate` — **y no declara `vinOrPlate`** |
-| Ejemplo de `GetClaimDocuments` | `IdAveria`, `IdDocumento`, `TipoDocumento`, `Fecha` |
-| Esquema `ClaimDocumentQueryResponse` | `documentId`, `claimId`, `documentType`, `date` |
-
-**Lo que se pide**
-
-1. **Homologar** los ejemplos de la documentación con los nombres que el servicio realmente acepta. Es una corrección de documentación, no desarrollo.
-2. **Devolver `400`** ante una propiedad desconocida en `$filter`, `$select` u `$orderby`, en lugar de ignorarla. El cuerpo debe nombrar la propiedad no reconocida.
-3. Documentar si los nombres son sensibles a mayúsculas.
-
-**Criterios de aceptación**
-
-1. Todos los ejemplos del spec funcionan tal como están escritos.
-2. `?$filter=propiedadInexistente eq 1` devuelve `400` nombrando la propiedad, **no** `200` con lista vacía.
-3. La documentación indica explícitamente la sensibilidad a mayúsculas.
-
-**Si no se atiende.** Cada consulta hay que descubrirla por prueba y error, y un cambio futuro de nomenclatura rompería el sistema **sin producir un solo error**: simplemente dejaría de encontrar averías, y el Copiloto reportaría que no hay casos. Es el escenario que las reglas de integridad del §2.3 existen para prohibir.
-
-#### G16 · Componente y refacciones reclamadas — etapa 1 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** paso 5. Es el dato central de la puerta de exclusiones.
-
-**Por qué es necesario.** Para decidir si una avería procede hay que saber **qué pieza se reclama** y cotejarla contra las exclusiones del condicionado: los nueve grupos excluidos de la cláusula 1 y las 32 operaciones no incluidas de la cláusula 13. Esa comparación sostiene el **15.7%** de los rechazos por componente excluido y el **6.8%** por fuga excluida. Hoy el componente hay que **inferirlo del texto libre de la descripción y del PDF del presupuesto**.
-
-Que el dato existe no es una suposición: el tablero del área reporta componentes rechazados con volumen —anticongelante 342, aceite de transmisión 277, compresor de A/C 204—, así que **está en la base de datos**. Solo no está expuesto.
-
-**Estado actual verificado.** No existe. Las cadenas `refac` y `labor` aparecen **0 veces** en el spec de `claims`. Lo único disponible es `ClaimResponse.description`, texto libre.
-
-**Lo que se pide**
-
-- **Método y ruta:** `GET /api/Claims/v1/GetClaimComponents/{claimId}`
-
-  Alternativa aceptable: exponerlos como colección anidada en la avería.
-
-- **Respuesta 200:**
-
-  ```json
-  [
-    { "componentId": 418, "componentName": "BOMBA DE AGUA",
-      "quantity": 1, "isMainComponent": true, "reportedBy": "workshop" },
-    { "componentId": 902, "componentName": "ANTICONGELANTE",
-      "quantity": 4, "isMainComponent": false, "reportedBy": "workshop" }
-  ]
-  ```
-
-- **Y el catálogo:** `GET /api/Claims/v1/GetComponents` con los ~890 valores que el tablero ya usa, con identificador estable. Sin catálogo, comparar por cadena es tan frágil como leer el texto libre.
-
-**Criterios de aceptación**
-
-1. Dado un identificador de avería, se obtienen los componentes reclamados con identificador de catálogo, no solo su nombre.
-2. Se distingue el componente principal de los accesorios del presupuesto.
-3. El catálogo de componentes es consultable y sus identificadores son estables.
-4. Un componente que el tablero reporta como rechazado aparece en la respuesta de esa avería.
-
-**Si no se atiende.** El componente se infiere de texto libre. Cuando la inferencia no es inequívoca, el dictamen es `duda` y el caso se remite a una persona — lo cual es seguro, pero desperdicia buena parte del ahorro: **el 22.5% de los rechazos depende de esta comparación**.
-
-### 5.4 Deliberar el caso favorable
-
-#### G26 · Presupuesto desglosado — etapa 3 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** paso 5, la verificación económica.
-
-**Por qué es necesario.** La etapa 3 pide *verificar que el presupuesto cuadre*: que la aritmética sea correcta, que las refacciones correspondan al fallo reportado, que no haya conceptos excluidos escondidos en el desglose, y que el total no rebase los límites del contrato. **Sin el desglose, esa verificación no es implementable de ninguna forma.** No es una degradación: es la ausencia del dato central.
-
-Igual que con **G16**, el dato existe: el tablero del área reporta importes por componente y por avería, así que está en la base.
-
-**Estado actual verificado.** No existe. `budget` aparece **una vez** en todo el spec de `claims`, y solo en la prosa descriptiva del servicio. `labor` y refacciones: **0 ocurrencias**. Lo único disponible es el **PDF del presupuesto** cargado como evidencia.
-
-**Lo que se pide**
-
-- **Método y ruta:** `GET /api/Claims/v1/GetClaimBudget/{claimId}`
-- **Respuesta 200:**
-
-  ```json
-  {
-    "claimId": 3246,
-    "currency": "MXN",
-    "submittedAt": "2026-06-26T10:40:00-06:00",
-    "submittedBy": "garantias@chevroletmilenio.mx",
-    "lines": [
-      { "lineId": 1, "type": "part",   "componentId": 418, "description": "BOMBA DE AGUA",
-        "quantity": 1, "unitPrice": 4820.00, "amount": 4820.00 },
-      { "lineId": 2, "type": "part",   "componentId": 902, "description": "ANTICONGELANTE",
-        "quantity": 4, "unitPrice": 310.00,  "amount": 1240.00 },
-      { "lineId": 3, "type": "labor",  "description": "Mano de obra",
-        "hours": 3.5, "hourlyRate": 620.00,  "amount": 2170.00 }
-    ],
-    "partsTotal": 6060.00,
-    "laborTotal": 2170.00,
-    "subtotal": 8230.00,
-    "taxes": 1316.80,
-    "total": 9546.80,
-    "authorizedAmount": null
-  }
-  ```
-
-- Lo esencial del diseño: **`type` distingue refacción de mano de obra**, y cada refacción trae `componentId` del catálogo de **G16**. Sin esas dos cosas no se puede comprobar la correspondencia con el fallo ni detectar conceptos excluidos.
-- **Errores:** `401` · `403` · `404` avería inexistente · `409` la avería aún no tiene presupuesto cargado, que es un estado legítimo y debe distinguirse de un error.
-
-**Criterios de aceptación**
-
-1. Se obtienen las líneas del presupuesto con tipo, cantidad, precio unitario e importe.
-2. Cada refacción trae identificador de componente del catálogo.
-3. La suma de líneas coincide con los totales devueltos.
-4. Una avería sin presupuesto devuelve `409`, **no** `200` con lista vacía.
-5. La moneda viene explícita, para poder operar los tres países.
-
-**Si no se atiende.** La verificación económica se intentaría extrayendo el desglose del **PDF del presupuesto**, con confianza explícita y remisión a una persona ante cualquier ambigüedad. Dado que un error aquí cuesta dinero directo y que los presupuestos vienen en formatos heterogéneos de 1 607 talleres distintos, **la recomendación es no encender la etapa 3 sobre esa base.**
-
-#### G27 · Límites del contrato y valor del vehículo — etapa 3 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** paso 5.
-
-**Por qué es necesario.** La cláusula 11 del certificado es explícita: la valoración **nunca puede superar el valor de venta del vehículo** según el Libro Azul, y se paga la menor de tres cantidades — límite por avería, límite de contrato y valor del vehículo. Verificar eso exige los tres números. Hoy **ninguno está disponible como dato**: el certificado los enuncia de forma cualitativa —"Valor Venta Vehículo"— sin cuantificarlos.
-
-**Estado actual verificado.** `ContractInfo` trae `priceWithoutTaxes`, `taxes` y `total`, que son el **precio del contrato de garantía**, no los límites de cobertura. Ningún endpoint expone el valor de venta del vehículo ni su fuente de valuación.
-
-**Lo que se pide**
-
-Puede entregarse dentro de **G19** —el condicionado estructurado ya los incluye— o como campos añadidos al detalle del contrato:
-
-  ```json
-  {
-    "perClaimLimitType": "vehicle-sale-value",
-    "perClaimLimitAmount": null,
-    "contractLimitType": "vehicle-sale-value",
-    "contractLimitAmount": null,
-    "vehicleSaleValue": 285000.00,
-    "valuationSource": "Libro Azul",
-    "valuationDate": "2026-08-12",
-    "currency": "MXN",
-    "consumedAmount": 0.00
-  }
-  ```
-
-- **`consumedAmount`** importa: el límite de contrato es acumulativo, así que hay que saber cuánto se ha pagado ya sobre ese contrato para saber cuánto queda.
-- **`valuationDate` y `valuationSource`** importan porque el valor del vehículo cambia con el tiempo, y la cláusula lo ancla al año de la venta.
-- Si el valor de venta **no está registrado** en el sistema, decirlo explícitamente en lugar de devolver cero: un cero se interpretaría como "no se puede autorizar nada".
-
-**Criterios de aceptación**
-
-1. Se obtienen los tres límites de la cláusula 11 como valores numéricos o como tipo declarado.
-2. El valor del vehículo viene con moneda, fuente y fecha de valuación.
-3. Se obtiene el importe ya consumido del límite de contrato.
-4. Un contrato sin valor de vehículo registrado lo indica con `null` y una razón, **no** con cero.
-
-**Si no se atiende.** El agente de presupuesto puede verificar aritmética y conceptos excluidos, pero **no puede verificar que el total respete los límites**. Eso deja fuera una de las cuatro comprobaciones de la etapa 3 y obliga a que una persona la haga siempre — lo que reduce sustancialmente el ahorro.
-
-#### G28 · Aceptar una avería con el detalle de lo autorizado — etapa 3 · ⛔ BLOQUEANTE
-
-**Paso del proceso que lo necesita:** paso 5, el lado favorable del dictamen.
-
-**Por qué es necesario.** Es el equivalente de **G21** para la aceptación, y no es simétrico: aceptar no basta con cambiar un estatus. La cláusula 6 del certificado exige que **en la resolución se detallen las reparaciones autorizadas y su valoración**, y establece que *"en ningún caso se hará cargo de trabajos o reparaciones no autorizadas en la resolución escrita"*. El detalle de lo autorizado **es** el instrumento contractual que limita la obligación de pago.
-
-**Estado actual verificado.** No existe, por la misma razón que **G21**: no hay escritura de estatus sobre averías.
-
-**Lo que se pide**
-
-Puede ser el mismo endpoint de **G21** con destino `Aceptada`, siempre que acepte estos campos adicionales:
-
-| Campo | Tipo | Obligatorio | Notas |
-| --- | --- | :-: | --- |
-| `approvedBy` | string | **sí** | La persona que aprobó. **Regla de integridad** (**G23**) |
-| `authorizedAmount` | decimal | **sí** | Importe autorizado. **Lo fija la persona, nunca el sistema** |
-| `authorizedLines` | array | **sí** | Identificadores de las líneas del presupuesto (**G26**) que se autorizan |
-| `resolutionDocumentId` | int | **sí** | La resolución de autorización ya cargada |
-| `comment` | string | **sí** | Sustento |
-
-- **Validación de negocio que se pide del lado del servidor:** que `authorizedAmount` **no exceda** los límites de **G27**. Si los excede, `422`. Es la última red de seguridad antes de un pago indebido, y no debe depender del cliente.
-- **Errores:** los de **G21**, más `422` cuando el importe excede el límite o cuando alguna línea autorizada no pertenece al presupuesto de esa avería.
-
-**Criterios de aceptación**
-
-1. Aceptar una avería con importe, líneas, aprobador y documento devuelve `200` y el estatus queda en `Aceptada`.
-2. Aceptar **sin** `approvedBy` devuelve `422` y no cambia nada.
-3. Aceptar con un importe que excede el límite del contrato devuelve `422` y no cambia nada.
-4. Aceptar con una línea que no pertenece a ese presupuesto devuelve `422`.
-5. El detalle de lo autorizado queda consultable después, para poder cotejarlo contra la factura que llegue.
-6. Repetir con la misma clave de idempotencia no produce una segunda aceptación.
-
-**Si no se atiende.** La etapa 3 se queda en propuesta: el agente arma el expediente y el técnico entra a la plataforma a aceptar a mano. Se conserva el ahorro de análisis y captura, y se pierde el cierre. Es un desenlace aceptable, y **preferible a una aceptación automática sin las validaciones de este endpoint**.
-
+| **1. Estatus de falta de evidencia** | Nuevo valor en el catálogo de estatus de avería, aplicable desde `Validación`, del que se puede volver a `Validación`. La avería permanece abierta y trabajable. |
+| **2. Motivo del retorno** | Al aplicar el estatus, el técnico indica **qué falta**, de un catálogo cerrado y con la posibilidad de detallar. Es lo que hace accionable el estado, tanto para el distribuidor como para el reporte. |
+| **3. Bitácora de cambios de estatus** | Registro inmutable de cada transición de la avería: estatus origen, estatus destino, fecha y hora, usuario que la ejecutó y motivo cuando aplique. Aplica a **todas** las transiciones, no solo a la nueva. |
+| **4. Reloj por responsable** | Cálculo, sobre la bitácora, del tiempo acumulado que cada avería pasó imputable al área técnica y al distribuidor. El compromiso de 48 horas hábiles se computa solo sobre el tramo del área técnica. |
+| **5. Exposición de tiempos** | Los tiempos y la bitácora consultables desde la interfaz de SIGA y desde la API, tanto por avería como agregados por distribuidor y por técnico. |
+| **6. Permisos** | Solo el rol técnico —y los roles que el área designe— puede aplicar el estatus. El distribuidor no puede sacarse a sí mismo del estado salvo cargando el documento. |
+
+### Qué es el MVP
+
+Las funcionalidades **1, 2 y 3** son el mínimo indispensable: sin ellas no hay dato. La **4** y la **5** convierten el dato en información y son lo que le da valor al área; se piden juntas porque un dato que nadie puede consultar no cambia nada. La **6** es una condición de integridad, no una funcionalidad separable.
 
 ## 6. Fuera de alcance
 
-Lo que este documento **no** pide:
+- **Alerta automática al distribuidor.** El área la planteó en la sesión como uso derivado del estatus. **Se retira deliberadamente de este PRD** por decisión de alcance del 2026-09-01: primero el dato, después las automatizaciones que se apoyen en él. Si se decide construirla, se pedirá por separado y con su propio análisis: a quién se notifica, con qué frecuencia, con qué texto y con qué política de recordatorios.
+- **Que el Copiloto de Averías escriba este estatus.** El Copiloto lo lee; aplicarlo es acción del técnico. Si en el futuro se quiere que lo escriba, es una petición aparte con su propio análisis de riesgo.
+- **Cambiar el flujo de dictamen.** `Aceptada` y `No procede garantía` siguen funcionando exactamente igual, y las transiciones que el área técnica puede mover no se amplían más allá de lo que este PRD pide.
+- **Redefinir el SLA de 48 horas hábiles.** El compromiso no cambia; cambia sobre qué tramo se calcula.
+- **Endpoint de resolución de averías, tipo de documento "Resolución" y desglose de presupuesto.** Son capacidades que el Copiloto de Averías necesitará en sus etapas 2 y 3 y que **no se piden aquí**. Se registran para que no se lean como olvido y se levantarán acotadas cuando corresponda.
+- **Reportes de desempeño ya construidos.** Este PRD pide que el dato exista y sea consultable; los tableros que se construyan sobre él son trabajo posterior.
+- **Aplicar el cambio a Colombia y Chile.** El alcance es México. El diseño no debería impedir replicarlo, pero su despliegue regional es otra conversación.
 
-- **Cambios en la interfaz de SIGA.** Nada requiere tocar pantallas.
-- **Cambios en la lógica de negocio del dictamen.** Los criterios de cobertura son del área de averías y no cambian.
-- **Automatizar el llenado del formato de resolución dentro de SIGA.** Es una mejora que el área ha pedido por separado; este desarrollo genera el documento por fuera y lo adjunta.
-- **Permitir dos averías vigentes sobre el mismo VIN.** Petición del área, ajena a este PRD.
-- **Ejecutar pagos** ni tocar la pasarela. La identidad de servicio solo **lee** importes y **registra** el que una persona autorizó.
-- **Endpoints de administración.** Donde hace falta configuración (**G03**), basta que el equipo la aplique a petición y documente el procedimiento.
-- **Notificaciones nuevas.** Donde el Copiloto necesita que se avise a alguien, pide que se dispare **la notificación que la plataforma ya emite**.
-- **Las otras 25 solicitudes**, que viven en `PRD_EXTRAS.md` y no bloquean nada.
+## 7. Flujos principales
 
-## 7. Flujos y punto de consumo
-
-### 7.1 Qué llamada hace cada paso, y qué falta
+### 7.1 Ciclo de la avería con el nuevo estatus
 
 ```mermaid
-flowchart TD
-    A["Agencia registra la averia"] --> B["SIGA asigna y notifica"]
-    B -.->|"hoy: correo a buzon personal<br/>pedido: G05 webhook"| C["Orquestador detecta el caso<br/>folio + VIN"]
-    C --> D["GetAllContracts filter vin<br/>VERIFICAR V5"]
-    D --> E["GetContractById<br/>EXISTE"]
-    E --> F["GetContractPdfDataById<br/>EXISTE - garantia G18<br/>estructurado G19"]
-    F --> G["Localizar la averia<br/>falta G11 - nomenclatura G06"]
-    G --> H["Campos de la averia<br/>faltan G12 G13"]
-    H --> I["GetClaimDocuments<br/>EXISTE - falta G17"]
-    I --> J["DownloadClaimDocument<br/>EXISTE"]
-    J --> K["Componente reclamado<br/>falta G16"]
-    K --> L["Seguimiento del expediente<br/>falta G20"]
-    L --> M["DICTAMEN"]
-    M -->|improcedente| N["UploadClaimDocument<br/>EXISTE - confirmar G22"]
-    N --> O["Resolver la averia<br/>falta G21 G15 G23 G04"]
-    M -->|procedente| P["Presupuesto desglosado<br/>falta G26"]
-    P --> Q["Limites y valor del vehiculo<br/>falta G27"]
-    Q --> R["Comparativo<br/>falta G29"]
-    R --> S["Aprobacion humana"]
-    S --> T["Aceptar con detalle<br/>falta G28"]
-    M -->|duda| U["Correo al tecnico<br/>sin escritura"]
+stateDiagram-v2
+    Registrada --> Validacion: la agencia completa el registro
+    Validacion --> FaltaEvidencia: el tecnico determina<br/>que la evidencia no alcanza<br/>y registra el motivo
+    FaltaEvidencia --> Validacion: el distribuidor carga<br/>el documento faltante
+    FaltaEvidencia --> Validacion: el tecnico lo regresa<br/>por decision propia
+    Validacion --> Aceptada: dictamen favorable
+    Validacion --> NoProcede: dictamen desfavorable
+    FaltaEvidencia --> NoProcede: el tecnico dictamina<br/>con lo que hay
 ```
 
-### 7.2 El orden de la resolución — por qué el documento va antes que el estatus
+**Dos decisiones que este diagrama fija.** La primera: **de `Falta de evidencia` se puede dictaminar directamente**, sin pasar por `Validación`. Un caso puede quedarse esperando evidencia indefinidamente y el técnico necesita poder resolverlo con lo que tenga sin fingir un retorno. La segunda: **el estatus es reversible tantas veces como haga falta**. Un mismo caso puede entrar y salir varias veces si la evidencia llega en tandas, y cada ciclo se registra por separado.
+
+### 7.2 Cómo se reparte el reloj
 
 ```mermaid
-sequenceDiagram
-    participant O as Orquestador
-    participant A as API de SIGA
-    participant T as Taller
-    O->>A: UploadClaimDocument (resolucion)
-    A-->>O: 200 documentId
-    Note over O,A: Si esto falla, NO se marca nada.<br/>El caso se convierte en excepcion.
-    O->>A: ResolveClaim con resolutionDocumentId
-    A-->>A: Valida que el documento exista<br/>y pertenezca a la averia
-    A-->>O: 200 estatus cambiado
-    A->>T: Notificacion que la plataforma ya emite
-    Note over O,A: Reintento con la misma Idempotency-Key<br/>devuelve el mismo resultado.<br/>No hay segundo cambio ni segunda notificacion.
+gantt
+    dateFormat YYYY-MM-DD
+    axisFormat %d/%m
+    section Averia 4312
+    Validacion - reloj del tecnico      :a1, 2026-08-20, 1d
+    Falta de evidencia - reloj del distribuidor :crit, a2, 2026-08-21, 3d
+    Validacion - reloj del tecnico      :a3, 2026-08-24, 1d
+    Dictamen                            :milestone, 2026-08-25, 0d
 ```
 
-Esta secuencia es la que hace imposible el antipatrón del §2.3. **La validación tiene que estar del lado del servidor**: si el endpoint acepta resolver sin documento, la garantía depende de que el cliente se porte bien, y eso no es una garantía.
+En el ejemplo, la avería tardó **cinco días naturales** en resolverse. Hoy los cinco se le imputan al técnico. Con el cambio, **dos** se le imputan al área técnica —y caben holgadamente en las 48 horas hábiles— y **tres** al distribuidor. El total no cambia; cambia de quién es cada tramo.
 
-## 8. Índice y orden de arranque
+### 7.3 Qué necesita registrar la bitácora
 
-| ID | Solicitud | Etapa que desbloquea | Severidad | Fase | ¿Requiere desarrollo? |
-| --- | --- | :-: | :-: | :-: | --- |
-| **G06** | Nomenclatura OData consistente | 1 | ⛔ | A | No — corregir documentación |
-| **G22** | Tipo de documento "Resolución" | 2 | ⚠ | A | Probablemente no — confirmar |
-| **G15** | Catálogo normalizado de motivos | 2 | ⛔ | B | Sí, y normalizar 56 valores |
-| **G16** | Componente y refacciones reclamadas | 1 | ⛔ | B | Exponer un dato que ya existe |
-| **G21** | Resolver una avería | 2 | ⛔ | C | Sí — es el núcleo |
-| **G23** | Atribución de la decisión | 2 | ⛔ | C | Sí, junto con G21 |
-| **G03** | Rol de servicio con privilegio mínimo | 2 | ⛔ | C | Configuración, no desarrollo |
-| **G04** | Idempotencia en las escrituras | 2 | ⛔ | C | Sí, junto con G21 |
-| **G26** | Presupuesto desglosado | 3 | ⛔ | D | Exponer un dato que ya existe |
-| **G27** | Límites del contrato y valor del vehículo | 3 | ⛔ | D | Sí |
-| **G28** | Aceptar con detalle de lo autorizado | 3 | ⛔ | D | Sí, hermano de G21 |
+```mermaid
+flowchart LR
+    A["Cualquier cambio de estatus<br/>de una averia"] --> B["Registrar transicion"]
+    B --> C["Estatus origen<br/>Estatus destino<br/>Fecha y hora<br/>Usuario que la ejecuto<br/>Rol del usuario<br/>Motivo (si aplica)"]
+    C --> D["Registro inmutable:<br/>no se edita ni se borra"]
+    D --> E["Consultable por averia"]
+    D --> F["Agregable por distribuidor,<br/>por tecnico y por periodo"]
+```
 
-**Si hubiera que empezar por lo más rentable:** **G06** y **G22** primero, porque cuestan una revisión de documentación y una respuesta por escrito, y eliminan el riesgo más peligroso del sistema. Después el paquete **G21 + G23 + G03 + G04**, que es una sola pieza de trabajo y cierra la etapa 2 completa.
+La bitácora se pide para **todas** las transiciones y no solo para las del nuevo estatus. La razón es práctica: para calcular el tramo imputable al técnico hace falta saber cuándo entró la avería a `Validación`, y ese dato hoy tampoco se conserva de forma consultable.
+
+## 8. Requerimientos funcionales
+
+| **ID** | **Requerimiento** | **Descripción** |
+| --- | --- | --- |
+| **RF-01** | Nuevo estatus en el catálogo de averías | Un valor de estatus para la falta de evidencia, con identificador estable. El nombre exacto lo define el área; en la sesión se mencionaron *"falta de evidencia"* y *"documentación incompleta"*. |
+| **RF-02** | Transición desde `Validación` | El técnico puede mover una avería de `Validación` al nuevo estatus. |
+| **RF-03** | Retorno a `Validación` | La avería vuelve a `Validación` cuando el distribuidor carga un documento, y también por acción explícita del técnico. |
+| **RF-04** | Dictamen directo desde el nuevo estatus | El técnico puede dictaminar (`Aceptada` o `No procede garantía`) sin pasar antes por `Validación`. |
+| **RF-05** | Reversibilidad ilimitada | Una avería puede entrar y salir del estatus tantas veces como haga falta, y cada ciclo se registra por separado. |
+| **RF-06** | La avería permanece abierta | El estatus **no cierra** la avería, no la cancela y no la excluye de la carga de documentos ni de la bandeja del técnico. |
+| **RF-07** | Motivo obligatorio al aplicar el estatus | Al mover la avería, el técnico indica qué falta, de un catálogo cerrado y con campo de detalle opcional. |
+| **RF-08** | Catálogo de motivos administrable | Los motivos de falta de evidencia se administran desde la plataforma, con identificador estable, sin requerir despliegue. |
+| **RF-09** | Bitácora de todas las transiciones | Cada cambio de estatus de cualquier avería se registra con estatus origen, estatus destino, fecha y hora, usuario, rol del usuario y motivo cuando aplique. |
+| **RF-10** | Bitácora inmutable | Los registros de la bitácora no se editan ni se borran. Una corrección se hace con una transición nueva, no reescribiendo la historia. |
+| **RF-11** | Bitácora retroactiva si es posible | Si la base ya conserva de alguna forma los cambios de estatus históricos, se cargan a la bitácora. Si no, se declara la fecha desde la que hay historia. |
+| **RF-12** | Cómputo del tiempo por responsable | Por cada avería, el tiempo acumulado imputable al área técnica y el imputable al distribuidor, calculados sobre la bitácora. |
+| **RF-13** | El SLA se computa solo sobre el tramo técnico | El compromiso de 48 horas hábiles se calcula exclusivamente sobre el tiempo en estatus imputables al área técnica. |
+| **RF-14** | Tiempos en horas hábiles y naturales | Ambos cálculos disponibles: el hábil para el SLA, el natural para la conversación con el distribuidor. |
+| **RF-15** | Consulta por avería | La bitácora y los tiempos de una avería, visibles en su ficha en SIGA. |
+| **RF-16** | Consulta agregada por distribuidor | Tiempo promedio y mediano de respuesta por distribuidor, en un periodo, con el número de casos que lo sustenta. |
+| **RF-17** | Consulta agregada por técnico | El equivalente para el área técnica, con el tiempo imputable ya separado. |
+| **RF-18** | Exposición por API | La bitácora y los tiempos consultables por API, para que el Copiloto de Averías y cualquier otro consumidor los usen sin depender de la interfaz. |
+| **RF-19** | Permiso de aplicación del estatus | Solo el rol técnico y los roles que el área designe pueden aplicar el nuevo estatus. |
+| **RF-20** | El distribuidor no se autoexcluye | El usuario distribuidor no puede mover la avería fuera del estatus salvo por el efecto de cargar el documento faltante. |
+| **RF-21** | Visibilidad para el distribuidor | El distribuidor ve en su portal que la avería está en falta de evidencia y **qué se le está pidiendo**. Sin eso, el estatus no cumple su función de trasladar la responsabilidad. |
 
 ## 9. Requerimientos no funcionales
 
-| ID | Requerimiento |
-| --- | --- |
-| **RNF-01** | **Validación del lado del servidor.** Las reglas de integridad del §2.3 se verifican en el servidor, no se confían al cliente. Un endpoint que acepta una resolución sin documento no cumple el requisito aunque el cliente nunca lo haga. |
-| **RNF-02** | **Ningún estado ambiguo.** Cada respuesta distingue "no existe" (`404`), "no tengo permiso" (`403`), "existe pero está vacío" (`200`) y "existe pero no aplica en este estado" (`409`). Un `200` con lista vacía nunca debe ser la respuesta a una consulta mal formada. |
-| **RNF-03** | **Idempotencia en toda escritura**, con ventana de retención documentada (**G04**). |
-| **RNF-04** | **Atribución de doble sujeto.** Toda escritura registra la identidad que la ejecutó y, cuando aplique, la persona que la autorizó, como campos separados (**G23**). |
-| **RNF-05** | **Privilegio mínimo.** La identidad de servicio obtiene solo los permisos de su etapa activa (**G03**). |
-| **RNF-06** | **Errores descriptivos.** El servicio ya usa `ProblemDetails`; se pide que el cuerpo nombre el campo o la propiedad concreta que causó el rechazo, no solo el código. |
-| **RNF-07** | **Moneda explícita** en todo importe. La operación abarca tres monedas con órdenes de magnitud muy distintos. |
-| **RNF-08** | **Volumen.** ~11 averías por día hábil en México. El volumen no es el reto; la exactitud y la trazabilidad sí. |
+| **ID** | **Requerimiento** | **Descripción** |
+| --- | --- | --- |
+| **RNF-01** | **No romper lo que existe** | Las averías vigentes, los reportes actuales y las integraciones que consumen el estatus deben seguir funcionando. Un valor nuevo en el catálogo no puede hacer fallar a un consumidor que no lo conoce. |
+| **RNF-02** | **Identificadores estables** | El identificador del estatus y los de los motivos no cambian entre ambientes ni entre despliegues. Cualquier consumidor externo los va a persistir. |
+| **RNF-03** | **La bitácora es la fuente de verdad** | Los tiempos se calculan desde la bitácora y no se almacenan como campos que puedan divergir de ella. |
+| **RNF-04** | **Trazabilidad de la autoría** | Toda transición queda atribuida a un usuario identificable. Ninguna transición es anónima, incluidas las que dispare el sistema. |
+| **RNF-05** | **Consistencia del reparto** | La suma de los tramos imputados a cada responsable debe igualar el tiempo total transcurrido. Un tramo sin dueño es un defecto. |
+| **RNF-06** | **Definición explícita del horario hábil** | El cálculo en horas hábiles necesita una definición documentada de jornada, días laborables y festivos, y debe ser configurable por país. |
+| **RNF-07** | **Coherencia con la interfaz** | Los tiempos que muestre la API y los que muestre SIGA deben ser el mismo número, calculado del mismo modo. |
+| **RNF-08** | **Sin datos personales innecesarios** | La bitácora registra usuario y rol, no datos del beneficiario. |
+| **RNF-09** | **Replicabilidad por país** | El diseño no debe impedir habilitar el estatus en Colombia y Chile, aunque su despliegue no sea parte de este alcance. |
 
 ## 10. Integraciones y datos
 
-### 10.1 Qué usa el Copiloto de lo que ya existe
-
-| Operación existente | Para qué |
+| **Integración / Fuente** | **Uso esperado** |
 | --- | --- |
-| `GetAllContracts` con filtro por VIN | Localizar el contrato desde el VIN del correo de asignación |
-| `GetContractById` | Vehículo, kilómetros al contratar, fecha de primera factura, vigencia |
-| `GetContractPdfDataById` | **El condicionado.** Es el habilitador de la etapa 1 |
-| `GetClaims` | La avería: descripción, estatus, técnico asignado |
-| `GetClaimDocuments` + `DownloadClaimDocument` | La evidencia cargada por el taller |
-| `UploadClaimDocument` | Adjuntar la resolución — depende de **G22** |
-| `Login` | Autenticación, hasta que exista identidad de máquina |
+| **Catálogo de estatus de averías** | Alta del nuevo valor con identificador estable. Hoy conviven **11 estatus reales** en la operación, con variantes por país. |
+| **Módulo de averías de SIGA** | Aplicación del estatus, captura del motivo y visualización de la bitácora en la ficha de la avería. |
+| **Portal del distribuidor** | Visibilidad del estatus y de lo que se le está pidiendo (RF-21). |
+| **Carga de documentos de la avería** | Evento que dispara el retorno automático a `Validación` (RF-03). |
+| **API de Averías** | Exposición de la bitácora y de los tiempos calculados (RF-18). Consumidor conocido: el Copiloto de Averías. |
+| **Reportes y tableros del área** | Consumo de los tiempos agregados por distribuidor y por técnico. |
 
-### 10.2 Qué falta, y de las once quién lo resuelve
+### Datos nuevos que este cambio crea
 
-| Dato o acción que el dictamen necesita | Estado | Solicitud |
+| Dato | Dónde vive | Quién lo consume |
 | --- | --- | --- |
-| Localizar la avería por folio de forma fiable | ⚠ nomenclatura contradictoria | **G06** |
-| Saber qué componente se reclama | ❌ no expuesto | **G16** |
-| Registrar el motivo del rechazo | ❌ no existe el campo ni el catálogo | **G15** |
-| Cambiar el estatus de la avería | ❌ no existe | **G21** |
-| Adjuntar la resolución antes del estatus | ⚠ falta confirmar el tipo | **G22** |
-| Saber quién decidió | ❌ no existe | **G23** |
-| Escribir con permisos acotados | ❌ no hay rol de servicio | **G03** |
-| Reintentar sin duplicar | ❌ sin idempotencia | **G04** |
-| Verificar que el presupuesto cuadre | ❌ no expuesto | **G26** |
-| Verificar los límites del contrato | ❌ no expuesto | **G27** |
-| Aceptar registrando importe y aprobador | ❌ no existe | **G28** |
+| Estatus de falta de evidencia | Catálogo de estatus | Todo el ciclo de la avería |
+| Motivo de la falta de evidencia | Catálogo administrable + registro en la avería | El distribuidor, el reporte, el Copiloto |
+| Bitácora de transiciones | Tabla nueva, inmutable | Cálculo de tiempos, auditoría, Copiloto |
+| Tiempo imputable al área técnica | Calculado sobre la bitácora | SLA, evaluación del equipo |
+| Tiempo imputable al distribuidor | Calculado sobre la bitácora | Evaluación de la red, equipo comercial |
 
-**Un dato que no existe en el sistema, no solo en la API.** El **historial de mantenimientos** del vehículo. `VehicleInfo.timelyServices` es un booleano capturado en la venta, no un historial. La única prueba son las facturas y el carnet cargados como evidencia, y es la causal del **29.1% de los rechazos**. Este documento **no pide crearlo**: sería un cambio de producto. Se menciona para que quede claro que el Copiloto seguirá leyendo documentos para esa causal, y que eso es una limitación asumida.
+## 11. Eventos para BI
 
-## 11. Verificación de suficiencia
-
-Se contrastaron los **68 requerimientos funcionales** del PRD del Copiloto de Averías, uno por uno, contra la API existente más estas once solicitudes. Resultado:
-
-| Etapa del Copiloto | RF | ¿Suficiente? | Observación |
-| --- | :-: | :-: | --- |
-| **1 — Dictamen y documento** | 39 | ✅ **Sí** | No necesita ninguna de las once. **G06** y **G16** mejoran su exactitud, pero la etapa está diseñada para funcionar sin nada nuevo |
-| **2 — Escritura de improcedencia** | 6 | ✅ **Sí** | Cubierta por G21, G15, G23, G03, G04 y G22. **La suficiencia depende de G22:** sin un tipo de documento donde adjuntar la resolución, RF-41 no se puede cumplir |
-| **3 — Caso procedente** | 12 | ✅ **Sí** | Cubierta por G26, G27, G28, G16 y G23. Solo RF-52 (comparativo contra referencia) queda degradado, y el propio PRD lo tiene como pendiente de definir |
-| **4 — Operación de alta carga** | 6 | ⚠️ **Parcialmente** | Cuatro de seis se cumplen. **RF-62** —solicitar al taller la documentación de pago— requiere `AddClaimFollowUp`, que está en `PRD_EXTRAS.md` como **G30**. **RF-63** —vigilar el expediente tras la aceptación— se cumple de forma aproximada con el estatus, y de forma completa con **G32** |
-| **5 — Operación regional** | 5 | ❌ **No** | Requiere las APIs de Colombia y Chile (**G33**) y catálogos por país (**G34**), ambas en `PRD_EXTRAS.md`. Es deliberado: son una dependencia de plataforma sin fecha y no deben retrasar México |
-
-### Hallazgo de la verificación
-
-**El corte inicial dejaba fuera G22 y eso rompía la etapa 2.** La regla de integridad *ningún rechazo sin resolución adjunta* exige cargar el documento antes de marcar el estatus. `UploadClaimDocument` existe, pero **si no hay un tipo de documento para la resolución no hay dónde ponerla**, y entonces G21 quedaría inutilizable en la práctica: el sistema podría marcar el rechazo pero no sustentarlo, que es exactamente el comportamiento que este proyecto existe para no repetir. Por eso G22 entró a la lista de imprescindibles aunque sea una confirmación y no un desarrollo.
-
-### Dos métricas que no se podrán reportar
-
-No bloquean el desarrollo, pero conviene saberlo:
-
-- **Cumplimiento del compromiso de 48 horas hábiles.** Requiere la fecha de paso a `Validación` (**G13**, en extras). Sin ella el SLA se aproxima con la fecha de creación, que lo sobrestima.
-- **Averías por técnico y por día**, que es la métrica que justifica el proyecto. Requiere el padrón de técnicos (**G35**, en extras) para saber quién está activo. Se puede aproximar con el identificador de técnico de cada avería.
-
-### Conclusión
-
-**Las once son suficientes para desarrollar las etapas 1, 2 y 3 sin bloqueos por parte de la API** —lo que cubre el rechazo automático completo y la deliberación del caso favorable, es decir el 100% del volumen de dictamen—. La etapa 4 necesita **G30** y **G32**, y la etapa 5 necesita **G33** y **G34**; las cuatro están en `PRD_EXTRAS.md`, y ninguna de las cuatro es urgente hoy.
-
-## 12. Criterios de verificación de la entrega
-
-| Fase | Se considera entregada cuando |
+| Evento | Datos que registra |
 | --- | --- |
-| **A** | Los ejemplos de OData del spec funcionan tal como están escritos; una propiedad desconocida devuelve `400`; y está confirmado por escrito el identificador del tipo de documento de resolución |
-| **B** | Existe un catálogo de motivos sin duplicados semánticos y con identificadores estables; y dado un identificador de avería se obtienen sus componentes reclamados con identificador de catálogo |
-| **C** | Se puede resolver una avería en `Validación` con motivo, comentario, referencia al documento y atribución; con idempotencia comprobada; y **no** se puede resolver sin documento |
-| **D** | Se obtiene el presupuesto desglosado y los límites del contrato, y se puede aceptar una avería con importe, líneas y aprobador, validando el límite del lado del servidor |
+| `averia_cambio_estatus` | idAvería, estatus origen, estatus destino, fecha y hora, usuario, rol, motivo |
+| `averia_marcada_falta_evidencia` | idAvería, motivo, usuario, distribuidor, fecha y hora, nº de veces que ya había entrado al estatus |
+| `averia_retorno_a_validacion` | idAvería, cómo volvió (carga de documento o acción del técnico), horas transcurridas en el estatus |
+| `documento_cargado_en_falta_evidencia` | idAvería, tipo de documento, usuario, si resolvió el motivo registrado |
+| `averia_dictaminada_desde_falta_evidencia` | idAvería, dictamen, motivo pendiente al momento de dictaminar |
 
-**Verificación conjunta propuesta.** Para cada fase, una sesión corta donde se ejercitan los criterios de aceptación contra QA con casos reales. Es más barato que un ciclo de reporte de defectos y evita discutir después si algo "ya estaba".
+El evento **`averia_retorno_a_validacion`** es el que sostiene toda la medición del distribuidor: su duración es, literalmente, lo que hoy no se puede saber.
+
+## 12. Métricas de éxito
+
+| **Métrica** | **Descripción** | **Criterio** |
+| --- | --- | --- |
+| **Adopción del estatus** | % de averías que en algún momento pasan por falta de evidencia | Se espera **alto**: el área estima que solo el 5% de los casos es evaluable con lo que llega de entrada. Una adopción baja indicaría que el estatus no se está usando, no que no hace falta |
+| **Cobertura de la bitácora** | % de transiciones de estatus con registro completo | **100%.** Una transición sin registro es un defecto |
+| **Tiempo imputable al área técnica** | Mediana y p90 del tramo técnico, antes y después del cambio | Baja esperada respecto del indicador actual. **Es el objetivo del proyecto**: no que el equipo trabaje más rápido, sino que el indicador diga la verdad |
+| **Tiempo imputable al distribuidor** | Mediana y p90 por distribuidor | **Dato nuevo, sin línea base.** Su valor está en existir |
+| **Cumplimiento real del SLA** | % de casos dentro de 48 horas hábiles computadas solo sobre el tramo técnico | Se mide desde el primer mes. La línea base actual —mediana de 4.1 días y p90 de 50.1 días en México, medida sobre el reloj indiferenciado— no es comparable |
+| **Distribuidores identificados como lentos** | Nº de distribuidores por encima del umbral que fije el área | Se reporta al equipo comercial. Es el entregable que David describió como *"visítalos y ajústalos"* |
+| **Motivos más frecuentes** | Distribución de los motivos de falta de evidencia | Insumo directo para el catálogo de evidencia mínima del área y para la ayuda contextual al cargar documentos |
+| **Reincidencia** | Nº de veces que una misma avería entra al estatus | Un promedio alto indica que las solicitudes de evidencia no están siendo claras |
 
 ## 13. Riesgos y supuestos
 
 ### Riesgos
 
-| Riesgo | Impacto | Mitigación |
+| **Riesgo** | **Impacto potencial** | **Mitigación** |
 | --- | --- | --- |
-| **Se entrega el endpoint de resolución sin las validaciones de integridad.** Un `ResolveClaim` que acepta cualquier cuerpo desbloquea la etapa 2 en apariencia, pero permite el rechazo sin sustento | **Alto** | Los criterios 2, 3 y 4 de **G21** son la prueba. Si no pasan, la capacidad no está entregada aunque el endpoint responda `200`. De nuestro lado, el marcado automático no se enciende hasta que pasen |
-| **El catálogo de motivos se entrega sin normalizar**, replicando los 56 valores con duplicados | **Alto** | El criterio 1 de **G15** es explícito: no dos entradas con el mismo significado. Sin eso no se puede medir el sistema por causal, que es el criterio para encender o apagar el automatismo |
-| **El tipo de documento de resolución no existe** | Alto | Es lo primero que hay que confirmar (**G22**, fase A). Si no existe, hay que darlo de alta antes de cualquier otra cosa de la etapa 2 |
-| **Un `200` con colección vacía se usa como respuesta a estados legítimos** —avería sin presupuesto | Alto | **RNF-02** y el criterio 4 de **G26** piden `409`. Un vacío indistinguible haría que el Copiloto concluyera "no hay nada que verificar" |
-| **El componente y el presupuesto no están en la base como se supone** | Medio | El tablero del área los consume con volúmenes por componente e importe, así que la evidencia es fuerte. Si estuvieran calculados fuera del sistema, **G16** y **G26** son mucho más grandes de lo estimado y conviene decirlo pronto |
-| **Se atienden las fáciles y se posponen las de fondo** | Medio | El §8 indica qué desbloquea cada una, así que posponer tiene una consecuencia nombrable |
+| **El estatus se usa como estacionamiento.** Un técnico con carga alta puede mover casos a falta de evidencia para detener su reloj sin haber pedido nada real. | **Alto** — corrompe justo la métrica que el cambio busca arreglar | Motivo obligatorio de catálogo (RF-07); visibilidad del motivo para el distribuidor (RF-21), que hace verificable la solicitud; monitoreo de la métrica de reincidencia y de casos que entran al estatus sin comunicación asociada |
+| **El estatus no se usa.** Si aplicarlo cuesta más clics que no aplicarlo, no se aplica, y el dato nunca aparece. | **Alto** — el proyecto no entrega nada | Que aplicarlo sea parte del acto de pedir la evidencia, no un paso administrativo aparte. Medir la adopción desde la primera semana y ajustar la interacción si es baja |
+| **Un consumidor existente falla ante el estatus nuevo.** Reportes, integraciones o pantallas que asumen el conjunto actual de estatus. | Alto | Inventario de consumidores del catálogo de estatus antes de liberar (RNF-01); despliegue con el nuevo valor visible pero no aplicable, para verificar que nada se rompe |
+| **No hay historia previa que cargar en la bitácora.** Si la base no conserva los cambios de estatus, la medición arranca de cero y no habrá comparación con el pasado. | Medio | Verificarlo en la fase de análisis (RF-11). Si no hay historia, declararlo explícitamente y fijar la fecha de inicio de la serie en lugar de publicar comparaciones inválidas |
+| **El horario hábil no está definido con precisión** y cada reporte calcula distinto. | Medio | Definición documentada y configurable por país (RNF-06), acordada con el área antes de implementar |
+| **El distribuidor percibe el cambio como una forma de culparlo.** | Medio | Es un riesgo de comunicación, no técnico. El área debe acompañar el despliegue explicando que el propósito es agilizar y dar visibilidad. La redacción de lo que ve el distribuidor importa |
+| **Se difiere por considerarse menor.** Es un cambio pequeño frente a otros pendientes de la plataforma y podría postergarse indefinidamente, como ya ocurrió. | Medio | Este PRD documenta que es **precondición** de la automatización del ciclo de averías, y que el área lo intentó antes sin éxito |
 
 ### Supuestos
 
-1. **El componente reclamado y el desglose del presupuesto existen en la base de datos.** El tablero del área los consume.
-2. **La plataforma ya emite las notificaciones** que se disparan cuando un técnico dictamina, y se pueden reutilizar sin construir nada nuevo.
-3. **El folio del correo de asignación es el identificador de la avería** consultable por API. Pendiente de confirmar con el área.
-4. **El modelo de roles admite un rol acotado** para consumidores automatizados, dado que la documentación describe control de acceso multi-rol.
-5. **El texto del certificado que devuelve `GetContractPdfDataById` es completo y fiel.** De ello depende la etapa 1, que ya está en marcha.
+| **Supuesto** | **Descripción** |
+| --- | --- |
+| El catálogo de estatus admite valores nuevos | Se asume que agregar un estatus es una operación de configuración y no un cambio estructural. **Por verificar con el equipo de SIGA.** |
+| La carga de documentos es un evento detectable | El retorno automático a `Validación` (RF-03) depende de que la plataforma pueda reaccionar a la carga de un documento por parte del distribuidor. |
+| El portal del distribuidor puede mostrar el motivo | RF-21 asume que existe una superficie donde el distribuidor ve el estado de sus averías. |
+| El área define el nombre y los motivos | El nombre exacto del estatus y el catálogo inicial de motivos los entrega el área de averías, no el desarrollo. |
+| El SLA de 48 horas hábiles es el compromiso vigente | Se asume que no cambia y que solo cambia su base de cálculo. |
+| El cambio aplica primero a México | Colombia y Chile quedan para una decisión posterior, aunque el diseño no debería impedirlo. |
 
 ## 14. Preguntas abiertas
 
-Lo que necesitamos del equipo de SIGA para cerrar el diseño:
-
-1. 🔴 **¿Existe un tipo de documento para la resolución?** Es la pregunta más urgente: de ella depende la etapa 2 completa. Si existe, basta el identificador (**G22**).
-2. 🔴 **¿Cuál es la nomenclatura correcta de OData?** Los ejemplos del spec usan `IdAveria` y `VinOrPlate`; los esquemas documentan `claimId` y no declaran `vinOrPlate`. Necesitamos saber cuál manda (**G06**).
-3. 🔴 **¿En qué plazo es viable el endpoint de resolución?** De ello depende cuándo el Copiloto deja de requerir intervención manual (**G21**).
-4. **¿El componente reclamado y el presupuesto son consultables desde la base?** Nuestra evidencia es que sí, porque el tablero del área los usa (**G16**, **G26**).
-5. **¿Dónde vive el valor de venta del vehículo** y cuál es su fuente de valuación? El certificado lo enuncia sin cuantificarlo (**G27**).
-6. **¿Cómo se da de alta una identidad de servicio** y quién puede asignarle un rol? (**G03**).
-7. **¿Se puede obtener una cuenta de rol técnico o coordinador en QA?** Las que tenemos son de taller y distribuidor, así que no podemos verificar lo que ve el área técnica.
-8. **¿El folio que aparece en el correo de asignación es el mismo identificador que consulta la API?**
-
-### Del lado de EngineCX
-
-- **Pendiente:** confirmar quién respalda formalmente la entrega.
+| **Tema** | **Pregunta abierta** |
+| --- | --- |
+| 🔴 **Nombre** | **¿Cómo se llama el estatus?** En la sesión se mencionaron *"falta de evidencia"* y *"documentación incompleta"*. Lo define el área, y conviene que sea el mismo término en los tres países. |
+| 🔴 **Factibilidad** | **¿Agregar un estatus al catálogo es configuración o desarrollo?** De la respuesta depende el tamaño real de este proyecto. Pregunta directa al equipo de SIGA. |
+| 🔴 **Historia** | **¿La base conserva los cambios de estatus históricos?** Si sí, la medición arranca con comparación contra el pasado; si no, arranca de cero y hay que decirlo. |
+| 🔴 **Motivos** | **¿Cuál es el catálogo inicial de motivos de falta de evidencia?** Debería alinearse con el documento de evidencia mínima por sistema que el área está preparando. |
+| **Retorno automático** | **¿Cualquier documento cargado devuelve la avería a `Validación`, o solo uno que corresponda al motivo registrado?** Lo primero es simple y puede generar retornos falsos; lo segundo es más fino y exige relacionar motivo con tipo de documento. |
+| **Horario hábil** | **¿Cuál es la definición oficial de jornada, días laborables y festivos** para el cómputo del SLA en México? |
+| **Umbral** | **¿A partir de cuántas horas se considera que un distribuidor respondió tarde?** Lo necesita el reporte del equipo comercial. |
+| **Casos sin respuesta** | **¿Qué pasa con una avería que lleva semanas en falta de evidencia?** ¿Se cierra automáticamente, se escala, se queda abierta indefinidamente? Hoy no hay política y el estatus la va a hacer visible. |
+| **Visibilidad** | **¿Qué ve exactamente el distribuidor** y por qué canal se entera? Sin la alerta automática —fuera de alcance—, depende de que entre al portal. |
+| **Alcance regional** | **¿Se habilita también en Colombia y Chile, y cuándo?** El diseño lo permitiría; la decisión es del área. |
+| **Plazo** | **¿En qué plazo puede el equipo de SIGA entregarlo?** El área lo declaró precondición de los flujos de automatización, así que la fecha condiciona un segundo proyecto. |
+| **Reportes** | **¿Los tableros sobre estos tiempos los construye SIGA o el área?** Este PRD pide el dato y su consulta; los tableros son trabajo posterior sin dueño asignado. |

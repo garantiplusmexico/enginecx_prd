@@ -133,47 +133,47 @@ src/
 
 ### Fase 0 — Fundaciones, guardarraíles y extracción de reglas
 
-- [ ] **T-01** — Crear el repositorio `siga_alfa` con la estructura de ramas Engine
+- [x] **T-01** — Crear el repositorio `siga_alfa` con la estructura de ramas Engine
   - Archivos a crear/modificar: `README.md`, `.gitignore`, `.github/CODEOWNERS`
   - Criterio de completitud: existen `main`, `develop`, `pre-qa`, `qa`; `main` protegida con 2 aprobaciones; `develop` sin commits directos; el responsable tiene acceso
 
-- [ ] **T-02** — Andamiaje base de la aplicación y estructura de carpetas de A1 §3
+- [x] **T-02** — Andamiaje base de la aplicación y estructura de carpetas de A1 §3
   - Archivos a crear/modificar: `package.json`, `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`, configuración de Tailwind, `src/main.tsx`, `src/app/App.tsx`, árbol completo de `src/` con un `index.ts` por capa, `CLAUDE.md`
   - Criterio de completitud: `npx tsc -b` y `npm run build` pasan en verde sobre un esqueleto que renderiza una ruta vacía; el árbol de carpetas coincide con A1 §3
 
-- [ ] **T-03** — Instalar y configurar React Router, TanStack Query y Zustand (ADR-006)
+- [x] **T-03** — Instalar y configurar React Router, TanStack Query y Zustand (ADR-006)
   - Archivos a crear/modificar: `package.json`, `src/app/providers/QueryProvider.tsx`, `src/app/routes/index.tsx`, `src/shared/sync/store.ts`
   - Criterio de completitud: router montado con dos rutas de prueba y navegación con URL e historial; `QueryClient` configurado con política de reintentos y `staleTime` documentados; store de Zustand creado vacío con su regla de uso escrita en `CLAUDE.md`
 
-- [ ] **T-04** — Configuración tipada y validada al arranque
+- [x] **T-04** — Configuración tipada y validada al arranque
   - Archivos a crear/modificar: `src/config/env.ts`, `src/config/env.test.ts`, `.env.example`
   - Criterio de completitud: si falta o es inválida una variable requerida, la aplicación falla al arrancar con un mensaje claro; ninguna variable se lee con `import.meta.env` fuera de `config/` (verificado por linter en T-09)
 
-- [ ] **T-05** — Jerarquía de errores tipificados y su traducción a mensajes
+- [x] **T-05** — Jerarquía de errores tipificados y su traducción a mensajes
   - Archivos a crear/modificar: `src/shared/errors/*.ts`, `src/shared/errors/traducir.ts`, `src/shared/errors/*.test.ts`
   - Criterio de completitud: existen las 7 categorías de A1 §10 (`DomainError`, `ValidationError`, `AuthenticationError`, `AuthorizationError`, `NetworkError`, `ProviderError`, `InfrastructureError`); pruebas que verifican que ningún mensaje al usuario contiene nombre de tabla, SQL, ruta interna ni el mensaje original del proveedor
 
-- [ ] **T-06** — Contratos transversales (ports), sin implementación
+- [x] **T-06** — Contratos transversales (ports), sin implementación
   - Archivos a crear/modificar: `src/shared/observability/MonitoringProvider.ts`, `src/infrastructure/auth/AuthProvider.ts`, `src/infrastructure/storage/StorageProvider.ts`, `src/infrastructure/local/LocalStore.ts`, `src/infrastructure/realtime/RealtimeProvider.ts`, `src/domain/shared/ClockProvider.ts`
   - Criterio de completitud: los seis contratos compilan sin ninguna importación de infraestructura; `RealtimeProvider` queda **declarado y sin implementación** (ADR-005 modificado por ADR-011: sin acoplamiento a proveedor), con comentario que registra sus futuros consumidores (War Room, Post-Venta, Call Center)
 
-- [ ] **T-07** — Contenedor de composición de dependencias
+- [x] **T-07** — Contenedor de composición de dependencias
   - Archivos a crear/modificar: `src/app/container.ts`, `src/app/providers/ContainerProvider.tsx`, `src/app/container.test.ts`
   - Criterio de completitud: un único punto decide qué implementación satisface cada contrato; una prueba monta el contenedor completo con dobles y no toca la red
 
-- [ ] **T-08** — Implementaciones de infraestructura transversal
+- [~] **T-08** — Implementaciones de infraestructura transversal *(parcial: falta `SentryMonitoringProvider`)*
   - Archivos a crear/modificar: `src/infrastructure/api/cliente.ts`, `src/infrastructure/api/errores.ts`, `src/infrastructure/auth/ApiAuthProvider.ts`, `src/infrastructure/storage/ApiStorageProvider.ts`, `src/infrastructure/local/IndexedDBLocalStore.ts`, `src/shared/observability/SentryMonitoringProvider.ts`, `src/domain/shared/RelojDelSistema.ts` + pruebas de cada uno
   - Criterio de completitud: `errores.ts` traduce todo fallo HTTP —incluidos 401/403 y la caída de red— a las categorías de T-05 antes de salir de infraestructura; `IndexedDBLocalStore` se prueba sin navegador con doble de IndexedDB; el cliente HTTP se instancia **una sola vez** y solo aquí, y es el único lugar donde se adjunta el token
 
-- [ ] **T-09** — Reglas de linter arquitectónicas (los 5 guardarraíles automáticos de A1 §15)
+- [x] **T-09** — Reglas de linter arquitectónicas (los 5 guardarraíles automáticos de A1 §15)
   - Archivos a crear/modificar: `eslint.config.js`, `tools/eslint-rules/*.js` + pruebas de cada regla
   - Criterio de completitud: fallan la compilación (1) importar el cliente HTTP o llamar `fetch` desde `ui/`, (2) hablar con la red fuera de `infrastructure/api/`, (3) importar `ui/` o `infrastructure/` de otro feature, (4) usar `matchMedia` o `navigator.standalone` fuera del `DeviceContextProvider`, (5) importar cualquier dependencia externa desde `domain/`. Cada regla tiene una prueba con un caso que debe fallar y uno que debe pasar
 
-- [ ] **T-10** — Script de métricas arquitectónicas y línea base
+- [x] **T-10** — Script de métricas arquitectónicas y línea base
   - Archivos a crear/modificar: `tools/metricas-arquitectura.mjs`, `docs/linea-base.md`
   - Criterio de completitud: el script cuenta queries en vistas, archivos que importan el SDK fuera de infraestructura y componentes de terreno duplicados, y falla si alguno es distinto de 0 en el repo nuevo. Deja registrada la línea base **medida** del sistema actual (a 2026-08-25: 840 llamadas `.from()/.rpc()`, 447 dentro de `.tsx`, 157 archivos con el SDK, `App.tsx` de 916 líneas)
 
-- [ ] **T-11** — Integración continua
+- [x] **T-11** — Integración continua
   - Archivos a crear/modificar: `.github/workflows/ci.yml`
   - Criterio de completitud: en cada PR corren `npx tsc -b`, `npm run lint` (incluye T-09), `npm test` y `npm run build`, más el script de T-10; un PR que viole un guardarraíl no puede mergearse
 
@@ -181,19 +181,19 @@ src/
   - Archivos a crear/modificar: `vite.config.ts` (vite-plugin-pwa), `public/` (manifiesto e iconos), `src/app/providers/ActualizacionProvider.tsx`
   - Criterio de completitud: la aplicación se instala en Android e iOS, su shell carga sin conexión (RNF-15) y avisa cuando hay versión nueva
 
-- [ ] **T-13** — Extracción de reglas del sistema actual: Mi Día, visitas y lobbies
+- [x] **T-13** — Extracción de reglas del sistema actual: Mi Día, visitas y lobbies
   - Archivos a crear/modificar: `docs/reglas/visitas.md` · fuentes `[repo actual] src/features/visitas/` (70 archivos, 14.245 líneas) y `src/App.tsx`
   - Criterio de completitud: catálogo con cada regla encontrada, su ubicación actual, si se conserva o se descarta y a qué capa va. Incluye obligatoriamente: una visita en curso por asesor, el aviso global ligado al **usuario real** y no al impersonado por "Ver como", el borrador en tres capas (servidor, local, marca de visita abierta) y el cronómetro
 
-- [ ] **T-14** — Extracción de reglas: tareas, agenda, cumpleaños y bitácora
+- [x] **T-14** — Extracción de reglas: tareas, agenda, cumpleaños y bitácora
   - Archivos a crear/modificar: `docs/reglas/gestion.md` · fuentes `[repo actual] src/features/visitas/` y las migraciones de `plan_tareas`, `agenda_eventos`, `feriados`, `bitacoras`
   - Criterio de completitud: catálogo equivalente al de T-13, incluyendo el cálculo de días hábiles (`limite_habil`), la evaluación de cumplimiento diario de bitácora y las exenciones vigentes
 
-- [ ] **T-15** — Extracción de reglas: gastos, boletas y rendiciones
+- [x] **T-15** — Extracción de reglas: gastos, boletas y rendiciones
   - Archivos a crear/modificar: `docs/reglas/gastos.md` · fuentes `[repo actual] src/features/gastos/` (26 archivos, 8.779 líneas) y las RPCs `gasto_*` y `rendicion_*`
   - Criterio de completitud: catálogo equivalente, con la máquina de estados de rendición completa (incluidos rechazo y reenvío) y las reglas de la cola de boletas actual (`useSincronizarBoletas`, `idbStore.ts`)
 
-- [ ] **T-16** — Extracción de reglas: identidad, permisos, "Ver como" y modo demo
+- [x] **T-16** — Extracción de reglas: identidad, permisos, "Ver como" y modo demo
   - Archivos a crear/modificar: `docs/reglas/identidad.md` · fuentes `[repo actual] src/App.tsx`, `src/features/auth/`, `src/types/index.ts`, `demoGuard.ts` y las migraciones de `rol_capacidades` y `usuario_roles`
   - Criterio de completitud: qué puede hacer el AF expresado como **lista de decisiones de acceso**, no como matriz de capacidades — la matriz desaparece (ADR-011). Cada decisión mapeada al rol del JWT que la habilita. Las capacidades del sistema actual (`facturacion`, `salas`, `midia`, `cobertura`, `unoauno`, `config`) se leen como documentación de lo que el permiso significaba. Lista de todos los puntos donde el tier legacy decide algo, con qué lo reemplaza; "Ver como" formulado como **regla de dominio**, no como guard de UI
 
@@ -201,7 +201,7 @@ src/
   - Archivos a crear/modificar: `docs/linea-base.md`
   - Criterio de completitud: tiempo de apertura de Mi Día en el sistema actual (con y sin señal, en dispositivo y red representativos) e incidencias por asesor y por semana del último mes. Sin esto, RNF-06 y la métrica de incidencias del PRD §12 no son verificables
 
-- [ ] **T-18** — Especificación del esquema y del contrato de idempotencia para el servicio
+- [x] **T-18** — Especificación del esquema y del contrato de idempotencia para el servicio
   - Archivos a crear/modificar: `docs/reglas/esquema-fase1.md` · fuentes: las migraciones, funciones y políticas del repo actual (solo lectura) · destino: el equipo que construye `Services/GarantiMax/`
   - Criterio de completitud: tabla por tabla del alcance de Fase 1, sus campos con tipo y obligatoriedad, sus invariantes y su dueño; **clave de idempotencia con índice único parcial** exigida en visitas, lobbies, eventos de agenda, avances de tarea, bitácoras y gastos (RNF-09), más unicidad por asesor y día en bitácoras; columna de país donde haya dato operativo; claves de un solo tipo y FKs reales — **nada de transcribir el esquema viejo** (A3 §3). Incluye la tabla de eventos de producto del PRD §11. Se entrega como especificación, no como SQL: la implementación es del servicio
 
@@ -218,27 +218,27 @@ src/
 >
 > Entorno verificado en esta máquina el 26-08-2026: .NET SDK 8.0.418, PostgreSQL 16.3 escuchando en 5432, y las propiedades MSBuild `GPProjectBasePath` / `GPProjectsPath` resueltas por variables de entorno.
 
-- [ ] **T-S01** — Esqueleto del servicio y su rama
+- [x] **T-S01** — Esqueleto del servicio y su rama
   - Archivos a crear/modificar: `[repo api] Services/GarantiMax/{GarantiMax.csproj,Program.cs,appsettings.json,Dockerfile}`, entrada en `gp_3.0_siga_api.sln`, rama `feature/PJ4487-garantimax-nucleo-asesor` desde `develop`
   - Criterio de completitud: el servicio arranca en el puerto **5006** con Swagger/Scalar; JWT Bearer configurado contra el mismo `JwtSettings` que el resto; Serilog y `LogsMonitorClient` registrados; un endpoint de salud responde y **exige token**
 
-- [ ] **T-S02** — `DbContext` propio y base de datos
+- [x] **T-S02** — `DbContext` propio y base de datos
   - Archivos a crear/modificar: `Services/GarantiMax/Data/GarantiMaxDbContext.cs`, `Options/`, `appsettings.json`
   - Criterio de completitud: contexto propio del servicio contra una base **separada** (`garantimax_db`), con su cadena en `appsettings` bindeada a `Options/`. **No se toca `garantiplus_dbContext`** ni `DataAccess`, congelado desde enero de 2025. La conexión se verifica contra la base local
 
-- [ ] **T-S03** — Modelo de datos de Fase 1 y migración inicial
+- [x] **T-S03** — Modelo de datos de Fase 1 y migración inicial
   - Archivos a crear/modificar: `Services/GarantiMax/Models/*`, migración EF inicial
   - Criterio de completitud: implementa la especificación de T-18 — claves de un solo tipo y FKs reales, columna de país, clave de idempotencia con índice único parcial donde T-18 la exige, unicidad por asesor y día en bitácoras. **Nada transcrito del esquema viejo** (A3 §3.1). Los estados van como enums respaldados por restricción
 
-- [ ] **T-S04** — Siembra de datos de prueba
+- [x] **T-S04** — Siembra de datos de prueba
   - Archivos a crear/modificar: script de siembra + `Services/GarantiMax/doc/siembra-de-pruebas.md`
   - Criterio de completitud: catálogos de referencia (salas, vendedores de sala, clientes), un asesor de prueba ligado al usuario de prueba que ya existe, y un juego mínimo de datos que permita recorrer los cinco flujos críticos. Idempotente: se puede correr dos veces sin duplicar
 
-- [ ] **T-S05** — Autorización base y su documentación
+- [x] **T-S05** — Autorización base y su documentación
   - Archivos a crear/modificar: `Services/GarantiMax/{Interfaces,Services}/` para la resolución del asesor desde el token, `Services/GarantiMax/doc/README.md` + `doc/quien-puede-ver-que.md`
   - Criterio de completitud: un helper único traduce el token al asesor y **todo endpoint lo usa** — nadie recibe un identificador de asesor por parámetro y confía en él. La regla «el asesor solo lee y escribe lo suyo» queda documentada con ejemplos que pasan y que no, según la convención `doc/` del repo. Es el sustituto de RLS y el punto donde un descuido es un hueco de seguridad, no un bug
 
-- [ ] **T-S06** — Endpoints de identidad y perfil
+- [x] **T-S06** — Endpoints de identidad y perfil
   - Criterio de completitud: perfil del asesor, marca de bienvenida vista y de inducción. Los roles **no** se exponen por endpoint: viajan en el token
 
 - [x] **T-S07** — Endpoints de terreno: Mi Día, visitas y lobbies
@@ -365,7 +365,8 @@ src/
   - **El check-in pide dos cosas: sala y tipo.** El asesor está de pie en la puerta con el teléfono en una mano; cada campo de más ahí es un minuto que no está saludando al jefe de sala. La hora es la del toque y la ubicación no se espera (V-20)
   - **No hay botón de guardar:** autoguardado con 700 ms de espera (V-12) más un guardado de emergencia en `visibilitychange` (V-13), que es lo que salva el trabajo cuando entra una llamada
   - **El cronómetro vive aislado** (V-22): dentro del formulario, los diez puntos del decálogo se redibujarían cada segundo
-  - **Lo que falta y hay que decirlo:** las interacciones por vendedor y las ventas de la visita, que necesitan el catálogo de vendedores por sala y son dos formularios en sí mismos
+  - **Las interacciones por vendedor y las ventas quedaron hechas el 31-08-2026**, con el catálogo de vendedores ya disponible. Son una **lista con hoja y no un formulario largo**: cuatro datos por vendedor y una sala tiene entre tres y diez, así que puestos a la vez son cuarenta controles en un teléfono sostenido con una mano. La lista resume lo registrado por vendedor —«Capacitación · 3 unidades» o «Sin registrar»— y el asesor ve de un golpe a quién le falta
+  - **«No anoté» y «anotó cero» no se confunden:** vacío quita la línea de venta, un cero la conserva. Y el catálogo de vendedores **se guarda como snapshot**, porque una visita ocurre justo donde puede no haber cobertura: sin la lista no hay interacciones que registrar
 
 - [x] **T-38** — Aviso global de visita en curso
   - Archivos a crear/modificar: `src/features/visitas/ui/AvisoVisitaEnCurso.tsx` y su estado transversal

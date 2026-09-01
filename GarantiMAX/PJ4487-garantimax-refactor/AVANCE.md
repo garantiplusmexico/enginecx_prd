@@ -81,13 +81,23 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 | Fase | ID (BD) | Tareas | Días est. (rango) | Fecha inicio | Fecha fin | Días ejecutados | Días restantes | Estatus |
 |---|---|---|---|---|---|---|---|---|
-| **Fase 0 — Fundaciones, guardarraíles y extracción de reglas** | 193 | T-01 a T-19 | 30 – 40 | 2026-08-25 | | 0 | 30 – 40 | 🟡 En progreso |
-| **Fase 1 — Núcleo verificable del asesor (P1)** | 194 | T-20 a T-43 | 40 – 52 | | | 0 | 40 – 52 | ⏳ Pendiente |
+| **Fase 0 — Fundaciones, guardarraíles y extracción de reglas** | 193 | T-01 a T-19 | 30 – 40 | 2026-08-25 | | 5 | — | 🟡 Casi cerrada — abiertas **T-12** (PWA), **T-17** (línea base) y el `SentryMonitoringProvider` de T-08 |
+| **Fase 1 — Núcleo verificable del asesor (P1)** | 194 | T-20 a T-43 | 40 – 52 | 2026-08-28 | | 2 | — | 🟡 En progreso — hechas T-20 a T-38, T-41 y T-42; abiertas **T-39** (bloqueada), **T-40** y el resto de T-43 |
 | **Fase 2 — Gestión del asesor (P2)** | 195 | T-44 a T-54 | 20 – 26 | | | 0 | 20 – 26 | ⏳ Pendiente |
 | **Fase 3 — Gastos y rendiciones (P3)** | 196 | T-55 a T-61 | 20 – 27 | | | 0 | 20 – 27 | ⏳ Pendiente |
 | **Fase 4 — Notificaciones, verificación, auditoría y corte** | 197 | T-62 a T-72 | 32 – 42 | | | 0 | 32 – 42 | ⏳ Pendiente |
-| **Total proyecto (P1+P2+P3+cierre)** | — | 72 tareas | ~142 – 187 | 2026-08-25 | | 0 | ~142 – 187 | 🟡 En progreso |
-| **Solo P1 (guardarraíl del PRD)** | — | T-01 a T-43 | ~70 – 92 | 2026-08-25 | | 0 | ~70 – 92 | 🟡 En progreso |
+| **Total proyecto (P1+P2+P3+cierre)** | — | 72 tareas | ~142 – 187 | 2026-08-25 | | 5 | — | 🟡 En progreso — 43 de 72 tareas cerradas |
+| **Solo P1 (guardarraíl del PRD)** | — | T-01 a T-43 | ~70 – 92 | 2026-08-25 | | 5 | — | 🟡 En progreso — quedan T-12, T-17, T-39, T-40 y el resto de T-43 |
+
+> **Cómo leer «Días ejecutados».** Son **días hábiles transcurridos** desde la fecha de
+> inicio de esa fila, no esfuerzo consumido: la Fase 0 y la Fase 1 corrieron **en paralelo**
+> —la extracción de reglas y las fundaciones seguían abiertas cuando arrancó el vertical de
+> identidad—, así que sumar las filas contaría los mismos días dos veces. Del 25 al 31 de
+> agosto de 2026 hay **5 días hábiles** (el 29 y 30 son fin de semana).
+>
+> La columna «Días restantes» se deja vacía a propósito: el rango estimado sigue siendo el
+> de la planificación y nadie ha vuelto a estimar contra lo ejecutado. Una resta ahí daría
+> una precisión que no existe.
 
 ---
 
@@ -152,7 +162,7 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 | ID | Tarea | Responsable | Iniciada | Notas |
 |---|---|---|---|---|
-| | | | | |
+| T-43 | Catálogos de referencia en solo lectura | Claude Code | 2026-08-31 | Salas, vendedores y feriados hechos. Faltan clientes, proyectos e historial de sala |
 
 ---
 
@@ -160,15 +170,20 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 | ID | Tarea | Bloqueada por (si aplica) |
 |---|---|---|
-| T-08 | Implementaciones de infraestructura transversal — resto | **Parcial ya hecho** (`RelojDelSistema`). Sin backend: `IndexedDBLocalStore`, `SentryMonitoringProvider`. Con backend: `ApiAuthProvider`, `ApiStorageProvider` |
-| T-12 | PWA instalable con shell offline | Nada |
-| T-17 | Línea base medida de las métricas de producto | Acceso al sistema actual **en producción** — hay que medir antes del corte o se pierde la comparación |
-| T-19 | Sistema de componentes base adaptativo | Nada |
-| T-S05 | Autorización base y su documentación | Nada — el rol `"Asesor Farmer"` ya existe en `AspNetRoles` y el usuario de prueba lo tiene |
-| T-S06 a T-S09 | Endpoints de identidad, terreno, gestión y gastos | T-S05. **Alcance reducido en T-S09:** solo los endpoints del asesor (enviar, reenviar); aprobar, pagar y rechazar quedan en la fase del CM |
-| T-20 en adelante | Fase 1 del frontend | Los endpoints de su vertical |
+| T-08 (resto) | `SentryMonitoringProvider` | Nada. El monitoreo va hoy a la consola, y eso es lo que hace invisible un fallo en el teléfono de un asesor |
+| T-12 | PWA instalable con shell offline | Nada. No hay `public/`, ni manifiesto, ni service worker: el motor offline funciona pero la aplicación no se instala |
+| T-17 | Línea base medida de las métricas de producto | Acceso al sistema actual **en producción**. Es la única tarea con fecha de caducidad: después del corte no hay con qué comparar, y RNF-06 se mide contra ella |
+| T-40 | Lobbies y otros eventos | Nada — el endpoint quedó hecho en T-S07 |
+| Historial de visitas | La pantalla del historial | Nada — el repositorio ya tiene `history()` con OData |
+| T-43 (resto) | Clientes, proyectos e historial de sala | Nada |
+| T-S08 · T-S09 | Endpoints de gestión y de gastos | Nada. **Alcance reducido en T-S09:** solo los del asesor (enviar, reenviar); aprobar y pagar son de otro rol y de otra fase |
+| Prueba del contrato de enums en la API | Fijar del lado del servicio el orden de los `enum` | Nada. Hoy solo lo protegen las pruebas del frontend, y **no hay proyecto de test en el repo de la API**: si alguien inserta un valor en medio del enum, el frontend empieza a leer «capacitación» donde dice «inducción» |
 
-> **Nota sobre la tabla anterior.** Hasta el 26-08-2026 esta sección listaba T-09 a T-19 con bloqueos que ya no existen: dos filas decían "MCP de Supabase pendiente de autorización". Ese bloqueo desapareció con ADR-011 — el sistema actual está clonado en `../garantimax` y se lee del disco, sin MCP. Las filas obsoletas se eliminaron en lugar de dejarlas tachadas: una tabla de pendientes que miente es peor que no tenerla.
+> **Nota sobre la tabla anterior.** Se reescribió el 31-08-2026: listaba T-19, T-S05 y T-S06 como
+> pendientes cuando ya estaban hechas, y «T-20 en adelante» bloqueada por endpoints que ya
+> existen. Una tabla de pendientes que miente es peor que no tenerla — es la segunda vez que
+> pasa en este archivo, y la primera fue por el mismo motivo: las filas se agregan al planificar
+> y nadie las quita al cerrarlas.
 
 ---
 
@@ -176,7 +191,9 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 | ID | Tarea | Motivo del bloqueo | Quién debe resolverlo |
 |---|---|---|---|
-| | | | |
+| T-39 | Evidencia fotográfica de la visita | **No hay endpoint de archivos**, y no puede escribirse sin decidir dónde viven los blobs (S3, disco del contenedor, otro). Sin eso tampoco se puede escribir `ApiStorageProvider`. Es lo único que separa al vertical de visitas de estar completo | Responsable del proyecto |
+| «Ver como» (impersonación) | Habilitar los roles que pueden impersonar | Falta el **nombre exacto del rol de Country Manager** en `AspNetRoles`. La regla está escrita y probada; la lista de roles autorizados está **vacía a propósito** y el sistema falla cerrado: nadie impersona | Responsable del proyecto |
+| Uso real en jornada completa | Sesión que aguante el día | El token dura **60 minutos** y `AuthController` no expone endpoint de renovación: el asesor volvería a entrar a media jornada, y eso **exige señal**. O se sube `JwtSettings:ExpirationMinutes`, o el servicio de autenticación gana un endpoint | Responsable del proyecto + equipo de la API |
 
 ---
 

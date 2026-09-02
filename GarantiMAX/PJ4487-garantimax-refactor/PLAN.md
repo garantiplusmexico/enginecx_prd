@@ -427,21 +427,27 @@ src/
 
 ### Fase 2 — Gestión del asesor: tareas, agenda, cumpleaños y bitácora (P2)
 
-- [ ] **T-44** — Dominio de tarea
+- [x] **T-44** — Dominio de tarea
   - Archivos a crear/modificar: `src/features/tareas/domain/*.ts` + pruebas
   - Criterio de completitud: `abierta → en_progreso → completada | cancelada`; los avances son **inmutables** una vez registrados; solo una tarea completada admite calificación; se conserva el vínculo con la sala o el plan que la originó
+  - **Desviación: esa máquina de estados no existe.** La extracción de reglas (T-14) encontró que una tarea tiene un **booleano** de completada y un estado **derivado** —completada, atrasada, pendiente (G-19)—, y que la máquina de verdad es otra: la **negociación** —pendiente, aceptada, rechazada, cambio propuesto (G-24)—, que este PLAN no mencionaba. Se implementó lo que hay. Lo demás del criterio sí se cumple: los avances son inmutables (no hay editar ni borrar, ni en el frontend ni en el servicio) y solo lo completado admite nota
 
-- [ ] **T-45** — `TareaRepository`
+- [x] **T-45** — `TareaRepository`
   - Archivos a crear/modificar: `src/features/tareas/{ports,infrastructure}/*.ts` + pruebas de mapeo
   - Criterio de completitud: cubre `plan_tareas`, `tarea_avances`, `tarea_comentarios` y las RPCs `crear_tarea_sala`, `completar_tarea`, `set_tarea_completada`, `calificar_tarea`, `tarea_avance_crear`, todas detrás del contrato
 
-- [ ] **T-46** — Casos de uso de tareas y su decorador offline
+- [x] **T-46** — Casos de uso de tareas y su decorador offline
   - Archivos a crear/modificar: `src/features/tareas/application/{CrearTarea,RegistrarAvance,CompletarTarea,CalificarTarea,ListarMisTareas}.ts`, `src/features/tareas/infrastructure/TareaRepositoryOffline.ts` + pruebas
   - Criterio de completitud: registrar un avance sin señal se encola y no se pierde (RNF-08); reintentar no duplica el avance
+  - Las dos mitades del criterio viven en sitios distintos: **no se pierde** porque el método es encolable, y **no se duplica** porque su clave es el id del **avance** y no el de la tarea. Con la de la tarea, dos avances del mismo día se colapsarían en uno y el asesor perdería el de la mañana
+  - **Proponer un cambio y responderlo NO se encolan**, y no es limitación técnica: son una **conversación**. Encolarlas dejaría al asesor creyendo que negoció algo que el otro no ha visto, con la propuesta viajando horas después sobre una tarea que quizá ya cambió
 
-- [ ] **T-47** — Interfaz de tareas
+- [x] **T-47** — Interfaz de tareas
   - Archivos a crear/modificar: `src/features/tareas/ui/*.tsx`
   - Criterio de completitud: lista, detalle, avances comentados, calificación y cierre, adaptativa en ambos contextos (RF-10)
+  - **El detalle tiene URL propia** (`/tareas/:id`) y no es una hoja sobre el listado: es donde se trabaja, y las notificaciones de G-30 hablan de una tarea concreta, así que tienen que poder llevar a ella
+  - **Lo que espera aceptación va arriba del listado**, sin importar el filtro: es lo único de esa pantalla que el asesor puede perder por no haberlo visto, porque tiene plazo (G-26)
+  - **Rechazar y proponer no son un botón:** abren una hoja con su campo, porque el motivo del rechazo es todo el contenido de la notificación que recibe el mandante (G-28)
 
 - [ ] **T-48** — Dominio de agenda y días hábiles
   - Archivos a crear/modificar: `src/domain/agenda/*.ts` + pruebas con `ClockProvider` simulado

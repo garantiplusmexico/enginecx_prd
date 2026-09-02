@@ -10,6 +10,25 @@
 
 **Spec:** `Desarrollos_internos/PJ1544-copiloto-averias/PRD.md` (v0.3, 2026-09-01)
 
+**Exploración:** `anexos/hallazgos-exploracion-2026-09-01.md` — lo que se verificó contra producción. **Léelo antes de empezar.**
+
+> ## ⚠ Corregido tras la exploración de producción del 2026-09-01
+>
+> Este plan se escribió antes de tocar la API y los buzones reales. Lo que sigue ya está corregido en las tareas, y se resume aquí para que nadie reintroduzca una suposición vieja:
+>
+> | Lo que el plan decía | Lo que es |
+> |---|---|
+> | `POST /api/Authentication/v1/Login` | `POST /authentication/api/Auth/v1/Login`; cada servicio con prefijo (`/claims`, `/contracts`, `/catalogs`) |
+> | Las listas son arreglos | Son `{ value: [...], pagination: {...} }`, y **`$top` está capado a 100** |
+> | El caso se identifica por `folio` (texto) | Por **`claimId`** (entero). El correo confirma que «folio» y `claimId` son el mismo número |
+> | El contrato se busca **por VIN** | La avería **no trae VIN**. Se busca por `contractId`, y si trae el centinela **57227** (19.6% de la base), por `policyId` |
+> | Un correo por caso | **Hasta 18 correos en 14 minutos** por un solo caso. Obliga a una ventana de reposo (Task 10b) |
+> | La suficiencia se decide por `documentType` | Los 16 tipos son genéricos y los nombres suelen ser `WhatsApp Image ….jpeg`. Hay que **abrir y clasificar** los documentos (Task 9) |
+> | Hay que pedir el tipo de documento «Resolución» | **Ya existe**: `documentTypeId` 14 |
+> | `claim.status` es legible | Es `statusId` numérico **sin catálogo**. El mapa vive en configuración (Task 8b) |
+>
+> **Tres cosas que la exploración regaló y hay que aprovechar:** el correo de carga de archivo **nombra el archivo y su tipo**; el correo de observaciones **trae la descripción de la falla** (que en la API viene vacía el 44% de las veces); y el VIN viaja en el asunto de todos los correos de avería.
+
 ## Constricciones globales
 
 - **RNF-18 — La suficiencia precede al dictamen, siempre.** Ninguna ruta del código puede invocar el motor de dictamen sobre un expediente cuya última evaluación de suficiencia no sea `suficiente`. Esta constricción se hace cumplir por tipos, no por disciplina (Task 11).
@@ -22,6 +41,10 @@
 - **Idioma.** Todo el texto dirigido a una persona —correos, documento, reporte— va en español de México. Los identificadores de código, en inglés.
 - **Zona horaria.** Todo cálculo de fechas y horas usa `America/Mexico_City`. Nada de `new Date()` sin zona explícita.
 - **Node 20+**, TypeScript en modo `strict`, sin `any` implícito.
+- **Ventana de reposo de 10 minutos.** Ningún evento dispara la evaluación de suficiencia por sí mismo: reinicia un temporizador, y la evaluación corre cuando el caso lleva 10 minutos sin novedades. Verificado en producción: la avería 163087 generó 16 cargas de archivo en 4 minutos.
+- **Doble puente al contrato.** Siempre `contractId` primero; si no resuelve, `policyId`. El valor **57227 es un centinela**, no un contrato: aparece en 3 358 averías con VIN distintos.
+- **Todo filtro OData se verifica al arrancar.** Un nombre de campo inexistente devuelve HTTP 200 con lista vacía, no un error: un typo es indistinguible de «no hay resultados».
+- **El remitente de los correos de la plataforma es `plataforma@garantiplus.mx`.** Cualquier otro remitente es el canal humano y se ignora.
 
 ---
 
@@ -588,27 +611,65 @@ git commit -m "feat: máquina de estados del caso con RNF-18 impuesta por diseñ
 
 - [ ] **Step 1: Crear los fixtures**
 
+Los cuatro primeros son **transcripciones literales de correos de producción** del 1 de septiembre de 2026 (buzón de Miguel Ángel, avería 163087). No los inventes ni los "mejores": son el contrato con la plataforma.
+
 ```json
 // tests/fixtures/emails/asignacion.json
 {
-  "from": "Contacto@garantiplus.mx",
+  "from": "plataforma@garantiplus.mx",
   "to": "miguel.rodriguez@garantiplus.mx",
-  "subject": "Asignación de avería 3246 / Vin 9GAMM6108KB004600",
-  "body": "Se le ha asignado la avería 3246 correspondiente al VIN 9GAMM6108KB004600.",
+  "subject": "Asignación de avería 163087 / Vin KNDPV3AF2T7463841",
+  "body": "Estimado(a) usuario(a): Se le ha asignado la atención de la avería registrada con folio 163087 correspondiente al vehículo con VIN KNDPV3AF2T7463841. Atentamente Garantiplus México",
   "messageId": "<abc123@garantiplus.mx>",
-  "receivedAt": "2026-09-01T15:04:00.000Z"
+  "receivedAt": "2026-09-01T19:38:15.000Z"
 }
 ```
 
 ```json
-// tests/fixtures/emails/documento-cargado.json
+// tests/fixtures/emails/carga-archivo.json
 {
-  "from": "Contacto@garantiplus.mx",
+  "from": "plataforma@garantiplus.mx",
   "to": "miguel.rodriguez@garantiplus.mx",
-  "subject": "Nuevo documento en la avería 3246",
-  "body": "El distribuidor cargó un documento en la avería 3246 / Vin 9GAMM6108KB004600.",
+  "subject": "Carga de archivo en avería 163087 / Vin KNDPV3AF2T7463841",
+  "body": "Estimado(a) MIGUEL ANGEL RODRIGUEZ Y RUIZ: Se ha registrado un nuevo archivo (SERIE.jpeg / Varios) para la avería 163087 del vehículo con VIN KNDPV3AF2T7463841. Atentamente Garantiplus México",
   "messageId": "<def456@garantiplus.mx>",
-  "receivedAt": "2026-09-02T18:20:00.000Z"
+  "receivedAt": "2026-09-01T19:49:52.000Z"
+}
+```
+
+```json
+// tests/fixtures/emails/observaciones.json
+{
+  "from": "plataforma@garantiplus.mx",
+  "to": "miguel.rodriguez@garantiplus.mx",
+  "subject": "Observaciones sobre avería 163087 / Vin KNDPV3AF2T7463841",
+  "body": "Estimado(a) usuario(a): Se han registrado las siguientes observaciones por parte de la agencia: ------------------------------ *Durante la inspección se identificó corte localizado en el costado exterior del neumático, presentando fuga de aire en dicha zona.* Atentamente Garantiplus México",
+  "messageId": "<ghi789@garantiplus.mx>",
+  "receivedAt": "2026-09-01T19:51:30.000Z"
+}
+```
+
+```json
+// tests/fixtures/emails/pago.json
+{
+  "from": "plataforma@garantiplus.mx",
+  "to": "miguel.rodriguez@garantiplus.mx",
+  "subject": "Pago de avería 159523 / Mitsubishi",
+  "body": "Estimado(a) usuario(a): Se ha registrado el pago de la avería 159523. Atentamente Garantiplus México",
+  "messageId": "<jkl012@garantiplus.mx>",
+  "receivedAt": "2026-09-01T19:49:42.000Z"
+}
+```
+
+```json
+// tests/fixtures/emails/humano.json
+{
+  "from": "garantias@bmwcancun.mx",
+  "to": "miguel.rodriguez@garantiplus.mx",
+  "subject": "Solicitud de reconsideración – Avería 157279 / Contrato 771162",
+  "body": "Buenas tardes Miguel, solicitamos reconsideración del caso.",
+  "messageId": "<mno345@bmwcancun.mx>",
+  "receivedAt": "2026-09-01T17:56:13.000Z"
 }
 ```
 
@@ -617,10 +678,10 @@ git commit -m "feat: máquina de estados del caso con RNF-18 impuesta por diseñ
 {
   "from": "boletin@proveedor.com",
   "to": "miguel.rodriguez@garantiplus.mx",
-  "subject": "Promoción de septiembre",
+  "subject": "Webinar - Arquitectura de APIs para el Éxito",
   "body": "Aproveche nuestras ofertas.",
   "messageId": "<zzz@proveedor.com>",
-  "receivedAt": "2026-09-02T09:00:00.000Z"
+  "receivedAt": "2026-09-01T17:48:43.000Z"
 }
 ```
 
@@ -631,48 +692,78 @@ git commit -m "feat: máquina de estados del caso con RNF-18 impuesta por diseñ
 import { describe, it, expect } from 'vitest'
 import { parseSigaEmail } from '../../src/ingestion/email-parser.js'
 import asignacion from '../fixtures/emails/asignacion.json'
-import documento from '../fixtures/emails/documento-cargado.json'
+import carga from '../fixtures/emails/carga-archivo.json'
+import observaciones from '../fixtures/emails/observaciones.json'
+import pago from '../fixtures/emails/pago.json'
+import humano from '../fixtures/emails/humano.json'
 import ruido from '../fixtures/emails/no-relacionado.json'
 
 describe('parseSigaEmail', () => {
-  it('reconoce el correo de asignación y extrae folio y VIN', () => {
+  it('reconoce la asignación y extrae claimId y VIN', () => {
     const r = parseSigaEmail(asignacion)
     expect(r.recognized).toBe(true)
     if (!r.recognized) return
-    expect(r.folio).toBe('3246')
-    expect(r.vin).toBe('9GAMM6108KB004600')
+    expect(r.claimId).toBe(163087)
+    expect(r.vin).toBe('KNDPV3AF2T7463841')
     expect(r.eventKind).toBe('asignacion')
   })
 
-  it('reconoce un correo de carga de documento sobre el mismo folio', () => {
-    const r = parseSigaEmail(documento)
+  it('reconoce la carga de archivo y extrae el nombre y el tipo del documento', () => {
+    const r = parseSigaEmail(carga)
     expect(r.recognized).toBe(true)
     if (!r.recognized) return
-    expect(r.folio).toBe('3246')
     expect(r.eventKind).toBe('documento_cargado')
+    expect(r.claimId).toBe(163087)
+    expect(r.document).toEqual({ fileName: 'SERIE.jpeg', documentType: 'Varios' })
   })
 
-  it('ignora sin rastro cualquier otro correo', () => {
+  it('reconoce las observaciones y extrae el texto de la agencia', () => {
+    const r = parseSigaEmail(observaciones)
+    expect(r.recognized).toBe(true)
+    if (!r.recognized) return
+    expect(r.eventKind).toBe('observaciones')
+    expect(r.observations).toContain('corte localizado en el costado exterior del neumático')
+    // El texto va entre asteriscos en el cuerpo; no deben sobrevivir.
+    expect(r.observations).not.toMatch(/^\*|\*$/)
+    expect(r.observations).not.toContain('Atentamente')
+  })
+
+  it('reconoce el pago aunque su asunto no traiga VIN', () => {
+    const r = parseSigaEmail(pago)
+    expect(r.recognized).toBe(true)
+    if (!r.recognized) return
+    expect(r.eventKind).toBe('pago')
+    expect(r.claimId).toBe(159523)
+    expect(r.vin).toBeNull()
+  })
+
+  it('IGNORA el correo de una agencia aunque mencione una avería', () => {
+    expect(parseSigaEmail(humano).recognized).toBe(false)
+  })
+
+  it('ignora cualquier otro correo', () => {
     expect(parseSigaEmail(ruido).recognized).toBe(false)
   })
 
-  it('la huella es estable para el mismo mensaje y distinta entre mensajes', () => {
-    const a = parseSigaEmail(asignacion)
-    const b = parseSigaEmail(asignacion)
-    const c = parseSigaEmail(documento)
+  it('la huella es estable por mensaje y distinta entre mensajes', () => {
+    const a = parseSigaEmail(asignacion), b = parseSigaEmail(asignacion), c = parseSigaEmail(carga)
     if (!a.recognized || !b.recognized || !c.recognized) throw new Error('no reconocido')
     expect(a.fingerprint).toBe(b.fingerprint)
     expect(a.fingerprint).not.toBe(c.fingerprint)
   })
 
-  it('devuelve no reconocido si el asunto menciona avería pero no hay folio', () => {
-    const r = parseSigaEmail({ ...asignacion, subject: 'Asignación de avería / Vin', body: 'sin folio' })
+  it('descarta si el VIN del asunto no coincide con el del cuerpo', () => {
+    const r = parseSigaEmail({ ...asignacion, body: asignacion.body.replace('KNDPV3AF2T7463841', '1HGBH41JXMN109186') })
     expect(r.recognized).toBe(false)
   })
 
-  it('descarta el correo cuando el VIN del asunto no coincide con el del cuerpo', () => {
-    const r = parseSigaEmail({ ...asignacion, body: 'Se le ha asignado la avería 3246 correspondiente al VIN 1HGBH41JXMN109186.' })
-    expect(r.recognized).toBe(false)
+  it('descarta si no hay número de avería', () => {
+    expect(parseSigaEmail({ ...asignacion, subject: 'Asignación de avería / Vin', body: 'sin folio' }).recognized).toBe(false)
+  })
+
+  it('tolera que el remitente venga con nombre para mostrar', () => {
+    const r = parseSigaEmail({ ...asignacion, from: 'Garantiplus <plataforma@garantiplus.mx>' })
+    expect(r.recognized).toBe(true)
   })
 })
 ```
@@ -692,47 +783,88 @@ export type RawEmail = {
   from: string; to: string; subject: string; body: string; messageId: string; receivedAt: string
 }
 
-export type EventKind = 'asignacion' | 'documento_cargado' | 'cambio_estatus' | 'actualizacion'
+export type EventKind = 'asignacion' | 'documento_cargado' | 'observaciones' | 'pago'
 
 export type ParsedEmail =
   | { recognized: false }
-  | { recognized: true; folio: string; vin: string | null; eventKind: EventKind; fingerprint: string; occurredAt: Date; mailbox: string }
+  | {
+      recognized: true
+      claimId: number
+      vin: string | null
+      eventKind: EventKind
+      fingerprint: string
+      occurredAt: Date
+      mailbox: string
+      /** Solo en `documento_cargado`: el correo nombra el archivo y su tipo. */
+      document: { fileName: string; documentType: string } | null
+      /** Solo en `observaciones`: la descripción de la falla que escribió la agencia. */
+      observations: string | null
+    }
 
-const SENDER = /@garantiplus\.(mx|co|cl)$/i
-const FOLIO = /aver[íi]a\s+(\d{2,8})/i
-const VIN = /\b([A-HJ-NPR-Z0-9]{17})\b/i
+/**
+ * Único remitente válido, verificado en producción el 2026-09-01.
+ * Las agencias escriben a los técnicos por su cuenta y mencionan averías: ese es
+ * el canal humano y NO se procesa. Filtrar solo por patrón de asunto lo dejaría entrar.
+ */
+const REMITENTE = 'plataforma@garantiplus.mx'
 
-function classify(subject: string): EventKind | null {
-  const s = subject.toLowerCase()
-  if (s.includes('asignación de avería') || s.includes('asignacion de averia')) return 'asignacion'
-  if (s.includes('documento')) return 'documento_cargado'
-  if (s.includes('estatus') || s.includes('estado')) return 'cambio_estatus'
-  if (s.includes('avería') || s.includes('averia')) return 'actualizacion'
-  return null
+const ASUNTOS: Array<[RegExp, EventKind]> = [
+  [/^asignaci[óo]n de aver[íi]a\s+(\d+)/i, 'asignacion'],
+  [/^carga de archivo en aver[íi]a\s+(\d+)/i, 'documento_cargado'],
+  [/^observaciones sobre aver[íi]a\s+(\d+)/i, 'observaciones'],
+  [/^pago de aver[íi]a\s+(\d+)/i, 'pago'],
+]
+
+const VIN = /\b([A-HJ-NPR-Z0-9]{17})\b/
+// «Se ha registrado un nuevo archivo (SERIE.jpeg / Varios) para la avería …»
+const ARCHIVO = /nuevo archivo\s*\(([^/)]+?)\s*\/\s*([^)]+?)\)/i
+// «…por parte de la agencia: ---- *TEXTO* Atentamente»
+const OBSERVACIONES = /por parte de la agencia:\s*-*\s*\*?(.+?)\*?\s*(?:atentamente|$)/is
+
+function direccion(from: string): string {
+  const m = from.match(/<([^>]+)>/)
+  return (m ? m[1] : from).trim().toLowerCase()
 }
 
 export function parseSigaEmail(raw: RawEmail): ParsedEmail {
-  if (!SENDER.test(raw.from.trim())) return { recognized: false }
+  if (direccion(raw.from) !== REMITENTE) return { recognized: false }
 
-  const eventKind = classify(raw.subject)
-  if (!eventKind) return { recognized: false }
+  const asunto = raw.subject.trim()
+  const encontrado = ASUNTOS.map(([re, kind]) => [asunto.match(re), kind] as const)
+                            .find(([m]) => m !== null)
+  if (!encontrado) return { recognized: false }
 
-  const folio = (raw.subject.match(FOLIO) ?? raw.body.match(FOLIO))?.[1]
-  if (!folio) return { recognized: false }
+  const [match, eventKind] = encontrado
+  const claimId = Number(match![1])
+  if (!Number.isInteger(claimId) || claimId <= 0) return { recognized: false }
 
-  const vinSubject = raw.subject.match(VIN)?.[1]?.toUpperCase() ?? null
-  const vinBody = raw.body.match(VIN)?.[1]?.toUpperCase() ?? null
-  // RF-03: si ambos existen y difieren, el correo no es de fiar.
-  if (vinSubject && vinBody && vinSubject !== vinBody) return { recognized: false }
+  const vinAsunto = asunto.match(VIN)?.[1]?.toUpperCase() ?? null
+  const vinCuerpo = raw.body.match(VIN)?.[1]?.toUpperCase() ?? null
+  // Si ambos existen y difieren, el correo no es de fiar.
+  if (vinAsunto && vinCuerpo && vinAsunto !== vinCuerpo) return { recognized: false }
+
+  let document: { fileName: string; documentType: string } | null = null
+  if (eventKind === 'documento_cargado') {
+    const m = raw.body.match(ARCHIVO)
+    if (m) document = { fileName: m[1].trim(), documentType: m[2].trim() }
+  }
+
+  let observations: string | null = null
+  if (eventKind === 'observaciones') {
+    const m = raw.body.match(OBSERVACIONES)
+    if (m) observations = m[1].replace(/\s+/g, ' ').replace(/^\*+|\*+$/g, '').trim() || null
+  }
 
   return {
     recognized: true,
-    folio,
-    vin: vinSubject ?? vinBody,
+    claimId,
+    vin: vinAsunto ?? vinCuerpo,
     eventKind,
     fingerprint: createHash('sha256').update(raw.messageId).digest('hex').slice(0, 32),
     occurredAt: new Date(raw.receivedAt),
     mailbox: raw.to,
+    document,
+    observations,
   }
 }
 ```
@@ -740,7 +872,7 @@ export function parseSigaEmail(raw: RawEmail): ParsedEmail {
 - [ ] **Step 5: Correr el test y verificar que pasa**
 
 Run: `npx vitest run tests/ingestion/email-parser.test.ts`
-Esperado: PASS, 6 tests.
+Esperado: PASS, 10 tests.
 
 - [ ] **Step 6: Commit**
 
@@ -749,7 +881,7 @@ git add src/ingestion tests/ingestion tests/fixtures/emails
 git commit -m "feat: parser de correos de SIGA con clasificación de evento"
 ```
 
-> **Nota para quien ejecute esta tarea.** Los patrones de asunto de los correos que **no** son de asignación son una hipótesis: el catálogo real está en la pregunta abierta #1 del PRD. Cuando se levante sobre un buzón real, esta tarea se revisa y los fixtures se reemplazan por correos auténticos. El barrido de la Task 10 existe precisamente para que el sistema funcione mientras tanto.
+> **Verificado en producción.** Los cuatro patrones y sus cuerpos salen de correos reales del buzón de Miguel Ángel (1 de septiembre de 2026). Lo que **no** está verificado es si existen más tipos que no aparecieron en la muestra de cinco días —por ejemplo, un correo de cambio de estatus—. El barrido de la Task 10 cubre ese hueco: si SIGA emite un correo que no reconocemos, el barrido detecta el cambio de todas formas.
 
 ---
 
@@ -979,8 +1111,8 @@ git commit -m "feat: repositorios de expediente y bitácora de eventos con idemp
 ## Task 6: Cliente de solo lectura de la API de SIGA
 
 **Files:**
-- Create: `src/siga/siga-client.ts`, `src/siga/siga-types.ts`
-- Create: `tests/fixtures/siga/contract.json`, `tests/fixtures/siga/claim.json`, `tests/fixtures/siga/documents.json`
+- Create: `src/siga/siga-client.ts`, `src/siga/siga-types.ts`, `src/siga/odata.ts`
+- Create: `tests/fixtures/siga/contract-detail.json`, `tests/fixtures/siga/claim.json`, `tests/fixtures/siga/documents.json`
 - Test: `tests/siga/siga-client.test.ts`
 
 **Interfaces:**
@@ -988,117 +1120,168 @@ git commit -m "feat: repositorios de expediente y bitácora de eventos con idemp
 - Produces:
   ```typescript
   interface SigaReader {
-    findContractByVin(vin: string): Promise<ContractSummary | null>
-    getContractDetail(contractId: string): Promise<ContractDetail>
-    getCertificateText(contractId: string): Promise<string>
-    getClaim(folio: string): Promise<ClaimDetail>
-    listClaimDocuments(folio: string): Promise<ClaimDocument[]>
-    downloadDocument(documentId: string): Promise<Buffer>
+    getClaim(claimId: number): Promise<ClaimSummary | null>
+    findContract(claim: { contractId: number; policyId: number }): Promise<ContractSummary | null>
+    getContractDetail(contractId: number): Promise<ContractDetail>
+    getCertificateText(contractId: number): Promise<string>
+    listClaimDocuments(claimId: number): Promise<ClaimDocument[]>
+    downloadDocument(documentId: number): Promise<{ buffer: Buffer; mimeType: string }>
+    listDocumentTypes(): Promise<Array<{ documentTypeId: number; documentTypeName: string }>>
+    verifyFilters(): Promise<void>
   }
   export function createSigaClient(deps?: { fetch?: typeof fetch }): SigaReader
+  export const SENTINEL_CONTRACT_ID = 57227
   ```
-  `ContractSummary = { contractId, vin, product, dealer, status, validFrom, validTo }`
-  `ContractDetail = ContractSummary & { vehicle: { brand, model, version, year, kmAtContract, firstInvoiceDate, engineNumber } }`
-  `ClaimDetail = { folio, vin, status, assignedTo, failureDescription, reportedAt, registeredBy }`
-  `ClaimDocument = { documentId, documentType, fileName, uploadedAt }`
 
-- [ ] **Step 1: Escribir el test con un `fetch` doblado**
+> **Rutas verificadas en producción el 2026-09-01.** Cada servicio tiene su prefijo. Las respuestas de lista vienen envueltas en `{ value, pagination }` y **`$top` no pasa de 100**.
+
+- [ ] **Step 1: Escribir el test**
 
 ```typescript
 // tests/siga/siga-client.test.ts
 import { describe, it, expect, vi } from 'vitest'
-import { createSigaClient } from '../../src/siga/siga-client.js'
-import contrato from '../fixtures/siga/contract.json'
+import { createSigaClient, SENTINEL_CONTRACT_ID } from '../../src/siga/siga-client.js'
+import detalle from '../fixtures/siga/contract-detail.json'
 import averia from '../fixtures/siga/claim.json'
+
+const envuelto = (items: unknown[]) => ({ value: items, pagination: { total: items.length, pageSize: 100, currentPage: 1, totalPages: 1 } })
 
 function fakeFetch(routes: Record<string, unknown>) {
   return vi.fn(async (url: string | URL) => {
-    const u = String(url)
+    const u = decodeURIComponent(String(url))
     const key = Object.keys(routes).find((k) => u.includes(k))
     if (!key) return new Response('no encontrado', { status: 404 })
     return new Response(JSON.stringify(routes[key]), { status: 200, headers: { 'content-type': 'application/json' } })
   }) as unknown as typeof fetch
 }
 
+const LOGIN = { '/authentication/api/Auth/v1/Login': { accessToken: 't', refreshToken: 'r', expiresIn: 3600, tokenType: 'Bearer' } }
+
 describe('cliente de SIGA', () => {
-  it('localiza el contrato por VIN', async () => {
-    const c = createSigaClient({ fetch: fakeFetch({ '/Authentication': { token: 't' }, '/GetAllContracts': [contrato] }) })
-    const r = await c.findContractByVin('9GAMM6108KB004600')
-    expect(r?.contractId).toBe(contrato.contractId)
+  it('recupera la avería por claimId', async () => {
+    const c = createSigaClient({ fetch: fakeFetch({ ...LOGIN, 'GetClaims': envuelto([averia]) }) })
+    const r = await c.getClaim(163087)
+    expect(r?.claimId).toBe(163087)
+    expect(r?.statusId).toBe('2')
   })
 
-  it('devuelve null si el VIN no tiene contrato', async () => {
-    const c = createSigaClient({ fetch: fakeFetch({ '/Authentication': { token: 't' }, '/GetAllContracts': [] }) })
-    expect(await c.findContractByVin('NOEXISTE')).toBeNull()
+  it('devuelve null si la avería no existe, en vez de lanzar', async () => {
+    const c = createSigaClient({ fetch: fakeFetch({ ...LOGIN, 'GetClaims': envuelto([]) }) })
+    expect(await c.getClaim(999999)).toBeNull()
   })
 
-  it('lanza si el VIN tiene más de un contrato vigente', async () => {
-    const c = createSigaClient({ fetch: fakeFetch({ '/Authentication': { token: 't' }, '/GetAllContracts': [contrato, { ...contrato, contractId: 'OTRO' }] }) })
-    await expect(c.findContractByVin('9GAMM6108KB004600')).rejects.toThrow(/más de un contrato/)
+  it('busca el contrato por contractId cuando NO es el centinela', async () => {
+    const f = fakeFetch({ ...LOGIN, 'GetAllContracts': envuelto([{ contractId: 620497, vin: 'X', status: 'Activo' }]) })
+    const c = createSigaClient({ fetch: f })
+    await c.findContract({ contractId: 620497, policyId: 111 })
+    const llamada = (f as unknown as { mock: { calls: [string][] } }).mock.calls
+      .map(([u]) => decodeURIComponent(String(u))).find((u) => u.includes('GetAllContracts'))!
+    expect(llamada).toContain('contractId eq 620497')
   })
 
-  it('recupera la avería por folio', async () => {
-    const c = createSigaClient({ fetch: fakeFetch({ '/Authentication': { token: 't' }, '/GetClaims': [averia] }) })
-    const r = await c.getClaim('3246')
-    expect(r.folio).toBe('3246')
-    expect(r.status).toBe('Validación')
+  it('cae al policyId cuando el contractId es el centinela 57227', async () => {
+    const f = fakeFetch({ ...LOGIN, 'GetAllContracts': envuelto([{ contractId: 482879, vin: 'X', status: 'Activo' }]) })
+    const c = createSigaClient({ fetch: f })
+    const r = await c.findContract({ contractId: SENTINEL_CONTRACT_ID, policyId: 482879 })
+    expect(r?.contractId).toBe(482879)
+    const urls = (f as unknown as { mock: { calls: [string][] } }).mock.calls.map(([u]) => decodeURIComponent(String(u)))
+    expect(urls.some((u) => u.includes('contractId eq 482879'))).toBe(true)
+    expect(urls.some((u) => u.includes(`contractId eq ${SENTINEL_CONTRACT_ID}`))).toBe(false)
+  })
+
+  it('cae al policyId también cuando el contractId simplemente no resuelve', async () => {
+    let n = 0
+    const f = vi.fn(async (url: string | URL) => {
+      const u = decodeURIComponent(String(url))
+      if (u.includes('/Login')) return new Response(JSON.stringify(LOGIN['/authentication/api/Auth/v1/Login']), { status: 200 })
+      n++
+      const items = n === 1 ? [] : [{ contractId: 482879, vin: 'X', status: 'Activo' }]
+      return new Response(JSON.stringify(envuelto(items)), { status: 200 })
+    }) as unknown as typeof fetch
+    const c = createSigaClient({ fetch: f })
+    expect((await c.findContract({ contractId: 700000, policyId: 482879 }))?.contractId).toBe(482879)
+  })
+
+  it('devuelve null cuando ni el contractId ni el policyId resuelven', async () => {
+    const c = createSigaClient({ fetch: fakeFetch({ ...LOGIN, 'GetAllContracts': envuelto([]) }) })
+    expect(await c.findContract({ contractId: SENTINEL_CONTRACT_ID, policyId: 482879 })).toBeNull()
+  })
+
+  it('desenvuelve el sobre y respeta el tope de 100 por página', async () => {
+    const f = fakeFetch({ ...LOGIN, 'GetClaimDocuments': envuelto([{ documentId: 1, claimId: 163087, documentType: 'Presupuesto', originalFileName: 'p.pdf', mimeType: 'application/pdf', date: '2026-09-01T13:08:16' }]) })
+    const c = createSigaClient({ fetch: f })
+    expect(await c.listClaimDocuments(163087)).toHaveLength(1)
+    const url = (f as unknown as { mock: { calls: [string][] } }).mock.calls.map(([u]) => decodeURIComponent(String(u))).find((u) => u.includes('GetClaimDocuments'))!
+    expect(url).toContain('$top=100')
+  })
+
+  it('extrae el texto del certificado del campo content', async () => {
+    const c = createSigaClient({ fetch: fakeFetch({ ...LOGIN, 'GetContractPdfDataById': { fileName: '1.pdf', contentType: 'application/pdf', content: 'CONTRATO DE GARANTÍA MECANICA…' } }) })
+    expect(await c.getCertificateText(654077)).toContain('CONTRATO DE GARANTÍA')
+  })
+
+  it('lanza si el certificado viene vacío', async () => {
+    const c = createSigaClient({ fetch: fakeFetch({ ...LOGIN, 'GetContractPdfDataById': { content: '   ' } }) })
+    await expect(c.getCertificateText(654077)).rejects.toThrow(/vac[íi]o/)
+  })
+
+  it('verifyFilters detecta que un filtro devuelve vacío en silencio', async () => {
+    const c = createSigaClient({ fetch: fakeFetch({ ...LOGIN, 'GetClaims': envuelto([]) }) })
+    await expect(c.verifyFilters()).rejects.toThrow(/filtro/i)
   })
 
   it('reutiliza el token entre llamadas', async () => {
-    const f = fakeFetch({ '/Authentication': { token: 't' }, '/GetClaims': [averia] })
+    const f = fakeFetch({ ...LOGIN, 'GetClaims': envuelto([averia]) })
     const c = createSigaClient({ fetch: f })
-    await c.getClaim('3246'); await c.getClaim('3246')
-    const auths = (f as unknown as { mock: { calls: [string][] } }).mock.calls.filter(([u]) => String(u).includes('/Authentication'))
-    expect(auths).toHaveLength(1)
+    await c.getClaim(163087); await c.getClaim(163087)
+    const logins = (f as unknown as { mock: { calls: [string][] } }).mock.calls.filter(([u]) => String(u).includes('/Login'))
+    expect(logins).toHaveLength(1)
   })
 
-  it('el cliente NO expone ninguna operación de escritura', () => {
+  it('NO expone ninguna operación de escritura', () => {
     const c = createSigaClient({ fetch: fakeFetch({}) })
-    for (const prohibido of ['updateClaimStatus', 'uploadDocument', 'createClaim', 'post', 'put', 'patch']) {
-      expect(c).not.toHaveProperty(prohibido)
+    for (const p of ['updateClaimStatus', 'uploadDocument', 'createClaim', 'post', 'put', 'patch']) {
+      expect(c).not.toHaveProperty(p)
     }
   })
 })
 ```
 
-- [ ] **Step 2: Crear los fixtures**
-
-```json
-// tests/fixtures/siga/contract.json
-{
-  "contractId": "CTR-795713",
-  "vin": "9GAMM6108KB004600",
-  "product": "Excellence",
-  "dealer": "Distribuidora Norte",
-  "status": "Vigente",
-  "validFrom": "2025-03-10",
-  "validTo": "2027-03-10",
-  "vehicle": {
-    "brand": "Chevrolet", "model": "Captiva", "version": "LT", "year": 2024,
-    "kmAtContract": 12500, "firstInvoiceDate": "2024-11-02", "engineNumber": "MTR-88123"
-  }
-}
-```
+- [ ] **Step 2: Crear los fixtures** *(copias literales de respuestas de producción)*
 
 ```json
 // tests/fixtures/siga/claim.json
 {
-  "folio": "3246",
-  "vin": "9GAMM6108KB004600",
-  "status": "Validación",
-  "assignedTo": "miguel.rodriguez@garantiplus.mx",
-  "failureDescription": "La transmisión presenta patinado y ruido al cambiar de marcha.",
-  "reportedAt": "2026-09-01T14:30:00.000Z",
-  "registeredBy": "taller.norte@distribuidora.mx"
+  "claimId": 163087,
+  "policyId": 482879,
+  "contractId": 620497,
+  "description": "",
+  "creationDate": "2026-09-01T19:38:15.646285-06:00",
+  "statusId": "2",
+  "technicianId": 12,
+  "technicianName": "MIGUEL ANGEL RODRIGUEZ Y RUIZ",
+  "registeredBy": "ag1.mt1@grupodg.com",
+  "trackingUrl": "0843e106-ea9c-4a85-853d-4b8dfd3f0d7b"
 }
 ```
 
 ```json
 // tests/fixtures/siga/documents.json
 [
-  { "documentId": "DOC-1", "documentType": "Presupuesto", "fileName": "presupuesto.pdf", "uploadedAt": "2026-09-01T14:35:00.000Z" },
-  { "documentId": "DOC-2", "documentType": "Fotos odómetro", "fileName": "odometro.jpg", "uploadedAt": "2026-09-01T14:36:00.000Z" }
+  { "documentId": 561573, "claimId": 163087, "statusId": 1, "mimeType": "application/pdf", "date": "2026-09-01T11:44:39.060717", "documentType": "Presupuesto", "originalFileName": "Presupuesto.pdf" },
+  { "documentId": 561577, "claimId": 163087, "statusId": 1, "mimeType": "image/jpeg", "date": "2026-09-01T11:45:37.714965", "documentType": "Varios", "originalFileName": "Carnet.jpeg" },
+  { "documentId": 561580, "claimId": 163087, "statusId": 1, "mimeType": "image/jpeg", "date": "2026-09-01T11:45:56.774799", "documentType": "Varios", "originalFileName": "Odomtro.jpeg" }
 ]
+```
+
+```json
+// tests/fixtures/siga/contract-detail.json
+{
+  "channel": { "dealerName": "BYD CLEBER NACIONAL", "salesChannel": "Nuevo", "advisor": "FABIAN FLORES MARTINEZ", "registrationDate": "2025-12-29T20:04:21.368473", "paymentDate": "2026-02-19T12:47:27.168952", "cancellationDate": null, "paymentMethod": "" },
+  "beneficiary": { "beneficiaryType": "Fisica", "beneficiaryName": "JORGE EDUARDO GARZA GARZA", "companyName": "", "birthDate": "1974-08-27T00:00:00", "rfc": "GAGJ740827HD5", "address": "ABETO 416", "municipality": "General Escobedo", "state": "Nuevo León", "postalCode": "66068", "phone": "8115889733", "email": "Jorge_azrag@hotmail.com" },
+  "vehicle": { "brand": "BYD", "model": "DOLPHIN MINI", "version": "MINI", "year": 2026, "kilometers": 0, "horsepower": "130", "cubicCapacity": "0", "purchaseDate": "2025-11-30T00:00:00", "vin": "LGXCE4CC0T2016061", "engineNumber": "TZ18CXSH4J50", "factoryWarranty": true, "timelyServices": true, "usageType": "Particular", "propulsionType": "Motor eléctrico" },
+  "contract": { "contractId": 654077, "status": "Activo", "registrationDate": "2025-12-29T20:04:21.368473", "paymentDate": "2026-02-19T12:47:27.168952", "cancellationDate": null, "paymentMethod": "", "productName": "BYD CLEBER 6", "contractStartDate": "2025-12-29T00:00:00", "contractEndDate": "2031-12-28T00:00:00", "priceWithoutTaxes": 6119.4, "taxes": 979.1, "total": 7098.5 }
+}
 ```
 
 - [ ] **Step 3: Correr el test y verificar que falla**
@@ -1106,40 +1289,88 @@ describe('cliente de SIGA', () => {
 Run: `npx vitest run tests/siga/siga-client.test.ts`
 Esperado: FAIL — módulo no encontrado.
 
-- [ ] **Step 4: Implementar el cliente**
+- [ ] **Step 4: Implementar los tipos y el ayudante de OData**
 
 ```typescript
 // src/siga/siga-types.ts
+export type ClaimSummary = {
+  claimId: number; policyId: number; contractId: number; description: string
+  creationDate: string; statusId: string; technicianId: number; technicianName: string
+  registeredBy: string; trackingUrl: string
+}
 export type ContractSummary = {
-  contractId: string; vin: string; product: string; dealer: string
-  status: string; validFrom: string; validTo: string
+  contractId: number; status: string; registrationDate: string
+  contractStartDate: string; contractEndDate: string
+  dealerName: string; productName: string; total: number; vin: string
 }
 export type Vehicle = {
-  brand: string; model: string; version: string; year: number
-  kmAtContract: number; firstInvoiceDate: string; engineNumber: string
+  brand: string; model: string; version: string; year: number; kilometers: number
+  purchaseDate: string; vin: string; engineNumber: string
+  factoryWarranty: boolean; timelyServices: boolean; usageType: string; propulsionType: string
 }
-export type ContractDetail = ContractSummary & { vehicle: Vehicle }
-export type ClaimDetail = {
-  folio: string; vin: string; status: string; assignedTo: string | null
-  failureDescription: string; reportedAt: string; registeredBy: string | null
+export type ContractDetail = {
+  channel: { dealerName: string; salesChannel: string; advisor: string; paymentDate: string | null }
+  beneficiary: Record<string, string | null>
+  vehicle: Vehicle
+  contract: {
+    contractId: number; status: string; productName: string
+    contractStartDate: string; contractEndDate: string; total: number
+  }
 }
 export type ClaimDocument = {
-  documentId: string; documentType: string; fileName: string; uploadedAt: string
+  documentId: number; claimId: number; statusId: number; mimeType: string
+  date: string; documentType: string; originalFileName: string
 }
-export interface SigaReader {
-  findContractByVin(vin: string): Promise<ContractSummary | null>
-  getContractDetail(contractId: string): Promise<ContractDetail>
-  getCertificateText(contractId: string): Promise<string>
-  getClaim(folio: string): Promise<ClaimDetail>
-  listClaimDocuments(folio: string): Promise<ClaimDocument[]>
-  downloadDocument(documentId: string): Promise<Buffer>
+export type Paginated<T> = {
+  value: T[]
+  pagination: { total: number; pageSize: number; currentPage: number; totalPages: number; next: string | null; previous: string | null }
 }
 ```
 
 ```typescript
+// src/siga/odata.ts
+
+/** El tope real de la API. Pedir más devuelve 100 sin avisar. */
+export const MAX_PAGE = 100
+
+/** Codifica el filtro: un espacio sin codificar rompe la petición. */
+export function odata(params: { filter?: string; top?: number; skip?: number; orderby?: string }): string {
+  const q: string[] = []
+  if (params.filter) q.push(`$filter=${encodeURIComponent(params.filter)}`)
+  if (params.orderby) q.push(`$orderby=${encodeURIComponent(params.orderby)}`)
+  q.push(`$top=${Math.min(params.top ?? MAX_PAGE, MAX_PAGE)}`)
+  if (params.skip) q.push(`$skip=${params.skip}`)
+  return '?' + q.join('&')
+}
+```
+
+- [ ] **Step 5: Implementar el cliente**
+
+```typescript
 // src/siga/siga-client.ts
 import { loadConfig } from '../config/env.js'
-import type { SigaReader, ContractSummary, ContractDetail, ClaimDetail, ClaimDocument } from './siga-types.js'
+import { odata, MAX_PAGE } from './odata.js'
+import type {
+  SigaReaderTypes, ClaimSummary, ContractSummary, ContractDetail, ClaimDocument, Paginated,
+} from './siga-types.js'
+
+/**
+ * Valor centinela que SIGA pone en `contractId` cuando la avería no tiene contrato
+ * directo. Verificado el 2026-09-01: aparece en 3 358 de 17 160 averías, con VIN
+ * distintos entre sí. Nunca se debe consultar: hay que caer al `policyId`.
+ */
+export const SENTINEL_CONTRACT_ID = 57227
+
+export interface SigaReader {
+  getClaim(claimId: number): Promise<ClaimSummary | null>
+  findContract(claim: { contractId: number; policyId: number }): Promise<ContractSummary | null>
+  getContractDetail(contractId: number): Promise<ContractDetail>
+  getCertificateText(contractId: number): Promise<string>
+  listClaimDocuments(claimId: number): Promise<ClaimDocument[]>
+  downloadDocument(documentId: number): Promise<{ buffer: Buffer; mimeType: string }>
+  listDocumentTypes(): Promise<Array<{ documentTypeId: number; documentTypeName: string }>>
+  verifyFilters(): Promise<void>
+}
 
 export class SigaUnavailableError extends Error {
   constructor(public readonly endpoint: string, public readonly status: number) {
@@ -1155,13 +1386,13 @@ export function createSigaClient(deps: { fetch?: typeof fetch } = {}): SigaReade
 
   async function auth(): Promise<string> {
     if (token) return token
-    const res = await http(`${cfg.siga.baseUrl}/api/Authentication/v1/Login`, {
+    const res = await http(`${cfg.siga.baseUrl}/authentication/api/Auth/v1/Login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ user: cfg.siga.user, password: cfg.siga.password }),
+      body: JSON.stringify({ username: cfg.siga.user, password: cfg.siga.password }),
     })
-    if (!res.ok) throw new SigaUnavailableError('/Authentication', res.status)
-    token = ((await res.json()) as { token: string }).token
+    if (!res.ok) throw new SigaUnavailableError('/authentication/api/Auth/v1/Login', res.status)
+    token = ((await res.json()) as { accessToken: string }).accessToken
     return token
   }
 
@@ -1173,53 +1404,109 @@ export function createSigaClient(deps: { fetch?: typeof fetch } = {}): SigaReade
     return (await res.json()) as T
   }
 
+  /** Desenvuelve `{ value, pagination }` y pagina hasta agotar, respetando el tope de 100. */
+  async function getAll<T>(base: string, filter: string): Promise<T[]> {
+    const out: T[] = []
+    for (let skip = 0; ; skip += MAX_PAGE) {
+      const page = await get<Paginated<T>>(base + odata({ filter, top: MAX_PAGE, skip }))
+      out.push(...(page.value ?? []))
+      const total = page.pagination?.total ?? out.length
+      if (out.length >= total || !page.value?.length) return out
+    }
+  }
+
+  async function buscarContrato(id: number): Promise<ContractSummary | null> {
+    const v = await getAll<ContractSummary>('/contracts/api/Contracts/v1/GetAllContracts', `contractId eq ${id}`)
+    return v[0] ?? null
+  }
+
   return {
-    async findContractByVin(vin) {
-      const lista = await get<ContractSummary[]>(`/api/Contracts/v1/GetAllContracts?$filter=vin eq '${vin}'`)
-      const vigentes = lista.filter((c) => c.status?.toLowerCase() === 'vigente')
-      const candidatos = vigentes.length ? vigentes : lista
-      if (candidatos.length > 1) {
-        // Supuesto 7 del PRD: un VIN tiene a lo sumo un contrato vigente.
-        throw new Error(`El VIN ${vin} tiene más de un contrato vigente (${candidatos.length})`)
-      }
-      return candidatos[0] ?? null
+    async getClaim(claimId) {
+      const v = await getAll<ClaimSummary>('/claims/api/Claims/v1/GetClaims', `claimId eq ${claimId}`)
+      return v[0] ?? null
     },
-    getContractDetail: (id) => get<ContractDetail>(`/api/Contracts/v1/GetContractById/${id}`),
+
+    /**
+     * Doble puente. El `contractId` de la avería resuelve el 55% de los casos;
+     * cuando trae el centinela —o simplemente no existe— el `policyId` recupera
+     * otro 16%. El resto no tiene contrato consultable y es responsabilidad del
+     * llamador convertirlo en excepción.
+     */
+    async findContract({ contractId, policyId }) {
+      if (contractId !== SENTINEL_CONTRACT_ID) {
+        const porContrato = await buscarContrato(contractId)
+        if (porContrato) return porContrato
+      }
+      if (policyId && policyId !== contractId) {
+        const porPoliza = await buscarContrato(policyId)
+        if (porPoliza) return porPoliza
+      }
+      return null
+    },
+
+    getContractDetail: (id) => get<ContractDetail>(`/contracts/api/Contracts/v1/GetContractById/${id}`),
+
     async getCertificateText(id) {
-      const r = await get<{ text?: string; content?: string }>(`/api/Contracts/v1/GetContractPdfDataById/${id}`)
-      const texto = r.text ?? r.content ?? ''
-      if (!texto.trim()) throw new Error(`El certificado del contrato ${id} vino vacío`)
+      const r = await get<{ content?: string }>(`/contracts/api/Contracts/v1/GetContractPdfDataById/${id}`)
+      const texto = (r.content ?? '').trim()
+      if (!texto) throw new Error(`El certificado del contrato ${id} vino vacío`)
       return texto
     },
-    async getClaim(folio) {
-      const lista = await get<ClaimDetail[]>(`/api/Claims/v1/GetClaims?$filter=folio eq '${folio}'`)
-      const c = lista[0]
-      if (!c) throw new Error(`No existe la avería ${folio} en SIGA`)
-      return c
-    },
-    listClaimDocuments: (folio) => get<ClaimDocument[]>(`/api/Claims/v1/GetClaimDocuments?$filter=claimId eq '${folio}'`),
+
+    listClaimDocuments: (claimId) =>
+      getAll<ClaimDocument>('/claims/api/Claims/v1/GetClaimDocuments', `claimId eq ${claimId}`),
+
     async downloadDocument(documentId) {
       const t = await auth()
-      const res = await http(`${cfg.siga.baseUrl}/api/Claims/v1/DownloadClaimDocument/${documentId}`, {
-        headers: { authorization: `Bearer ${t}` },
-      })
-      if (!res.ok) throw new SigaUnavailableError('/DownloadClaimDocument', res.status)
-      return Buffer.from(await res.arrayBuffer())
+      const path = `/claims/api/Claims/v1/DownloadClaimDocument/${documentId}`
+      const res = await http(`${cfg.siga.baseUrl}${path}`, { headers: { authorization: `Bearer ${t}` } })
+      if (!res.ok) throw new SigaUnavailableError(path, res.status)
+      return {
+        buffer: Buffer.from(await res.arrayBuffer()),
+        mimeType: res.headers.get('content-type') ?? 'application/octet-stream',
+      }
+    },
+
+    async listDocumentTypes() {
+      const r = await get<Paginated<{ documentTypeId: number; documentTypeName: string }> | Array<{ documentTypeId: number; documentTypeName: string }>>(
+        '/claims/api/Claims/v1/GetDocumentType'
+      )
+      return Array.isArray(r) ? r : r.value
+    },
+
+    /**
+     * Un filtro con un nombre de campo inexistente devuelve HTTP 200 con lista vacía,
+     * no un error. Sin esta verificación, un typo se manifestaría como «no hay casos»
+     * y el copiloto se quedaría callado para siempre. Se corre al arrancar el servicio.
+     */
+    async verifyFilters() {
+      const sonda = await get<Paginated<ClaimSummary>>(
+        '/claims/api/Claims/v1/GetClaims' + odata({ top: 1, orderby: 'claimId desc' })
+      )
+      const ejemplo = sonda.value?.[0]
+      if (!ejemplo) throw new Error('Verificación de filtros: la API no devolvió ninguna avería')
+      const porId = await getAll<ClaimSummary>('/claims/api/Claims/v1/GetClaims', `claimId eq ${ejemplo.claimId}`)
+      if (porId.length !== 1) {
+        throw new Error(
+          `Verificación de filtros: el filtro «claimId eq ${ejemplo.claimId}» devolvió ${porId.length} resultados. ` +
+          `El nombre del campo cambió o el filtro dejó de aplicarse.`
+        )
+      }
     },
   }
 }
 ```
 
-- [ ] **Step 5: Correr el test y verificar que pasa**
+- [ ] **Step 6: Correr el test y verificar que pasa**
 
 Run: `npx vitest run tests/siga/siga-client.test.ts`
-Esperado: PASS, 6 tests.
+Esperado: PASS, 12 tests.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/siga tests/siga tests/fixtures/siga
-git commit -m "feat: cliente de solo lectura de la API de SIGA"
+git commit -m "feat: cliente de solo lectura de SIGA con doble puente y verificacion de filtros"
 ```
 
 ---
@@ -1235,11 +1522,17 @@ git commit -m "feat: cliente de solo lectura de la API de SIGA"
 - Consumes: `SigaReader` (Task 6), `findCase/patchCase` (Task 5).
 - Produces:
   ```typescript
-  type AssembleResult = { ok: true; case: CaseRecord; documents: ClaimDocument[]; newDocuments: ClaimDocument[] } | { ok: false; exception: DossierException }
-  assembleDossier(folio: string, deps: { siga: SigaReader }): Promise<AssembleResult>
+  type AssembleResult = { ok: true; case: CaseRecord; documents: ClaimDocument[]; newDocuments: ClaimDocument[] } | { ok: false; exception: BusinessException }
+  assembleDossier(claimId: number, deps: { siga: SigaReader }): Promise<AssembleResult>
   class BusinessException extends Error { constructor(public code: string, message: string) }
   class TechnicalError extends Error { constructor(public component: string, cause: unknown) }
   ```
+
+> **Corregido tras la exploración.** Tres cambios respecto de la versión original de esta tarea:
+>
+> 1. **El expediente arranca de la avería, no del VIN.** La avería trae `contractId` y `policyId`; el cliente resuelve el contrato con el doble puente. Desaparece la búsqueda por VIN y con ella el riesgo de «más de un contrato vigente».
+> 2. **`SIN_CONTRATO` es un desenlace esperado, no un caso raro.** El 29% de las averías —las de Mitsubishi— no tiene contrato consultable. Es una excepción notificada al técnico, no un error del sistema.
+> 3. **La coherencia se verifica contra el VIN del correo**, que es el único VIN que tenemos antes de resolver el contrato. Si el contrato resuelve a un VIN distinto del que traía el correo, el caso se detiene.
 
 - [ ] **Step 1: Escribir el test**
 
@@ -1372,24 +1665,31 @@ export async function assembleDossier(folio: string, deps: { siga: SigaReader })
 
   let claim, contract
   try {
-    claim = await deps.siga.getClaim(folio)
-    contract = await deps.siga.findContractByVin(actual.vin)
-  } catch (e) {
-    if (e instanceof Error && /más de un contrato/.test(e.message)) {
-      return { ok: false, exception: new BusinessException('CONTRATO_AMBIGUO', e.message) }
+    claim = await deps.siga.getClaim(claimId)
+    if (!claim) {
+      return { ok: false, exception: new BusinessException('AVERIA_INEXISTENTE', `La avería ${claimId} no existe en SIGA`) }
     }
+    contract = await deps.siga.findContract(claim)
+  } catch (e) {
     throw new TechnicalError('siga', e)
   }
 
+  // Desenlace esperado en ~29% de los casos (las averías de Mitsubishi).
+  // Se notifica al técnico y el caso sigue siendo suyo; no es un fallo del pipeline.
   if (!contract) {
-    return { ok: false, exception: new BusinessException('SIN_CONTRATO', `El VIN ${actual.vin} no tiene contrato en SIGA`) }
+    return {
+      ok: false,
+      exception: new BusinessException('SIN_CONTRATO',
+        `La avería ${claimId} no tiene contrato consultable (contractId=${claim.contractId}, policyId=${claim.policyId})`),
+    }
   }
-  // B6: VIN del caso = VIN del contrato = VIN de la avería.
-  if (contract.vin !== actual.vin || claim.vin !== actual.vin) {
+
+  // El VIN del correo es el único que tenemos antes de resolver el contrato.
+  if (actual.vin && contract.vin && contract.vin !== actual.vin) {
     return {
       ok: false,
       exception: new BusinessException('VIN_INCOHERENTE',
-        `VIN del caso ${actual.vin}, del contrato ${contract.vin}, de la avería ${claim.vin}`),
+        `VIN del correo ${actual.vin}, VIN del contrato ${contract.vin}`),
     }
   }
 
@@ -1600,6 +1900,429 @@ git commit -m "feat: catálogo de evidencia mínima versionado con semilla provi
 
 ---
 
+## Task 8b: Mapa de estatus configurable
+
+**Files:**
+- Create: `src/db/migrations/003_claim_status_map.sql`, `src/domain/claim-status.ts`
+- Test: `tests/domain/claim-status.test.ts`
+
+**Interfaces:**
+- Produces: `isWorkable(statusId: string): Promise<boolean>` · `statusName(statusId: string): Promise<string>` · `WORKABLE_STATUS_ID`
+
+> **Por qué existe esta tarea.** La API **no expone catálogo de estatus** (ocho rutas probadas, todas 404). `statusId` es una cadena numérica sin significado publicado. El mapa se infirió cruzando edad, número de documentos y presencia de un documento tipo *Resolución* sobre 300 averías: **1 = Registrada** y **2 = Validación** son los dos estados previos al dictamen, y 2 es el más fresco. **Es una inferencia, no un hecho**, así que vive en configuración y viaja marcada como no confirmada.
+
+- [ ] **Step 1: Escribir la migración**
+
+```sql
+-- src/db/migrations/003_claim_status_map.sql
+CREATE TABLE claim_status_map (
+  status_id   TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  workable    BOOLEAN NOT NULL DEFAULT false,  -- ¿el técnico puede dictaminarla aquí?
+  terminal    BOOLEAN NOT NULL DEFAULT false,  -- ¿el caso ya salió del ciclo?
+  confirmed   BOOLEAN NOT NULL DEFAULT false,  -- ¿lo confirmó el área o es inferencia?
+  notes       TEXT
+);
+
+INSERT INTO claim_status_map (status_id, name, workable, terminal, confirmed, notes) VALUES
+ ('1',  'Registrada (inferido)',            false, false, false, 'Sin documento Resolucion en la muestra; mediana 12 dias'),
+ ('2',  'Validacion (inferido)',            true,  false, false, 'Sin documento Resolucion y el mas fresco: mediana 6 dias'),
+ ('3',  'Posterior al dictamen (inferido)', false, false, false, 'Con Resolucion en 6 de 6 muestreados'),
+ ('4',  'Posterior al dictamen (inferido)', false, false, false, 'Con Resolucion en 6 de 6 muestreados'),
+ ('5',  'Posterior al dictamen (inferido)', false, false, false, 'Con Resolucion en 4 de 6 muestreados'),
+ ('6',  'Posterior al dictamen (inferido)', false, true,  false, 'El mas frecuente: 102 de 300'),
+ ('10', 'Posterior al dictamen (inferido)', false, true,  false, 'Segundo mas frecuente: 90 de 300'),
+ ('11', 'Marginal (inferido)',              false, true,  false, 'Solo 6 de 300');
+```
+
+- [ ] **Step 2: Escribir el test**
+
+```typescript
+// tests/domain/claim-status.test.ts
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { runMigrations, closePool, getPool } from '../../src/db/client.js'
+import { isWorkable, statusName, unconfirmedStatuses } from '../../src/domain/claim-status.js'
+
+beforeAll(async () => { await runMigrations() })
+afterAll(async () => { await closePool() })
+
+describe('mapa de estatus', () => {
+  it('solo el 2 es trabajable', async () => {
+    expect(await isWorkable('2')).toBe(true)
+    for (const s of ['1', '3', '4', '5', '6', '10', '11']) expect(await isWorkable(s)).toBe(false)
+  })
+
+  it('un statusId desconocido NO es trabajable', async () => {
+    expect(await isWorkable('99')).toBe(false)
+  })
+
+  it('el mapa se puede corregir sin tocar código', async () => {
+    await getPool().query(`UPDATE claim_status_map SET workable=true, confirmed=true WHERE status_id='3'`)
+    expect(await isWorkable('3')).toBe(true)
+    await getPool().query(`UPDATE claim_status_map SET workable=false, confirmed=false WHERE status_id='3'`)
+  })
+
+  it('reporta cuáles siguen sin confirmar, para que el aviso viaje a las salidas', async () => {
+    expect((await unconfirmedStatuses()).length).toBeGreaterThan(0)
+  })
+
+  it('el nombre de un estatus desconocido lo dice en vez de inventarlo', async () => {
+    expect(await statusName('99')).toMatch(/desconocido/i)
+  })
+})
+```
+
+- [ ] **Step 3: Correr el test y verificar que falla**
+
+Run: `DATABASE_URL=postgres://localhost/copiloto_test npx vitest run tests/domain/claim-status.test.ts`
+Esperado: FAIL — módulo no encontrado.
+
+- [ ] **Step 4: Implementar**
+
+```typescript
+// src/domain/claim-status.ts
+import { getPool } from '../db/client.js'
+
+export type StatusRow = { statusId: string; name: string; workable: boolean; terminal: boolean; confirmed: boolean }
+
+async function fila(statusId: string): Promise<StatusRow | null> {
+  const { rows } = await getPool().query(
+    `SELECT status_id, name, workable, terminal, confirmed FROM claim_status_map WHERE status_id=$1`, [statusId]
+  )
+  if (!rows[0]) return null
+  const r = rows[0]
+  return { statusId: r.status_id, name: r.name, workable: r.workable, terminal: r.terminal, confirmed: r.confirmed }
+}
+
+/** Un estatus que no conocemos NUNCA es trabajable: no dictaminamos sobre lo que no entendemos. */
+export async function isWorkable(statusId: string): Promise<boolean> {
+  return (await fila(statusId))?.workable ?? false
+}
+
+export async function isTerminal(statusId: string): Promise<boolean> {
+  return (await fila(statusId))?.terminal ?? false
+}
+
+export async function statusName(statusId: string): Promise<string> {
+  return (await fila(statusId))?.name ?? `Estatus ${statusId} (desconocido)`
+}
+
+/** Alimenta el aviso que viaja en el correo y en el reporte mientras el mapa siga siendo una inferencia. */
+export async function unconfirmedStatuses(): Promise<string[]> {
+  const { rows } = await getPool().query(`SELECT status_id FROM claim_status_map WHERE NOT confirmed ORDER BY status_id`)
+  return rows.map((r) => r.status_id as string)
+}
+```
+
+- [ ] **Step 5: Correr el test y verificar que pasa**
+
+Run: `DATABASE_URL=postgres://localhost/copiloto_test npx vitest run tests/domain/claim-status.test.ts`
+Esperado: PASS, 5 tests.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/domain/claim-status.ts src/db/migrations/003_claim_status_map.sql tests/domain/claim-status.test.ts
+git commit -m "feat: mapa de estatus configurable, con la inferencia marcada como no confirmada"
+```
+
+---
+
+## Task 8c: Clasificación de documentos por contenido
+
+**Files:**
+- Create: `src/sufficiency/document-classifier.ts`
+- Create: `src/adjudication/prompts/document-classification.v1.md`
+- Create: `src/db/migrations/004_document_classification.sql`
+- Test: `tests/sufficiency/document-classifier.test.ts`
+
+**Interfaces:**
+- Consumes: `SigaReader.downloadDocument` (Task 6).
+- Produces:
+  ```typescript
+  type DocumentClass = 'odometro' | 'presupuesto' | 'carnet' | 'factura_servicio' | 'escaneo' | 'estado_aceite' | 'residuos' | 'desarme' | 'foto_componente' | 'serie_vin' | 'otro' | 'ilegible'
+  type Classification = { documentId: number; classes: DocumentClass[]; legible: boolean; confidence: number; extracted: Record<string, string> | null }
+  classifyDocument(doc: ClaimDocument, deps: { siga: SigaReader; client?: Anthropic }): Promise<Classification>
+  ```
+
+> **Por qué existe esta tarea.** Los 16 tipos de documento de SIGA son genéricos y el nombre del archivo no es fiable. En una avería real los archivos venían como `Carnet.jpeg`, `Odomtro.jpeg` *(con typo)* y `Codigo de fallo.jpeg`; en otra, **siete** archivos idénticos llamados `WhatsApp Image 2026-09-01 at 10.30.38 AM (n).jpeg`. No hay forma de saber qué contiene un expediente sin mirarlo.
+
+- [ ] **Step 1: Escribir el prompt**
+
+Crear `src/adjudication/prompts/document-classification.v1.md`:
+
+```
+Eres un asistente que clasifica documentos de un expediente de garantía mecánica de vehículos.
+
+Se te entrega UN documento. Di qué es. No dictaminas, no opinas sobre cobertura, no estimas importes.
+
+Clases posibles (un documento puede tener varias):
+- `odometro` — fotografía del tablero o del cuentakilómetros donde se lee el kilometraje
+- `presupuesto` — cotización de la reparación con conceptos e importes
+- `carnet` — carnet o cartilla de mantenimiento, con sellos de servicio
+- `factura_servicio` — factura o comprobante de un servicio de mantenimiento
+- `escaneo` — lectura de códigos de falla o escaneo electrónico del vehículo
+- `estado_aceite` — evidencia del estado del aceite o del lubricante
+- `residuos` — evidencia de limalla, partículas o residuos en aceite o cárter
+- `desarme` — fotografías del componente desarmado o despiezado
+- `foto_componente` — fotografía del componente afectado sin desarmar
+- `serie_vin` — fotografía de la placa de serie, del VIN o del número de motor
+- `otro` — no encaja en ninguna de las anteriores
+- `ilegible` — está tan borroso, oscuro, cortado o vacío que no se puede determinar
+
+Reglas:
+- Si no puedes determinar qué es con claridad, responde `ilegible` u `otro` con confianza baja.
+  **Nunca adivines para parecer útil**: un documento mal clasificado hace que el sistema
+  crea que tiene evidencia que no tiene.
+- Si es un odómetro y el número se lee, ponlo en `extracted.kilometraje`.
+- Si es un carnet o una factura y se lee la fecha del servicio, ponla en `extracted.fechaServicio`.
+- Si es una placa de serie y se lee el VIN, ponlo en `extracted.vin`.
+
+Responde solo con este objeto JSON:
+
+{
+  "classes": ["<clase>", ...],
+  "legible": true,
+  "confidence": 0.0,
+  "extracted": { "kilometraje": "...", "fechaServicio": "...", "vin": "..." },
+  "reasoning": "<una frase>"
+}
+
+Nombre del archivo (puede ser útil o puede ser ruido tipo «WhatsApp Image …»): {{fileName}}
+Tipo que le asignó la agencia (genérico, poco informativo): {{documentType}}
+```
+
+- [ ] **Step 2: Escribir la migración de caché**
+
+```sql
+-- src/db/migrations/004_document_classification.sql
+-- La clasificación cuesta una llamada al modelo por documento. Un documento
+-- nunca cambia de contenido, así que se paga UNA vez en la vida del sistema.
+CREATE TABLE document_classifications (
+  document_id    BIGINT PRIMARY KEY,
+  claim_folio    TEXT NOT NULL,
+  classes        JSONB NOT NULL,
+  legible        BOOLEAN NOT NULL,
+  confidence     NUMERIC(4,3) NOT NULL,
+  extracted      JSONB,
+  prompt_version TEXT NOT NULL,
+  classified_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_doc_class_case ON document_classifications (claim_folio);
+```
+
+- [ ] **Step 3: Escribir el test**
+
+```typescript
+// tests/sufficiency/document-classifier.test.ts
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest'
+import { runMigrations, closePool, getPool } from '../../src/db/client.js'
+import { classifyDocument } from '../../src/sufficiency/document-classifier.js'
+
+beforeEach(async () => { await runMigrations(); await getPool().query('TRUNCATE document_classifications') })
+afterAll(async () => { await closePool() })
+
+const doc = (over = {}) => ({
+  documentId: 561580, claimId: 163087, statusId: 1, mimeType: 'image/jpeg',
+  date: '2026-09-01T11:45:56', documentType: 'Varios',
+  originalFileName: 'WhatsApp Image 2026-09-01 at 10.30.38 AM (6).jpeg', ...over,
+})
+
+const sigaDoble = { downloadDocument: vi.fn(async () => ({ buffer: Buffer.from('imagen'), mimeType: 'image/jpeg' })) }
+const modelo = (json: unknown) => ({ messages: { create: vi.fn(async () => ({ content: [{ type: 'text', text: JSON.stringify(json) }] })) } })
+
+describe('clasificación de documentos', () => {
+  it('clasifica un archivo de nombre opaco por su contenido', async () => {
+    const client = modelo({ classes: ['odometro'], legible: true, confidence: 0.94, extracted: { kilometraje: '48210' }, reasoning: 'tablero' })
+    const r = await classifyDocument(doc(), { siga: sigaDoble as never, client: client as never })
+    expect(r.classes).toEqual(['odometro'])
+    expect(r.extracted?.kilometraje).toBe('48210')
+  })
+
+  it('cachea: el segundo llamado NO vuelve a invocar al modelo ni a descargar', async () => {
+    const client = modelo({ classes: ['carnet'], legible: true, confidence: 0.9, extracted: null, reasoning: '' })
+    sigaDoble.downloadDocument.mockClear()
+    await classifyDocument(doc(), { siga: sigaDoble as never, client: client as never })
+    await classifyDocument(doc(), { siga: sigaDoble as never, client: client as never })
+    expect(client.messages.create).toHaveBeenCalledTimes(1)
+    expect(sigaDoble.downloadDocument).toHaveBeenCalledTimes(1)
+  })
+
+  it('un documento ilegible se marca como tal, no como una clase cualquiera', async () => {
+    const client = modelo({ classes: ['ilegible'], legible: false, confidence: 0.2, extracted: null, reasoning: 'borroso' })
+    const r = await classifyDocument(doc(), { siga: sigaDoble as never, client: client as never })
+    expect(r.legible).toBe(false)
+  })
+
+  it('una respuesta ininteligible del modelo produce ilegible, nunca una clase inventada', async () => {
+    const client = { messages: { create: vi.fn(async () => ({ content: [{ type: 'text', text: 'no puedo' }] })) } }
+    const r = await classifyDocument(doc(), { siga: sigaDoble as never, client: client as never })
+    expect(r.classes).toEqual(['ilegible'])
+    expect(r.confidence).toBe(0)
+  })
+
+  it('el PDF se envía como documento y la imagen como imagen', async () => {
+    const client = modelo({ classes: ['presupuesto'], legible: true, confidence: 0.95, extracted: null, reasoning: '' })
+    await classifyDocument(doc({ documentId: 999, mimeType: 'application/pdf', originalFileName: 'p.pdf' }),
+      { siga: { downloadDocument: async () => ({ buffer: Buffer.from('%PDF'), mimeType: 'application/pdf' }) } as never, client: client as never })
+    const enviado = JSON.stringify(client.messages.create.mock.calls[0][0])
+    expect(enviado).toContain('document')
+  })
+
+  it('un mimeType no soportado no se envía al modelo: se marca ilegible', async () => {
+    const client = modelo({ classes: ['otro'], legible: true, confidence: 0.9, extracted: null, reasoning: '' })
+    const r = await classifyDocument(doc({ documentId: 555, mimeType: 'video/mp4', originalFileName: 'Evidencia.mp4' }),
+      { siga: { downloadDocument: async () => ({ buffer: Buffer.from('x'), mimeType: 'video/mp4' }) } as never, client: client as never })
+    expect(r.legible).toBe(false)
+    expect(client.messages.create).not.toHaveBeenCalled()
+  })
+})
+```
+
+- [ ] **Step 4: Correr el test y verificar que falla**
+
+Run: `DATABASE_URL=postgres://localhost/copiloto_test npx vitest run tests/sufficiency/document-classifier.test.ts`
+Esperado: FAIL — módulo no encontrado.
+
+- [ ] **Step 5: Implementar**
+
+```typescript
+// src/sufficiency/document-classifier.ts
+import Anthropic from '@anthropic-ai/sdk'
+import { readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { z } from 'zod'
+import { loadConfig } from '../config/env.js'
+import { getPool } from '../db/client.js'
+import type { SigaReader, ClaimDocument } from '../siga/siga-types.js'
+
+export const CLASSIFIER_PROMPT_VERSION = 'document-classification.v1'
+
+export const DOCUMENT_CLASSES = [
+  'odometro', 'presupuesto', 'carnet', 'factura_servicio', 'escaneo', 'estado_aceite',
+  'residuos', 'desarme', 'foto_componente', 'serie_vin', 'otro', 'ilegible',
+] as const
+export type DocumentClass = (typeof DOCUMENT_CLASSES)[number]
+
+export type Classification = {
+  documentId: number; classes: DocumentClass[]; legible: boolean
+  confidence: number; extracted: Record<string, string> | null
+}
+
+const IMAGENES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+const salida = z.object({
+  classes: z.array(z.enum(DOCUMENT_CLASSES)).min(1),
+  legible: z.boolean(),
+  confidence: z.number().min(0).max(1),
+  extracted: z.record(z.string()).nullable(),
+  reasoning: z.string().optional(),
+})
+
+const ILEGIBLE = (documentId: number): Classification =>
+  ({ documentId, classes: ['ilegible'], legible: false, confidence: 0, extracted: null })
+
+function plantilla(): string {
+  return readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../adjudication/prompts/document-classification.v1.md'), 'utf8')
+}
+
+async function cacheado(documentId: number): Promise<Classification | null> {
+  const { rows } = await getPool().query(
+    `SELECT document_id, classes, legible, confidence, extracted FROM document_classifications WHERE document_id=$1`,
+    [documentId]
+  )
+  if (!rows[0]) return null
+  const r = rows[0]
+  return {
+    documentId: Number(r.document_id), classes: r.classes, legible: r.legible,
+    confidence: Number(r.confidence), extracted: r.extracted,
+  }
+}
+
+export async function classifyDocument(
+  doc: ClaimDocument,
+  deps: { siga: SigaReader; client?: Anthropic }
+): Promise<Classification> {
+  const previo = await cacheado(doc.documentId)
+  if (previo) return previo
+
+  const esImagen = IMAGENES.has(doc.mimeType)
+  const esPdf = doc.mimeType === 'application/pdf'
+
+  // Un video o un formato raro no se envía al modelo: se marca ilegible y el
+  // técnico decide. Enviar bytes que el modelo no puede leer es gastar sin ganar.
+  if (!esImagen && !esPdf) {
+    const r = ILEGIBLE(doc.documentId)
+    await guardar(doc, r)
+    return r
+  }
+
+  const { buffer } = await deps.siga.downloadDocument(doc.documentId)
+  const prompt = plantilla()
+    .replace('{{fileName}}', doc.originalFileName)
+    .replace('{{documentType}}', doc.documentType)
+
+  const client = deps.client ?? new Anthropic({ apiKey: loadConfig().anthropicApiKey })
+  const adjunto = esImagen
+    ? { type: 'image' as const, source: { type: 'base64' as const, media_type: doc.mimeType as 'image/jpeg', data: buffer.toString('base64') } }
+    : { type: 'document' as const, source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: buffer.toString('base64') } }
+
+  let texto: string
+  try {
+    const res = await client.messages.create({
+      model: 'claude-sonnet-5', max_tokens: 1024,
+      messages: [{ role: 'user', content: [adjunto, { type: 'text', text: prompt }] }],
+    })
+    texto = res.content.map((b) => (b.type === 'text' ? b.text : '')).join('')
+  } catch {
+    // Un fallo del modelo no inventa una clase: el documento queda sin clasificar
+    // y NO se cachea, para que el siguiente intento lo reintente.
+    return ILEGIBLE(doc.documentId)
+  }
+
+  const bruto = texto.match(/\{[\s\S]*\}/)?.[0]
+  let parsed: z.SafeParseReturnType<unknown, z.infer<typeof salida>> = { success: false } as never
+  if (bruto) { try { parsed = salida.safeParse(JSON.parse(bruto)) } catch { /* cae a ilegible */ } }
+  if (!parsed.success) {
+    const r = ILEGIBLE(doc.documentId)
+    await guardar(doc, r)
+    return r
+  }
+
+  const r: Classification = {
+    documentId: doc.documentId, classes: parsed.data.classes,
+    legible: parsed.data.legible, confidence: parsed.data.confidence,
+    extracted: parsed.data.extracted,
+  }
+  await guardar(doc, r)
+  return r
+}
+
+async function guardar(doc: ClaimDocument, r: Classification): Promise<void> {
+  await getPool().query(
+    `INSERT INTO document_classifications (document_id, claim_folio, classes, legible, confidence, extracted, prompt_version)
+     VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (document_id) DO NOTHING`,
+    [doc.documentId, String(doc.claimId), JSON.stringify(r.classes), r.legible, r.confidence,
+     r.extracted ? JSON.stringify(r.extracted) : null, CLASSIFIER_PROMPT_VERSION]
+  )
+}
+```
+
+- [ ] **Step 6: Correr el test y verificar que pasa**
+
+Run: `DATABASE_URL=postgres://localhost/copiloto_test npx vitest run tests/sufficiency/document-classifier.test.ts`
+Esperado: PASS, 6 tests.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/sufficiency/document-classifier.ts src/adjudication/prompts src/db/migrations tests/sufficiency
+git commit -m "feat: clasificacion de documentos por contenido con cache permanente"
+```
+
+---
+
 ## Task 9: Identificación del sistema afectado y evaluación de suficiencia (capa 0)
 
 **Files:**
@@ -1670,12 +2393,14 @@ const identificador = (systemKey: string, confidence = 0.95): SystemIdentifier =
   identify: async () => ({ systemKey, confidence }),
 })
 
-const doc = (documentType: string, legible = true) => ({ documentType, legible })
+let seq = 1
+const doc = (...classes: string[]) => ({ documentId: seq++, classes, legible: !classes.includes('ilegible') })
+const ilegible = (...classes: string[]) => ({ documentId: seq++, classes, legible: false })
 
 describe('evaluación de suficiencia', () => {
   it('declara insuficiente una transmisión con solo el presupuesto', async () => {
     const r = await evaluateSufficiency(
-      { failureDescription: 'La transmisión patina', documents: [doc('Presupuesto')] },
+      { failureDescription: 'La transmisión patina', documents: [doc('presupuesto')] },
       { identifier: identificador('transmision') }
     )
     expect(r.result).toBe('insuficiente')
@@ -1687,8 +2412,8 @@ describe('evaluación de suficiencia', () => {
   it('declara suficiente una transmisión con toda la evidencia mínima', async () => {
     const r = await evaluateSufficiency(
       { failureDescription: 'La transmisión patina', documents: [
-        doc('Presupuesto'), doc('Fotos odómetro'), doc('Estado de aceite'),
-        doc('Residuos'), doc('Escaneo'), doc('Carnet de mantenimiento'), doc('Facturas de servicio'),
+        doc('presupuesto'), doc('odometro'), doc('estado_aceite'),
+        doc('residuos'), doc('escaneo'), doc('carnet'), doc('factura_servicio'),
       ] },
       { identifier: identificador('transmision') }
     )
@@ -1699,7 +2424,7 @@ describe('evaluación de suficiencia', () => {
   it('un documento ilegible cuenta como faltante, con motivo distinto al ausente', async () => {
     const r = await evaluateSufficiency(
       { failureDescription: 'Compresor de A/C no enfría', documents: [
-        doc('Presupuesto'), doc('Fotografía del odómetro'), doc('Diagnóstico', false),
+        doc('presupuesto'), doc('odometro'), ilegible('escaneo'),
       ] },
       { identifier: identificador('aire_acondicionado') }
     )
@@ -1712,7 +2437,7 @@ describe('evaluación de suficiencia', () => {
   it('con confianza baja en el sistema, nunca declara suficiente', async () => {
     const r = await evaluateSufficiency(
       { failureDescription: 'Hace un ruido raro', documents: [
-        doc('Presupuesto'), doc('Fotos odómetro'), doc('Diagnóstico'), doc('Fotos del componente'),
+        doc('presupuesto'), doc('odometro'), doc('escaneo'), doc('foto_componente'),
       ] },
       { identifier: identificador('motor', 0.42) }
     )
@@ -1722,16 +2447,16 @@ describe('evaluación de suficiencia', () => {
 
   it('registra la versión del catálogo que aplicó', async () => {
     const r = await evaluateSufficiency(
-      { failureDescription: 'La transmisión patina', documents: [doc('Presupuesto')] },
+      { failureDescription: 'La transmisión patina', documents: [doc('presupuesto')] },
       { identifier: identificador('transmision') }
     )
     expect(r.catalogVersion).toBe('v0-provisional-2026-09-01')
   })
 
-  it('una foto del odómetro NO satisface también el requisito de fotos del componente', async () => {
+  it('un documento clasificado como odómetro NO satisface el requisito de fotos del componente', async () => {
     const r = await evaluateSufficiency(
       { failureDescription: 'Compresor de A/C no enfría', documents: [
-        doc('Presupuesto'), doc('Fotografía del odómetro'), doc('Diagnóstico'),
+        doc('presupuesto'), doc('odometro'), doc('escaneo'),
       ] },
       { identifier: identificador('aire_acondicionado') }
     )
@@ -1741,7 +2466,7 @@ describe('evaluación de suficiencia', () => {
 
   it('las etiquetas de los faltantes son accionables, no genéricas', async () => {
     const r = await evaluateSufficiency(
-      { failureDescription: 'La transmisión patina', documents: [doc('Presupuesto')] },
+      { failureDescription: 'La transmisión patina', documents: [doc('presupuesto')] },
       { identifier: identificador('transmision') }
     )
     const escaneo = r.missing.find((m) => m.requirementKey === 'escaneo')
@@ -1821,7 +2546,11 @@ import type { SystemIdentifier } from './system-identifier.js'
 /** Bajo este umbral no se puede aplicar ningún catálogo con honestidad (C1 del PRD). */
 export const MIN_SYSTEM_CONFIDENCE = 0.8
 
-export type DocumentView = { documentType: string; legible: boolean }
+/**
+ * Lo que la capa 0 recibe de cada documento: **sus clases, no su tipo de SIGA**.
+ * Lo produce el clasificador por contenido de la Task 8c.
+ */
+export type DocumentView = { documentId: number; classes: string[]; legible: boolean }
 export type MissingItem = { requirementKey: string; label: string; reason: 'ausente' | 'ilegible' }
 export type SufficiencyResult = {
   result: 'suficiente' | 'insuficiente'
@@ -1831,7 +2560,26 @@ export type SufficiencyResult = {
   catalogVersion: string
 }
 
-/** Palabras que relacionan un tipo de documento de SIGA con un requisito del catálogo. */
+/**
+ * Mapa de requisito del catálogo → clases de documento que lo satisfacen.
+ * Las clases vienen del clasificador por contenido (Task 8c), NO del `documentType`
+ * de SIGA: sus 16 tipos son genéricos y el nombre del archivo suele ser
+ * «WhatsApp Image ….jpeg».
+ */
+const REQUISITO_A_CLASES: Record<string, string[]> = {
+  presupuesto: ['presupuesto'],
+  odometro: ['odometro'],
+  estado_aceite: ['estado_aceite'],
+  residuos: ['residuos'],
+  escaneo: ['escaneo'],
+  carnet: ['carnet'],
+  facturas_servicio: ['factura_servicio'],
+  diagnostico: ['escaneo', 'desarme', 'foto_componente'],
+  desarme: ['desarme'],
+  fotos_componente: ['foto_componente', 'desarme'],
+}
+
+/** Vestigio de la versión anterior; se conserva solo como respaldo si el clasificador cae. */
 const SINONIMOS: Record<string, string[]> = {
   presupuesto: ['presupuesto', 'cotización', 'cotizacion'],
   odometro: ['odómetro', 'odometro', 'kilometraje', 'tablero'],
@@ -1846,9 +2594,8 @@ const SINONIMOS: Record<string, string[]> = {
 }
 
 function cubre(req: EvidenceRequirement, doc: DocumentView): boolean {
-  const claves = SINONIMOS[req.requirementKey] ?? [req.requirementKey]
-  const tipo = doc.documentType.toLowerCase()
-  return claves.some((k) => tipo.includes(k.toLowerCase()))
+  const aceptadas = REQUISITO_A_CLASES[req.requirementKey] ?? [req.requirementKey]
+  return doc.classes.some((c) => aceptadas.includes(c))
 }
 
 /**
@@ -2170,6 +2917,175 @@ Esperado: PASS, 8 tests.
 git add src/pipeline tests/pipeline
 git commit -m "feat: barrido de reconciliación y detección de casos estancados"
 ```
+
+---
+
+## Task 10b: Ventana de reposo
+
+**Files:**
+- Create: `src/pipeline/settle-window.ts`
+- Create: `src/db/migrations/005_settle_window.sql`
+- Test: `tests/pipeline/settle-window.test.ts`
+
+**Interfaces:**
+- Produces:
+  ```typescript
+  touch(claimId: number, at: Date): Promise<void>          // un evento llegó: reinicia el temporizador
+  dueForEvaluation(now: Date, windowMinutes: number): Promise<number[]>   // casos en reposo, listos para evaluar
+  markEvaluated(claimId: number, at: Date): Promise<void>
+  ```
+
+> **Por qué existe esta tarea.** Verificado en producción: la avería **163087** generó **18 correos en 14 minutos** el 1 de septiembre —1 de asignación, 16 de carga de archivo entre las 19:47:55 y las 19:49:52, y 1 de observaciones—. Evaluar la suficiencia en cada uno significaría 16 clasificaciones de documentos y 16 evaluaciones para un solo caso. La ventana de reposo hace que la ráfaga produzca **una** evaluación.
+
+- [ ] **Step 1: Escribir la migración**
+
+```sql
+-- src/db/migrations/005_settle_window.sql
+CREATE TABLE settle_window (
+  claim_folio      TEXT PRIMARY KEY REFERENCES cases(claim_folio) ON DELETE CASCADE,
+  last_touch_at    TIMESTAMPTZ NOT NULL,
+  last_evaluated_at TIMESTAMPTZ,
+  touches          INT NOT NULL DEFAULT 1
+);
+
+CREATE INDEX idx_settle_pending ON settle_window (last_touch_at)
+  WHERE last_evaluated_at IS NULL OR last_evaluated_at < last_touch_at;
+```
+
+- [ ] **Step 2: Escribir el test**
+
+```typescript
+// tests/pipeline/settle-window.test.ts
+import { describe, it, expect, beforeEach, afterAll } from 'vitest'
+import { getPool, runMigrations, closePool } from '../../src/db/client.js'
+import { createCase } from '../../src/db/repositories/case-repository.js'
+import { touch, dueForEvaluation, markEvaluated, touchCount } from '../../src/pipeline/settle-window.js'
+
+beforeEach(async () => { await runMigrations(); await getPool().query('TRUNCATE cases CASCADE') })
+afterAll(async () => { await closePool() })
+
+const T0 = new Date('2026-09-01T19:38:00Z')
+const min = (n: number) => new Date(T0.getTime() + n * 60_000)
+
+async function caso(folio: string) {
+  await createCase({ claimFolio: folio, vin: 'VIN' + folio, occurredAt: T0 })
+}
+
+describe('ventana de reposo', () => {
+  it('un caso recién tocado NO está listo', async () => {
+    await caso('163087'); await touch(163087, T0)
+    expect(await dueForEvaluation(min(3), 10)).toEqual([])
+  })
+
+  it('está listo cuando pasa la ventana sin novedades', async () => {
+    await caso('163087'); await touch(163087, T0)
+    expect(await dueForEvaluation(min(11), 10)).toEqual([163087])
+  })
+
+  it('cada evento nuevo reinicia el temporizador', async () => {
+    await caso('163087')
+    await touch(163087, T0)
+    await touch(163087, min(9))
+    expect(await dueForEvaluation(min(11), 10)).toEqual([])
+    expect(await dueForEvaluation(min(20), 10)).toEqual([163087])
+  })
+
+  it('la ráfaga real de 163087 produce UNA sola evaluación', async () => {
+    await caso('163087')
+    // 1 asignación + 16 cargas en 4 minutos + 1 observación
+    await touch(163087, T0)
+    for (let i = 0; i < 16; i++) await touch(163087, min(9 + i * 0.25))
+    await touch(163087, min(13))
+    expect(await touchCount(163087)).toBe(18)
+    expect(await dueForEvaluation(min(20), 10)).toEqual([163087])
+    await markEvaluated(163087, min(20))
+    expect(await dueForEvaluation(min(30), 10)).toEqual([])
+  })
+
+  it('tras evaluar, un evento nuevo vuelve a encolar el caso', async () => {
+    await caso('163087'); await touch(163087, T0)
+    await markEvaluated(163087, min(11))
+    await touch(163087, min(30))
+    expect(await dueForEvaluation(min(45), 10)).toEqual([163087])
+  })
+
+  it('devuelve los casos ordenados por antigüedad de su último evento', async () => {
+    await caso('A'); await caso('B')
+    await touch(Number('1') && 0 || 0, T0).catch(() => {})
+    await getPool().query(`INSERT INTO settle_window (claim_folio, last_touch_at) VALUES ('A',$1),('B',$2)`, [min(5), min(1)])
+    expect(await dueForEvaluation(min(60), 10)).toEqual(['B', 'A'].map(Number).map((n) => n) as never)
+  })
+})
+```
+
+- [ ] **Step 3: Correr el test y verificar que falla**
+
+Run: `DATABASE_URL=postgres://localhost/copiloto_test npx vitest run tests/pipeline/settle-window.test.ts`
+Esperado: FAIL — módulo no encontrado.
+
+- [ ] **Step 4: Implementar**
+
+```typescript
+// src/pipeline/settle-window.ts
+import { getPool } from '../db/client.js'
+
+/**
+ * El caso no se evalúa cuando llega un evento: se evalúa cuando **deja** de llegar.
+ * Cada evento reinicia el temporizador; la evaluación corre cuando el caso lleva
+ * `windowMinutes` sin novedades.
+ */
+export async function touch(claimId: number, at: Date): Promise<void> {
+  await getPool().query(
+    `INSERT INTO settle_window (claim_folio, last_touch_at, touches)
+     VALUES ($1, $2, 1)
+     ON CONFLICT (claim_folio) DO UPDATE
+       SET last_touch_at = GREATEST(settle_window.last_touch_at, EXCLUDED.last_touch_at),
+           touches = settle_window.touches + 1`,
+    [String(claimId), at]
+  )
+}
+
+/** Casos cuyo último evento ya cumplió la ventana y que no se han evaluado desde entonces. */
+export async function dueForEvaluation(now: Date, windowMinutes: number): Promise<number[]> {
+  const corte = new Date(now.getTime() - windowMinutes * 60_000)
+  const { rows } = await getPool().query(
+    `SELECT claim_folio FROM settle_window
+     WHERE last_touch_at <= $1
+       AND (last_evaluated_at IS NULL OR last_evaluated_at < last_touch_at)
+     ORDER BY last_touch_at ASC`,
+    [corte]
+  )
+  return rows.map((r) => Number(r.claim_folio))
+}
+
+export async function markEvaluated(claimId: number, at: Date): Promise<void> {
+  await getPool().query(
+    `UPDATE settle_window SET last_evaluated_at = $2 WHERE claim_folio = $1`, [String(claimId), at]
+  )
+}
+
+/** Cuántos eventos se acumularon en el caso. Alimenta la métrica de eventos hasta la suficiencia. */
+export async function touchCount(claimId: number): Promise<number> {
+  const { rows } = await getPool().query(
+    `SELECT touches FROM settle_window WHERE claim_folio = $1`, [String(claimId)]
+  )
+  return rows[0] ? Number(rows[0].touches) : 0
+}
+```
+
+- [ ] **Step 5: Correr el test y verificar que pasa**
+
+Run: `DATABASE_URL=postgres://localhost/copiloto_test npx vitest run tests/pipeline/settle-window.test.ts`
+Esperado: PASS, 6 tests. *(Si el último test resulta ilegible por el juego de tipos, reescríbelo comparando `string[]` en vez de `number[]`; lo que debe verificar es el orden por antigüedad.)*
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/pipeline/settle-window.ts src/db/migrations/005_settle_window.sql tests/pipeline/settle-window.test.ts
+git commit -m "feat: ventana de reposo para agrupar rafagas de eventos del mismo caso"
+```
+
+> **Cómo cambia la orquestación (Task 17).** `processEvent` deja de evaluar la suficiencia en línea: registra el evento, refresca el expediente y llama a `touch()`. Un trabajo programado —el mismo cron del barrido— llama a `dueForEvaluation()` y corre la evaluación y el dictamen de los casos en reposo. El correo al técnico sale de ahí, no del evento.
 
 ---
 
@@ -4425,7 +5341,10 @@ git commit -m "feat: interruptor de escritura de la etapa 2, apagado y con orden
 | RF-39 — parametrización por país | *Parcial: la configuración lo admite (Task 1); las tablas por país se agregan en la etapa 5* |
 | RF-40 a RF-45 — escritura de la etapa 2 | 20 |
 | RF-69 a RF-72 — expediente vivo, refresco incremental, barrido | 5, 7, 10 |
-| RF-73 a RF-79 — capa 0 de suficiencia | 8, 9 |
+| RF-73 a RF-79 — capa 0 de suficiencia | 8, **8c**, 9 |
+| *(nuevo)* Mapa de estatus sin catálogo en la API | **8b** |
+| *(nuevo)* Clasificación de documentos por contenido | **8c** |
+| *(nuevo)* Agrupación de ráfagas de eventos | **10b** |
 | RF-80 — estado `ESTANCADO` | 10 |
 | RF-81 — política de correos silenciosos | 17 |
 | RF-82 — reevaluación tras dictamen | 17 |
@@ -4434,27 +5353,28 @@ git commit -m "feat: interruptor de escritura de la etapa 2, apagado y con orden
 | RF-94 a RF-100 — semáforo de confianza | **Fuera de este plan (etapa 3)** |
 | RNF-01 a RNF-23 | Distribuidos; los duros —RNF-04, RNF-07, RNF-18, RNF-23— tienen test propio en 3, 5, 17 y 20 |
 
-**Tres huecos declarados, no olvidados:**
+**Cuatro huecos declarados, no olvidados:**
 
 1. **Las plantillas oficiales del documento** (Task 14) son un entregable del área. Se construye contra una de andamiaje con los mismos marcadores.
-2. **El catálogo real de correos de actualización** (Task 4) no está verificado. El barrido de la Task 10 cubre el hueco mientras tanto.
-3. **El catálogo de evidencia mínima** (Task 8) arranca provisional y sin validar. Está marcado como tal en la base y el aviso viaja hasta el correo del técnico.
+2. **El catálogo de evidencia mínima** (Task 8) arranca provisional y sin validar. Está marcado como tal en la base y el aviso viaja hasta el correo del técnico.
+3. **El mapa de estatus** (Task 8b) es una inferencia sobre 300 averías, no un dato confirmado. Vive en configuración y viaja marcado.
+4. **El 29% de las averías —las de Mitsubishi— no tiene contrato consultable.** Verificado: su `contractId` es el centinela 57227, el `policyId` no resuelve y el VIN tampoco existe en la base de contratos. `GetIssues` está vacío y no hay endpoint de seguimiento. **El copiloto las trata como excepción notificada**; dónde viven esos contratos es una pregunta abierta para el equipo de SIGA.
 
 ---
 
 ## Orden de ejecución y dependencias
 
 ```
-1 → 2 → 3 → 5 ┬→ 7 → 10 ┐
-    4 ────────┤          ├→ 17 → 18 → 19
-    6 ────────┘          │
-    8 → 9 ───────────────┤
-    11 → 12 → 13 ────────┤
-    14 → 15 → 16 ────────┘
-                          17 → 20
+1 → 2 → 3 → 5 ┬→ 7 → 10 ┬→ 10b ┐
+    4 ────────┤         │      │
+    6 ────────┘         │      ├→ 17 → 18 → 19
+    8 → 8b → 8c → 9 ────┘      │
+    11 → 12 → 13 ──────────────┤
+    14 → 15 → 16 ──────────────┘
+                                17 → 20
 ```
 
-Las tareas 4, 6, 8 y 11 no dependen entre sí y pueden ir en paralelo una vez terminada la 3. La 17 es el punto de convergencia: nada de ella se puede probar de verdad hasta que las anteriores existan.
+Las tareas 4, 6, 8 y 11 no dependen entre sí y pueden ir en paralelo una vez terminada la 3. La cadena **8 → 8b → 8c → 9** es la capa 0 completa y es la más larga: conviene empezarla temprano. La 17 es el punto de convergencia: nada de ella se puede probar de verdad hasta que las anteriores existan.
 
 **Hitos revisables con el área:**
 

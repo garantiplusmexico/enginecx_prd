@@ -15,7 +15,7 @@
 | Fecha de generación | 2026-09-02 |
 | Estado | Borrador |
 | Modelo | Claude Opus 4.8 — esfuerzo normal |
-| ID plan (BD) | *(pm_plan_desarrollo.id — lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | 68 |
 
 > **Rama local ya existente:** `feature/ag_siga_multibranding_prueba_concepto` (sin commits propios vs `develop`; solo `appsettings` locales). Al ejecutar el plan, crear/renombrar a `feature/PJ9770-poc-white-label-hostname` desde `develop` actualizado. No mezclar los cambios locales de conexión/país en el PR.
 
@@ -237,10 +237,10 @@ Estimación en **días hábiles**. PoC acotada; no hay fecha límite contractual
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Modelo y resolución (P1)** | Options, resolver, DI, appsettings | T-01 a T-03 | 0.5 – 1 día | |
-| **Fase 1 — Login (P1)** | Banners, layout, footer ARG | T-04 a T-06 | 1 – 1.5 días | |
-| **Fase 2 — Chrome (P1)** | Top bar, menú, home logo | T-07 a T-08 | 0.5 – 1 día | |
-| **Fase 3 — Verificación (P1)** | Dual host local + checklist | T-09 a T-10 | 0.5 – 1 día | |
+| **Fase 0 — Modelo y resolución (P1)** | Options, resolver, DI, appsettings | T-01 a T-03 | 0.5 – 1 día | 246 |
+| **Fase 1 — Login (P1)** | Banners, layout, footer ARG | T-04 a T-06 | 1 – 1.5 días | 247 |
+| **Fase 2 — Chrome (P1)** | Top bar, menú, home logo | T-07 a T-08 | 0.5 – 1 día | 248 |
+| **Fase 3 — Verificación (P1)** | Dual host local + checklist | T-09 a T-10 | 0.5 – 1 día | 249 |
 | **Total proyecto (P1)** | PoC completa de opción A (login + chrome) | 10 tareas | **~2.5 – 4.5 días hábiles (≈ 1 semana)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + 1 + 2 + 3 (todo el alcance de este PRD) | T-01 a T-10 | **~2.5 – 4.5 días hábiles** | — |
 

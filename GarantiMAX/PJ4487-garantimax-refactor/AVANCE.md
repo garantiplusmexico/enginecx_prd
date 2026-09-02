@@ -103,8 +103,8 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 | **Fase 1 — Núcleo verificable del asesor (P1)** | 194 | T-20 a T-43 | 40 – 52 | 2026-08-28 | | 2 | — | 🟡 En progreso — hechas T-20 a T-38 y T-40 a T-43; **solo queda T-39** (parcial: falta la captura de fotos, que espera el bucket) |
 | **Fase 2 — Gestión del asesor (P2)** | 195 | T-44 a T-54 | 20 – 26 | 2026-09-01 | | 2 | — | 🟡 En progreso — endpoints hechos (T-S08) y el vertical de tareas cerrado (T-44 a T-47); quedan agenda, cumpleaños y bitácora |
 | **Fase 3 — Gastos y rendiciones (P3)** | 196 | T-55 a T-61 | 20 – 27 | | | 0 | 20 – 27 | ⏳ Pendiente |
-| **Fase 4 — Notificaciones, verificación, auditoría y corte** | 197 | T-62 a T-72 | 32 – 42 | | | 0 | 32 – 42 | ⏳ Pendiente |
-| **Total proyecto (P1+P2+P3+cierre)** | — | 72 tareas | ~142 – 187 | 2026-08-25 | | 5 | — | 🟡 En progreso — 54 de 72 tareas cerradas |
+| **Fase 4 — Notificaciones, verificación, auditoría y corte** | 197 | T-62 a T-73 | 35 – 47 | | | 0 | 35 – 47 | ⏳ Pendiente |
+| **Total proyecto (P1+P2+P3+cierre)** | — | 73 tareas | ~145 – 192 | 2026-08-25 | | 5 | — | 🟡 En progreso — 54 de 73 tareas cerradas |
 | **Solo P1 (guardarraíl del PRD)** | — | T-01 a T-43 | ~70 – 92 | 2026-08-25 | | 5 | — | 🟡 En progreso — quedan T-17 y la captura de T-39 |
 
 > **Cómo leer «Días ejecutados».** Son **días hábiles transcurridos** desde la fecha de
@@ -198,6 +198,7 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 |---|---|---|
 | T-17 | Línea base medida de las métricas de producto | Acceso al sistema actual **en producción**. Es la única tarea con fecha de caducidad: después del corte no hay con qué comparar, y RNF-06 se mide contra ella |
 | T-39 (resto) | Captura desde la cámara, compresión (V-30) y encolado del blob (V-31) | El **bucket de S3**, para poder probarla de punta a punta. El código de subida ya está y responde 503 mientras no exista |
+| T-73 | Identidad visual y pasada de diseño (**agregada el 02-09-2026**) | La **fuente de la identidad**: paleta, tipografía y logo, del manual de marca o del sistema actual. Sin eso no arranca — no se inventa una identidad desde el código |
 | T-S09 | Endpoints de gastos y rendiciones | Nada. **Alcance reducido:** solo los del asesor (enviar, reenviar); aprobar y pagar son de otro rol y de otra fase |
 | Prueba del contrato de enums en la API | Fijar del lado del servicio el orden de los `enum` | Nada. Hoy solo lo protegen las pruebas del frontend, y **no hay proyecto de test en el repo de la API**: si alguien inserta un valor en medio del enum, el frontend empieza a leer «capacitación» donde dice «inducción» |
 

@@ -515,6 +515,22 @@ src/
 
 ### Fase 4 — Notificaciones, verificación, auditoría y corte
 
+> **T-73 va primero de la fase, aunque su número sea el más alto**: se agregó
+> después de cerrar la numeración (2026-09-02). T-19 entregó el sistema de
+> componentes **base** —deliberadamente sobrio, sin identidad— y nunca se
+> agregó la tarea que lo viste. Tiene que estar cerrada antes de T-65 (E2E) y
+> de T-71 (piloto).
+
+- [ ] **T-73** — Identidad visual y pasada de diseño
+  - Archivos a crear/modificar: `src/shared/ui/tokens.css`, los 7 componentes de `src/shared/ui/`, `src/shared/layouts/*` y las pantallas de `src/features/identity/ui/*`
+  - Criterio de completitud: **una sola paleta en todo el frontend**. Los colores, la tipografía y los espaciados de la marca viven en el bloque `@theme` de `tokens.css`, y las pantallas los nombran **por su papel** (`text-ink`, `bg-accent`, `border-border`) y no por su tono (`text-slate-900`). Quedan eliminadas las ~42 clases de color escritas a mano que sobreviven en 7 archivos de identidad —login, bienvenida, perfil y las dos pantallas de sesión—, escritas antes de que existiera T-19: hoy se ven idénticas porque `slate-900` **es** `#0f172a`, el valor de `--color-ink`, y por eso el desajuste no lo detecta ni `tsc` ni el linter ni las pruebas; el día que la marca cambie el token, esas pantallas se quedarían atrás sin avisar
+  - Criterio de completitud: el aspecto **replica el del sistema actual**, para que el asesor reconozca la aplicación en el corte y el reentrenamiento sea mínimo, pero **ordenado**: un solo botón, un solo campo, un solo espaciado entre tarjetas, en lugar de las variantes que el sistema actual acumuló entre su versión móvil y su versión de escritorio (A3: dos implementaciones de Mi Día, 972 líneas la móvil). Replicar el aspecto no es replicar el desorden
+  - Restricción: **solo utilidades de Tailwind**. Sin CSS nativo, sin `@apply`, sin clases propias y sin `style` inline. El proyecto está hoy limpio de las cuatro cosas y la tarea lo mantiene así; la única excepción viva son las 4 líneas del `body` en `index.css`, que pintan el fondo y no pueden expresarse como utilidad. Cualquier excepción nueva va con el motivo escrito al lado. Nota: el bloque `@theme` **es** el mecanismo de tema de Tailwind v4, no CSS a mano — `--color-ink` es lo que genera la utilidad `text-ink`
+  - Restricción: se conservan sin excepción los dos tokens que son **requisito y no gusto** — `--spacing-touch` de 44 px (RNF-17) y los pares de contraste ≥ 4.5:1, medidos y anotados en `tokens.css`. Si la paleta de marca no cumple contraste sobre alguna superficie, se ajusta el par y se registra, no se baja el umbral
+  - Fuera de alcance: **no cambia la arquitectura de información**. Qué va primero en cada pantalla, qué es una hoja y qué una ruta propia, y cuántos toques cuesta cada flujo se decidieron tarea por tarea y están cubiertos por pruebas. Esta tarea viste las pantallas, no las reordena. Si el diseño exige mover estructura, es otra tarea con su propio criterio: lo cosmético cuesta días, reordenar flujos cuesta reescribir pantallas y pruebas
+  - Prerequisito: **la fuente de la identidad**. Hace falta la paleta, la tipografía y el logo —del manual de marca o extraídos del sistema actual—; sin eso la tarea no arranca, porque no se inventa una identidad desde el código
+  - Verificación: las pruebas existentes tienen que pasar **sin tocarlas**. Consultan por rol y por texto accesible, no por clase CSS, y esa propiedad es la que hace que un rediseño sea barato: de ~1000 pruebas, solo las 6 líneas de `components.test.tsx` miran una clase, y es `min-h-touch`, que esta tarea conserva. Si un cambio visual obliga a reescribir pruebas, es señal de que se está moviendo estructura y no aspecto
+
 - [ ] **T-62** — Notificaciones al asesor
   - Archivos a crear/modificar: `src/features/identidad/{ports,infrastructure,application,ui}/Notificacion*` + pruebas
   - Criterio de completitud: avisa de visitas abiertas sin cerrar, tareas atrasadas y bitácoras pendientes, leyendo `notificaciones` y respetando lo que producen `visitas-abiertas-cron` y `tareas-atrasadas-cron` (RF-20)
@@ -764,8 +780,8 @@ Estimación en **días hábiles**, para **un desarrollador a tiempo completo**. 
 | **Fase 1 — Núcleo verificable del asesor (P1)** | Identidad, sesión y permisos por rol del JWT · shell adaptativo, rutas y bienvenida · motor offline completo (cola, idempotencia, decorador, estado observable) · Mi Día con snapshot · visitas con check-in, borrador, evidencia, aviso global y cierre · lobbies · catálogos de referencia en lectura | T-20 a T-43 | 40 – 52 días | 194 |
 | **Fase 2 — Gestión del asesor (P2)** | Tareas y avances · agenda y días hábiles · cumpleaños y saludos · bitácora diaria con dictado y mejora de redacción | T-44 a T-54 | 20 – 26 días | 195 |
 | **Fase 3 — Gastos y rendiciones (P3)** | Dominio de gasto y rendición · repositorios y RPCs · captura de boleta con lectura automática · decorador offline con imágenes · categorización y asignación · rendiciones y observación del flujo de aprobación | T-55 a T-61 | 20 – 27 días | 196 |
-| **Fase 4 — Notificaciones, verificación, auditoría y corte** | Notificaciones · eventos de BI · observabilidad y auditoría · E2E de los 5 flujos críticos · pruebas de corte de red · revisión de la autorización de los endpoints · lista de paridad · despliegue · reversión ensayada · piloto · corte único | T-62 a T-72 | 32 – 42 días | 197 |
-| **Total proyecto (P1+P2+P3+cierre)** | | **72 tareas** | **~142 – 187 días hábiles (≈ 28 – 37 semanas)** | — |
+| **Fase 4 — Notificaciones, verificación, auditoría y corte** | Notificaciones · eventos de BI · observabilidad y auditoría · E2E de los 5 flujos críticos · pruebas de corte de red · revisión de la autorización de los endpoints · lista de paridad · despliegue · reversión ensayada · **identidad visual y pasada de diseño** · piloto · corte único | T-62 a T-73 | 35 – 47 días | 197 |
+| **Total proyecto (P1+P2+P3+cierre)** | | **73 tareas** | **~145 – 192 días hábiles (≈ 29 – 39 semanas)** | — |
 | **Solo P1 (guardarraíl del PRD)** | Fase 0 + Fase 1 | T-01 a T-43 | **~70 – 92 días hábiles (≈ 14 – 19 semanas)** | — |
 
 > **Notas sobre la tabla:**

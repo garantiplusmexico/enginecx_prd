@@ -806,7 +806,9 @@ export type ParsedEmail =
  * Las agencias escriben a los técnicos por su cuenta y mencionan averías: ese es
  * el canal humano y NO se procesa. Filtrar solo por patrón de asunto lo dejaría entrar.
  */
-const REMITENTE = 'plataforma@garantiplus.mx'
+export const REMITENTE_PLATAFORMA = 'plataforma@garantiplus.mx'
+/** Los avisos de pago los emite otra cuenta. */
+export const REMITENTE_PAGOS = 'pagos@garantiplus.mx'
 
 const ASUNTOS: Array<[RegExp, EventKind]> = [
   [/^asignaci[óo]n de aver[íi]a\s+(\d+)/i, 'asignacion'],
@@ -881,7 +883,12 @@ git add src/ingestion tests/ingestion tests/fixtures/emails
 git commit -m "feat: parser de correos de SIGA con clasificación de evento"
 ```
 
-> **Verificado en producción.** Los cuatro patrones y sus cuerpos salen de correos reales del buzón de Miguel Ángel (1 de septiembre de 2026). Lo que **no** está verificado es si existen más tipos que no aparecieron en la muestra de cinco días —por ejemplo, un correo de cambio de estatus—. El barrido de la Task 10 cubre ese hueco: si SIGA emite un correo que no reconocemos, el barrido detecta el cambio de todas formas.
+> **Verificado en producción, y corregido dos veces por ella.** Los cuatro patrones y sus cuerpos salen de correos reales del buzón de Miguel Ángel (1 de septiembre de 2026). Al correr el parser contra los 40 correos del buzón aparecieron dos cosas que la muestra inicial no mostraba:
+>
+> 1. **Los avisos de pago los emite `pagos@garantiplus.mx`**, no `plataforma@`. Se admiten los dos remitentes, y cada uno **solo** puede emitir sus propios tipos: un «Pago de avería» que diga venir de la plataforma se descarta.
+> 2. **El nombre del archivo puede traer paréntesis anidados** (`Cuenta Bancaria.STD (1).JPG`) y el tipo puede venir en `snake_case` (`cuenta_bancaria`) en vez del nombre del catálogo. La extracción captura todo hasta el `) para la avería` y parte por el **último** ` / `.
+>
+> Resultado en campo sobre 40 correos: **25 reconocidos, 15 ignorados**, y los 15 ignorados son todos del canal humano o ruido. Sin falsos positivos ni falsos negativos. Lo que **no** está verificado es si existen más tipos que no aparecieron en la muestra de cinco días —por ejemplo, un correo de cambio de estatus—. El barrido de la Task 10 cubre ese hueco: si SIGA emite un correo que no reconocemos, el barrido detecta el cambio de todas formas.
 
 ---
 

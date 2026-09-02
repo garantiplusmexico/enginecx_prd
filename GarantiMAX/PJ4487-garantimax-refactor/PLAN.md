@@ -396,7 +396,7 @@ src/
 - [x] **T-40** — Lobbies y otros eventos
   - Archivos creados: `src/features/visits/domain/Lobby.ts`, `ports/LobbyRepository.ts`, `infrastructure/{ApiLobbyRepository,offlineLobbyRepository}.ts`, `application/SaveLobby.ts`, `ui/{LobbyPage,LobbyHistoryPage}.tsx`, `app/routes/LobbyRoutes.tsx` + pruebas
   - Criterio de completitud: comparten el ciclo de la visita **sin exigir sala**; tienen detalle e historial propios (RF-09)
-  - **No hay `RegistrarOtroEvento`.** El PLAN lo pedía aparte y no existe: sería el mismo agregado con otro nombre. Lo que el sistema actual llama «otro evento» es un lobby sin sala, y eso ya se registra — un caso de uso más habría sido simetría por simetría
+  - **No hay `RegistrarOtroEvento`, y el motivo que se anotó aquí era equivocado.** Se dijo que «otro evento» era un lobby sin sala; **no lo es**: `RegistrarOtro.tsx` del sistema actual escribe en `agenda_eventos` con `tipo: 'otro'` y estado `hecho`. Es un **evento de agenda**, y lo cubre el feature de agenda —que ya admite ese tipo (T-49)— en cuanto exista su pantalla (T-50). Corregido el 02-09-2026 al revisar la paridad contra el repositorio del sistema actual
   - **Y no hay `OpenLobby`.** Un lobby no tiene ciclo abierto: no hay check-in, ni cronómetro, ni borrador, porque se anota **después** de que ocurrió. Por eso su pantalla sí tiene botón de guardar, al contrario que la de la visita: no hay nada que salvar de una llamada entrante cuando el asesor no está en medio del evento
   - **El costo vacío es `null` y no cero** (V-50), y la distinción se mantiene en las cinco capas: el campo, el dominio, el repositorio, el viaje por IndexedDB y la línea del historial —«Sin costo registrado» y «$0» son dos frases—. Colapsarla en la pantalla habría deshecho al final lo que todo lo demás se molesta en mantener
   - El decorador offline son **40 líneas y una sola operación**, con el id del lobby como clave: reintentar no crea un segundo lobby (V-48, RNF-09)
@@ -449,13 +449,19 @@ src/
   - **Lo que espera aceptación va arriba del listado**, sin importar el filtro: es lo único de esa pantalla que el asesor puede perder por no haberlo visto, porque tiene plazo (G-26)
   - **Rechazar y proponer no son un botón:** abren una hoja con su campo, porque el motivo del rechazo es todo el contenido de la notificación que recibe el mandante (G-28)
 
-- [ ] **T-48** — Dominio de agenda y días hábiles
+- [x] **T-48** — Dominio de agenda y días hábiles
   - Archivos a crear/modificar: `src/domain/agenda/*.ts` + pruebas con `ClockProvider` simulado
-  - Criterio de completitud: `agendado → realizado | reagendado | cancelado`; un evento no se agenda en día inhábil salvo marca explícita; el cálculo de días hábiles y feriados se prueba **sin base de datos** contra los casos de `docs/reglas/gestion.md` (RF-12)
+  - Criterio de completitud: `agendado → realizado | reagendado | cancelado`; un evento no se agenda en día inhábil salvo marca explícita; el cálculo de días hábiles y feriados se prueba **sin base de datos** contra los casos de `docs/reglas/gestion.md`
+  - **Dos desviaciones.** «Reagendado» **no es un estado**: el catálogo dice `pendiente · hecho · cancelado` (G-31) y reagendar cambia la fecha dejando el evento pendiente; guardarlo como estado dejaría eventos que nadie sabe si ocurrieron. Y un día inhábil **avisa, no bloquea**: no hay tal regla en el catálogo, y un lobby de un sábado o una capacitación en feriado son eventos legítimos
+  - Los días hábiles viven en `src/domain/agenda/` **compartido**, no en el feature: de la misma respuesta dependen la agenda, la bitácora (G-09) y el plazo de aceptación de una tarea (G-26). Se prueban sin base de datos, con los feriados como conjunto
+  - Una prueba encontró un defecto real: `isBusinessDay('2026-02-31')` devolvía `true`. Ahora una fecha que no existe no es hábil (RF-12)
 
-- [ ] **T-49** — `AgendaRepository` y casos de uso
+- [x] **T-49** — `AgendaRepository` y casos de uso
   - Archivos a crear/modificar: `src/features/agenda/{ports,infrastructure,application}/*.ts` + pruebas
   - Criterio de completitud: cubre `agenda_eventos`, `feriados` y la función `limite_habil`; casos de uso `AgendarEvento`, `MarcarEventoRealizado`, `ReagendarEvento`, `CancelarEvento`, `ObtenerAgendaDelDia`
+  - `ObtenerAgendaDelDia` es `ObtenerAgenda` con `from === to`: un caso de uso aparte para un rango de un día sería el mismo código con otro nombre
+  - **El cliente HTTP ganó `patch`**: el servicio expone la actualización del evento como PATCH y no PUT a propósito, y la primera versión usaba `put` —habría respondido 405—. Segundo hueco del cliente compartido que destapa un endpoint nuevo, después de la cadena de consulta con dos `?`
+  - Las cuatro escrituras se encolan, y **reagendar dos veces manda la última fecha** porque comparten clave: si el asesor lo mueve al jueves y después al viernes, lo que tiene que llegar es el viernes
 
 - [ ] **T-50** — Interfaz de agenda
   - Archivos a crear/modificar: `src/features/agenda/ui/*.tsx`

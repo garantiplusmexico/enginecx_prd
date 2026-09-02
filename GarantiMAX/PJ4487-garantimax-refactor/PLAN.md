@@ -490,17 +490,30 @@ src/
   - **La foto no se ofrece todavía**, aunque G-41 la admite y el servicio ya guarda su clave: falta el bucket de S3, lo mismo que bloquea la evidencia de la visita (T-39). Un botón que siempre falla es peor que ninguno
   - **Hizo falta un `GET` en el servicio**: `GET /api/Greetings/{vendedor}/{año}`, sin OData porque el par **identifica** el saludo. Sin él, «ya saludado» sería un dato con nada detrás
 
-- [ ] **T-52** — Dominio de bitácora
+- [x] **T-52** — Dominio de bitácora
   - Archivos a crear/modificar: `src/features/bitacora/domain/*.ts` + pruebas
   - Criterio de completitud: **una por asesor y día**; se considera cumplida con contenido en los campos obligatorios; el incumplimiento se evalúa al cierre del día hábil; las exenciones vigentes del sistema actual quedan reflejadas o descartadas explícitamente
+  - **Las dos reglas que nacieron de un incidente están con su razonamiento intacto.** G-16 —no se guarda en blanco— no es una validación de formulario: sin ella un borrador vacío del teléfono pisaba lo escrito desde la web. G-17 —al reconciliar **gana el que tiene contenido**, no el último— es la única regla de resolución de conflictos del sistema actual, y hay una prueba que fija que lo local pendiente gana **aunque el servidor sea más nuevo**, porque esa es la distinción
+  - **Quién está obligado NO se decide en el cliente**, y es deliberado: necesita los feriados, la fecha de inicio de la obligación —distinta por asesor— y la zona horaria, tres cosas que el servicio tiene juntas. En el sistema actual la pantalla las combinaba y daba una respuesta distinta cada vez que la tabla de feriados iba con retraso
+  - **Las exenciones quedan descartadas, no reflejadas.** Existían para parchear que la obligación colgaba del **tier legacy** `FARMER`/`GTE`: el tier de quien atendía Contact Center era FARMER aunque su trabajo no fuera de terreno. El tier desaparece (ADR-008) y la obligación pasa a ser atributo del asesor, con lo que las seis exenciones dejan de tener objeto
 
-- [ ] **T-53** — `BitacoraRepository` y casos de uso, incluidas las funciones de servidor
+- [x] **T-53** — `BitacoraRepository` y casos de uso, incluidas las funciones de servidor
   - Archivos a crear/modificar: `src/features/bitacora/{ports,infrastructure,application}/*.ts` (`RegistrarBitacoraDelDia`, `TranscribirDictado`, `MejorarRedaccion`, `VerificarCumplimientoDiario`) + pruebas
   - Criterio de completitud: `transcribir-bitacora`, `mejorar-bitacora` y `mejorar-redaccion` se invocan **desde infraestructura**, reutilizadas tal cual; el cliente nunca maneja credenciales de los proveedores de IA (RF-15, RNF-11); las pruebas de inyección de prompt del sistema actual se portan y se extienden
+  - **«Reutilizadas tal cual» ya no es posible, y no es un recorte.** Eran tres **funciones de Supabase**, y el criterio se escribió antes de ADR-011. El equivalente son endpoints del servicio .NET, que **no existen**: falta una decisión de negocio —qué proveedor de IA, con qué clave, con qué presupuesto— que no se toma escribiendo código. Lo que falta está escrito en `[repo api] Services/GarantiMax/doc/ayuda-de-escritura.md`
+  - **Lo que sí quedó hecho**: los puertos (`TranscriptionProvider`, `WritingAssistant`), sus implementaciones contra el servicio, los casos de uso y sus pruebas — incluido que un **503 es «esto no está encendido»** y **no es reintentable**, para que no se confunda con un fallo de red. Encenderlo cuando existan los endpoints es una bandera
+  - **Las pruebas de inyección de prompt quedan pendientes con su motivo**: no hay dónde ejecutarlas todavía. Son requisito de los endpoints, y están anotadas como tal en el documento del servicio
+  - **Guardar es local primero** (G-15), y hay una prueba que comprueba el **orden**: el borrador se escribe en el teléfono antes de intentar subir. Nació de una pérdida de datos — el asesor escribe en el estacionamiento de una sala, y si el guardado dependiera de que salga la petición, un día malo se lleva veinte minutos de escritura
+  - **La clave de la cola es la fecha, y sale gratis**: la bitácora ya es única por día, así que guardar tres veces encola una sola operación con el último texto — que es justo lo que hace falta mientras se redacta
 
-- [ ] **T-54** — Interfaz de bitácora
+- [x] **T-54** — Interfaz de bitácora
   - Archivos a crear/modificar: `src/features/bitacora/ui/*.tsx`
   - Criterio de completitud: novedades, problemas, plan y texto libre con las salas mencionadas; dictado por voz y mejora de redacción; el estado de cumplimiento del día es visible (RF-14)
+  - **Corrección al criterio.** «Novedades, problemas, plan y texto libre» **no son campos** en el sistema actual: son el marcador de posición de un único cuadro —«¿Qué pasó hoy? Novedades, gestiones, problemas, plan para mañana…»— y G-01 dice literalmente «texto libre, una por autor y por día». Partirlo en cuatro obligaría al asesor a clasificar al final de una jornada de terreno, que es cuando menos ganas tiene. El marcador se conserva. Verificado en `../garantimax` el 02-09-2026
+  - **Y «las salas mencionadas» no existen**: ninguna versión del sistema actual extrae ni muestra las salas nombradas en el texto. Se descarta, no se implementa a ciegas
+  - **El dictado y la mejora quedan apagados por bandera** (`VITE_AYUDA_ESCRITURA`, apagada por defecto), y los botones no se dibujan. Ver T-53
+  - **La pantalla distingue tres estados de guardado**, no dos: guardado, guardado en el teléfono pendiente de subir, y sin comprobar contra el servidor. Decir «guardado» a secas cuando está en la cola es la clase de mentira pequeña que hace que alguien descubra a fin de mes que faltaban tres bitácoras
+  - **El aviso de atrasos se puede cerrar y no bloquea** (G-12): quien debe tres bitácoras necesita escribir la de hoy más que nadie. Lista los días concretos, porque «te faltan 3» obliga a ir día por día buscando. Y si la comprobación **falla no se muestra nada** (G-13): no se dice «estás al día», que sería afirmar algo sin comprobar
 
 ### Fase 3 — Gastos, boletas y rendiciones (P3)
 

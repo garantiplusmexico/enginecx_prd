@@ -252,8 +252,15 @@ src/
   - **Mi Día es una sola respuesta** —visita en curso, agenda resuelta, bitácora y cumpleaños— porque es exactamente lo que se guarda como snapshot offline (V-40): cinco endpoints serían cinco oportunidades de quedarse con medio día. **El día va en la ruta y es obligatorio:** el servicio conoce el país del asesor, no su zona horaria, y resolver «hoy» en UTC adelanta el día a las 21:00 en Santiago
   - Documentado en `Services/GarantiMax/doc/una-visita-en-curso.md`
 
-- [ ] **T-S08** — Endpoints de gestión: tareas, avances, agenda, cumpleaños y bitácora
+- [x] **T-S08** — Endpoints de gestión: tareas, avances, agenda, cumpleaños y bitácora
   - Criterio de completitud: reimplementa las reglas de `crear_tarea_sala`, `completar_tarea`, `set_tarea_completada`, `calificar_tarea`, `tarea_avance_crear`, `limite_habil`, `cumpleanos_vendedores` y `vendedor_por_nombre` extraídas en T-13 y T-14. Bitácora con unicidad por asesor y día
+  - Archivos creados: `Controllers/{Tasks,Agenda,FieldLog,Greetings}Controller.cs`, `Services/{BusinessCalendar,TaskNegotiation}.cs`, `Interfaces/IBusinessCalendar.cs`, sus DTO y `doc/limite-habil.md`
+  - **`limite_habil` estaba mal documentado en los dos sitios donde lo teníamos**, y se descubrió al implementarlo: G-26 decía «el siguiente día hábil a la misma hora» y la nota del esquema decía «23:59:59». La función original hace **las dos cosas** según el día en que se creó la tarea — misma hora si fue día hábil, el día completo si fue fin de semana o feriado, porque a quien le encargan algo un domingo no lo vio. El detalle y los ejemplos, en `doc/limite-habil.md`
+  - **Un solo calendario de días hábiles** para las tres reglas que dependen de él (G-08, G-09, G-26). En el sistema actual vivían en tres sitios y solo uno consultaba los feriados
+  - **Ningún endpoint escribe el estado de negociación:** las seis transiciones pasan por `TaskNegotiation`, función pura sin `DbContext` ni reloj. Es la compensación por haber sacado la máquina de los *triggers* de PL/pgSQL, donde era imposible de saltar
+  - **«Sus tareas» son dos cosas** —las que debe hacer y las que encargó (G-22)—; acotar solo por responsable le escondería a un jefe las que él mismo repartió
+  - El «atrasada >48h» (G-20) viaja como **booleano y no como cuenta de días**: la aritmética de fechas dentro de la consulta no tiene traducción garantizada a SQL y habría compilado para fallar al abrir la lista
+  - **Dos builds fallidos antes de compilar**, los dos por no verificar un nombre que estaba en disco: la política de *rate limiting* y el *namespace* de los enums
 
 - [ ] **T-S09** — Endpoints de gastos y rendiciones
   - Criterio de completitud: la **máquina de estados completa** (`borrador → enviada → aprobada_jefe → aprobada_ops → pagada`, más `rechazada` y el contador de reenvíos) con las transiciones válidas garantizadas en el servicio, no en la UI. Es el bloque con más negocio del alcance. La aprobación y el pago quedan **bloqueados** para el rol del asesor

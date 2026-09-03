@@ -460,6 +460,7 @@ src/
   - **El detalle tiene URL propia** (`/tareas/:id`) y no es una hoja sobre el listado: es donde se trabaja, y las notificaciones de G-30 hablan de una tarea concreta, así que tienen que poder llevar a ella
   - **Lo que espera aceptación va arriba del listado**, sin importar el filtro: es lo único de esa pantalla que el asesor puede perder por no haberlo visto, porque tiene plazo (G-26)
   - **Rechazar y proponer no son un botón:** abren una hoja con su campo, porque el motivo del rechazo es todo el contenido de la notificación que recibe el mandante (G-28)
+  - ⚠️ **Se cerró con un hueco, y lo destapó T-68 el 03-09-2026.** `tasks.create` estaba en el contrato de servicios y **ninguna pantalla lo llamaba**: el asesor no podía crear una tarea. El dominio, el caso de uso y el endpoint sí estaban. Cerrado con `NewTaskSheet` el mismo día. Vale registrarlo porque es el primer «hecho» de este plan que no lo estaba, y lo encontró la lista de paridad haciendo su trabajo
 
 - [x] **T-48** — Dominio de agenda y días hábiles
   - Archivos a crear/modificar: `src/domain/agenda/*.ts` + pruebas con `ClockProvider` simulado
@@ -599,13 +600,24 @@ src/
   - Prerequisito: **la fuente de la identidad**. Hace falta la paleta, la tipografía y el logo —del manual de marca o extraídos del sistema actual—; sin eso la tarea no arranca, porque no se inventa una identidad desde el código
   - Verificación: las pruebas existentes tienen que pasar **sin tocarlas**. Consultan por rol y por texto accesible, no por clase CSS, y esa propiedad es la que hace que un rediseño sea barato: de ~1000 pruebas, solo las 6 líneas de `components.test.tsx` miran una clase, y es `min-h-touch`, que esta tarea conserva. Si un cambio visual obliga a reescribir pruebas, es señal de que se está moviendo estructura y no aspecto
 
-- [ ] **T-62** — Notificaciones al asesor
+- [x] **T-62** — Notificaciones al asesor
   - Archivos a crear/modificar: `src/features/identidad/{ports,infrastructure,application,ui}/Notificacion*` + pruebas
   - Criterio de completitud: avisa de visitas abiertas sin cerrar, tareas atrasadas y bitácoras pendientes, leyendo `notificaciones` y respetando lo que producen `visitas-abiertas-cron` y `tareas-atrasadas-cron` (RF-20)
+  - **Viven en su propio feature y no en identidad**, como decía el PLAN: **hablan de todo** —tareas, visitas abiertas, bitácoras— y metidos en identidad ese feature tendría que conocer los tres
+  - **Cada aviso lleva a lo que anuncia**, y el destino lo decide el **dominio**: es una regla, no una decisión de navegación. Sin destino no se pinta un enlace muerto — mandar a Mi Día desde un aviso que hablaba de algo concreto es peor que no ofrecer nada
+  - **Abrir es leer.** Un botón de «marcar leído» le pide al asesor confirmar algo que ya hizo. Y **marcar leído se encola**: sin eso, el aviso que leyó en una sala sin cobertura volvería como nuevo al recuperar señal, que es como se aprende a ignorar los avisos
+  - **Los tres tipos periódicos están declarados aunque no lleguen todavía.** El orden del enum **es el contrato**: declararlos después obligaría a insertarlos en medio y el asesor vería un aviso con la etiqueta de otro
+  - **Lo que falta no es código.** `visitas-abiertas-cron` y `tareas-atrasadas-cron` necesitan **dónde correr**, y el servicio no tiene planificador: un `BackgroundService` corre una vez **por instancia**, así que con dos tareas de ECS son dos avisos por asesor. Escrito en `[repo api] doc/los-dos-procesos-periodicos.md`, con una advertencia: la columna `notificaciones.tipo` tiene un `CHECK` con los cinco valores originales, y **la migración va antes** del proceso periódico
 
-- [ ] **T-63** — Eventos de producto para BI
+- [x] **T-63** — Eventos de producto para BI
   - Archivos a crear/modificar: `src/shared/observability/eventos.ts` y su emisión desde los casos de uso + pruebas
   - Criterio de completitud: los eventos del PRD §11 se emiten **desde la capa de aplicación, nunca desde la UI**, con fecha, asesor, identificadores de negocio, resultado y motivo; escriben en `eventos_producto` (T-18)
+  - **Se emiten desde la aplicación y no desde la UI, y eso cambia lo que miden.** Un evento disparado en un `onClick` cuenta **intenciones**: `visita_cerrada` en el botón se registra también cuando el cierre falla, y entonces el número de BI no cuadra con las filas de la base. Hay una prueba que fija justo eso — con una visita ya abierta, el check-in no ocurre y el evento tampoco
+  - **El registrador nunca rompe nada.** No devuelve promesa —si la devolviera, algún caso de uso la esperaría y cerrar una visita tardaría lo que tarde un evento de BI—, atrapa el rechazo **y** las excepciones sincrónicas, y manda el fallo al monitoreo. La dependencia es **opcional** en todos los casos de uso, con un registrador vacío por defecto
+  - **Cuatro de la lista del PRD NO los emite el cliente**, y leyendo solo el PRD se esperaría que sí: las tres transiciones de aprobación y el pago los produce **quien aprueba**, que no es el asesor (E-42), y `bitacora_incumplida` es un proceso periódico. El registrador los **descarta con aviso**, y la lista de los cinco se declara como **dato** para que una prueba lo compruebe: un comentario que dice «esto no se hace» no impide hacerlo
+  - **Una excepción al criterio, con su motivo:** `operacion_encolada` sale del **decorador offline**, porque describe algo que decide el decorador — el caso de uso pidió guardar y no sabe si acabó en el servidor o en la cola
+  - **Y la única recursión posible del cableado, cortada:** al sumidero de eventos no se le pasa el registrador. Si lo recibiera, un evento que no pudo salir se encolaría, el decorador emitiría `operacion_encolada`, ese tampoco saldría… hasta agotar el almacén del teléfono. Queda escrito junto al cableado para que nadie lo «arregle» después
+  - **Solo identificadores** (A1 §11). El tipo del contenido es `Record<string, string | number | boolean>` y no `unknown` a propósito: obliga a escribir el valor a mano. Hay pruebas de lo que **no** viaja — las coordenadas de una visita que sí las tiene, el comentario que el asesor escribió
 
 - [ ] **T-64** — Observabilidad y auditoría de operaciones críticas
   - Archivos a crear/modificar: `src/shared/observability/*` y la configuración de Sentry
@@ -624,9 +636,14 @@ src/
   - Archivos a crear/modificar: `docs/autorizacion-fase1.md` y los documentos correspondientes en `[repo api] Services/GarantiMax/doc/`
   - Criterio de completitud: endpoint por endpoint, qué puede leer y escribir el asesor y **cómo lo garantiza el servicio**. La fuente de la especificación son las ~150 políticas RLS del sistema actual, leídas tabla por tabla. El modo demo queda respaldado por el servicio y no solo por el guard del cliente. Documento **firmado por TI** (A1 §15.11). Agravante que hay que compensar con revisión humana: el repo de la API **no tiene proyectos de test**
 
-- [ ] **T-68** — Lista de paridad funcional
+- [x] **T-68** — Lista de paridad funcional
   - Archivos a crear/modificar: `docs/paridad.md`
   - Criterio de completitud: cada funcionalidad de terreno del sistema actual con su equivalente verificado en el nuevo, probada por un asesor real, con estado y responsable; **firmada antes del corte** (RF-25). Sin el 100 %, el corte no se ejecuta
+  - **No está firmada, y no puede estarlo:** RF-25 exige que un asesor real lo pruebe, y eso es el piloto. «Verificado» aquí significa contra el código, y el documento lo dice en su primera línea
+  - **Se empezó ahora a propósito.** Construir cada vertical produjo **diez** discrepancias entre el plan y el sistema actual, y reconstruirlas en el corte sería releer los mismos archivos con menos tiempo y más presión — la situación exacta en la que una lista de paridad se firma sin verificarse
+  - **Y encontró un hueco real el mismo día: T-47 estaba mal cerrada.** `tasks.create` estaba en el contrato y **ninguna pantalla lo llamaba**, así que el asesor no podía crear una tarea. Cerrado en el momento (`NewTaskSheet`, siete pruebas), porque era un hueco de pantalla y no de negocio
+  - **El bucket de S3 bloquea cuatro filas** —evidencia de visita, adjuntos de lobby, foto del saludo y captura de boleta—: es el bloqueo más grande de la lista. Las claves de IA bloquean tres, los nombres de rol una, y el servicio de tasas una que **no impide rendir** (E-22: la conversión es *best-effort*)
+  - **Dos pantallas sin decidir**: `PlanGrupoModal` y `ProyectoEncabezado`. Nadie ha dicho si entran al corte
 
 - [ ] **T-69** — Despliegue y ambientes
   - Archivos a crear/modificar: `vercel.json`, configuración del proyecto Vercel, variables por ambiente

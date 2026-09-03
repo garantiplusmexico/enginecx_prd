@@ -262,8 +262,20 @@ src/
   - El «atrasada >48h» (G-20) viaja como **booleano y no como cuenta de días**: la aritmética de fechas dentro de la consulta no tiene traducción garantizada a SQL y habría compilado para fallar al abrir la lista
   - **Dos builds fallidos antes de compilar**, los dos por no verificar un nombre que estaba en disco: la política de *rate limiting* y el *namespace* de los enums
 
-- [ ] **T-S09** — Endpoints de gastos y rendiciones
+- [x] **T-S09** — Endpoints de gastos y rendiciones
   - Criterio de completitud: la **máquina de estados completa** (`borrador → enviada → aprobada_jefe → aprobada_ops → pagada`, más `rechazada` y el contador de reenvíos) con las transiciones válidas garantizadas en el servicio, no en la UI. Es el bloque con más negocio del alcance. La aprobación y el pago quedan **bloqueados** para el rol del asesor
+  - Archivos creados: `[repo api] Services/GarantiMax/{Interfaces/IExpenseClaimWorkflow,Services/ExpenseClaimWorkflow,Controllers/{Expenses,ExpenseClaims}Controller,DTOs/Expenses/*}` y `doc/maquina-de-la-rendicion.md`
+  - **La máquina está completa; los endpoints, no**, y es la forma que el criterio pide. Las seis transiciones están implementadas y validadas —incluidas aprobar como jefe, aprobar como Operaciones y marcar pagada— pero **solo `submit` tiene ruta**, porque en Fase 1 el asesor solo observa (E-42)
+  - **Y el motivo de que el resto no tenga ruta es una pregunta abierta, no pereza:** autorizarlas necesita nombres de rol —quién es jefe, quién es Operaciones, quién es el Country Manager— y esa decisión sigue pendiente. Añadir dos rutas que cualquiera con la política del asesor pudiera llamar sería peor que no tenerlas. Cuando se decida, lo que se agrega es una política y dos rutas
+  - **Enviar y reenviar son el mismo endpoint**, y los distingue el estado de partida. Preguntárselo al cliente dejaría que un reenvío llegara etiquetado como primer envío, perdiendo el contador que hace auditable el ida y vuelta (E-34)
+  - **Al reenviar se limpian el rechazo y las aprobaciones del envío anterior**: describen una versión de la rendición que ya no es esta, y dejarlas haría que se leyera como rechazada mientras espera revisión
+  - **El atajo de E-32 quedó con su condición precisa**: `enviada → aprobada_ops` salteándose al jefe vale solo si el dueño **no tiene jefe** en el organigrama. Escrito como «Operaciones siempre puede» dejaría que toda rendición se saltara a su jefe
+  - **Nadie resuelve lo suyo**, y no está en el catálogo como regla aparte: en el organigrama nadie es su propio jefe, pero depender de que el organigrama esté bien es depender de un dato, y esto es dinero
+  - **Los totales se calculan por moneda y nunca se almacenan** (E-24). Limitación dicha en voz alta: el desglose por moneda está en el **detalle** y no en la lista, porque una agrupación así no se traduce dentro de una proyección que OData pueda filtrar y forzarla significaría materializar todas las rendiciones para mostrar una página. La lista lleva la suma local y el conteo de lo no convertido, así que la honestidad de E-23 se mantiene
+  - **Dos defectos encontrados al escribirlo y corregidos.** (1) La fusión de gastos cambiaba la clave ajena del archivo pero lo dejaba dentro de la colección del gasto que se borra: la cascada se habría llevado la foto que se acababa de salvar. (2) El estado `procesando` era **inalcanzable**, y es el que sostiene E-02 —la fila existe antes de la lectura, para que una lectura fallida nunca pierda la foto (E-03)—; el comando lleva ahora una bandera de «lectura pendiente», que es lo único del estado que el cliente sabe
+  - **El dueño lo pone el servidor y el comando no tiene ese campo** (E-07). Un campo que se ignora es un campo que alguien va a probar
+  - **Un gasto en una rendición enviada no se modifica**, con 409 y no 400: la petición está bien formada, es el momento el que no lo está
+  - **La detección de duplicados (E-25, E-26) y la conversión de moneda (E-20 a E-23) no están aquí**: son de los casos de uso de gasto (T-57) y del servicio de tasas, y meterlas en el endpoint de guardado las habría dejado fuera del alcance de sus pruebas
 
 > **Los endpoints con IA y los procesos programados** —lectura de boleta, transcripción, mejora de redacción, notificaciones y los dos periódicos— se construyen en la fase donde el frontend los consume (Fase 3 y Fase 4), no aquí. Su especificación son las Edge Functions actuales, y las credenciales de IA viven en `Options/`, nunca en el cliente.
 
@@ -582,6 +594,7 @@ src/
 - [ ] **T-64** — Observabilidad y auditoría de operaciones críticas
   - Archivos a crear/modificar: `src/shared/observability/*` y la configuración de Sentry
   - Criterio de completitud: los errores no controlados llegan a Sentry con traza, versión, ruta, categoría e identificador de usuario y **sin datos personales**; nunca se registra contenido de bitácoras, imágenes de boletas ni ubicaciones exactas (A1 §11); apertura y cierre de visita, transiciones de rendición y envío de bitácora quedan auditados
+  - **La mitad de Sentry ya está hecha**, cerrada con T-08 el 01-09-2026: `SentryMonitoringProvider` con `sendDefaultPii: false` y su trozo aparte para no precargarlo en el service worker. Lo que queda de T-64 es la **auditoría de operaciones críticas** — y las transiciones de rendición ya escriben su evento en la misma transacción que el cambio de estado (T-S09), así que esa parte también está cubierta del lado del servicio
 
 - [ ] **T-65** — Pruebas de extremo a extremo de los cinco flujos críticos
   - Archivos a crear/modificar: `e2e/*.spec.ts`, `playwright.config.ts`, workflow de CI

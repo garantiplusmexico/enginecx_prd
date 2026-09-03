@@ -652,6 +652,15 @@ src/
 - [ ] **T-70** — Procedimiento de reversión
   - Archivos a crear/modificar: `docs/reversion.md`
   - Criterio de completitud: pasos, responsables, tiempos y criterio de decisión para devolver a los asesores al sistema actual **dentro de la misma jornada**; **ensayado en un simulacro real** antes del corte, con el resultado registrado (RNF-21)
+  - Archivos creados: `docs/reversion.md`
+  - **Queda ABIERTA a propósito, aunque el documento esté escrito.** El criterio pide «ensayado en un simulacro real», y marcarla cerrada sería afirmar que RNF-21 se cumple. Se cumple cuando haya un simulacro con su resultado registrado en §7 del documento
+  - **El hallazgo que ordena todo el documento: revertir devuelve el acceso, no los datos.** Con las bases separadas (ADR-011), lo que un asesor haga en el sistema nuevo el día del corte es **invisible** para el actual. Devolverlos son quince minutos; decidir qué pasa con el trabajo de esa jornada es la parte difícil, y **hay que decidirla antes del corte**. Sin esa asimetría, revertir parecería un botón
+  - **Los criterios son números y no juicios**: cuatro señales de reversión inmediata sin consultar a nadie —no se puede iniciar sesión, se pierde trabajo confirmado, el servicio cae más de 30 minutos, un dato de un asesor visible para otro— y tres umbrales con porcentaje para el mediodía. Un umbral que se discute a las once de la mañana con gente en terreno no es un criterio
+  - **Y tres cosas por las que NO se revierte**, incluida una que parece razón: que falte una funcionalidad que `paridad.md` ya declaraba pendiente. Si estaba en la lista, se sabía antes del corte
+  - **Decide una sola persona**, no un comité: revertir de más cuesta una jornada en el sistema viejo, revertir de menos cuesta una jornada de trabajo perdido
+  - **El paso que se olvida: NO se apaga el sistema nuevo.** Se deja en pie y sin escrituras, porque es lo único que permite recuperar después el trabajo de la jornada — apagarlo convierte un problema de horas en una pérdida
+  - **Una decisión abierta que no es del documento**: qué pasa con el trabajo de la jornada. Recomendación escrita —migrar visitas y boletas, perder el resto, porque una visita y una boleta no se pueden reconstruir— pero la decide el responsable con operaciones. Y la opción de migrar **solo existe si el guion está escrito y ensayado antes**
+  - **Cuatro suposiciones declaradas** que hay que confirmar: si el corte cierra el acceso al sistema actual, el TTL del dominio, que exista un canal que los asesores lean en terreno, y que TI esté disponible el día del corte
 
 - [ ] **T-71** — Piloto con un grupo reducido de asesores
   - Archivos a crear/modificar: `docs/piloto.md`

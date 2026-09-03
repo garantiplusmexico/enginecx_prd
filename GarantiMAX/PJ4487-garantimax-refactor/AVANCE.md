@@ -66,7 +66,7 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 **Pendiente del backend: nada de código.** El bloque T-S01 a T-S09 está completo. Lo que espera son tres decisiones —el bucket de S3, las dos claves de IA y los nombres de rol para aprobar y pagar una rendición— y una cosa que sí es trabajo pero de ese repo: **no hay proyecto de test**, así que el orden de los `enum` solo lo protegen las pruebas del frontend. *(Reescrito el 03-09-2026: el texto anterior seguía pidiendo el endpoint de archivos y T-S08, hechos desde el 31-08 y el 01-09.)*
 
-**Pendiente del frontend, sin dependencias:** la **Fase 3** entera salvo persistir la foto de la boleta — T-55, T-56, T-60 y T-61 no tocan imágenes. Y de la Fase 4, **T-63** (eventos de producto) y **T-62** (notificaciones) tienen sus tablas creadas, y **T-68** y **T-70** son documentos. T-17 sigue esperando acceso a producción y **conviene no dejarla para el final**: después del corte no hay con qué comparar. *(Reescrito el 03-09-2026: pedía T-12 y Sentry, cerrados el 01-09.)*
+**Pendiente del frontend, sin dependencias: nada.** Se agotó el 03-09-2026 con T-70. Todo lo que queda de la Fase 4 espera una decisión o algo que no es código — el bucket de S3, las dos claves de IA, los nombres de rol, el proyecto de Vercel, la identidad de marca, un grupo de asesores para el piloto y una firma de TI. **T-17 es la excepción y la más urgente**: se mide sobre el sistema actual en producción, y después del corte no hay con qué comparar. *(Reescrito el 03-09-2026: la nota anterior pedía la Fase 3 y las tres tareas de Fase 4 que ya están cerradas. Es la tercera vez que este párrafo se queda viejo, y por el mismo motivo de siempre — se escribe al planificar y nadie lo toca al cerrar.)*
 
 > ### 🔎 Dos catálogos que faltaban en todos los documentos
 >
@@ -207,6 +207,7 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 | ID | Tarea | Responsable | Iniciada | Notas |
 |---|---|---|---|---|
+| T-70 | Procedimiento de reversion del corte | Claude Code | 2026-09-03 | **El documento esta escrito; el simulacro no.** Se deja abierta a proposito: el criterio pide «ensayado en un simulacro real», y cerrarla seria afirmar que RNF-21 se cumple. El hallazgo que ordena el documento: **revertir devuelve el acceso, no los datos** — con las bases separadas, lo que se haga en el sistema nuevo el dia del corte es invisible para el actual. Devolver a los asesores son 15 minutos; decidir que pasa con el trabajo de la jornada hay que decidirlo **antes** |
 | | | | | |
 
 ---
@@ -218,6 +219,7 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 | T-17 | Línea base medida de las métricas de producto | Acceso al sistema actual **en producción**. Es la única tarea con fecha de caducidad: después del corte no hay con qué comparar, y RNF-06 se mide contra ella |
 | T-39 (resto) | Captura desde la cámara, compresión (V-30) y encolado del blob (V-31) | El **bucket de S3**, para poder probarla de punta a punta. El código de subida ya está y responde 503 mientras no exista |
 | T-58 (blob) · T-59 | Guardar la imagen de la boleta en el dispositivo y la captura desde camara | El **bucket de S3**, el mismo que la evidencia de visita. El dominio, los repositorios y la cola ya estan |
+| T-70 (simulacro) | Ensayar la reversion con personas | Una fecha y **una persona real** que intente reingresar al sistema actual. Y una decision del responsable: que pasa con el trabajo de la jornada si hay que revertir |
 | `LeerDatosDeBoleta` (parte de T-57) | Lectura automatica de la boleta con IA | Portar `leer-boleta` al servicio. Usa la **misma clave de Anthropic** que la ayuda de escritura, asi que no añade una decision nueva |
 | T-73 | Identidad visual y pasada de diseño (**agregada el 02-09-2026**) | La **fuente de la identidad**: paleta, tipografía y logo, del manual de marca o del sistema actual. Sin eso no arranca — no se inventa una identidad desde el código |
 | Prueba del contrato de enums en la API | Fijar del lado del servicio el orden de los `enum` | Nada. Hoy solo lo protegen las pruebas del frontend, y **no hay proyecto de test en el repo de la API**: si alguien inserta un valor en medio del enum, el frontend empieza a leer «capacitación» donde dice «inducción» |
@@ -341,7 +343,7 @@ Repositorio `siga_alfa` inicializado: ramas `main` (pendiente, ver nota), `devel
 
 ## Notas para quien retome el trabajo
 
-- **Por dónde continuar:** **T-70** (procedimiento de reversión) es el último documento sin bloqueo. Después, lo que queda de la Fase 4 depende de cosas que no son código: **T-69** necesita el proyecto de Vercel, **T-65** y **T-66** necesitan el sistema corriendo contra el servicio, **T-67** necesita firma de TI, **T-73** la identidad de marca y **T-71** un grupo de asesores. Y **T-17** sigue caducando: después del corte no hay con qué comparar.
+- **Por dónde continuar:** ya no queda nada de la Fase 4 sin bloqueo. Lo que sigue depende de decisiones o de cosas que no son código: **T-69** necesita el proyecto de Vercel, **T-65** y **T-66** el sistema corriendo contra el servicio, **T-67** firma de TI, **T-73** la identidad de marca, **T-71** un grupo de asesores y **T-72** las tres anteriores. Y **T-17** sigue caducando: la línea base se mide sobre el sistema actual en producción, y después del corte no hay con qué comparar.
 - **Contexto importante:**
   - **No hay Supabase** (ADR-011). Aquí no se escribe SQL ni se define modelo de datos: el backend es `Services/GarantiMax/` en `../gp_3.0_siga_api`. El cliente de red vive solo en `src/infrastructure/api/`.
   - `main` de `siga_alfa` no existe aún — no intentar sembrarlo directo, ver nota en "Resumen de estado".

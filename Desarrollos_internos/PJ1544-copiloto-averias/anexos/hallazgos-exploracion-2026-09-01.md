@@ -163,3 +163,77 @@ El 29% restante son **todas de Mitsubishi** (VIN con prefijo `MMB`). Existen 492
 `Copiloto de averías` (`nJm48fpQLOM0V5nT`) quedó **desactivado**, con cinco nodos de exploración: `Webhook → Buzon → Gmail → Recorte → Responder`. El respaldo del esqueleto original está en `respaldo-copiloto-averias-original.json`. Credenciales vinculadas: `e1AHIA134O0p0PzN` (Miguel) y `oR0aKRNKwvNBmy2Q` (Eduardo).
 
 El nodo Gmail v2.2 con `simple: false` **ya normaliza** `from`, `to`, `subject`, `date`, `messageId`, `text`, `html` y `attachments` en la raíz del item: no hace falta parsear `payload.headers`.
+
+---
+
+# Tercera tanda — 2026-09-03 · el experimento de deliberación
+
+## R6 — El `policyId` NO es un puente: es una colisión numérica
+
+**Corrige el hallazgo R2 de la primera tanda.** Se midió si el contrato hallado corresponde de verdad a la avería, usando una prueba objetiva: **¿la fecha de la avería cae dentro de la vigencia del contrato?**
+
+| Puente | Casos | Vigencia coherente |
+|---|---:|---:|
+| `contractId` | 48 | **48 (100%)** |
+| `policyId` | 18 | **3 (17%)** |
+
+Los 15 restantes eran contratos **ajenos**. Caso concreto: la avería **163615**, registrada por `servicio2@mitsubishireynosa.mx`, resolvía por `policyId` al contrato 108718 — un **Volkswagen Jetta 2019**, producto EXCELLENCE CAMCAR M2, estatus **Cancelado**, vigencia terminada el **16/11/2023**. El copiloto habría dictaminado contra el certificado de otro coche.
+
+Los espacios de identificadores de `claims` y `contracts` se solapan, así que `contractId eq {policyId}` casi siempre encuentra *algo*. Ese algo no tiene relación con el caso.
+
+**Consecuencias:**
+- La cobertura real de expediente es **48%**, no el 71% que se reportó.
+- Queda **prohibido** usar `policyId` como puente.
+- Todo contrato hallado debe validarse: **vigencia que cubra la fecha de la avería** y **VIN coincidente con el del correo**.
+
+## El experimento de deliberación
+
+Dos casos con contrato válido, certificado real y resolución ya emitida. En cada uno se emitió un dictamen **antes** de abrir la resolución del técnico.
+
+### Caso 163549 — Chevrolet Traverse 2020 · EXCELLENCE SUV GM M2 12
+
+| | Dictamen del agente | Resolución de Eduardo |
+|---|---|---|
+| Veredicto | `duda` — evidencia insuficiente | **Aceptada**, $10,008.00 |
+| Catalizador del presupuesto | improcedente por la exclusión 8 (*escapes*) | **excluido de la valoración** |
+| Tiempo | retendría el caso | resuelto **el mismo día** |
+
+- **Acierto:** el presupuesto pedía palanca selectora **y** catalizador; el técnico autorizó solo la palanca ($4,827.59 + $3,800 de mano de obra + IVA = $10,008.00). La señal del agente sobre el catalizador coincidió con su criterio.
+- **Error:** el agente exigió carnet, facturas de mantenimiento y escaneo de códigos. El técnico resolvió con seis documentos. Es un **falso insuficiente**: el catálogo provisional de evidencia mínima pide de más.
+
+### Caso 163681 — Nissan March · GP Llantas
+
+| | Dictamen del agente | Resolución de Eduardo |
+|---|---|---|
+| Veredicto | `duda` — distinguir impacto de defecto de fábrica exige valorar la pieza | **Aceptada**, $2,660.49 |
+
+- **Acierto:** la valoración **no lleva mano de obra** ($2,293.53 × 1.16 = $2,660.49), coherente con la exclusión 1 del condicionado de llantas, que excluye los costos de colocación.
+- **Error:** el agente remitió. El criterio operativo del área para llantas es más simple de lo que el condicionado sugiere: presentada la llanta con daño estructural, se acepta.
+
+### Lo que el experimento demuestra
+
+1. **El agente es sistemáticamente más conservador que el técnico.** Dos de dos casos aceptados fueron remitidos por el agente. Es coherente con el sesgo a la remisión del RNF-03, pero confirma el riesgo del §13: **si el agente remite todo, el ahorro no está en el veredicto**, sino en el expediente pre-armado, la captura de datos y la detección de conceptos excluidos.
+2. **Donde el agente sí aporta valor medible es en el presupuesto.** Acertó en los dos casos: detectó el concepto excluido en uno y la ausencia de mano de obra en el otro. Eso apunta a que la **verificación del presupuesto (etapa 3) puede valer más que el dictamen de improcedencia (etapa 1)** — al revés de lo que asume la secuencia de etapas del PRD.
+3. **Los umbrales de suficiencia hay que calibrarlos hacia abajo.** El catálogo provisional es más estricto que la práctica del área.
+
+## R7 — La evidencia decisiva a veces es video
+
+En 163549 los dos documentos que prueban la falla son `Condicion De Falla Palanca de Velocidades 1.mp4` y `...2.mp4`. El clasificador de la Task 8c los marcaría **`ilegible`** por `mimeType: video/mp4`. En 163615 hay otros dos videos. Descartar el video deja al agente sin la prueba principal en una fracción no trivial de los casos.
+
+## R8 — El presupuesto puede venir en XLSX
+
+La avería 163417 trae `PRESUPUESTO_DIAGNOSTICO.xlsx` y `Análisis_de_intervalos_de_mantenimientos.xlsx` (mimeType `application/vnd.openxmlformats-...sheet`). El clasificador tampoco los soporta, y el segundo es **precisamente** el análisis de la cláusula 9 que el técnico hizo a mano.
+
+## R9 — La plantilla de resolución exige datos que la API no tiene
+
+Las tres resoluciones leídas comparten estructura y piden campos que **no existen en la API**:
+
+| Campo de la plantilla | Origen |
+|---|---|
+| `N.º Contrato` | Es el **`policyId`**, no el `contractId`. En 162988 la resolución dice 482879 = policyId |
+| `KM inicial` | `vehicle.kilometers` del contrato ✅ |
+| `KM Avería` | **No existe.** En 163549 la resolución declara 97 523 y no hay foto de odómetro en el expediente |
+| `Fecha de Cierre` | **No existe** — no hay bitácora de estatus |
+| `Producto` | No coincide con `productName`: la API dice *GP Llantas*, la resolución dice *AUTOCOM TPA LLANTAS* |
+
+**Las plantillas oficiales ya están disponibles**: vienen adjuntas como documento tipo *Resolución* en los expedientes ya dictaminados. Hay dos formatos confirmados —**Mitsubishi** (encabezado negro, dos páginas con Carta de Recepción del Vehículo) y **GarantiPLUS LATAM** (encabezado verde, una página)—. Deja de ser un entregable pendiente del área: se pueden extraer de producción.

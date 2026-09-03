@@ -21,7 +21,7 @@
 > | `POST /api/Authentication/v1/Login` | `POST /authentication/api/Auth/v1/Login`; cada servicio con prefijo (`/claims`, `/contracts`, `/catalogs`) |
 > | Las listas son arreglos | Son `{ value: [...], pagination: {...} }`, y **`$top` está capado a 100** |
 > | El caso se identifica por `folio` (texto) | Por **`claimId`** (entero). El correo confirma que «folio» y `claimId` son el mismo número |
-> | El contrato se busca **por VIN** | La avería **no trae VIN**. Se busca por `contractId`, y si trae el centinela **57227** (19.6% de la base), por `policyId` |
+> | El contrato se busca **por VIN** | La avería **no trae VIN**. Se busca **solo por `contractId`**. El `policyId` **NO sirve como puente**: produce colisiones numéricas (ver abajo) |
 > | Un correo por caso | **Hasta 18 correos en 14 minutos** por un solo caso. Obliga a una ventana de reposo (Task 10b) |
 > | La suficiencia se decide por `documentType` | Los 16 tipos son genéricos y los nombres suelen ser `WhatsApp Image ….jpeg`. Hay que **abrir y clasificar** los documentos (Task 9) |
 > | Hay que pedir el tipo de documento «Resolución» | **Ya existe**: `documentTypeId` 14 |
@@ -42,7 +42,8 @@
 - **Zona horaria.** Todo cálculo de fechas y horas usa `America/Mexico_City`. Nada de `new Date()` sin zona explícita.
 - **Node 20+**, TypeScript en modo `strict`, sin `any` implícito.
 - **Ventana de reposo de 10 minutos.** Ningún evento dispara la evaluación de suficiencia por sí mismo: reinicia un temporizador, y la evaluación corre cuando el caso lleva 10 minutos sin novedades. Verificado en producción: la avería 163087 generó 16 cargas de archivo en 4 minutos.
-- **Doble puente al contrato.** Siempre `contractId` primero; si no resuelve, `policyId`. El valor **57227 es un centinela**, no un contrato: aparece en 3 358 averías con VIN distintos.
+- **Un solo puente al contrato: `contractId`.** El valor **57227 es un centinela** —aparece en 3 358 averías con VIN distintos— y cuando lo trae, **el caso no tiene contrato consultable y punto**. Buscar el contrato por `policyId` está **prohibido**: mide 17% de coherencia contra 100% del `contractId` (ver abajo).
+- **Todo contrato hallado se valida antes de usarse.** Dos comprobaciones obligatorias: la **fecha de la avería debe caer dentro de la vigencia** del contrato, y el **VIN del contrato debe coincidir con el del correo**. Un contrato que falle cualquiera de las dos se descarta y el caso pasa a excepción.
 - **Todo filtro OData se verifica al arrancar.** Un nombre de campo inexistente devuelve HTTP 200 con lista vacía, no un error: un typo es indistinguible de «no hay resultados».
 - **El remitente de los correos de la plataforma es `plataforma@garantiplus.mx`.** Cualquier otro remitente es el canal humano y se ignora.
 
@@ -1128,7 +1129,7 @@ git commit -m "feat: repositorios de expediente y bitácora de eventos con idemp
   ```typescript
   interface SigaReader {
     getClaim(claimId: number): Promise<ClaimSummary | null>
-    findContract(claim: { contractId: number; policyId: number }): Promise<ContractSummary | null>
+    findContract(claim: { contractId: number }): Promise<ContractSummary | null>
     getContractDetail(contractId: number): Promise<ContractDetail>
     getCertificateText(contractId: number): Promise<string>
     listClaimDocuments(claimId: number): Promise<ClaimDocument[]>
@@ -1186,32 +1187,25 @@ describe('cliente de SIGA', () => {
     expect(llamada).toContain('contractId eq 620497')
   })
 
-  it('cae al policyId cuando el contractId es el centinela 57227', async () => {
-    const f = fakeFetch({ ...LOGIN, 'GetAllContracts': envuelto([{ contractId: 482879, vin: 'X', status: 'Activo' }]) })
+  it('devuelve null SIN consultar cuando el contractId es el centinela', async () => {
+    const f = fakeFetch({ ...LOGIN, 'GetAllContracts': envuelto([{ contractId: 999, vin: 'X', status: 'Activo' }]) })
     const c = createSigaClient({ fetch: f })
-    const r = await c.findContract({ contractId: SENTINEL_CONTRACT_ID, policyId: 482879 })
-    expect(r?.contractId).toBe(482879)
+    expect(await c.findContract({ contractId: SENTINEL_CONTRACT_ID })).toBeNull()
     const urls = (f as unknown as { mock: { calls: [string][] } }).mock.calls.map(([u]) => decodeURIComponent(String(u)))
-    expect(urls.some((u) => u.includes('contractId eq 482879'))).toBe(true)
-    expect(urls.some((u) => u.includes(`contractId eq ${SENTINEL_CONTRACT_ID}`))).toBe(false)
+    expect(urls.some((u) => u.includes('GetAllContracts'))).toBe(false)
   })
 
-  it('cae al policyId también cuando el contractId simplemente no resuelve', async () => {
-    let n = 0
-    const f = vi.fn(async (url: string | URL) => {
-      const u = decodeURIComponent(String(url))
-      if (u.includes('/Login')) return new Response(JSON.stringify(LOGIN['/authentication/api/Auth/v1/Login']), { status: 200 })
-      n++
-      const items = n === 1 ? [] : [{ contractId: 482879, vin: 'X', status: 'Activo' }]
-      return new Response(JSON.stringify(envuelto(items)), { status: 200 })
-    }) as unknown as typeof fetch
+  it('NUNCA usa el policyId como puente: es una colisión numérica, no una relación', async () => {
+    const f = fakeFetch({ ...LOGIN, 'GetAllContracts': envuelto([]) })
     const c = createSigaClient({ fetch: f })
-    expect((await c.findContract({ contractId: 700000, policyId: 482879 }))?.contractId).toBe(482879)
+    expect(await c.findContract({ contractId: 700000, policyId: 482879 } as never)).toBeNull()
+    const urls = (f as unknown as { mock: { calls: [string][] } }).mock.calls.map(([u]) => decodeURIComponent(String(u)))
+    expect(urls.some((u) => u.includes('contractId eq 482879'))).toBe(false)
   })
 
-  it('devuelve null cuando ni el contractId ni el policyId resuelven', async () => {
+  it('devuelve null cuando el contractId no resuelve', async () => {
     const c = createSigaClient({ fetch: fakeFetch({ ...LOGIN, 'GetAllContracts': envuelto([]) }) })
-    expect(await c.findContract({ contractId: SENTINEL_CONTRACT_ID, policyId: 482879 })).toBeNull()
+    expect(await c.findContract({ contractId: 700000 })).toBeNull()
   })
 
   it('desenvuelve el sobre y respeta el tope de 100 por página', async () => {
@@ -1370,7 +1364,7 @@ export const SENTINEL_CONTRACT_ID = 57227
 
 export interface SigaReader {
   getClaim(claimId: number): Promise<ClaimSummary | null>
-  findContract(claim: { contractId: number; policyId: number }): Promise<ContractSummary | null>
+  findContract(claim: { contractId: number }): Promise<ContractSummary | null>
   getContractDetail(contractId: number): Promise<ContractDetail>
   getCertificateText(contractId: number): Promise<string>
   listClaimDocuments(claimId: number): Promise<ClaimDocument[]>
@@ -1434,21 +1428,25 @@ export function createSigaClient(deps: { fetch?: typeof fetch } = {}): SigaReade
     },
 
     /**
-     * Doble puente. El `contractId` de la avería resuelve el 55% de los casos;
-     * cuando trae el centinela —o simplemente no existe— el `policyId` recupera
-     * otro 16%. El resto no tiene contrato consultable y es responsabilidad del
-     * llamador convertirlo en excepción.
+     * ÚNICO puente válido: `contractId`.
+     *
+     * Se intentó usar `policyId` como respaldo y **hay que no hacerlo**. Medido sobre
+     * las 100 averías más recientes: el contrato hallado por `contractId` cubre la fecha
+     * de la avería en el **100%** de los casos (48/48); el hallado por `policyId`, solo
+     * en el **17%** (3/18). Los otros 15 eran contratos ajenos —otro vehículo, otra
+     * marca, vigencia vencida años antes—: los espacios de identificadores se solapan y
+     * la coincidencia es numérica, no semántica.
+     *
+     * Ejemplo real: la avería 163615, registrada por `servicio2@mitsubishireynosa.mx`,
+     * resolvía por `policyId` a un Volkswagen Jetta 2019 con contrato **cancelado** y
+     * vigencia terminada en 2023. El copiloto habría dictaminado contra el certificado
+     * de otro coche.
+     *
+     * Cuando esto devuelve null, el caso NO tiene contrato consultable: es excepción.
      */
-    async findContract({ contractId, policyId }) {
-      if (contractId !== SENTINEL_CONTRACT_ID) {
-        const porContrato = await buscarContrato(contractId)
-        if (porContrato) return porContrato
-      }
-      if (policyId && policyId !== contractId) {
-        const porPoliza = await buscarContrato(policyId)
-        if (porPoliza) return porPoliza
-      }
-      return null
+    async findContract({ contractId }) {
+      if (contractId === SENTINEL_CONTRACT_ID) return null
+      return buscarContrato(contractId)
     },
 
     getContractDetail: (id) => get<ContractDetail>(`/contracts/api/Contracts/v1/GetContractById/${id}`),

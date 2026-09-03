@@ -537,33 +537,49 @@ src/
 
 ### Fase 3 — Gastos, boletas y rendiciones (P3)
 
-- [ ] **T-55** — Dominio de gasto y rendición
+- [x] **T-55** — Dominio de gasto y rendición
   - Archivos a crear/modificar: `src/features/gastos/domain/*.ts` + pruebas
   - Criterio de completitud: un gasto pertenece a un asesor y tiene categoría y asignación; **un gasto incluido en una rendición enviada no se modifica**; rendición `borrador → enviada → aprobada_jefe → aprobada_ops → pagada`, con `rechazada` desde cualquier estado de aprobación y reentrada por `reenviada`; el asesor solo transiciona `borrador → enviada` y `rechazada → reenviada`
+  - **Las reglas que solo se entienden con el caso detrás quedaron con él escrito.** El umbral de 0,8 (E-09) y por qué no es un número al azar; cada dudoso con **su razón** (E-11), porque «no pudimos leer el total» y «esta fecha es de hace ocho meses» piden cosas distintas; el duplicado que se **marca y no se rechaza** (E-25), porque a veces son dos cafés idénticos; la sugerencia de miles que se **ofrece y no se aplica** (E-15), porque multiplicar por mil sin preguntar produce una rendición de un millón
+  - **La máquina de estados se espeja a conciencia.** El servicio decide si **se puede**, el cliente decide si **se ofrece**: sin la del cliente la pantalla enseñaría botones que el servidor va a rechazar, y sin la del servicio la regla la gobernaría el teléfono. El sistema actual hacía lo mismo y su código decía que «espeja» al SQL. El precio es que pueden separarse, y por eso las pruebas **enumeran las transiciones exhaustivamente**
 
-- [ ] **T-56** — `GastoRepository` y `RendicionRepository`
+- [x] **T-56** — `GastoRepository` y `RendicionRepository`
   - Archivos a crear/modificar: `src/features/gastos/{ports,infrastructure}/*.ts` + pruebas de mapeo
   - Criterio de completitud: cubren `gastos`, `gasto_archivos`, `gasto_asignaciones`, `gasto_categorias`, `rendiciones`, `rendicion_eventos` y las RPCs `gasto_crear`, `gasto_fusionar`, `rendicion_enviar`, `rendicion_rechazar`, `rendicion_reenviar` (las de aprobación y pago quedan declaradas en el contrato pero no expuestas al asesor)
+  - **El pipeline se acota con OData por defecto** (`State lt 4`), y el número sale del catálogo en vez de escrito a mano: si mañana se inserta un estado antes, el filtro cambia solo
+  - **Un defecto que obligó a cambiar el servicio.** El gasto no traía coordenadas, y eso convertía E-27 —dos gastos a menos de 500 m y 6 horas son el mismo pago— en una **función muerta**: compila, las pruebas pasan si se escriben con la misma laguna, y la sugerencia de fusión nunca aparece. Corregido en `[repo api] cf32e63`, con una prueba que fija justo eso
 
-- [ ] **T-57** — Casos de uso de gasto
+- [x] **T-57** — Casos de uso de gasto
   - Archivos a crear/modificar: `src/features/gastos/application/{CapturarBoleta,LeerDatosDeBoleta,RegistrarGasto,AsignarGasto,FusionarGastos}.ts` + pruebas
   - Criterio de completitud: `LeerDatosDeBoleta` invoca `leer-boleta` desde infraestructura y **permite corregir los datos antes de guardar** (RF-16); la asignación admite sala, visita o proyecto (RF-18)
+  - **Guardar un gasto NO exige que esté completo**, y es la decisión que sostiene el flujo: por completar es un estado legítimo (E-10). Exigir el total dejaría al asesor con una boleta en la mano y una pantalla que no le deja avanzar — y la boleta se pierde antes que la paciencia
+  - **`LeerDatosDeBoleta` queda pendiente** con su motivo: el endpoint `leer-boleta` no está portado al servicio. Lo que **sí** está es el dominio completo de la extracción —umbral, dudosos con su razón, fecha plausible, sugerencia de miles, duplicados— así que cuando el endpoint exista solo hay que llamarlo. Y usa la **misma clave de Anthropic** que la ayuda de escritura
+  - **Un 404 y un 409 llegan como `DomainError`** con la frase del servicio, y los dos son rechazos que no se arreglan reintentando
 
 - [ ] **T-58** — Decorador offline de gastos
   - Archivos a crear/modificar: `src/features/gastos/infrastructure/GastoRepositoryOffline.ts` + pruebas
   - Criterio de completitud: la boleta se guarda localmente **con su imagen** y se sincroniza al recuperar señal, con reintentos y **sin duplicar el gasto** (RF-17, RNF-09); reemplaza por completo a `useSincronizarBoletas` sin heredar su acoplamiento a `App.tsx`
+  - **Hecha la mitad que no depende del bucket:** el decorador offline con las cinco escrituras en **una sola cola** (ADR-009), que es lo que elimina la duplicación del sistema actual — tenía una cola **propia** para boletas además de la de visitas, y su código explicaba por qué. Las claves con su motivo: fusionar usa el **par ordenado**, porque fusionar A con B y B con A es la misma operación y encolar las dos borraría dos filas
+  - **Falta el blob**: guardar la imagen en el dispositivo y sincronizarla espera el bucket de S3, igual que la evidencia de visita
 
 - [ ] **T-59** — Interfaz de captura y categorización
   - Archivos a crear/modificar: `src/features/gastos/ui/{CapturaBoletaPage,DetalleGastoPage}.tsx`
   - Criterio de completitud: captura desde cámara, corrección de los datos leídos, categoría y destino; operable con una sola mano (RNF-16); funciona sin señal indicando que quedó encolada
 
-- [ ] **T-60** — Rendiciones
+- [x] **T-60** — Rendiciones
   - Archivos a crear/modificar: `src/features/gastos/application/{ArmarRendicion,EnviarRendicion}.ts` y la observación de estado + pruebas
   - Criterio de completitud: agrupa gastos, envía, y el asesor **observa** el avance por jefe, operaciones y pago; puede reenviar tras rechazo (RF-19). La aprobación se sigue operando en el sistema actual durante la Fase 1
+  - **Enviar y reenviar son el mismo caso de uso**, y los distingue el estado de partida — igual que en el servicio. Preguntárselo al cliente dejaría que un reenvío llegara etiquetado como primer envío (E-34)
+  - **La transición se comprueba antes de tocar la red.** El servicio la valida igual, pero pedirle que rechace lo que aquí ya se sabe imposible gasta una petición desde una sala con mala cobertura
 
-- [ ] **T-61** — Interfaz de rendiciones y trazabilidad
+- [x] **T-61** — Interfaz de rendiciones y trazabilidad
   - Archivos a crear/modificar: `src/features/gastos/ui/RendicionesPage.tsx`
   - Criterio de completitud: lista y detalle con la línea de tiempo de `rendicion_eventos`; cada transición queda registrada con actor, momento y resultado (RNF-13)
+  - **Lo primero es quién tiene la pelota** (E-43): una rendición enviada es dinero que el asesor espera, y la pregunta que lo trae a esa pantalla es «¿en quién está detenido?». Lo calcula el servicio, porque depende de si tiene jefe en el organigrama (E-32)
+  - **El motivo del rechazo va en la LISTA**, no solo en el detalle: es lo que decide si hay que abrirla
+  - **La línea de tiempo se separa por envío** cuando hubo más de uno (E-34): mezclados deja una línea donde «rechazada» y «aprobada» se alternan sin explicación
+  - **El comentario solo se pide en un reenvío**: en el primer envío no hay nada que contestar, y un campo vacío ahí hace dudar de si es obligatorio
+  - **Un total sin ninguna conversión no muestra un cero** (E-23): manda a ver el detalle, porque un cero en una lista de rendiciones se lee como «no gastó nada»
 
 ### Fase 4 — Notificaciones, verificación, auditoría y corte
 

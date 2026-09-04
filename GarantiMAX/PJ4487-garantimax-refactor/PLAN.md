@@ -804,14 +804,22 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 **Funcionales:**
 
 - [ ] Cada invariante del dominio identificada en T-13…T-16 tiene al menos una prueba unitaria (RNF-04)
-  - **Medido el 04-09-2026 y NO se cumple**, con un motivo concreto y una parte que no es nuestra. De las **192 reglas** catalogadas, **89 se citan en alguna prueba**. El desglose señala el agujero sin ambigüedad:
+  - **Medido el 04-09-2026 y NO se cumple**, con un motivo concreto y una parte que no es nuestra. De las **196 reglas** catalogadas, **94 se citan en alguna prueba** y 138 en algún archivo fuente. El desglose señala el agujero sin ambigüedad:
 
     | Catálogo | Reglas | Citadas en prueba | Sin citar en ningún sitio |
     |---|---|---|---|
     | `gastos.md` | 55 | 36 | 9 |
     | `gestion.md` | 44 | 27 | 6 |
-    | `visitas.md` | 51 | 23 | 14 |
+    | `visitas.md` | 55 | 28 | 13 |
     | `identidad.md` | **42** | **3** | **30** |
+
+  - **La segunda medición, del mismo día, subió el denominador.** El manual
+    maestro añadió cuatro reglas a `visitas.md` (V-54 a V-57) que la extracción
+    original no tenía, porque no viven en ninguna migración. Es la forma correcta
+    de que este número empeore: aparecen reglas que existían y no estaban
+    escritas. **Leer el resto del anexo probablemente añada más**, y eso es
+    bueno — una regla catalogada y sin probar es un riesgo conocido; una sin
+    catalogar es un riesgo que nadie puede ver
 
   - **`identidad.md` es casi todo el hueco**, y no por descuido: cartera, alcance por asesor, «Ver como» y los permisos los hace cumplir el **servicio .NET**, donde **no hay proyecto de test**. Sus 42 reglas no se pueden probar desde aquí, y hoy nada las prueba en ninguna parte. Es el argumento más fuerte para añadir ese proyecto, que ya está en las decisiones abiertas
   - **Ojo con el número: contar citas no es medir cobertura.** Una regla puede estar probada sin que su identificador aparezca en el texto de la prueba, así que 89 es un **suelo**, no la cifra real. Lo que sí es firme es el otro extremo: las **59 reglas que no se citan en ningún archivo fuente** no las prueba nadie, porque nadie las ha escrito todavía

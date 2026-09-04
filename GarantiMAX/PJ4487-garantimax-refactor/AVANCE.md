@@ -300,6 +300,34 @@ número.
    07:00 los ven solo el Country Manager y el Gerente Comercial. Queda escrito
    para que nadie lo lea después como funcionalidad perdida.
 
+### El contraste del modelo de datos: T-18 sale bien
+
+El capítulo 8 del anexo documenta el modelo de datos del sistema actual tabla por
+tabla, y su §8.7 lista **diez decisiones transversales**. Contrastadas una por una
+contra `docs/reglas/esquema-fase1.md`: en **seis fuimos al revés a propósito**
+—FKs reales donde ellos tienen vínculos blandos por nombre, `Guid` con FK donde
+ellos guardan `asesor_id` como texto, el alcance en el servicio donde ellos lo
+dejan al cliente, `CHECK` derivado del enum donde ellos tienen texto libre,
+identidad uniforme donde ellos tienen tres excepciones— en dos coincidimos, y en
+dos divergimos con motivo escrito.
+
+Dos cosas que el contraste dejó claras:
+
+- **La clave del cliente como primaria es más fuerte que su índice único
+  parcial**, y solo es posible porque no hay histórico que tolerar. Es una cosa
+  concreta que compró «borrón y cuenta nueva».
+- Su **JSONB para las sub-entidades** de la visita es «clave para el flujo
+  offline» porque la visita se sincroniza como un solo INSERT. Nosotros sacamos
+  las fotos a tabla y **conservamos el INSERT único**: las filas de foto van en la
+  misma transacción.
+
+Y una corrección nuestra: el comentario de `VisitInProgress` decía que separar
+`visitas_en_curso` de `visitas_abiertas` «no compraba nada». **Sí tenían un
+motivo** —su tabla es fuente de Realtime y el autosave la reescribe cada 700 ms,
+así que mantuvieron la entrada del cron lejos de esa manguera—. Fusionar sigue
+siendo correcto para nosotros, pero por un motivo nuestro: no hay Realtime
+(ADR-005). Si Realtime llega, es la primera decisión a revisar.
+
 ### Y lo que confirmó
 
 El capítulo de offline **valida nuestro diseño** en cuatro puntos: insert-only

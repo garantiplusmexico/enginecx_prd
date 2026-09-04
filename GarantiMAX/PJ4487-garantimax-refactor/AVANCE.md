@@ -254,6 +254,62 @@ El resto de la Fase 4 sigue esperando algo que no es código: las dos claves de 
 
 ---
 
+## El Manual Maestro de Mi Día, y los seis hallazgos que produjo
+
+El responsable dejó en la raíz de `siga_alfa` un **Manual Maestro de Mi Día**:
+296 páginas, versión V5 de la app, fechado el 06-08-2026, con **anexo técnico de
+catorce capítulos** —arquitectura, modelo de datos completo, offline y
+sincronización, timestamps, integraciones, PWA en iPhone y una guía de
+replicación—. Tiene capa de texto y se lee con `pdftotext -layout`.
+
+**Es la mejor fuente de reglas que hemos tenido, mejor que leer el código del
+sistema actual**, y por un motivo concreto: documenta las reglas que **no están
+en ninguna migración ni política** — las que viven en una línea de un
+`useEffect` y se pierden al reescribir. Trae además una sección de
+contradicciones entre sus propios capítulos, resuelta contra `pg_policies` en
+producción, diciendo cuál versión coincide con el código.
+
+Se verificaron cinco afirmaciones suyas contra `../garantimax` y **ninguna
+resultó falsa**; el 10 % del decálogo en la nota de sala es exacto hasta el
+número.
+
+### Lo que corrigió de nuestro código
+
+1. **No pedíamos `navigator.storage.persist()`.** Safari borra el IndexedDB de un
+   sitio que no se usa en siete días, sin avisar: el síntoma es que las visitas
+   guardadas sin señal **desaparecen**.
+2. **`capture="environment"` estaba mal**, y el comentario con que lo justifiqué
+   decía lo contrario de la razón real. Fuerza la cámara y esconde la fototeca; el
+   sistema actual va sin él porque «a veces la foto se tomó antes de entrar a la
+   app» — la boleta se fotografía en la caja, al pagar.
+3. **El guardado de emergencia era decorativo.** Teníamos el evento correcto
+   (`visibilitychange`, V-13) y el almacén equivocado: el flush pedía una
+   escritura a IndexedDB, que es asíncrona, y en iOS el proceso muere antes de
+   que confirme. Ahora se escribe **primero en `localStorage`, sincrónico**, y se
+   escucha también `pagehide`. Cuatro reglas nuevas: V-54 a V-57.
+
+### Lo que descubrió del negocio
+
+4. **El decálogo es el 10 % de la nota de la sala**, y lo alimenta una RPC sobre
+   la base **vieja**. El día del corte ese 10 % se congela, sin fallar a la vista.
+   Tres salidas y una recomendación en `paridad.md` §4-bis.
+5. **Dos funciones de agenda que no teníamos**: «Ir en Waze» y «Agregar a Google
+   Calendar». Hechas. Y al portar Waze salió que **al catálogo de salas le faltan
+   las coordenadas** (`salas_geo`, §4-ter).
+6. **La pestaña «Hoy» no es del asesor**: el briefing con IA y su correo de las
+   07:00 los ven solo el Country Manager y el Gerente Comercial. Queda escrito
+   para que nadie lo lea después como funcionalidad perdida.
+
+### Y lo que confirmó
+
+El capítulo de offline **valida nuestro diseño** en cuatro puntos: insert-only
+para la visita (nunca UPDATE desde la cola), último-que-escribe-gana para el
+borrador del servidor, la **regla asimétrica de la bitácora** —gana lo local si
+tiene contenido, que es nuestro G-17— y la subida de fotos sobreescribiendo la
+misma ruta. De sus **nueve deudas** de offline arreglamos tres, heredamos dos con
+motivo y compartimos dos por diseño: la comparación completa está en
+`docs/reglas/visitas.md` §7.
+
 ## Hallazgos del repaso del 04-09-2026
 
 Al marcar en el plan lo que ya estaba hecho aparecieron dos cosas que no eran

@@ -625,6 +625,22 @@ src/
   - **Sin esto no es que la aplicación funcione peor: no funciona.** Una visita es siempre a una sala (V-01). Con el catálogo vacío el asesor no puede hacer check-in, y es lo primero que hace
   - **No se hace con endpoints, y es deliberado.** El catálogo de referencia es de solo lectura por diseño (RF-24): gestionar salas es Fase 2, y que ese contrato no tenga escrituras es lo que sostiene la frontera. Esto es una carga **de una vez**, por script, no una pantalla de administración
   - **Tres de las ocho no salen de una copia** y hay que decidirlas: `salas_asignacion` —la cartera: qué salas ve cada asesor, y si está mal uno abre la aplicación y ve la de otro—, el **organigrama** (`asesores.jefe_id`), sin el cual ninguna rendición se puede aprobar (E-38), y las **coordenadas de las salas** que hoy no están en el esquema (`paridad.md` §4-quater)
+  - **Quién captura cada catálogo hoy** *(verificado en el código del sistema actual el 04-09-2026, a petición del responsable)*. La respuesta cambia la forma de esta tarea, porque **no todas se teclean**:
+
+    | Catálogo | ¿Formulario hoy? | Quién |
+    |---|---|---|
+    | **Salas** | **No.** Salen de `americar_siga_real`, un **feed externo** (`sala_key` → `sucursal`). Nadie las teclea | — |
+    | **Clientes** | **No.** Ningún escritor en la aplicación | — |
+    | **Vendedores** | **Sí**, `features/vendedores/VendedoresSala.tsx`. Los creados a mano llevan `id_externo` **negativo** y `origen: manual`; los positivos vienen del mismo feed. **Borrar es solo del CM** | Quien gestiona la sala |
+    | **Cartera** (`salas_asignacion`) | **Sí**, módulo **Configuración** (`AsesoresAdmin`, `AsignacionAsesor`) | **CM o GTE** (`puedeImportar`) |
+    | **Asesores y organigrama** | **Sí**, `config/EquipoAccesos.tsx` — «mantenedor unificado: organigrama (jefe) + rol real + roles secundarios» | **CM o GTE** |
+    | **Feriados** | **Sí**, `config/FeriadosEditor.tsx` | **CM o GTE** |
+    | **Categorías de gasto** | **No.** Sembradas por migración (0190, 0198) | Un desarrollador |
+    | **Proyectos** | **No.** Ningún escritor | — |
+    | **Coordenadas** (`salas_geo`) | **No.** Ningún escritor en la aplicación: se cargaron por fuera | — |
+
+  - **Y eso destapa que esto NO es solo una carga inicial.** Cinco de los ocho catálogos se mantienen hoy en el **módulo Configuración**, que en nuestro plan es **Fase 3**. Después del corte, un CM que reasigne una sala a otro asesor lo hará en la base **vieja**, y la nueva no se enterará: la cartera de ese asesor quedará mal hasta que alguien lo note. No es divergencia teórica — es el dato que decide qué salas ve cada persona al abrir la aplicación
+  - **Tres salidas, y hay que elegir antes del corte:** (a) **adelantar el mantenedor de cartera y organigrama** a la Fase 1 —es poco: dos pantallas de configuración—; (b) **una importación periódica** desde el sistema actual, que es un puente de datos y contradice ADR-011; o (c) **mantenerlo a mano en los dos** durante la ventana, que funciona con pocos asesores y se rompe en silencio en cuanto alguien olvida uno de los dos lados. **Recomendación: (a)**, porque la cartera no es un catálogo cualquiera: si está mal, el asesor abre la aplicación y no ve su trabajo
   - **Bloquea T-71 y T-72.** No hay piloto posible con cuatro salas ficticias
 
 - [ ] **T-73** — Identidad visual y pasada de diseño

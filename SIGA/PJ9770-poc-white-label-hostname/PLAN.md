@@ -1,19 +1,18 @@
-# Plan de Desarrollo — PoC white-label por hostname en SIGA
+# Plan de Desarrollo — White-label por hostname y configuración por proyecto en SIGA
 
-> Generado por Claude Code a partir del PRD correspondiente.
-> Este documento es el punto de partida para la ejecución. El programador lo valida y refina antes de ejecutar.
+> Generado a partir del PRD v0.2. P1 (Fases 0–3) ya ejecutada en código. P2 (Fases 4–7) es el alcance nuevo.
 
 | Campo | Detalle |
 |---|---|
-| PRD de origen | `enginecx_prd/SIGA/PJ9770-poc-white-label-hostname/PRD.md` |
-| Repositorio | `gp_4.0_siga` (SIGA Web — GarantiplusWeb) |
+| PRD de origen | `enginecx_prd/SIGA/PJ9770-poc-white-label-hostname/PRD.md` (v0.2) |
+| Repositorio | `gp_4.0_siga` (SIGA Web — GarantiplusWeb; PDFGenerator y Endosos en correo P2) |
 | Rama base | `develop` |
 | Rama | `feature/PJ9770-poc-white-label-hostname` |
 | Tipo | Feature / PoC sobre proyecto existente |
 | Responsable | Alejandro Govea Hernandez |
 | Folio PRD | PJ9770 |
-| Fecha de generación | 2026-09-02 |
-| Estado | Borrador |
+| Fecha de generación | 2026-09-02; ampliación P2 2026-09-04 |
+| Estado | P1 en verificación; P2 pendiente de ejecutar |
 | Modelo | Claude Opus 4.8 — esfuerzo normal |
 | ID plan (BD) | 68 |
 
@@ -23,11 +22,13 @@
 
 ## 1. Resumen técnico
 
-Se agrega un **contexto de marca por request** en GarantiplusWeb. El hostname (`Request.Host`) se mapea a una definición en `appsettings` (`Branding`). Las vistas de login y el chrome autenticado leen ese contexto en lugar de hardcodear Garantiplus o de usar `_hub.BaseCountry` (que en esta instancia es siempre `MEX`).
+**P1:** contexto de marca por request a partir del Host (`Branding` en `appsettings`) → login.
 
-- **Arquitectura:** se mantiene el monolito SIGA Web en EC2 (`rules/arquitectura.md` §3 y §5). No hay microservicio nuevo ni cambio de hub.
-- **Stack:** .NET 8 / C#, Razor Pages + MVC, JSON de banners, sin PostgreSQL nuevo.
-- **BD:** sin cambios.
+**P2:** overlay por `id_proyecto` de sesión (`proyecto_configuracion` + archivos en disco). Chrome autenticado y correo usan esa fila. Sin fila visual → host. Sin `id_proyecto` explícito en un envío → **no se manda correo**.
+
+- **Arquitectura:** monolito SIGA Web en EC2. PDFGenerator y Endosos siguen procesos gRPC; P2 les pasa `id_proyecto` cuando el flujo tiene contrato/proyecto.
+- **Stack:** .NET 8 / C#, Razor, EF Core, PostgreSQL (tabla nueva).
+- **BD:** tabla `proyecto_configuracion` en MX y CO.
 - **Código nuevo en inglés**; textos de UI en español.
 
 El login hoy hace:
@@ -84,6 +85,20 @@ No se introduce un segundo deploy ni se cambia el hub. La marca es un **concern 
               [resto SIGA: proyectos, PaisAR, BD MX]
 ```
 
+**P2 — overlay (tras login):**
+
+```
+Session [_IdProyecto]  →  proyecto_configuracion
+        │                      │
+        │                      ├─ hay fila → chrome (AppName, logos, URL)
+        │                      │            + email (username, credentials, token)
+        │                      └─ no hay fila → chrome = Branding del host
+        │                                       email = no enviar si faltan credenciales de proyecto
+        │
+ChangeProject(id) → set session → reload página
+Jobs / gRPC sin id_proyecto → no SendEmail*
+```
+
 **Por qué no Option B (segunda instancia / hub ARG):** ARG ya es país hosted con `PaisAR` y `Resources/ARG.json`. Convertirlo en hub implica `CountryBase`, jobs, correo y posiblemente BD; no hace falta para probar identidad visual.
 
 **Forwarded headers:** en EC2 detrás de Nginx, `Request.Host` debe ser el Host público. Si hoy Nginx reescribe al interno, la T-03 documenta el check; no se asume cambio de infra en la PoC.
@@ -138,9 +153,55 @@ No se introduce un segundo deploy ni se cambia el hub. La marca es un **concern 
   - Archivos a modificar: `GarantiplusWeb/Properties/launchSettings.json`; `GarantiplusWeb/appsettings.json` (hosts `127.0.0.1`, `localhost`, `warranties.localhost` u otro acordado)
   - Criterio de completitud: documentado en §12 cómo levantar dos URLs contra la misma app. Un hostname dispara `enginecx-ar` y el otro `garantiplus` sin recompilar.
 
-- [ ] **T-10** — Checklist de verificación manual
+- [ ] **T-10** — Checklist de verificación manual (P1)
   - Archivos: ninguno de producto (evidencia en ejecución / `AVANCE.md`)
-  - Criterio de completitud: recorrido anotado: (1) host GP → login idéntico a hoy; (2) host EngineCX → login sin Garantiplus; (3) login real en ambos y chrome coherente; (4) cambio de proyecto a ARG/MEX **no** cambia la marca de esta PoC (solo el host). No hay suite de tests en el repo; la verificación es manual en browser.
+  - Criterio de completitud P1: (1) host GP → login idéntico a hoy; (2) host EngineCX → login sin Garantiplus; (3) login real en ambos y chrome coherente **por host**. El punto (4) original (“cambio de proyecto no cambia marca”) **queda anulado por P2** (RF-12). Completar T-10 de P1 antes o en paralelo a P2; el checklist P2 es T-20.
+
+### Fase 4 — Persistencia y almacenamiento (P2)
+
+- [ ] **T-11** — Tabla `proyecto_configuracion`
+  - Archivos: entidad EF en `DataAccess` y **la misma** en `DataAccessColombia`; `DbSet` + FK a `proyecto`; script SQL en `GarantiplusWeb/BD/` (fecha + nombre descriptivo).
+  - Criterio de completitud: columnas de RF-09. 1:1 con `id_proyecto` (unique). Código de entidad en inglés (`ProjectConfiguration` / mapeo a tabla `proyecto_configuracion` en snake_case de SIGA).
+
+- [ ] **T-12** — Raíces en `appsettings`
+  - Archivos: `GarantiplusWeb/Options/` (p. ej. `ProjectBrandingStorageOptions`), `GarantiplusWeb/appsettings.json`.
+  - Criterio de completitud: dos raíces configurables (assets visuales y archivos de email). No hardcodear `C:\`. Las carpetas de runtime en `.gitignore`.
+
+### Fase 5 — Catálogo Proyectos (P2)
+
+- [ ] **T-13** — Pestaña Configuraciones
+  - Archivos: `Areas/Catalogos/Views/Proyectos/Edit.cshtml` (cuarta tab junto a Proyecto / Correo bienvenida / Correo registro); `Create.cshtml` (tabs equivalentes); partial nuevo `_ProjectConfiguration.cshtml`; `ProyectosController.cs`.
+  - Criterio de completitud: campos RF-08. Create: tras INSERT se crea carpeta `{id}` y la fila. Edit: carga valores y previews de archivos ya guardados. Roles iguales al catálogo actual (`Administrador General, Gestor de Países, Auditor`). Mensajes de error al usuario en español.
+
+- [ ] **T-14** — Upload de archivos
+  - Criterio de completitud: Logo y HeaderLogo con extensión/tamaño validados. Credentials y token se escriben en la raíz de email. BD guarda ruta relativa o absoluta resoluble + nombre. Reemplazar archivo = sobrescribir el mismo nombre fijo. No commitear binarios ni `credentials.json`.
+
+### Fase 6 — Overlay de chrome (P2)
+
+- [ ] **T-15** — Resolver de proyecto
+  - Archivos: extender `IBrandingContext` / nuevo `IProjectBrandingOverlay` scoped que lee sesión `_IdProyecto` y `proyecto_configuracion`.
+  - Criterio de completitud: campo a campo, valor de proyecto si no vacío; si no, `Brand` del host. Sin proyecto en sesión (login) → solo host.
+
+- [ ] **T-16** — Recarga en `ChangeProject`
+  - Archivos: `GeneralController.ChangeProject` / JS en `_Layout.cshtml` (ya llama `~/Home/ChangeProject/`).
+  - Criterio de completitud: tras cambiar proyecto, full reload de la página actual. Chrome ( `_TopNavBar` HeaderLogo, home logos) refleja RF-11. AppName/CompanyName/ExternalSiteUrl donde ya se leen de branding.
+
+### Fase 7 — Correo por proyecto (P2)
+
+- [ ] **T-17** — Web `IEmailSender`
+  - Archivos: factory en `GarantiplusWeb/Program.cs`; resolver que carga `proyecto_configuracion` por sesión. **No** usar `EmailSettings` global como fallback de envío.
+  - Criterio de completitud: si hay `id_proyecto` y la fila tiene username + credentials + token válidos → `EmailSenderGmail` con esas rutas. Si falta cualquiera → no enviar; log técnico en inglés.
+
+- [ ] **T-18** — PDFGenerator y Endosos
+  - Archivos: clientes gRPC web (pasar `id_proyecto` en header o campo proto); servicios leen BD o ruta acordada y construyen `EmailSettings`.
+  - Criterio de completitud: correo de bienvenida / endoso usa la cuenta del proyecto del contrato. Sin `id_proyecto` en la llamada → no enviar. Incluir el `new EmailSender(...)` de `PDFResolucionAutomatica` si ese flujo tiene avería/proyecto.
+
+- [ ] **T-19** — Jobs sin proyecto
+  - Archivos: jobs Quartz que hoy envían correo (p. ej. `CutBillJob` si aplica).
+  - Criterio de completitud: sin `id_proyecto` explícito en el job **no** llaman `SendEmail*`. Log del skip. No reintroducir cuenta MX default.
+
+- [ ] **T-20** — Checklist P2
+  - Criterio de completitud: (1) proyecto sin config → chrome = host; intento de correo no sale si no hay credenciales de proyecto; (2) proyecto con config → chrome y From de un envío de prueba; (3) `ChangeProject` recarga y cambia logos; (4) login sigue por host; (5) job sin id no envía.
 
 ---
 
@@ -148,7 +209,7 @@ No se introduce un segundo deploy ni se cambia el hub. La marca es un **concern 
 
 | Tabla | Tipo de cambio | Descripción |
 |---|---|---|
-| — | Ninguno | La marca se configura en `appsettings`. Sin migraciones. |
+| `proyecto_configuracion` | Nueva | 1:1 con `proyecto`. Textos de marca + rutas de Logo, HeaderLogo, credentials, token. Script en `GarantiplusWeb/BD/`. Aplicar en MX y CO. |
 
 ---
 
@@ -156,7 +217,9 @@ No se introduce un segundo deploy ni se cambia el hub. La marca es un **concern 
 
 | Método | Ruta | Descripción | Estado |
 |---|---|---|---|
-| — | — | No hay API nueva. El login Identity (`/Identity/Account/Login`) no cambia de ruta; solo de vista. | — |
+| — | `/Identity/Account/Login` | Sin cambio de ruta (P1). | Hecho |
+| POST | `Catalogos/Proyectos/Create` y `Edit` | Multipart: datos de proyecto + pestaña Configuraciones. | P2 |
+| GET | `Home/ChangeProject/{id}` | Ya existe; P2 exige reload con overlay. | P2 |
 
 ---
 
@@ -169,7 +232,14 @@ No se introduce un segundo deploy ni se cambia el hub. La marca es un **concern 
 | `Branding:Brands:{key}:*` | Rutas de logo, favicon, JSON de banners, partial de footer | Todos |
 | Hosts locales sugeridos | `localhost` / `127.0.0.1` → `garantiplus`; `warranties.localhost` → `enginecx-ar` | Desarrollo |
 
-No hay secrets. Hosts de producción conocidos: `intranet.garantiplus.mx`, `warranties.enginecx.com.ar`. Host de QA: pregunta abierta del PRD.
+P2 (adicionales):
+
+| Variable | Descripción | Ambiente |
+|---|---|---|
+| Raíz assets por proyecto | Carpeta base de Logo / HeaderLogo | Todos |
+| Raíz email por proyecto | Carpeta base de credentials/token | Todos |
+
+No commitear esas carpetas ni `credentials.json`. Hosts de producción conocidos: `intranet.garantiplus.mx`, `warranties.enginecx.com.ar`. Host de QA: pregunta abierta del PRD.
 
 ---
 
@@ -194,14 +264,23 @@ No hay secrets. Hosts de producción conocidos: `intranet.garantiplus.mx`, `warr
 
 ## 10. Criterios de aceptación
 
-- [ ] En `warranties.enginecx.com.ar` (o host local equivalente) el login no muestra la palabra “Garantiplus” ni su isotipo; usa título/logo/banners/footer EngineCX.
-- [ ] En `intranet.garantiplus.mx` (o host local default) el login y el chrome son visualmente los de hoy.
-- [ ] Tras autenticarse por el host EngineCX, top bar y menú no muestran logo Garantiplus.
-- [ ] `Hub:HubBaseCountryCode` sigue `MEX`; ARG sigue en `HostedCountryCodes`.
-- [ ] No hay cambios de esquema PostgreSQL ni de `CountryBase`.
-- [ ] Hosts y assets salen de `appsettings`, no de `if (Request.Host == "...")` dispersos en vistas.
-- [ ] El código nuevo (clases/métodos) está en inglés.
-- [ ] Verificación manual T-10 ejecutada en los dos hosts.
+**P1**
+
+- [ ] En host EngineCX el login no muestra “Garantiplus” ni su isotipo.
+- [ ] En host Garantiplus el login es el de hoy.
+- [ ] `Hub:HubBaseCountryCode` sigue `MEX`.
+- [ ] Hosts y assets de P1 salen de `appsettings`.
+- [ ] Código nuevo en inglés. Verificación T-10.
+
+**P2**
+
+- [ ] Pestaña Configuraciones en crear/editar proyecto persiste `proyecto_configuracion` y archivos bajo `{id_proyecto}`.
+- [ ] Sin fila: chrome autenticado = branding del host.
+- [ ] Con fila: chrome usa logos/nombres/URL del proyecto; `ChangeProject` recarga y actualiza.
+- [ ] Login sigue solo por host (favicon/banners/footer).
+- [ ] Un envío con `id_proyecto` y credenciales de proyecto usa esa cuenta From.
+- [ ] Un job o llamada sin `id_proyecto` explícito **no envía** correo.
+- [ ] Modelo/tabla replicados en DataAccess MX y CO. `CountryBase` no se usa para este cambio.
 
 ---
 
@@ -211,7 +290,9 @@ No hay secrets. Hosts de producción conocidos: `intranet.garantiplus.mx`, `warr
 |---|---|---|---|
 | Nginx no reenvía el Host público | Media | Alto (PoC funciona en local y falla en prod) | T-03/T-09: loguear `Request.Host` una vez; ajustar forwarded headers solo si hace falta |
 | Assets EngineCX no entregados | Media | Medio | Placeholder `enginecx_logo.png` + banners locales; no bloquear código |
-| Alcance se infla a correos/PDFs/`PJ9766` | Alta | Alto | Guardarraíl P1 = Fase 0+1+2+3 de este plan; correo/PDF fuera |
+| Alcance se infla a PJ9766 (aprobación, palabras prohibidas) | Media | Alto | P2 = catálogo + overlay + correo por `id_proyecto`; nada más |
+| Job sigue mandando con EmailSettings MX | Alta | Alto | T-19: skip explícito; sin fallback |
+| Create sin id aún | Media | Medio | T-13: INSERT primero, luego carpeta y fila |
 | `if (pais == Argentina)` en home choca con marca-por-host | Media | Medio | T-08: host manda sobre el logo; no ampliar ifs de país |
 | Rama local `ag_siga_multibranding_*` + appsettings de país | Media | Bajo | Rama nueva desde `develop`; no commitear connection strings locales |
 
@@ -221,7 +302,7 @@ No hay secrets. Hosts de producción conocidos: `intranet.garantiplus.mx`, `warr
 
 1. **No usar `siga-cambio-pais-base`.** Eso cambia BD/hub/correo MX↔CO↔CL, no la marca.
 2. **No hacer ARG hub** para esta PoC.
-3. Relación con **PJ9766**: el `IBrandingContext` es el runtime; el catálogo admin de PJ9766 podría más adelante llenar las mismas `BrandDefinition`. No diseñar ese admin aquí.
+3. Relación con **PJ9766**: P2 es el admin mínimo (pestaña + tabla + runtime). Aprobación y palabras prohibidas siguen en PJ9766.
 4. El layout de login hoy hace `@await Html.PartialAsync($"_LoginFooter{ViewData["CountryCode"]}")`. Hay `_LoginFooterMEX|COL|CHL` y un `_LoginFooter.cshtml` genérico. La PoC debe ramificar **primero** por branding y, para Garantiplus, conservar el footer por país de hub.
 5. `Login.cshtml.cs` carga `banner.json` del working directory (`File.ReadAllText("banner.json")`). El archivo de marca debe resolverse igual (raíz del content root), no desde `wwwroot`, salvo que se decida mover ambos — no mover `banner.json` en esta PoC.
 6. **Prueba local sugerida:** en `launchSettings` añadir `http://warranties.localhost:4006` y en `C:\Windows\System32\drivers\etc\hosts` la línea `127.0.0.1 warranties.localhost`. El perfil actual ya usa `http://127.0.0.1:4006`.
@@ -241,12 +322,14 @@ Estimación en **días hábiles**. PoC acotada; no hay fecha límite contractual
 | **Fase 1 — Login (P1)** | Banners, layout, footer ARG | T-04 a T-06 | 1 – 1.5 días | 247 |
 | **Fase 2 — Chrome (P1)** | Top bar, menú, home logo | T-07 a T-08 | 0.5 – 1 día | 248 |
 | **Fase 3 — Verificación (P1)** | Dual host local + checklist | T-09 a T-10 | 0.5 – 1 día | 249 |
-| **Total proyecto (P1)** | PoC completa de opción A (login + chrome) | 10 tareas | **~2.5 – 4.5 días hábiles (≈ 1 semana)** | — |
-| **Solo P1 (guardarraíl del PRD)** | Fase 0 + 1 + 2 + 3 (todo el alcance de este PRD) | T-01 a T-10 | **~2.5 – 4.5 días hábiles** | — |
+| **Fase 4 — Persistencia (P2)** | Tabla + raíces settings | T-11 a T-12 | 1 – 1.5 días | por asignar |
+| **Fase 5 — Catálogo (P2)** | Pestaña + uploads | T-13 a T-14 | 1.5 – 2.5 días | por asignar |
+| **Fase 6 — Overlay chrome (P2)** | Resolver proyecto + ChangeProject | T-15 a T-16 | 1 – 1.5 días | por asignar |
+| **Fase 7 — Correo (P2)** | Web + gRPC + jobs + checklist | T-17 a T-20 | 2 – 3 días | por asignar |
+| **Total P1** | Login + chrome por host | T-01 a T-10 | **~2.5 – 4.5 días** | — |
+| **Total P2** | Config por proyecto + correo | T-11 a T-20 | **~5.5 – 8.5 días** | — |
 
-> En esta PoC **no hay P2/P3**. Correos, PDFs, catálogo admin y marca-por-país-de-proyecto quedan fuera y, si se retoman, deben ir a `PJ9766` o a un PRD de evolución.
-
-> **Riesgo de deadline:** no hay fecha límite en el PRD. El rango cabe en una semana hábil de un desarrollador. Si se pide “cero Garantiplus” también en correos/PDFs, **no comprimir este plan**: abrir alcance nuevo. Un segundo desarrollador no reduce materialmente (el trabajo es secuencial sobre las mismas vistas).
+> P1 no se reabre salvo bugs. P2 no incluye PJ9766 (aprobación / palabras prohibidas) ni reescribir plantillas HTML de correo.
 
 ---
 

@@ -9,8 +9,8 @@
 | Responsable actual | Alejandro Govea Hernandez |
 | Folio PRD | PJ9770 |
 | ID plan (BD) | 68 |
-| Última actualización | 2026-09-02 |
-| Estado general | 🟡 En progreso |
+| Última actualización | 2026-09-04 |
+| Estado general | 🟡 En progreso (P1); P2 documentado, no ejecutado |
 | Modelo | Claude Sonnet 5 — esfuerzo: normal |
 
 ---
@@ -19,7 +19,7 @@
 
 Rama `feature/PJ9770-poc-white-label-hostname` creada desde `develop`. Ejecución con **Claude Sonnet 5 / esfuerzo normal**. Los `appsettings` locales de conexión/país del desarrollador están en stash; no se mezclaron.
 
-Fases 0 y 1 commiteadas en `gp_4.0_siga`. Código de Fase 2 y T-09 en working tree, pendiente autorización de commit. T-10 (checklist manual en browser) no ejecutada.
+Fases 0, 1 y 2 commiteadas en `gp_4.0_siga`. Queda T-09 (`launchSettings.json`) sin commitear y T-10 (checklist P1). El 2026-09-04 el PRD pasó a **v0.2** (configuración por proyecto + correo con `id_proyecto` explícito; jobs sin id **no envían**). Fases 4–7 del PLAN pendientes; no ejecutar hasta que el programador lo pida. El intento de correo por host en PDF/Endosos se revirtió a propósito para redefinir en P2.
 
 ---
 
@@ -85,6 +85,7 @@ Fases 0 y 1 commiteadas en `gp_4.0_siga`. Código de Fase 2 y T-09 en working tr
 | No se tocó `ForwardedHeaders` | Ya tiene `XForwardedHost` y `KnownNetworks/Proxies` vacíos | PoC en prod debería ver el Host público si Nginx lo reenvía |
 | `_NavigationGPMX_*` no se modifica | El layout autenticado actual es Remake (`_TopNavBar` + `_LeftMenuBar_{hub}`); `logo_home.jpg` solo está en el layout viejo | Menú lateral Remake no tenía isotipo Garantiplus que sustituir |
 | Perfil `WarrantiesEngineCX` reutiliza el mismo `applicationUrl` (`127.0.0.1:4006`) | Evita bind duplicado de puerto; el Host lo resuelve `hosts` | Hay que agregar `127.0.0.1 warranties.localhost` (admin) |
+| `EmailSettings` por marca (pedido en ejecución) | Argentina puede usar otro buzón Gmail sin cambiar el hub | `Username` vacío en `enginecx-ar` cae al `EmailSettings` global. Jobs Quartz siguen con el global (no hay Host). Asuntos/HTML con “Garantiplus” siguen fuera de alcance. |
 
 ---
 
@@ -109,6 +110,8 @@ Fases 0 y 1 commiteadas en `gp_4.0_siga`. Código de Fase 2 y T-09 en working tr
 | `GarantiplusWeb/Views/Home/Index.cshtml` | Modificado | T-08 |
 | `GarantiplusWeb/Views/Home/EcosistemaEngineCX.cshtml` | Modificado | T-08 |
 | `GarantiplusWeb/Properties/launchSettings.json` | Modificado | T-09 |
+| `GarantiplusWeb/Options/BrandEmailSettings.cs` | Creado | Extra (email por marca) |
+| `GarantiplusWeb/Services/Branding/BrandEmailSettingsResolver.cs` | Creado | Extra (email por marca) |
 
 ---
 
@@ -118,12 +121,13 @@ Fases 0 y 1 commiteadas en `gp_4.0_siga`. Código de Fase 2 y T-09 en working tr
 |---|---|---|
 | `87e3e9b` | `[PJ9770-poc-white-label-hostname] Fase 0 - Modelo de marca y resolución por host` | 2026-09-02 |
 | `f364caf` | `[PJ9770-poc-white-label-hostname] Fase 1 - Login white-label por marca` | 2026-09-02 |
+| `8f5feea` | `[PJ9770-poc-white-label-hostname] Fase 2 - Chrome autenticado por marca` | 2026-09-02 |
 
 ---
 
 ## Notas para quien retome el trabajo
 
-- **Commit por fase.** Fases 0 (`87e3e9b`) y 1 (`f364caf`) ya en remoto. Quedan Fase 2 (chrome) y T-09 (`launchSettings`).
+- **Commit por fase.** Fases 0 (`87e3e9b`), 1 (`f364caf`) y 2 (`8f5feea`) ya en remoto. Queda T-09 (`launchSettings`).
 - Los `appsettings` locales de conexión/país del desarrollador están en stash; no mezclarlos ni commitear connection strings.
 - Hosts: `127.0.0.1`/`localhost` → `garantiplus`; `warranties.localhost` → `enginecx-ar`. En Windows (admin): `127.0.0.1 warranties.localhost` en `C:\Windows\System32\drivers\etc\hosts`.
 - T-10: levantar perfil `GarantiplusMX` y `WarrantiesEngineCX` (mismo puerto; el segundo abre `warranties.localhost:4006`). Verificar login + chrome; cambiar proyecto ARG/MEX no debe cambiar la marca.

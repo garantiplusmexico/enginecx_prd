@@ -1,102 +1,129 @@
-# PRD — PoC white-label por hostname en SIGA
+# PRD — White-label por hostname y configuración por proyecto en SIGA
 
-> Feature sobre sistema existente (SIGA Web). Prueba de concepto de la opción A: resolver la identidad de marca por `Request.Host` sin cambiar hub, país base ni base de datos.
+> Feature sobre sistema existente (SIGA Web). **P1 (entregado):** resolver la identidad de marca por `Request.Host` sin cambiar hub, país base ni base de datos. **P2 (esta versión):** configuración de marca y correo **por proyecto**, persistida en BD y aplicada al chrome y a todos los envíos de email cuando hay un `id_proyecto` explícito.
 >
-> Relacionado con `PJ9766-configuracion-marca-proyecto` (producto completo: catálogo por proyecto, aprobación, palabras prohibidas, correo y plantillas). Esta PoC **no sustituye** ese PRD: valida el mecanismo de runtime (host → marca) que un catálogo futuro podría alimentar.
+> Relacionado con `PJ9766-configuracion-marca-proyecto` (producto completo: aprobación, palabras prohibidas, plantillas). PJ9770 **no sustituye** PJ9766: cubre runtime por host (P1) + alta/edición de config por proyecto y su aplicación (P2). Quedan fuera de este folio el workflow de aprobación y las palabras prohibidas.
 
 | Campo | Detalle |
 |---|---|
-| Proyecto / Sistema | SIGA Web (`gp_4.0_siga` / GarantiplusWeb) |
-| Tipo | Feature / PoC |
+| Proyecto / Sistema | SIGA Web (`gp_4.0_siga` / GarantiplusWeb) + envíos de correo en PDFGenerator y Endosos cuando viajan con `id_proyecto` |
+| Tipo | Feature / PoC ampliada |
 | Área / empresa | GarantiPlus México — proyecto Argentina (Engine Warranties) |
 | Folio | PJ9770 |
-| Versión | v0.1 |
-| Fecha | 2026-09-02 |
-| Autores | Alejandro Govea Hernandez (a partir de análisis técnico 2026-09-02) |
+| Versión | v0.2 |
+| Fecha | 2026-09-04 (v0.1: 2026-09-02) |
+| Autores | Alejandro Govea Hernandez |
 | Revisión / liderazgo | Aldo Álvarez (Director de TI) — por confirmar |
-| Modelo de generación | Claude Opus 4.8 — esfuerzo normal |
+| Modelo de generación | Claude Opus 4.8 — esfuerzo normal (v0.1); ampliación v0.2 a partir de cierre con el desarrollador |
 
 ---
 
 ## 1. Resumen del cambio
 
-SIGA Web es una sola aplicación. Hoy [intranet.garantiplus.mx](https://intranet.garantiplus.mx/) y [warranties.enginecx.com.ar](https://warranties.enginecx.com.ar/) apuntan a la misma instancia con `Hub:HubBaseCountryCode = MEX`. El login toma el país del **hub**, no del host: título `Garantiplus`, favicon de `garantiplus.mx`, un único `banner.json` con imágenes Garantiplus y footer legal mexicano (`_LoginFooterMEX`). Argentina es un país *hosted* (`HostedCountryCodes`), no un hub.
+SIGA Web es una sola aplicación. [intranet.garantiplus.mx](https://intranet.garantiplus.mx/) y [warranties.enginecx.com.ar](https://warranties.enginecx.com.ar/) apuntan a la misma instancia con `Hub:HubBaseCountryCode = MEX`. Argentina es país *hosted*, no hub. En Argentina la marca Garantiplus no puede usarse.
 
-El problema de negocio: en Argentina la marca Garantiplus no puede usarse (conflicto legal previo; ver `PJ9766`). El mercado opera como Engine Warranties / Warranties EngineCX. Quien entra por la URL argentina debe ver esa identidad **antes de autenticarse**.
+**P1** introduce white-label por hostname: login y chrome anónimo según el Host (`appsettings` `Branding`). Eso se mantiene.
 
-Esta PoC introduce un **white-label por hostname**: un `IBrandingContext` resuelto por request a partir del Host, con un catálogo en `appsettings`. En `warranties.enginecx.com.ar` el login y el chrome (logo, título, favicon, banners, footer) usan la marca EngineCX. En `intranet.garantiplus.mx` no cambia el comportamiento actual.
+**P2** añade una segunda capa **después del login**. El usuario ya elige proyecto con el selector de la barra (`SessionProjectId` / `Home/ChangeProject`). Ese proyecto puede tener una fila en `proyecto_configuracion` (nombre, logos, URL externa, cuenta de correo y archivos de Gmail). Al cambiar de proyecto la página se recarga y el chrome usa esa config. Si el proyecto no tiene fila (o campos vacíos), se usa el branding del host. Todo correo de la aplicación usa la cuenta del proyecto **solo si hay `id_proyecto` explícito**; si no hay (jobs, procesos sin contexto), **no se envía**.
 
-No se convierte Argentina en hub, no se toca DataAccess ni `CountryBase`, no se clona el producto.
+No se convierte Argentina en hub. No se clona el producto.
 
 ---
 
 ## 2. Contexto del cambio
 
-Hoy hay tres conceptos mezclados:
-
-| Concepto | Qué es | Qué usa el login hoy |
+| Concepto | Qué es | Dónde aplica |
 |---|---|---|
-| Hub | País dueño de la instancia (`MEX`) | `_hub.BaseCountry` → siempre MEX |
-| País del proyecto | ARG/PER/… en sesión **después** del login | No disponible en páginas anónimas |
-| Marca | No existe | Hardcode Garantiplus |
+| Hub | País dueño de la instancia (`MEX`) | País operativo; no es marca |
+| Host | URL de entrada | Login (anónimo): título, favicon, logo, banners, footer |
+| Proyecto de sesión | `_IdProyecto` tras login / `ChangeProject` | Chrome autenticado + correo |
+| `proyecto_configuracion` | Fila 1:1 opcional por `id_proyecto` | Overlay sobre el branding del host |
 
-Ya hay atisbos post-login (`Views/Home/Index.cshtml` cambia títulos si `Localizer["pais"] == "Argentina"`), pero el menú sigue con `logo_home.jpg` / `garantiplus-logo-02.svg`, los banners de login son únicos y el legal del footer es mexicano. No existe `_LoginFooterARG`.
+El selector de proyecto ya existe (`<project-selector>` en `_TopNavBar`, `Home/ChangeProject`). P2 no inventa otro flujo de “elegir proyecto al entrar”: usa el de hoy y recarga.
 
-Precedente de *skin* (no de marca por URL): layouts Mitsubishi/Astara por proyecto (`SessionProjectLayout`).
+Precedente de *skin* por proyecto: `SessionProjectLayout` (Mitsubishi/Astara). P2 es marca/correo, no un layout distinto.
 
 ---
 
 ## 3. Alcance del cambio
 
-**Qué entra (PoC / P1):**
+**P1 (entregado — no reabrir salvo bugs):**
 
 | Elemento | Descripción |
 |---|---|
-| Resolver de marca por host | Mapear hostname → clave de marca (`garantiplus` / `enginecx-ar`) desde configuración. |
-| Contexto de marca por request | `IBrandingContext` scoped, consumible en Razor y page models. |
-| Login | Título, favicon, logo, banners (`banner.{marca}.json`) y footer según marca. |
-| Chrome autenticado | Logo del top bar y del menú lateral según marca del host. |
-| Footer ARG | Partial `_LoginFooterARG` sin textos legales de Garantiplus México (placeholder EngineCX hasta que Legal entregue textos AR). |
-| Prueba local | Segundo binding HTTP y/o hosts file para simular ambos dominios contra la misma app. |
+| Resolver de marca por host | Hostname → clave de marca desde `Branding`. |
+| Login | Título, favicon, logo, banners, footer según host. |
+| Chrome autenticado *hasta P1* | Top bar según marca del **host** (queda sustituido en P2 tras login). |
+
+**P2 (entra ahora):**
+
+| Elemento | Descripción |
+|---|---|
+| Tabla `proyecto_configuracion` | Nueva; `id_proyecto` + campos de marca y rutas de archivos. Réplica en DataAccess México y Colombia. |
+| Pestaña Configuraciones | En catálogo de Proyectos (crear y editar): AppName, CompanyName, Logo, HeaderLogo, ExternalSiteUrl, email username, credentials y token. |
+| Almacenamiento de archivos | Raíz configurable en `appsettings`; subcarpeta `{id_proyecto}`; nombres fijos de archivo. En BD se guarda la ruta (url + nombre), no el binario. |
+| Overlay de branding | Autenticado: si hay config de proyecto, pinta chrome con esos valores; si no, host. Login sigue 100% por host. |
+| Recarga al cambiar proyecto | `ChangeProject` recarga la página con la config del proyecto elegido. |
+| Correo por proyecto | Cualquier envío en la app usa username + credentials + token del proyecto. Hace falta `id_proyecto` explícito. |
+| PDFGenerator / Endosos | Si el envío nace de un flujo con contrato/proyecto, reciben `id_proyecto` y usan la misma fila. |
+| Jobs / procesos sin proyecto | **No envían** correo hasta que exista `id_proyecto` explícito. No hay fallback silencioso a la cuenta MX del `appsettings`. |
 
 **Qué NO entra:**
 
 | Exclusión | Justificación |
 |---|---|
-| Convertir ARG en hub (`HubBaseCountryCode`, `CountryBase`, DataAccess) | Fuera de identidad; es cambio operativo de país. |
-| Correos (From, asuntos, HTML, logos absolutos) | Requiere buzón `@enginecx.com.ar` / SPF-DKIM; va en evolución post-PoC o en `PJ9766`. |
-| PDFs, contratos, ODP | Motor `PDFGenerator`; no es necesario para validar el enfoque. |
-| Catálogo admin, aprobación, palabras prohibidas | Alcance de `PJ9766`, no de esta PoC. |
-| Marca por país de proyecto si se entra por `.mx` | PoC discrimina **solo por host**. Un usuario ARG en `intranet.garantiplus.mx` sigue viendo Garantiplus. |
-| Textos legales argentinos definitivos (Ley 25.326) | Dependencia de Legal; PoC usa placeholder sin mencionar Garantiplus. |
+| Convertir ARG en hub | Fuera de identidad. |
+| Aprobación, palabras prohibidas, catálogo de plantillas de PJ9766 | Otro folio. |
+| Favicon, banners de login y footer legal por proyecto | El login no tiene proyecto; siguen por host. |
+| `NavLogoPath` | No se usa en vistas; no se pide en el catálogo. |
+| Asuntos/HTML de correo “Bienvenido a Garantiplus” | Fuera de este corte; P2 cambia la **cuenta From**, no las plantillas. |
+| API SIGA (`gp_3.0_siga_api`) | El login y el catálogo de proyectos de esta PoC son SIGA Web. |
 | Fork / segundo código SIGA | Descartado. |
-| Cambios de BD | La marca vive en `appsettings` en esta PoC. |
 
 ---
 
 ## 4. Requerimientos funcionales
 
+### P1 — Host (vigentes)
+
 | ID | Requerimiento | Descripción |
 |---|---|---|
-| RF-01 | Resolución por hostname | Dada una request, la app determina la marca comparando `Request.Host` (sin puerto, case-insensitive) con el mapa de hosts. Si no hay match, usa la marca default (`garantiplus`). |
-| RF-02 | Login EngineCX | En host EngineCX: título de página y H1 sin “Garantiplus”; favicon y logo EngineCX; banners del JSON de esa marca; footer `_LoginFooterARG`. |
-| RF-03 | Login Garantiplus intacto | En host Garantiplus (y default): comportamiento actual (banners `banner.json`, `_LoginFooterMEX` cuando el hub es MEX, título Garantiplus). |
-| RF-04 | Chrome autenticado | Tras login en host EngineCX, top bar y menú lateral no muestran el logo Garantiplus; usan el logo de la marca del host. |
-| RF-05 | Sin “Garantiplus” en superficies PoC del host AR | En las superficies de esta PoC (login + chrome) el host `warranties.enginecx.com.ar` no muestra la palabra ni el isotipo Garantiplus. |
-| RF-06 | Misma app, mismo hub | `Hub:HubBaseCountryCode` permanece `MEX`. ARG sigue hosted. No hay segundo deploy para la PoC. |
-| RF-07 | Configuración, no hardcode de hosts | Hosts y rutas de assets viven en `appsettings` (sección `Branding`). |
+| RF-01 | Resolución por hostname | `Request.Host` (sin puerto, case-insensitive) → mapa `Hosts`. Sin match → `DefaultBrandKey`. |
+| RF-02 | Login EngineCX | Host EngineCX: sin “Garantiplus” en title/H1/isotipo; banners y footer de esa marca. |
+| RF-03 | Login Garantiplus intacto | Host Garantiplus/default: comportamiento actual. |
+| RF-05 | Sin “Garantiplus” en login AR | Superficies de login del host `warranties.enginecx.com.ar`. |
+| RF-06 | Misma app, mismo hub | `HubBaseCountryCode` = `MEX`. ARG hosted. |
+| RF-07 | Hosts en configuración | No hardcodear hosts en vistas. |
+
+### P2 — Proyecto
+
+| ID | Requerimiento | Descripción |
+|---|---|---|
+| RF-08 | Pestaña Configuraciones | Crear y editar proyecto: pestaña con AppName (texto), CompanyName (texto), Logo (archivo), HeaderLogo (archivo), ExternalSiteUrl (URL), Email username (email), CredentialsPath (archivo), TokenPath (archivo/carpeta token). |
+| RF-09 | Persistencia | Una fila por proyecto en `proyecto_configuracion`. Los archivos se guardan en disco; las columnas de archivo almacenan ruta + nombre. |
+| RF-10 | Carpetas | Raíz de assets y raíz de email se leen de `appsettings`. Dentro: carpeta `{id_proyecto}`. Nombres de archivo fijos (`Logo`, `HeaderLogo`, credentials y token según convención acordada en implementación). En **Create**, el `id_proyecto` se obtiene tras el INSERT; archivos y fila se escriben en ese mismo flujo. |
+| RF-11 | Overlay post-login | Chrome autenticado (AppName/CompanyName donde aplique, Logo, HeaderLogo, ExternalSiteUrl) sale de `proyecto_configuracion` si existe; si no hay fila o el campo está vacío, el valor del **host**. |
+| RF-12 | Recarga al cambiar proyecto | Al usar el selector (`ChangeProject`), se recarga la página y se aplica la config del `id_proyecto` nuevo. |
+| RF-13 | Correo con `id_proyecto` | Todo `IEmailSender` / envío Gmail de la aplicación usa la cuenta de `proyecto_configuracion` de ese proyecto (username + credentials + token). |
+| RF-14 | Sin `id_proyecto` no hay envío | Jobs Quartz, procesos batch u otros caminos sin `id_proyecto` explícito **no envían** correo. No usar la cuenta default de `EmailSettings` como atajo. |
+| RF-15 | Servicios gRPC | PDFGenerator y Endosos, cuando envían correo de un flujo de contrato/endoso, reciben `id_proyecto` y resuelven la misma configuración (BD + rutas de archivo). |
+| RF-04 (actualizado) | Chrome autenticado | Tras login, el chrome sigue al **proyecto** (RF-11), no al host. El host solo manda en login y como fallback. |
 
 ---
 
-## 5. Requerimientos no funcionales *(solo los que apliquen a este cambio)*
+## 5. Requerimientos no funcionales
 
 | ID | Requerimiento | Descripción |
 |---|---|---|
-| RNF-01 | Sin impacto en MX | Quien entra por el host Garantiplus no percibe cambio de marca. |
-| RNF-02 | Código nuevo en inglés | Clases, miembros y comentarios técnicos en inglés (`coding-guidelines.md`). Textos de UI en español. |
-| RNF-03 | Proxy / Host | Documentar que detrás de Nginx el Host debe ser el público (o `X-Forwarded-Host` / Forwarded Headers). La PoC local usa Host directo. |
-| RNF-04 | Sin secrets nuevos | No hay credenciales de correo ni DNS en esta PoC. |
-| RNF-05 | Sesiones por dominio | Cookies de sesión no se comparten entre `.mx` y `.com.ar` (dominios distintos). No se cambia el esquema de cookies. |
+| RNF-01 | Sin impacto en MX sin config | Un proyecto sin fila en `proyecto_configuracion` se ve y envía como el host (visual) y **no envía** correo de proyecto; los envíos requieren RF-14/RF-13. Aclaración: el chrome cae a host; el correo no cae a MX silencioso. |
+| RNF-02 | Código nuevo en inglés | UI en español. |
+| RNF-03 | Proxy / Host | `Request.Host` público o `X-Forwarded-Host` para P1. |
+| RNF-04 | Credenciales de correo | `credentials.json` y token no se commitean. Viven en disco del servidor bajo la raíz configurada; `.gitignore` de esas carpetas. |
+| RNF-05 | Sesiones por dominio | Sin cambio de cookies. |
+| RNF-06 | DataAccess espejo | Modelo y `DbSet` iguales en México y Colombia. |
+| RNF-07 | Recarga | El cambio de proyecto no deja chrome/correo de la sesión anterior en memoria de la request (scoped por request + reload). |
+
+**Nota RNF-01 / correo:** el fallback a host es **solo visual**. El correo no usa `EmailSettings` global si falta config de proyecto: o hay fila completa de email en `proyecto_configuracion`, o no se envía (log en inglés del motivo).
 
 ---
 
@@ -104,33 +131,48 @@ Precedente de *skin* (no de marca por URL): layouts Mitsubishi/Astara por proyec
 
 | Componente / Integración | Tipo de cambio | Descripción |
 |---|---|---|
-| GarantiplusWeb — Options + DI | Nuevo | `BrandingOptions`, resolver, `IBrandingContext`, registro en `Program.cs`. |
-| `GarantiplusWeb/appsettings.json` | Modificación | Sección `Branding` (hosts + definiciones de marca). |
-| Login (`Login.cshtml` / `.cs`) | Modificación | Carga de banners y ViewData desde branding, no solo hub. |
-| `_LoginLayout.cshtml` | Modificación | Título, favicon, logo según contexto. |
-| `_LoginFooterARG.cshtml` | Nuevo | Footer legal placeholder EngineCX. |
-| `banner.enginecx-ar.json` | Nuevo | Slides de login para la marca AR. |
-| Remake `_TopNavBar.cshtml` | Modificación | Logo según marca. |
-| Navegación / `logo_home.jpg` | Modificación mínima | Logo lateral según marca (partial existente, sin nuevo layout Mitsubishi-style). |
-| `launchSettings.json` | Modificación | Segundo `applicationUrl` para probar dos hosts en local. |
-| Hub / DataAccess / BD | Sin cambio | — |
-| PDFGenerator / Emailing | Sin cambio | Fuera de PoC. |
-| API SIGA (`gp_3.0_siga_api`) | Sin cambio | El login de SIGA Web no pasa por la API. |
+| `Branding` / `IBrandingContext` (P1) | Ya existe | Login y fallback visual. |
+| DataAccess / DataAccessColombia | Nuevo | Entidad `proyecto_configuracion`, `DbSet`, FK a `proyecto`. |
+| PostgreSQL | Nuevo | Tabla `proyecto_configuracion`. |
+| `ProyectosController` + vistas | Modificación | Pestaña Configuraciones en Create/Edit (`Edit.cshtml` ya tiene tabs; Create hoy no). |
+| `appsettings` web | Modificación | Raíces de carpetas de logos y de email por proyecto. |
+| `ChangeProject` / `_TopNavBar` | Modificación | Recarga; chrome lee overlay. |
+| `IEmailSender` factory (web) | Modificación | Resolver por `id_proyecto` de sesión; si no hay config de email, no construir envío / no enviar. |
+| PDFGenerator / Endosos | Modificación | Recibir `id_proyecto`; resolver cuenta; no enviar si falta. |
+| Jobs Quartz | Modificación | No enviar sin `id_proyecto` explícito. |
+| API SIGA | Sin cambio | — |
+
+**Campos de `proyecto_configuracion` (negocio):**
+
+| Campo | Origen UI | Persistencia |
+|---|---|---|
+| `id_proyecto` | PK/FK | entero |
+| `app_name` | AppName | texto |
+| `company_name` | CompanyName | texto |
+| `logo_path` | archivo Logo | ruta + nombre |
+| `header_logo_path` | archivo HeaderLogo | ruta + nombre |
+| `external_site_url` | ExternalSiteUrl | texto URL |
+| `email_username` | EmailSettings username | texto email |
+| `credentials_path` | archivo credentials | ruta + nombre |
+| `token_path` | token Gmail | ruta |
 
 ---
 
 ## 7. Preguntas abiertas
 
-| Tema | Pregunta abierta |
+| Tema | Estado |
 |---|---|
-| Nombre comercial | ¿“Engine Warranties”, “Warranties EngineCX” u otro? El home actual usa “Warranties EngineCX”; `PJ9766` usa “Engine Warranties”. La PoC usará **Warranties EngineCX** hasta que se confirme. |
-| Assets | ¿Hay logo, favicon y banners definitivos para AR, o se reutiliza `enginecx_logo.png` y banners placeholder? |
-| Footer legal | ¿Legal entrega textos AR para la PoC o basta un placeholder explícito “textos pendientes de Legal”? |
-| Post-PoC vs `PJ9766` | ¿Esta PoC se fusiona a `develop` como base del catálogo de `PJ9766`, o permanece como rama de experimentación? |
-| Host QA | ¿Cuál será el hostname de QA para EngineCX (además de producción `warranties.enginecx.com.ar`)? |
-| Entrada cruzada | Confirmado para PoC: marca **solo por host**. ¿En una fase posterior también se aplica marca EngineCX si `codigo_pais == ARG` aunque se entre por `.mx`? |
+| Recarga al cambiar proyecto | **Cerrado:** sí, recarga con la config del proyecto. |
+| Fallback visual | **Cerrado:** sin fila → branding del host. |
+| Correo | **Cerrado:** cuenta del proyecto en toda la app; sin `id_proyecto` explícito **no se envía**. |
+| Nombre comercial EngineCX | Abierto (P1): Warranties EngineCX hasta confirmar. |
+| Assets / footer legal AR | Abierto (P1): placeholders. |
+| Host QA EngineCX | Abierto. |
+| Relación merge vs PJ9766 | Abierto a nivel de release. |
+| Nombres exactos de archivo en disco | A fijar en implementación (`Logo`, `HeaderLogo`, `credentials.json`, carpeta `token`). |
+| Extensiones permitidas de logo | A fijar (p. ej. png/svg/jpg) y tamaño máximo. |
 
 ---
 
 *Engine CX — Departamento de Desarrollo*
-*Versión: v0.1*
+*Versión: v0.2*

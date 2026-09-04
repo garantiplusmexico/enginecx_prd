@@ -629,7 +629,7 @@ src/
 
     | Catálogo | ¿Formulario hoy? | Quién |
     |---|---|---|
-    | **Salas** | **No.** Salen de `americar_siga_real`, un **feed externo** (`sala_key` → `sucursal`). Nadie las teclea | — |
+    | **Salas** | **No hay alta.** Una sala **existe porque aparece en los contratos**: su clave es `distribuidor | punto_venta`. `americar_siga_real` no es un feed sino una **tabla de mapeo editable** —clave SIGA → sucursal real, 45 filas cargadas de un backup— que mantienen **CM/GTE** | Deriva de facturación |
     | **Clientes** | **No.** Ningún escritor en la aplicación | — |
     | **Vendedores** | **Sí**, `features/vendedores/VendedoresSala.tsx`. Los creados a mano llevan `id_externo` **negativo** y `origen: manual`; los positivos vienen del mismo feed. **Borrar es solo del CM** | Quien gestiona la sala |
     | **Cartera** (`salas_asignacion`) | **Sí**, módulo **Configuración** (`AsesoresAdmin`, `AsignacionAsesor`) | **CM o GTE** (`puedeImportar`) |
@@ -637,10 +637,13 @@ src/
     | **Feriados** | **Sí**, `config/FeriadosEditor.tsx` | **CM o GTE** |
     | **Categorías de gasto** | **No.** Sembradas por migración (0190, 0198) | Un desarrollador |
     | **Proyectos** | **No.** Ningún escritor | — |
-    | **Coordenadas** (`salas_geo`) | **No.** Ningún escritor en la aplicación: se cargaron por fuera | — |
+    | **Coordenadas** (`salas_geo`) | **Sí, y esto es lo interesante**: la migración 0016 amplió la escritura al **FARMER**. El asesor geocodifica una dirección con **Nominatim** (OpenStreetMap, sin clave) y guarda lat/lng, región y comuna | **El propio asesor**, además de GTE y CM |
 
   - **Y eso destapa que esto NO es solo una carga inicial.** Cinco de los ocho catálogos se mantienen hoy en el **módulo Configuración**, que en nuestro plan es **Fase 3**. Después del corte, un CM que reasigne una sala a otro asesor lo hará en la base **vieja**, y la nueva no se enterará: la cartera de ese asesor quedará mal hasta que alguien lo note. No es divergencia teórica — es el dato que decide qué salas ve cada persona al abrir la aplicación
   - **Tres salidas, y hay que elegir antes del corte:** (a) **adelantar el mantenedor de cartera y organigrama** a la Fase 1 —es poco: dos pantallas de configuración—; (b) **una importación periódica** desde el sistema actual, que es un puente de datos y contradice ADR-011; o (c) **mantenerlo a mano en los dos** durante la ventana, que funciona con pocos asesores y se rompe en silencio en cuanto alguien olvida uno de los dos lados. **Recomendación: (a)**, porque la cartera no es un catálogo cualquiera: si está mal, el asesor abre la aplicación y no ve su trabajo
+  - **Las coordenadas NO se cargan: se capturan.** *(Corregido el 04-09-2026.)* La primera versión de esta tarea decía que había que sembrarlas desde `salas_geo`. El sistema actual hace algo mejor y lo dejó escrito en una migración: **el asesor las corrige desde la aplicación**, geocodificando la dirección con Nominatim. Y nosotros tenemos una ventaja que ellos no usan — el **check-in ya captura la ubicación del dispositivo** (V-20), así que estando en la sala se puede ofrecer «guardar esta como la ubicación de la sala» sin escribir ninguna dirección. Copiar las que existan sirve como punto de partida; el mecanismo es capturarlas
+  - **Lo que queda genuinamente sin saber son dos, no cinco** *(acotado el 04-09-2026)*: **`clientes`** y **`proyectos`**, que no tienen escritor en ninguna parte de la aplicación actual. Probablemente fueron una carga inicial por SQL, en cuyo caso la nuestra es igual y no hay nada que resolver — pero hay que confirmarlo antes de darlo por hecho
+  - **Y una pregunta que no es de datos sino de diseño:** en el sistema actual una sala **existe porque factura**. En el nuestro `salas` es una tabla con clave propia y no deriva de nada. Eso significa que **una sala nueva no aparece sola**: si un concesionario empieza a vender el mes que viene, alguien tiene que darla de alta, y no hay pantalla para eso. Es la misma decisión de la cartera —adelantar un mantenedor mínimo o vivir con una carga periódica— y conviene resolverlas juntas
   - **Bloquea T-71 y T-72.** No hay piloto posible con cuatro salas ficticias
 
 - [ ] **T-73** — Identidad visual y pasada de diseño

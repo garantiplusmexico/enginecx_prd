@@ -44,19 +44,23 @@ Se **reconstruye desde cero la aplicación de terreno del Asesor Farmer** en un 
 ## 2. Prerequisitos
 
 - [ ] PRD validado por el responsable (PJ4487, **v0.2** — incluye ADR-011) y anexos A1/A2/A3 leídos por quien ejecuta
-- [ ] **Repositorio nuevo `siga_alfa` creado** en la organización, con permisos para el responsable
-- [ ] Acceso de **lectura** al repositorio actual `garantiplusmexico/garantiplus-dashboard`: es la fuente para extraer las reglas de negocio (migraciones, funciones y políticas RLS). **No se escribe nada ahí**
-- [ ] Acceso de escritura al repositorio de la API `garantiplusmexico/gp_3.0_siga_api` y al entorno donde vive su base de datos
-- [ ] **Servicio `Services/GarantiMax/` creado** en el monorepo de la API, con su base de datos aprovisionada y su `DbContext` propio
-- [ ] `VITE_API_BASE_URL` definida para desarrollo, QA y producción (local: puerto 5006 por convención del repo de la API)
-- [ ] Usuario de prueba con rol de Asesor Farmer dado de alta en la base de la API, y **nombre exacto del rol** comunicado al frontend (pregunta abierta del PRD §14)
-- [ ] `VITE_SENTRY_DSN` disponible (proyecto Sentry nuevo o reutilizado)
-- [ ] Proyecto Vercel nuevo creado y dominio de transición decidido (ver §9)
-- [ ] `CLAUDE.md` presente en el repositorio nuevo (se genera en T-02; el del repo actual ya existe)
-- [ ] ADR-006 ratificado por TI (librerías) — **aprobado en la generación de este plan**
+> **Repasados el 04-09-2026.** Se marca solo lo que se puede comprobar desde
+> los repositorios; lo demás lleva escrito quién lo confirma, porque un
+> prerrequisito marcado «por si acaso» es peor que uno pendiente.
+
+- [x] **Repositorio nuevo `siga_alfa` creado** en la organización, con permisos para el responsable
+- [x] Acceso de **lectura** al repositorio actual `garantiplusmexico/garantiplus-dashboard`: es la fuente para extraer las reglas de negocio (migraciones, funciones y políticas RLS). **No se escribe nada ahí** — y no se ha escrito
+- [x] Acceso de escritura al repositorio de la API `garantiplusmexico/gp_3.0_siga_api` y al entorno donde vive su base de datos
+- [~] **Servicio `Services/GarantiMax/` creado** en el monorepo de la API, con su base de datos aprovisionada y su `DbContext` propio — el servicio y el `DbContext` están; que la **base esté aprovisionada** no se puede comprobar desde aquí y nunca se ha corrido una migración contra ella. Lo confirma el responsable
+- [~] `VITE_API_BASE_URL` definida para desarrollo, QA y producción (local: puerto 5006 por convención del repo de la API) — **desarrollo sí** (`.env.local`); QA y producción llegan con T-69
+- [ ] Usuario de prueba con rol de Asesor Farmer dado de alta en la base de la API, y **nombre exacto del rol** comunicado al frontend (pregunta abierta del PRD §14) — sigue abierta, y es la que bloquea aprobar y pagar una rendición
+- [ ] `VITE_SENTRY_DSN` disponible (proyecto Sentry nuevo o reutilizado) — **la variable está vacía en `.env.local`**. En desarrollo es admisible a propósito (`src/config` solo la exige fuera de desarrollo), así que hoy no se reporta nada a Sentry
+- [ ] Proyecto Vercel nuevo creado y dominio de transición decidido (ver §9) — bloquea T-69
+- [x] `CLAUDE.md` presente en el repositorio nuevo (se genera en T-02; el del repo actual ya existe)
+- [x] ADR-006 ratificado por TI (librerías) — **aprobado en la generación de este plan**
 - [ ] Disponibilidad confirmada de asesores reales para validaciones periódicas y para el piloto (supuesto del PRD §13)
 - [ ] Definido quién revisa y **firma** las reglas de autorización de los endpoints del servicio, sustituto de la auditoría de RLS (pregunta abierta del PRD §14)
-- [ ] Datos de prueba sembrados en las tablas de referencia (salas, vendedores de sala, clientes) para poder construir y probar — el script sale de T-18; la carga real la hace el responsable antes del piloto
+- [ ] Datos de prueba sembrados en las tablas de referencia (salas, vendedores de sala, clientes) para poder construir y probar — el script sale de T-18 (**hecha**); la carga real la hace el responsable antes del piloto, y sin ella no se puede probar nada de punta a punta
 
 ---
 
@@ -397,13 +401,13 @@ src/
   - A las tres horas escala **con el mismo umbral que el correo del servicio** (V-07): con dos números, el asesor vería una cosa en la pantalla y leería otra en su bandeja
   - Ocultar el botón de descartar **no es la defensa**: el caso de uso lo comprueba otra vez y el servicio también. Es no ofrecer lo que va a ser rechazado
 
-- [~] **T-39** — Evidencia de visita *(parcial: falta la captura; el almacenamiento está listo salvo el bucket)*
+- [~] **T-39** — Evidencia de visita *(parcial: falta la pantalla que capture dentro de la visita)*
   - Archivos creados: en la API, `Controllers/FilesController.cs`, `Interfaces/IFileStorage.cs`, `Services/S3FileStorage.cs`, `Options/FileStorageOptions.cs`, `doc/donde-viven-las-fotos.md`; en el frontend, `src/infrastructure/storage/ApiStorageProvider.ts` + pruebas
   - Criterio de completitud: captura desde cámara, subida a Storage y **encolado sin señal igual que las boletas**; ninguna imagen se pierde en las pruebas de corte de red
   - **Decidido el 31-08-2026: los blobs van a S3.** El bucket todavía no existe, así que el código está escrito y lo único que falta es crearlo y llenar la sección `FileStorage`. El servicio **arranca sin eso configurado a propósito**: validarlo al arrancar dejaría caído el servicio entero por una funcionalidad que nadie puede usar aún, así que los endpoints responden 503 con un mensaje utilizable —«registra la visita sin evidencia»— y el resto sigue trabajando
   - **La clave la propone el cliente y el servidor la acota.** `{prefix}/{advisorId}/{scope}/{path}`: el `path` es un uuid del teléfono y la subida sobreescribe (V-31), pero el asesor y el ámbito los pone el servidor desde el token. Por eso no hay consulta de «¿este archivo es mío?»: un archivo que no subió no tiene una clave que pueda nombrar
   - **Se corrigió el contrato `StorageProvider`**, que decía que la ruta la decide el servicio. Estaba mal: con una ruta del servidor, cada reintento de la cola habría creado un objeto nuevo y la fila se habría quedado apuntando al primero, el resto huérfano y pagándose en la factura de S3
-  - **Falta**: la captura desde la cámara, la compresión (V-30) y el encolado del blob (V-31)
+  - **Actualizado el 04-09-2026:** el bucket existe y las credenciales están probadas, y **la compresión (V-30) y el encolado del blob (V-31) ya están hechos** — los resolvió T-58/T-59 para la boleta, y `camera.ts` y `FileUploader` no saben nada de gastos: sirven igual para la evidencia. Lo que falta es **solo la pantalla**: ofrecer la cámara dentro del asistente de visita y guardar en qué paso se tomó cada foto (V-33). Ya no espera nada de nadie
 
 - [x] **T-40** — Lobbies y otros eventos
   - Archivos creados: `src/features/visits/domain/Lobby.ts`, `ports/LobbyRepository.ts`, `infrastructure/{ApiLobbyRepository,offlineLobbyRepository}.ts`, `application/SaveLobby.ts`, `ui/{LobbyPage,LobbyHistoryPage}.tsx`, `app/routes/LobbyRoutes.tsx` + pruebas
@@ -777,25 +781,41 @@ Todas se leen y validan **exclusivamente** en `src/config/env.ts` (T-04); si fal
 
 **Arquitectónicos** — verificables automáticamente en CI:
 
-- [ ] Cero archivos de presentación importan el cliente HTTP o llaman a `fetch` (RNF-01; línea base del sistema actual: 447 queries en `.tsx`)
-- [ ] Cero archivos fuera de `infrastructure/api/` hablan con la red (RNF-02; línea base del sistema actual: 157 archivos con el SDK)
-- [ ] El dominio compila sin ninguna dependencia externa
-- [ ] Ningún feature importa la `ui/` ni la `infrastructure/` de otro feature
-- [ ] Ningún componente accede a `matchMedia` ni a `navigator.standalone`
-- [ ] Cero referencias al tier legacy `CM` / `GTE` / `FARMER` en todo el repositorio
-- [ ] Las pruebas de dominio y de casos de uso corren **sin red ni servicio levantado** (RNF-03, meta 100 %)
-- [ ] Una sola implementación de Mi Día para escritorio y móvil (de 2 a 1)
+> **Medidos el 04-09-2026** sobre 238 archivos fuente. Los seis primeros los
+> comprueba `tools/metricas-arquitectura.mjs` en CI, y además los bloquean los
+> guardarraíles de ESLint: no dependen de que alguien se acuerde de mirarlos.
+
+- [x] Cero archivos de presentación importan el cliente HTTP o llaman a `fetch` (RNF-01; línea base del sistema actual: 447 queries en `.tsx`)
+- [x] Cero archivos fuera de `infrastructure/api/` hablan con la red (RNF-02; línea base del sistema actual: 157 archivos con el SDK)
+- [x] El dominio compila sin ninguna dependencia externa — guardarraíl 5
+- [x] Ningún feature importa la `ui/` ni la `infrastructure/` de otro feature — guardarraíl 3. Comparten `domain/` a propósito, que es vocabulario, no implementación
+- [x] Ningún componente accede a `matchMedia` ni a `navigator.standalone` — guardarraíl 4. Es lo que obliga a que los layouts adaptativos sean CSS, y por eso la agenda y la captura funcionan igual en teléfono y escritorio sin bifurcar
+- [x] Cero referencias al tier legacy `CM` / `GTE` / `FARMER` en todo el repositorio
+- [x] Las pruebas de dominio y de casos de uso corren **sin red ni servicio levantado** (RNF-03, meta 100 %) — 1 523 pruebas, ningún backend
+- [x] Una sola implementación de Mi Día para escritorio y móvil (de 2 a 1) — cerrado con T-41/T-42
 
 **Funcionales:**
 
 - [ ] Cada invariante del dominio identificada en T-13…T-16 tiene al menos una prueba unitaria (RNF-04)
+  - **Medido el 04-09-2026 y NO se cumple**, con un motivo concreto y una parte que no es nuestra. De las **192 reglas** catalogadas, **89 se citan en alguna prueba**. El desglose señala el agujero sin ambigüedad:
+
+    | Catálogo | Reglas | Citadas en prueba | Sin citar en ningún sitio |
+    |---|---|---|---|
+    | `gastos.md` | 55 | 36 | 9 |
+    | `gestion.md` | 44 | 27 | 6 |
+    | `visitas.md` | 51 | 23 | 14 |
+    | `identidad.md` | **42** | **3** | **30** |
+
+  - **`identidad.md` es casi todo el hueco**, y no por descuido: cartera, alcance por asesor, «Ver como» y los permisos los hace cumplir el **servicio .NET**, donde **no hay proyecto de test**. Sus 42 reglas no se pueden probar desde aquí, y hoy nada las prueba en ninguna parte. Es el argumento más fuerte para añadir ese proyecto, que ya está en las decisiones abiertas
+  - **Ojo con el número: contar citas no es medir cobertura.** Una regla puede estar probada sin que su identificador aparezca en el texto de la prueba, así que 89 es un **suelo**, no la cifra real. Lo que sí es firme es el otro extremo: las **59 reglas que no se citan en ningún archivo fuente** no las prueba nadie, porque nadie las ha escrito todavía
 - [ ] Los cinco flujos críticos tienen prueba E2E en verde (RNF-05)
 - [ ] Las pruebas de corte de red no pierden ninguna operación ni generan duplicados (RNF-08, RNF-09)
 - [ ] Mi Día es interactivo en ≤ 2 s con conexión y ≤ 1 s desde snapshot local (RNF-06)
 - [ ] Toda acción del asesor produce retroalimentación visible en ≤ 200 ms (RNF-07)
 - [ ] La lista de paridad funcional está al 100 % y **firmada** antes del corte (RF-25)
-- [ ] La aplicación es instalable y su shell carga sin conexión (RNF-15)
+- [x] La aplicación es instalable y su shell carga sin conexión (RNF-15) — cerrado con T-12; el build emite `sw.js` y precachea 36 entradas (552 KB), y `analiza-bundle` falla en CI si deja de emitirlas
 - [ ] Contraste AA, objetivos táctiles ≥ 44 px y navegación por teclado en escritorio (RNF-17)
+  - Los objetivos táctiles y el foco visible están puestos desde T-19 (`min-h-touch`, `focus-visible` en todo lo pulsable). **El contraste no se puede dar por bueno todavía porque la paleta va a cambiar en T-73**: medirlo ahora sería medir unos colores que no son los del corte. Se verifica *después* de T-73, no antes
 
 **Operativos:**
 

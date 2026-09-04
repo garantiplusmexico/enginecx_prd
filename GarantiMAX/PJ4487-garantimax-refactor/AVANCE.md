@@ -249,6 +249,35 @@ El resto de la Fase 4 sigue esperando algo que no es código: las dos claves de 
 
 ---
 
+## Hallazgos del repaso del 04-09-2026
+
+Al marcar en el plan lo que ya estaba hecho aparecieron dos cosas que no eran
+casillas olvidadas.
+
+**RNF-04 no se cumple, y el hueco está casi todo en un sitio.** De las **192
+reglas** catalogadas en `docs/reglas`, **89 se citan en alguna prueba**. Por
+catálogo: gastos 36 de 55, gestión 27 de 44, visitas 23 de 51 y **identidad 3
+de 42**.
+
+Identidad es el hueco, y no por descuido: cartera, alcance por asesor, «Ver
+como» y los permisos los hace cumplir el **servicio .NET**, y ese repositorio
+**no tiene proyecto de test**. Sus 42 reglas no se pueden probar desde el
+frontend, así que hoy no las prueba nadie en ninguna parte. Es el argumento más
+fuerte para añadir ese proyecto, que ya estaba en las decisiones abiertas como
+un «sería bueno» y con esto pasa a ser lo que bloquea un criterio de
+aceptación.
+
+Con una advertencia sobre el número: **contar citas no es medir cobertura.** Una
+regla puede estar probada sin que su identificador aparezca en el texto de la
+prueba, así que 89 es un **suelo**. Lo que sí es firme es el otro extremo: las
+**59 reglas que no se citan en ningún archivo fuente** no las prueba nadie,
+porque nadie las ha escrito todavía.
+
+**`VITE_SENTRY_DSN` está vacía**, así que hoy no se reporta nada a Sentry. En
+desarrollo es admisible a propósito —`src/config` solo la exige fuera de
+desarrollo— pero conviene saberlo: el monitoreo está construido y probado, y
+apagado.
+
 ## Decisiones tomadas durante la ejecución
 
 | Decisión | Justificación | Impacto |

@@ -14,7 +14,7 @@
 | Folio PRD | `PJ5642` — ⚠️ **PROVISIONAL E INVENTADO**, ver §12.1 |
 | Fecha de generación | 2026-09-04 |
 | Estado | Borrador |
-| ID plan (BD) | *(lo escribe el flujo al registrar el plan)* |
+| ID plan (BD) | **69** |
 
 ---
 
@@ -279,10 +279,10 @@ viene de que el link de pago nació dentro de BMW. Hoy solo se nota porque Omega
 
 | Fase | Incluye | Tareas | Días hábiles (rango) | ID (BD) |
 |---|---|---|---|---|
-| **Fase 0 — Red de seguridad** | Baseline, URL de PROD, inventario de consumidores | T-01 a T-03 | 0.5 – 1 día | |
-| **Fase 1 — Resolución por proyecto (P1)** | `ProjectId` en el DTO, columna en la consulta, diccionario y resolución | T-04 a T-07 | 1 – 2 días | |
-| **Fase 2 — Configuración (P1)** | Task-definitions de QA y PROD | T-08 a T-10 | 0.5 – 1 día | |
-| **Fase 3 — Validación y despliegue (P1)** | Pruebas locales, QA, PROD | T-11 a T-14 | 1 – 2 días | |
+| **Fase 0 — Red de seguridad** | Baseline, URL de PROD, inventario de consumidores | T-01 a T-03 | 0.5 – 1 día | 254 |
+| **Fase 1 — Resolución por proyecto (P1)** | `ProjectId` en el DTO, columna en la consulta, diccionario y resolución | T-04 a T-07 | 1 – 2 días | 255 |
+| **Fase 2 — Configuración (P1)** | Task-definitions de QA y PROD | T-08 a T-10 | 0.5 – 1 día | 256 |
+| **Fase 3 — Validación y despliegue (P1)** | Pruebas locales, QA, PROD | T-11 a T-14 | 1 – 2 días | 257 |
 | **Total proyecto** | | 14 tareas | ~3 – 6 días hábiles (≈ 1 semana) | — |
 | **Solo P1** | Fase 0 + Fase 1 | T-01 a T-07 | ~1.5 – 3 días hábiles | — |
 
